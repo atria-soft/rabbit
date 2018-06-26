@@ -39,6 +39,8 @@ def configure(target, my_module):
 		'rabbit/sqcompiler.cpp',
 		'rabbit/sqdebug.cpp',
 		'rabbit/sqfuncstate.cpp',
+		'rabbit/RefCounted.cpp',
+		'rabbit/WeakRef.cpp',
 		])
 	my_module.compile_version("c++", 2011)
 	my_module.add_depend([
@@ -60,12 +62,14 @@ def configure(target, my_module):
 		'rabbit/sqfuncproto.hpp',
 		'rabbit/sqconfig.hpp',
 		'rabbit/sqcompiler.hpp',
-		'rabbit/sqarray.hpp',
+		'rabbit/Array.hpp',
 		'rabbit/sqclosure.hpp',
 		'rabbit/sqlexer.hpp',
 		'rabbit/sqfuncstate.hpp',
 		'rabbit/sqstring.hpp',
 		'rabbit/sqtable.hpp',
+		'rabbit/RefCounted.hpp',
+		'rabbit/WeakRef.hpp',
 		])
 	return True
 

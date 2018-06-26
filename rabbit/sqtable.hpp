@@ -44,27 +44,27 @@ private:
 	int64_t _usednodes;
 
 ///////////////////////////
-	void AllocNodes(int64_t nSize);
+	void AllocNodes(int64_t nsize);
 	void Rehash(bool force);
-	SQTable(SQSharedState *ss, int64_t nInitialSize);
+	SQTable(SQSharedState *ss, int64_t nInitialsize);
 	void _ClearNodes();
 public:
-	static SQTable* Create(SQSharedState *ss,int64_t nInitialSize)
+	static SQTable* create(SQSharedState *ss,int64_t nInitialsize)
 	{
 		SQTable *newtable = (SQTable*)SQ_MALLOC(sizeof(SQTable));
-		new (newtable) SQTable(ss, nInitialSize);
+		new (newtable) SQTable(ss, nInitialsize);
 		newtable->_delegate = NULL;
 		return newtable;
 	}
 	void Finalize();
-	SQTable *Clone();
+	SQTable *clone();
 	~SQTable()
 	{
-		SetDelegate(NULL);
+		setDelegate(NULL);
 		for (int64_t i = 0; i < _numofnodes; i++) _nodes[i].~_HashNode();
 		SQ_FREE(_nodes, _numofnodes * sizeof(_HashNode));
 	}
-	inline _HashNode *_Get(const SQObjectPtr &key,SQHash hash)
+	inline _HashNode *_get(const SQObjectPtr &key,SQHash hash)
 	{
 		_HashNode *n = &_nodes[hash];
 		do{
@@ -75,7 +75,7 @@ public:
 		return NULL;
 	}
 	//for compiler use
-	inline bool GetStr(const SQChar* key,int64_t keylen,SQObjectPtr &val)
+	inline bool getStr(const SQChar* key,int64_t keylen,SQObjectPtr &val)
 	{
 		SQHash hash = _hashstr(key,keylen);
 		_HashNode *n = &_nodes[hash & (_numofnodes - 1)];
@@ -92,16 +92,16 @@ public:
 		}
 		return false;
 	}
-	bool Get(const SQObjectPtr &key,SQObjectPtr &val);
-	void Remove(const SQObjectPtr &key);
-	bool Set(const SQObjectPtr &key, const SQObjectPtr &val);
+	bool get(const SQObjectPtr &key,SQObjectPtr &val);
+	void remove(const SQObjectPtr &key);
+	bool set(const SQObjectPtr &key, const SQObjectPtr &val);
 	//returns true if a new slot has been created false if it was already present
 	bool NewSlot(const SQObjectPtr &key,const SQObjectPtr &val);
-	int64_t Next(bool getweakrefs,const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval);
+	int64_t next(bool getweakrefs,const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval);
 
 	int64_t CountUsed(){ return _usednodes;}
 	void Clear();
-	void Release()
+	void release()
 	{
 		sq_delete(this, SQTable);
 	}

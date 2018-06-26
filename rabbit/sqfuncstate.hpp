@@ -21,38 +21,38 @@ struct SQFuncState
 	void PopChildState();
 	void AddInstruction(SQOpcode _op,int64_t arg0=0,int64_t arg1=0,int64_t arg2=0,int64_t arg3=0){SQInstruction i(_op,arg0,arg1,arg2,arg3);AddInstruction(i);}
 	void AddInstruction(SQInstruction &i);
-	void SetIntructionParams(int64_t pos,int64_t arg0,int64_t arg1,int64_t arg2=0,int64_t arg3=0);
-	void SetIntructionParam(int64_t pos,int64_t arg,int64_t val);
-	SQInstruction &GetInstruction(int64_t pos){return _instructions[pos];}
+	void setIntructionParams(int64_t pos,int64_t arg0,int64_t arg1,int64_t arg2=0,int64_t arg3=0);
+	void setIntructionParam(int64_t pos,int64_t arg,int64_t val);
+	SQInstruction &getInstruction(int64_t pos){return _instructions[pos];}
 	void PopInstructions(int64_t size){for(int64_t i=0;i<size;i++)_instructions.pop_back();}
-	void SetStackSize(int64_t n);
+	void setStacksize(int64_t n);
 	int64_t CountOuters(int64_t stacksize);
 	void SnoozeOpt(){_optimization=false;}
 	void AddDefaultParam(int64_t trg) { _defaultparams.push_back(trg); }
-	int64_t GetDefaultParamCount() { return _defaultparams.size(); }
-	int64_t GetCurrentPos(){return _instructions.size()-1;}
-	int64_t GetNumericConstant(const int64_t cons);
-	int64_t GetNumericConstant(const float_t cons);
+	int64_t getDefaultParamCount() { return _defaultparams.size(); }
+	int64_t getCurrentPos(){return _instructions.size()-1;}
+	int64_t getNumericConstant(const int64_t cons);
+	int64_t getNumericConstant(const float_t cons);
 	int64_t PushLocalVariable(const SQObject &name);
 	void AddParameter(const SQObject &name);
 	//void AddOuterValue(const SQObject &name);
-	int64_t GetLocalVariable(const SQObject &name);
+	int64_t getLocalVariable(const SQObject &name);
 	void MarkLocalAsOuter(int64_t pos);
-	int64_t GetOuterVariable(const SQObject &name);
+	int64_t getOuterVariable(const SQObject &name);
 	int64_t GenerateCode();
-	int64_t GetStackSize();
-	int64_t CalcStackFrameSize();
+	int64_t getStacksize();
+	int64_t CalcStackFramesize();
 	void AddLineInfos(int64_t line,bool lineop,bool force=false);
 	SQFunctionProto *BuildProto();
 	int64_t AllocStackPos();
 	int64_t PushTarget(int64_t n=-1);
 	int64_t PopTarget();
-	int64_t TopTarget();
-	int64_t GetUpTarget(int64_t n);
+	int64_t topTarget();
+	int64_t getUpTarget(int64_t n);
 	void DiscardTarget();
 	bool IsLocal(uint64_t stkpos);
-	SQObject CreateString(const SQChar *s,int64_t len = -1);
-	SQObject CreateTable();
+	SQObject createString(const SQChar *s,int64_t len = -1);
+	SQObject createTable();
 	bool IsConstant(const SQObject &name,SQObject &e);
 	int64_t _returnexp;
 	SQLocalVarInfoVec _vlocals;
@@ -84,7 +84,7 @@ struct SQFuncState
 	bool _optimization;
 	SQSharedState *_sharedstate;
 	sqvector<SQFuncState*> _childstates;
-	int64_t GetConstant(const SQObject &cons);
+	int64_t getConstant(const SQObject &cons);
 private:
 	CompilerErrorFunc _errfunc;
 	void *_errtarget;

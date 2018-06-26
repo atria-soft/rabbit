@@ -318,7 +318,7 @@ int main(int argc, char* argv[])
 	HRABBITVM v;
 	int64_t retval = 0;
 #if defined(_MSC_VER) && defined(_DEBUG)
-	_CrtSetAllocHook(MemAllocHook);
+	_CrtsetAllocHook(MemAllocHook);
 #endif
 
 	v=sq_open(1024);

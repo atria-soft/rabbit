@@ -12,19 +12,19 @@
 #include <rabbit/sqfuncproto.hpp>
 #include <rabbit/sqclosure.hpp>
 
-SQTable::SQTable(SQSharedState *ss,int64_t nInitialSize)
+SQTable::SQTable(SQSharedState *ss,int64_t nInitialsize)
 {
 	int64_t pow2size=MINPOWER2;
-	while(nInitialSize>pow2size)pow2size=pow2size<<1;
+	while(nInitialsize>pow2size)pow2size=pow2size<<1;
 	AllocNodes(pow2size);
 	_usednodes = 0;
 	_delegate = NULL;
 }
 
-void SQTable::Remove(const SQObjectPtr &key)
+void SQTable::remove(const SQObjectPtr &key)
 {
 
-	_HashNode *n = _Get(key, HashObj(key) & (_numofnodes - 1));
+	_HashNode *n = _get(key, HashObj(key) & (_numofnodes - 1));
 	if (n) {
 		n->val.Null();
 		n->key.Null();
@@ -33,15 +33,15 @@ void SQTable::Remove(const SQObjectPtr &key)
 	}
 }
 
-void SQTable::AllocNodes(int64_t nSize)
+void SQTable::AllocNodes(int64_t nsize)
 {
-	_HashNode *nodes=(_HashNode *)SQ_MALLOC(sizeof(_HashNode)*nSize);
-	for(int64_t i=0;i<nSize;i++){
+	_HashNode *nodes=(_HashNode *)SQ_MALLOC(sizeof(_HashNode)*nsize);
+	for(int64_t i=0;i<nsize;i++){
 		_HashNode &n = nodes[i];
 		new (&n) _HashNode;
 		n.next=NULL;
 	}
-	_numofnodes=nSize;
+	_numofnodes=nsize;
 	_nodes=nodes;
 	_firstfree=&_nodes[_numofnodes-1];
 }
@@ -73,9 +73,9 @@ void SQTable::Rehash(bool force)
 	SQ_FREE(nold,oldsize*sizeof(_HashNode));
 }
 
-SQTable *SQTable::Clone()
+SQTable *SQTable::clone()
 {
-	SQTable *nt=Create(NULL,_numofnodes);
+	SQTable *nt=create(NULL,_numofnodes);
 #ifdef _FAST_CLONE
 	_HashNode *basesrc = _nodes;
 	_HashNode *basedst = nt->_nodes;
@@ -100,19 +100,19 @@ SQTable *SQTable::Clone()
 #else
 	int64_t ridx=0;
 	SQObjectPtr key,val;
-	while((ridx=Next(true,ridx,key,val))!=-1){
+	while((ridx=next(true,ridx,key,val))!=-1){
 		nt->NewSlot(key,val);
 	}
 #endif
-	nt->SetDelegate(_delegate);
+	nt->setDelegate(_delegate);
 	return nt;
 }
 
-bool SQTable::Get(const SQObjectPtr &key,SQObjectPtr &val)
+bool SQTable::get(const SQObjectPtr &key,SQObjectPtr &val)
 {
 	if(sq_type(key) == OT_NULL)
 		return false;
-	_HashNode *n = _Get(key, HashObj(key) & (_numofnodes - 1));
+	_HashNode *n = _get(key, HashObj(key) & (_numofnodes - 1));
 	if (n) {
 		val = _realval(n->val);
 		return true;
@@ -123,7 +123,7 @@ bool SQTable::NewSlot(const SQObjectPtr &key,const SQObjectPtr &val)
 {
 	assert(sq_type(key) != OT_NULL);
 	SQHash h = HashObj(key) & (_numofnodes - 1);
-	_HashNode *n = _Get(key, h);
+	_HashNode *n = _get(key, h);
 	if (n) {
 		n->val = val;
 		return false;
@@ -176,9 +176,9 @@ bool SQTable::NewSlot(const SQObjectPtr &key,const SQObjectPtr &val)
 	return NewSlot(key, val);
 }
 
-int64_t SQTable::Next(bool getweakrefs,const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval)
+int64_t SQTable::next(bool getweakrefs,const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval)
 {
-	int64_t idx = (int64_t)TranslateIndex(refpos);
+	int64_t idx = (int64_t)translateIndex(refpos);
 	while (idx < _numofnodes) {
 		if(sq_type(_nodes[idx].key) != OT_NULL) {
 			//first found
@@ -195,9 +195,9 @@ int64_t SQTable::Next(bool getweakrefs,const SQObjectPtr &refpos, SQObjectPtr &o
 }
 
 
-bool SQTable::Set(const SQObjectPtr &key, const SQObjectPtr &val)
+bool SQTable::set(const SQObjectPtr &key, const SQObjectPtr &val)
 {
-	_HashNode *n = _Get(key, HashObj(key) & (_numofnodes - 1));
+	_HashNode *n = _get(key, HashObj(key) & (_numofnodes - 1));
 	if (n) {
 		n->val = val;
 		return true;
@@ -213,7 +213,7 @@ void SQTable::_ClearNodes()
 void SQTable::Finalize()
 {
 	_ClearNodes();
-	SetDelegate(NULL);
+	setDelegate(NULL);
 }
 
 void SQTable::Clear()

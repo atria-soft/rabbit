@@ -44,7 +44,7 @@ SQRESULT sq_stackinfos(HRABBITVM v, int64_t level, SQStackInfos *si)
 				si->funcname = _stringval(func->_name);
 			if (sq_type(func->_sourcename) == OT_STRING)
 				si->source = _stringval(func->_sourcename);
-			si->line = func->GetLine(ci._ip);
+			si->line = func->getLine(ci._ip);
 						}
 			break;
 		case OT_NATIVECLOSURE:
@@ -68,7 +68,7 @@ void SQVM::Raise_Error(const SQChar *s, ...)
 	int64_t buffersize = (int64_t)scstrlen(s)+(NUMBER_MAX_CHAR*2);
 	scvsprintf(_sp(sq_rsl(buffersize)),buffersize, s, vl);
 	va_end(vl);
-	_lasterror = SQString::Create(_ss(this),_spval,-1);
+	_lasterror = SQString::create(_ss(this),_spval,-1);
 }
 
 void SQVM::Raise_Error(const SQObjectPtr &desc)
@@ -82,14 +82,14 @@ SQString *SQVM::PrintObjVal(const SQObjectPtr &o)
 	case OT_STRING: return _string(o);
 	case OT_INTEGER:
 		scsprintf(_sp(sq_rsl(NUMBER_MAX_CHAR+1)),sq_rsl(NUMBER_MAX_CHAR), _PRINT_INT_FMT, _integer(o));
-		return SQString::Create(_ss(this), _spval);
+		return SQString::create(_ss(this), _spval);
 		break;
 	case OT_FLOAT:
 		scsprintf(_sp(sq_rsl(NUMBER_MAX_CHAR+1)), sq_rsl(NUMBER_MAX_CHAR), _SC("%.14g"), _float(o));
-		return SQString::Create(_ss(this), _spval);
+		return SQString::create(_ss(this), _spval);
 		break;
 	default:
-		return SQString::Create(_ss(this), GetTypeName(o));
+		return SQString::create(_ss(this), getTypeName(o));
 	}
 }
 
@@ -108,15 +108,15 @@ void SQVM::Raise_CompareError(const SQObject &o1, const SQObject &o2)
 
 void SQVM::Raise_ParamTypeError(int64_t nparam,int64_t typemask,int64_t type)
 {
-	SQObjectPtr exptypes = SQString::Create(_ss(this), _SC(""), -1);
+	SQObjectPtr exptypes = SQString::create(_ss(this), _SC(""), -1);
 	int64_t found = 0;
 	for(int64_t i=0; i<16; i++)
 	{
 		int64_t mask = ((int64_t)1) << i;
 		if(typemask & (mask)) {
-			if(found>0) StringCat(exptypes,SQString::Create(_ss(this), _SC("|"), -1), exptypes);
+			if(found>0) StringCat(exptypes,SQString::create(_ss(this), _SC("|"), -1), exptypes);
 			found ++;
-			StringCat(exptypes,SQString::Create(_ss(this), IdType2Name((SQObjectType)mask), -1), exptypes);
+			StringCat(exptypes,SQString::create(_ss(this), IdType2Name((SQObjectType)mask), -1), exptypes);
 		}
 	}
 	Raise_Error(_SC("parameter %d has an invalid type '%s' ; expected: '%s'"), nparam, IdType2Name((SQObjectType)type), _stringval(exptypes));

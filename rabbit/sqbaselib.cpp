@@ -9,7 +9,7 @@
 #include <rabbit/sqvm.hpp>
 #include <rabbit/sqstring.hpp>
 #include <rabbit/sqtable.hpp>
-#include <rabbit/sqarray.hpp>
+#include <rabbit/Array.hpp>
 #include <rabbit/sqfuncproto.hpp>
 #include <rabbit/sqclosure.hpp>
 #include <rabbit/sqclass.hpp>
@@ -241,14 +241,14 @@ static int64_t base_suspend(HRABBITVM v)
 
 static int64_t base_array(HRABBITVM v)
 {
-	SQArray *a;
+	rabbit::Array *a;
 	SQObject &size = stack_get(v,2);
 	if(sq_gettop(v) > 2) {
-		a = SQArray::Create(_ss(v),0);
-		a->Resize(tointeger(size),stack_get(v,3));
+		a = rabbit::Array::create(_ss(v),0);
+		a->resize(tointeger(size),stack_get(v,3));
 	}
 	else {
-		a = SQArray::Create(_ss(v),tointeger(size));
+		a = rabbit::Array::create(_ss(v),tointeger(size));
 	}
 	v->Push(a);
 	return 1;
@@ -257,7 +257,7 @@ static int64_t base_array(HRABBITVM v)
 static int64_t base_type(HRABBITVM v)
 {
 	SQObjectPtr &o = stack_get(v,2);
-	v->Push(SQString::Create(_ss(v),GetTypeName(o),-1));
+	v->Push(SQString::create(_ss(v),getTypeName(o),-1));
 	return 1;
 }
 
@@ -408,7 +408,7 @@ static int64_t number_delegate_tochar(HRABBITVM v)
 {
 	SQObject &o=stack_get(v,1);
 	SQChar c = (SQChar)tointeger(o);
-	v->Push(SQString::Create(_ss(v),(const SQChar *)&c,1));
+	v->Push(SQString::create(_ss(v),(const SQChar *)&c,1));
 	return 1;
 }
 
@@ -463,11 +463,11 @@ static int64_t table_filter(HRABBITVM v)
 {
 	SQObject &o = stack_get(v,1);
 	SQTable *tbl = _table(o);
-	SQObjectPtr ret = SQTable::Create(_ss(v),0);
+	SQObjectPtr ret = SQTable::create(_ss(v),0);
 
 	SQObjectPtr itr, key, val;
 	int64_t nitr;
-	while((nitr = tbl->Next(false, itr, key, val)) != -1) {
+	while((nitr = tbl->next(false, itr, key, val)) != -1) {
 		itr = (int64_t)nitr;
 
 		v->Push(o);
@@ -476,7 +476,7 @@ static int64_t table_filter(HRABBITVM v)
 		if(SQ_FAILED(sq_call(v,3,SQTrue,SQFalse))) {
 			return SQ_ERROR;
 		}
-		if(!SQVM::IsFalse(v->GetUp(-1))) {
+		if(!SQVM::IsFalse(v->getUp(-1))) {
 			_table(ret)->NewSlot(key, val);
 		}
 		v->Pop();
@@ -511,7 +511,7 @@ static int64_t array_append(HRABBITVM v)
 
 static int64_t array_extend(HRABBITVM v)
 {
-	_array(stack_get(v,1))->Extend(_array(stack_get(v,2)));
+	_array(stack_get(v,1))->extend(_array(stack_get(v,2)));
 	sq_pop(v,1);
 	return 1;
 }
@@ -529,8 +529,8 @@ static int64_t array_pop(HRABBITVM v)
 static int64_t array_top(HRABBITVM v)
 {
 	SQObject &o=stack_get(v,1);
-	if(_array(o)->Size()>0){
-		v->Push(_array(o)->Top());
+	if(_array(o)->size()>0){
+		v->Push(_array(o)->top());
 		return 1;
 	}
 	else return sq_throwerror(v,_SC("top() on a empty array"));
@@ -541,7 +541,7 @@ static int64_t array_insert(HRABBITVM v)
 	SQObject &o=stack_get(v,1);
 	SQObject &idx=stack_get(v,2);
 	SQObject &val=stack_get(v,3);
-	if(!_array(o)->Insert(tointeger(idx),val))
+	if(!_array(o)->insert(tointeger(idx),val))
 		return sq_throwerror(v,_SC("index out of range"));
 	sq_pop(v,2);
 	return 1;
@@ -553,8 +553,8 @@ static int64_t array_remove(HRABBITVM v)
 	SQObject &idx = stack_get(v, 2);
 	if(!sq_isnumeric(idx)) return sq_throwerror(v, _SC("wrong type"));
 	SQObjectPtr val;
-	if(_array(o)->Get(tointeger(idx), val)) {
-		_array(o)->Remove(tointeger(idx));
+	if(_array(o)->get(tointeger(idx), val)) {
+		_array(o)->remove(tointeger(idx));
 		v->Push(val);
 		return 1;
 	}
@@ -573,24 +573,24 @@ static int64_t array_resize(HRABBITVM v)
 
 		if(sq_gettop(v) > 2)
 			fill = stack_get(v, 3);
-		_array(o)->Resize(sz,fill);
+		_array(o)->resize(sz,fill);
 		sq_settop(v, 1);
 		return 1;
 	}
 	return sq_throwerror(v, _SC("size must be a number"));
 }
 
-static int64_t __map_array(SQArray *dest,SQArray *src,HRABBITVM v) {
+static int64_t __map_array(rabbit::Array *dest,rabbit::Array *src,HRABBITVM v) {
 	SQObjectPtr temp;
-	int64_t size = src->Size();
+	int64_t size = src->size();
 	for(int64_t n = 0; n < size; n++) {
-		src->Get(n,temp);
+		src->get(n,temp);
 		v->Push(src);
 		v->Push(temp);
 		if(SQ_FAILED(sq_call(v,2,SQTrue,SQFalse))) {
 			return SQ_ERROR;
 		}
-		dest->Set(n,v->GetUp(-1));
+		dest->set(n,v->getUp(-1));
 		v->Pop();
 	}
 	return 0;
@@ -599,8 +599,8 @@ static int64_t __map_array(SQArray *dest,SQArray *src,HRABBITVM v) {
 static int64_t array_map(HRABBITVM v)
 {
 	SQObject &o = stack_get(v,1);
-	int64_t size = _array(o)->Size();
-	SQObjectPtr ret = SQArray::Create(_ss(v),size);
+	int64_t size = _array(o)->size();
+	SQObjectPtr ret = rabbit::Array::create(_ss(v),size);
 	if(SQ_FAILED(__map_array(_array(ret),_array(o),v)))
 		return SQ_ERROR;
 	v->Push(ret);
@@ -619,24 +619,24 @@ static int64_t array_apply(HRABBITVM v)
 static int64_t array_reduce(HRABBITVM v)
 {
 	SQObject &o = stack_get(v,1);
-	SQArray *a = _array(o);
-	int64_t size = a->Size();
+	rabbit::Array *a = _array(o);
+	int64_t size = a->size();
 	if(size == 0) {
 		return 0;
 	}
 	SQObjectPtr res;
-	a->Get(0,res);
+	a->get(0,res);
 	if(size > 1) {
 		SQObjectPtr other;
 		for(int64_t n = 1; n < size; n++) {
-			a->Get(n,other);
+			a->get(n,other);
 			v->Push(o);
 			v->Push(res);
 			v->Push(other);
 			if(SQ_FAILED(sq_call(v,3,SQTrue,SQFalse))) {
 				return SQ_ERROR;
 			}
-			res = v->GetUp(-1);
+			res = v->getUp(-1);
 			v->Pop();
 		}
 	}
@@ -647,20 +647,20 @@ static int64_t array_reduce(HRABBITVM v)
 static int64_t array_filter(HRABBITVM v)
 {
 	SQObject &o = stack_get(v,1);
-	SQArray *a = _array(o);
-	SQObjectPtr ret = SQArray::Create(_ss(v),0);
-	int64_t size = a->Size();
+	rabbit::Array *a = _array(o);
+	SQObjectPtr ret = rabbit::Array::create(_ss(v),0);
+	int64_t size = a->size();
 	SQObjectPtr val;
 	for(int64_t n = 0; n < size; n++) {
-		a->Get(n,val);
+		a->get(n,val);
 		v->Push(o);
 		v->Push(n);
 		v->Push(val);
 		if(SQ_FAILED(sq_call(v,3,SQTrue,SQFalse))) {
 			return SQ_ERROR;
 		}
-		if(!SQVM::IsFalse(v->GetUp(-1))) {
-			_array(ret)->Append(val);
+		if(!SQVM::IsFalse(v->getUp(-1))) {
+			_array(ret)->append(val);
 		}
 		v->Pop();
 	}
@@ -672,12 +672,12 @@ static int64_t array_find(HRABBITVM v)
 {
 	SQObject &o = stack_get(v,1);
 	SQObjectPtr &val = stack_get(v,2);
-	SQArray *a = _array(o);
-	int64_t size = a->Size();
+	rabbit::Array *a = _array(o);
+	int64_t size = a->size();
 	SQObjectPtr temp;
 	for(int64_t n = 0; n < size; n++) {
 		bool res = false;
-		a->Get(n,temp);
+		a->get(n,temp);
 		if(SQVM::IsEqual(temp,val,res) && res) {
 			v->Push(n);
 			return 1;
@@ -713,7 +713,7 @@ static bool _sort_compare(HRABBITVM v,SQObjectPtr &a,SQObjectPtr &b,int64_t func
 	return true;
 }
 
-static bool _hsort_sift_down(HRABBITVM v,SQArray *arr, int64_t root, int64_t bottom, int64_t func)
+static bool _hsort_sift_down(HRABBITVM v,rabbit::Array *arr, int64_t root, int64_t bottom, int64_t func)
 {
 	int64_t maxChild;
 	int64_t done = 0;
@@ -725,7 +725,7 @@ static bool _hsort_sift_down(HRABBITVM v,SQArray *arr, int64_t root, int64_t bot
 			maxChild = root2;
 		}
 		else {
-			if(!_sort_compare(v,arr->_values[root2],arr->_values[root2 + 1],func,ret))
+			if(!_sort_compare(v,(*arr)[root2],(*arr)[root2 + 1],func,ret))
 				return false;
 			if (ret > 0) {
 				maxChild = root2;
@@ -735,7 +735,7 @@ static bool _hsort_sift_down(HRABBITVM v,SQArray *arr, int64_t root, int64_t bot
 			}
 		}
 
-		if(!_sort_compare(v,arr->_values[root],arr->_values[maxChild],func,ret))
+		if(!_sort_compare(v,(*arr)[root],(*arr)[maxChild],func,ret))
 			return false;
 		if (ret < 0) {
 			if (root == maxChild) {
@@ -743,7 +743,7 @@ static bool _hsort_sift_down(HRABBITVM v,SQArray *arr, int64_t root, int64_t bot
 				return false; // We'd be swapping ourselve. The compare function is incorrect
 			}
 
-			_Swap(arr->_values[root],arr->_values[maxChild]);
+			_Swap((*arr)[root], (*arr)[maxChild]);
 			root = maxChild;
 		}
 		else {
@@ -755,16 +755,16 @@ static bool _hsort_sift_down(HRABBITVM v,SQArray *arr, int64_t root, int64_t bot
 
 static bool _hsort(HRABBITVM v,SQObjectPtr &arr, int64_t SQ_UNUSED_ARG(l), int64_t SQ_UNUSED_ARG(r),int64_t func)
 {
-	SQArray *a = _array(arr);
+	rabbit::Array *a = _array(arr);
 	int64_t i;
-	int64_t array_size = a->Size();
+	int64_t array_size = a->size();
 	for (i = (array_size / 2); i >= 0; i--) {
 		if(!_hsort_sift_down(v,a, i, array_size - 1,func)) return false;
 	}
 
 	for (i = array_size-1; i >= 1; i--)
 	{
-		_Swap(a->_values[0],a->_values[i]);
+		_Swap((*a)[0],(*a)[i]);
 		if(!_hsort_sift_down(v,a, 0, i-1,func)) return false;
 	}
 	return true;
@@ -774,9 +774,9 @@ static int64_t array_sort(HRABBITVM v)
 {
 	int64_t func = -1;
 	SQObjectPtr &o = stack_get(v,1);
-	if(_array(o)->Size() > 1) {
+	if(_array(o)->size() > 1) {
 		if(sq_gettop(v) == 2) func = 2;
-		if(!_hsort(v, o, 0, _array(o)->Size()-1, func))
+		if(!_hsort(v, o, 0, _array(o)->size()-1, func))
 			return SQ_ERROR;
 
 	}
@@ -789,17 +789,17 @@ static int64_t array_slice(HRABBITVM v)
 	int64_t sidx,eidx;
 	SQObjectPtr o;
 	if(get_slice_params(v,sidx,eidx,o)==-1)return -1;
-	int64_t alen = _array(o)->Size();
+	int64_t alen = _array(o)->size();
 	if(sidx < 0)sidx = alen + sidx;
 	if(eidx < 0)eidx = alen + eidx;
 	if(eidx < sidx)return sq_throwerror(v,_SC("wrong indexes"));
 	if(eidx > alen || sidx < 0)return sq_throwerror(v, _SC("slice out of range"));
-	SQArray *arr=SQArray::Create(_ss(v),eidx-sidx);
+	rabbit::Array *arr=rabbit::Array::create(_ss(v),eidx-sidx);
 	SQObjectPtr t;
 	int64_t count=0;
 	for(int64_t i=sidx;i<eidx;i++){
-		_array(o)->Get(i,t);
-		arr->Set(count++,t);
+		_array(o)->get(i,t);
+		arr->set(count++,t);
 	}
 	v->Push(arr);
 	return 1;
@@ -841,7 +841,7 @@ static int64_t string_slice(HRABBITVM v)
 	if(eidx < 0)eidx = slen + eidx;
 	if(eidx < sidx) return sq_throwerror(v,_SC("wrong indexes"));
 	if(eidx > slen || sidx < 0) return sq_throwerror(v, _SC("slice out of range"));
-	v->Push(SQString::Create(_ss(v),&_stringval(o)[sidx],eidx-sidx));
+	v->Push(SQString::create(_ss(v),&_stringval(o)[sidx],eidx-sidx));
 	return 1;
 }
 
@@ -875,10 +875,10 @@ static int64_t string_find(HRABBITVM v)
 	if(eidx > slen || sidx < 0) return sq_throwerror(v,_SC("slice out of range")); \
 	int64_t len=_string(str)->_len; \
 	const SQChar *sthis=_stringval(str); \
-	SQChar *snew=(_ss(v)->GetScratchPad(sq_rsl(len))); \
+	SQChar *snew=(_ss(v)->getScratchPad(sq_rsl(len))); \
 	memcpy(snew,sthis,sq_rsl(len));\
 	for(int64_t i=sidx;i<eidx;i++) snew[i] = func(sthis[i]); \
-	v->Push(SQString::Create(_ss(v),snew,len)); \
+	v->Push(SQString::create(_ss(v),snew,len)); \
 	return 1; \
 }
 
@@ -927,10 +927,10 @@ static int64_t closure_call(HRABBITVM v)
 
 static int64_t _closure_acall(HRABBITVM v,SQBool raiseerror)
 {
-	SQArray *aparams=_array(stack_get(v,2));
-	int64_t nparams=aparams->Size();
+	rabbit::Array *aparams=_array(stack_get(v,2));
+	int64_t nparams=aparams->size();
 	v->Push(stack_get(v,1));
-	for(int64_t i=0;i<nparams;i++)v->Push(aparams->_values[i]);
+	for(int64_t i=0;i<nparams;i++)v->Push((*aparams)[i]);
 	return SQ_SUCCEEDED(sq_call(v,nparams,SQTrue,raiseerror))?1:SQ_ERROR;
 }
 
@@ -967,42 +967,42 @@ static int64_t closure_setroot(HRABBITVM v)
 
 static int64_t closure_getinfos(HRABBITVM v) {
 	SQObject o = stack_get(v,1);
-	SQTable *res = SQTable::Create(_ss(v),4);
+	SQTable *res = SQTable::create(_ss(v),4);
 	if(sq_type(o) == OT_CLOSURE) {
 		SQFunctionProto *f = _closure(o)->_function;
 		int64_t nparams = f->_nparameters + (f->_varparams?1:0);
-		SQObjectPtr params = SQArray::Create(_ss(v),nparams);
-	SQObjectPtr defparams = SQArray::Create(_ss(v),f->_ndefaultparams);
+		SQObjectPtr params = rabbit::Array::create(_ss(v),nparams);
+	SQObjectPtr defparams = rabbit::Array::create(_ss(v),f->_ndefaultparams);
 		for(int64_t n = 0; n<f->_nparameters; n++) {
-			_array(params)->Set((int64_t)n,f->_parameters[n]);
+			_array(params)->set((int64_t)n,f->_parameters[n]);
 		}
 	for(int64_t j = 0; j<f->_ndefaultparams; j++) {
-			_array(defparams)->Set((int64_t)j,_closure(o)->_defaultparams[j]);
+			_array(defparams)->set((int64_t)j,_closure(o)->_defaultparams[j]);
 		}
 		if(f->_varparams) {
-			_array(params)->Set(nparams-1,SQString::Create(_ss(v),_SC("..."),-1));
+			_array(params)->set(nparams-1,SQString::create(_ss(v),_SC("..."),-1));
 		}
-		res->NewSlot(SQString::Create(_ss(v),_SC("native"),-1),false);
-		res->NewSlot(SQString::Create(_ss(v),_SC("name"),-1),f->_name);
-		res->NewSlot(SQString::Create(_ss(v),_SC("src"),-1),f->_sourcename);
-		res->NewSlot(SQString::Create(_ss(v),_SC("parameters"),-1),params);
-		res->NewSlot(SQString::Create(_ss(v),_SC("varargs"),-1),f->_varparams);
-	res->NewSlot(SQString::Create(_ss(v),_SC("defparams"),-1),defparams);
+		res->NewSlot(SQString::create(_ss(v),_SC("native"),-1),false);
+		res->NewSlot(SQString::create(_ss(v),_SC("name"),-1),f->_name);
+		res->NewSlot(SQString::create(_ss(v),_SC("src"),-1),f->_sourcename);
+		res->NewSlot(SQString::create(_ss(v),_SC("parameters"),-1),params);
+		res->NewSlot(SQString::create(_ss(v),_SC("varargs"),-1),f->_varparams);
+	res->NewSlot(SQString::create(_ss(v),_SC("defparams"),-1),defparams);
 	}
 	else { //OT_NATIVECLOSURE
 		SQNativeClosure *nc = _nativeclosure(o);
-		res->NewSlot(SQString::Create(_ss(v),_SC("native"),-1),true);
-		res->NewSlot(SQString::Create(_ss(v),_SC("name"),-1),nc->_name);
-		res->NewSlot(SQString::Create(_ss(v),_SC("paramscheck"),-1),nc->_nparamscheck);
+		res->NewSlot(SQString::create(_ss(v),_SC("native"),-1),true);
+		res->NewSlot(SQString::create(_ss(v),_SC("name"),-1),nc->_name);
+		res->NewSlot(SQString::create(_ss(v),_SC("paramscheck"),-1),nc->_nparamscheck);
 		SQObjectPtr typecheck;
 		if(nc->_typecheck.size() > 0) {
 			typecheck =
-				SQArray::Create(_ss(v), nc->_typecheck.size());
+				rabbit::Array::create(_ss(v), nc->_typecheck.size());
 			for(uint64_t n = 0; n<nc->_typecheck.size(); n++) {
-					_array(typecheck)->Set((int64_t)n,nc->_typecheck[n]);
+					_array(typecheck)->set((int64_t)n,nc->_typecheck[n]);
 			}
 		}
-		res->NewSlot(SQString::Create(_ss(v),_SC("typecheck"),-1),typecheck);
+		res->NewSlot(SQString::create(_ss(v),_SC("typecheck"),-1),typecheck);
 	}
 	v->Push(res);
 	return 1;
@@ -1029,9 +1029,9 @@ static int64_t generator_getstatus(HRABBITVM v)
 {
 	SQObject &o=stack_get(v,1);
 	switch(_generator(o)->_state){
-		case SQGenerator::eSuspended:v->Push(SQString::Create(_ss(v),_SC("suspended")));break;
-		case SQGenerator::eRunning:v->Push(SQString::Create(_ss(v),_SC("running")));break;
-		case SQGenerator::eDead:v->Push(SQString::Create(_ss(v),_SC("dead")));break;
+		case SQGenerator::eSuspended:v->Push(SQString::create(_ss(v),_SC("suspended")));break;
+		case SQGenerator::eRunning:v->Push(SQString::create(_ss(v),_SC("running")));break;
+		case SQGenerator::eDead:v->Push(SQString::create(_ss(v),_SC("dead")));break;
 	}
 	return 1;
 }

@@ -17,16 +17,16 @@
 #define CUR_CHAR (_currdata)
 #define RETURN_TOKEN(t) { _prevtoken = _curtoken; _curtoken = t; return t;}
 #define IS_EOB() (CUR_CHAR <= RABBIT_EOB)
-#define NEXT() {Next();_currentcolumn++;}
+#define NEXT() {next();_currentcolumn++;}
 #define INIT_TEMP_STRING() { _longstr.resize(0);}
 #define APPEND_CHAR(c) { _longstr.push_back(c);}
 #define TERMINATE_BUFFER() {_longstr.push_back(_SC('\0'));}
-#define ADD_KEYWORD(key,id) _keywords->NewSlot( SQString::Create(ss, _SC(#key)) ,int64_t(id))
+#define ADD_KEYWORD(key,id) _keywords->NewSlot( SQString::create(ss, _SC(#key)) ,int64_t(id))
 
 SQLexer::SQLexer(){}
 SQLexer::~SQLexer()
 {
-	_keywords->Release();
+	_keywords->release();
 }
 
 void SQLexer::Init(SQSharedState *ss, SQLEXREADFUNC rg, SQUserPointer up,CompilerErrorFunc efunc,void *ed)
@@ -34,7 +34,7 @@ void SQLexer::Init(SQSharedState *ss, SQLEXREADFUNC rg, SQUserPointer up,Compile
 	_errfunc = efunc;
 	_errtarget = ed;
 	_sharedstate = ss;
-	_keywords = SQTable::Create(ss, 37);
+	_keywords = SQTable::create(ss, 37);
 	ADD_KEYWORD(while, TK_WHILE);
 	ADD_KEYWORD(do, TK_DO);
 	ADD_KEYWORD(if, TK_IF);
@@ -81,7 +81,7 @@ void SQLexer::Init(SQSharedState *ss, SQLEXREADFUNC rg, SQUserPointer up,Compile
 	_currentcolumn = 0;
 	_prevtoken = -1;
 	_reached_eof = SQFalse;
-	Next();
+	next();
 }
 
 void SQLexer::Error(const SQChar *err)
@@ -89,7 +89,7 @@ void SQLexer::Error(const SQChar *err)
 	_errfunc(_errtarget,err);
 }
 
-void SQLexer::Next()
+void SQLexer::next()
 {
 	int64_t t = _readf(_up);
 	if(t > MAX_CHAR) Error(_SC("Invalid character"));
@@ -105,7 +105,7 @@ const SQChar *SQLexer::Tok2Str(int64_t tok)
 {
 	SQObjectPtr itr, key, val;
 	int64_t nitr;
-	while((nitr = _keywords->Next(false,itr, key, val)) != -1) {
+	while((nitr = _keywords->next(false,itr, key, val)) != -1) {
 		itr = (int64_t)nitr;
 		if(((int64_t)_integer(val)) == tok)
 			return _stringval(key);
@@ -285,10 +285,10 @@ int64_t SQLexer::Lex()
 	return 0;
 }
 
-int64_t SQLexer::GetIDType(const SQChar *s,int64_t len)
+int64_t SQLexer::getIDType(const SQChar *s,int64_t len)
 {
 	SQObjectPtr t;
-	if(_keywords->GetStr(s,len, t)) {
+	if(_keywords->getStr(s,len, t)) {
 		return int64_t(_integer(t));
 	}
 	return TK_IDENTIFIER;
@@ -560,7 +560,7 @@ int64_t SQLexer::ReadID()
 		NEXT();
 	} while(scisalnum(CUR_CHAR) || CUR_CHAR == _SC('_'));
 	TERMINATE_BUFFER();
-	res = GetIDType(&_longstr[0],_longstr.size() - 1);
+	res = getIDType(&_longstr[0],_longstr.size() - 1);
 	if(res == TK_IDENTIFIER || res == TK_CONSTRUCTOR) {
 		_svalue = &_longstr[0];
 	}

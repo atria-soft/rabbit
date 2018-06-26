@@ -33,7 +33,7 @@ enum NewObjectType {
 	NOT_CLASS = 2
 };
 
-enum AppendArrayType {
+enum appendArrayType {
 	AAT_STACK = 0,
 	AAT_LITERAL = 1,
 	AAT_INT = 2,

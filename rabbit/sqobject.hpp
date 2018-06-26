@@ -8,6 +8,8 @@
 #pragma once
 
 #include <rabbit/squtils.hpp>
+#include <rabbit/RefCounted.hpp>
+#include <rabbit/WeakRef.hpp>
 
 #ifdef _SQ64
 #define UINT_MINUS_ONE (0xFFFFFFFFFFFFFFFF)
@@ -89,22 +91,6 @@ enum SQMetaMethod{
 
 #define MINPOWER2 4
 
-struct SQRefCounted
-{
-	uint64_t _uiRef;
-	struct SQWeakRef *_weakref;
-	SQRefCounted() { _uiRef = 0; _weakref = NULL; }
-	virtual ~SQRefCounted();
-	SQWeakRef *GetWeakRef(SQObjectType type);
-	virtual void Release()=0;
-
-};
-
-struct SQWeakRef : SQRefCounted
-{
-	void Release();
-	SQObject _obj;
-};
 
 #define _realval(o) (sq_type((o)) != OT_WEAKREF?(SQObject)o:_weakref(o)->_obj)
 
@@ -112,25 +98,26 @@ struct SQObjectPtr;
 
 #define __AddRef(type,unval) if(ISREFCOUNTED(type)) \
 		{ \
-			unval.pRefCounted->_uiRef++; \
+			unval.pRefCounted->refCountIncrement(); \
 		}
 
-#define __Release(type,unval) if(ISREFCOUNTED(type) && ((--unval.pRefCounted->_uiRef)==0))  \
+#define __release(type,unval) if(ISREFCOUNTED(type) && (unval.pRefCounted->refCountDecrement()==0))  \
 		{   \
-			unval.pRefCounted->Release();   \
+			unval.pRefCounted->release();   \
 		}
 
-#define __ObjRelease(obj) { \
+#define __Objrelease(obj) { \
 	if((obj)) { \
-		(obj)->_uiRef--; \
-		if((obj)->_uiRef == 0) \
-			(obj)->Release(); \
+		auto val = (obj)->refCountDecrement(); \
+		if(val == 0) { \
+			(obj)->release(); \
+		} \
 		(obj) = NULL;   \
 	} \
 }
 
 #define __ObjAddRef(obj) { \
-	(obj)->_uiRef++; \
+	(obj)->refCountIncrement(); \
 }
 
 #define is_delegable(t) (sq_type(t)&SQOBJECT_DELEGABLE)
@@ -176,7 +163,7 @@ struct SQObjectPtr;
 		_type=type; \
 		_unVal.sym = x; \
 		assert(_unVal.pTable); \
-		_unVal.pRefCounted->_uiRef++; \
+		_unVal.pRefCounted->refCountIncrement(); \
 	} \
 	inline SQObjectPtr& operator=(_class *x) \
 	{  \
@@ -187,8 +174,8 @@ struct SQObjectPtr;
 		_type = type; \
 		SQ_REFOBJECT_INIT() \
 		_unVal.sym = x; \
-		_unVal.pRefCounted->_uiRef++; \
-		__Release(tOldType,unOldVal); \
+		_unVal.pRefCounted->refCountIncrement(); \
+		__release(tOldType,unOldVal); \
 		return *this; \
 	}
 
@@ -201,7 +188,7 @@ struct SQObjectPtr;
 	} \
 	inline SQObjectPtr& operator=(_class x) \
 	{  \
-		__Release(_type,_unVal); \
+		__release(_type,_unVal); \
 		_type = type; \
 		SQ_OBJECT_RAWINIT() \
 		_unVal.sym = x; \
@@ -230,14 +217,14 @@ struct SQObjectPtr : public SQObject
 	_REF_TYPE_DECL(OT_TABLE,SQTable,pTable)
 	_REF_TYPE_DECL(OT_CLASS,SQClass,pClass)
 	_REF_TYPE_DECL(OT_INSTANCE,SQInstance,pInstance)
-	_REF_TYPE_DECL(OT_ARRAY,SQArray,pArray)
+	_REF_TYPE_DECL(OT_ARRAY,rabbit::Array,pArray)
 	_REF_TYPE_DECL(OT_CLOSURE,SQClosure,pClosure)
 	_REF_TYPE_DECL(OT_NATIVECLOSURE,SQNativeClosure,pNativeClosure)
 	_REF_TYPE_DECL(OT_OUTER,SQOuter,pOuter)
 	_REF_TYPE_DECL(OT_GENERATOR,SQGenerator,pGenerator)
 	_REF_TYPE_DECL(OT_STRING,SQString,pString)
 	_REF_TYPE_DECL(OT_USERDATA,rabbit::UserData,pUserData)
-	_REF_TYPE_DECL(OT_WEAKREF,SQWeakRef,pWeakRef)
+	_REF_TYPE_DECL(OT_WEAKREF,rabbit::WeakRef,pWeakRef)
 	_REF_TYPE_DECL(OT_THREAD,SQVM,pThread)
 	_REF_TYPE_DECL(OT_FUNCPROTO,SQFunctionProto,pFunctionProto)
 
@@ -253,7 +240,7 @@ struct SQObjectPtr : public SQObject
 	}
 	inline SQObjectPtr& operator=(bool b)
 	{
-		__Release(_type,_unVal);
+		__release(_type,_unVal);
 		SQ_OBJECT_RAWINIT()
 		_type = OT_BOOL;
 		_unVal.nInteger = b?1:0;
@@ -262,7 +249,7 @@ struct SQObjectPtr : public SQObject
 
 	~SQObjectPtr()
 	{
-		__Release(_type,_unVal);
+		__release(_type,_unVal);
 	}
 
 	inline SQObjectPtr& operator=(const SQObjectPtr& obj)
@@ -274,7 +261,7 @@ struct SQObjectPtr : public SQObject
 		_unVal = obj._unVal;
 		_type = obj._type;
 		__AddRef(_type,_unVal);
-		__Release(tOldType,unOldVal);
+		__release(tOldType,unOldVal);
 		return *this;
 	}
 	inline SQObjectPtr& operator=(const SQObject& obj)
@@ -286,7 +273,7 @@ struct SQObjectPtr : public SQObject
 		_unVal = obj._unVal;
 		_type = obj._type;
 		__AddRef(_type,_unVal);
-		__Release(tOldType,unOldVal);
+		__release(tOldType,unOldVal);
 		return *this;
 	}
 	inline void Null()
@@ -295,7 +282,7 @@ struct SQObjectPtr : public SQObject
 		SQObjectValue unOldVal = _unVal;
 		_type = OT_NULL;
 		_unVal.raw = (SQRawObjectVal)NULL;
-		__Release(tOldType ,unOldVal);
+		__release(tOldType ,unOldVal);
 	}
 	private:
 		SQObjectPtr(const SQChar *){} //safety
@@ -313,16 +300,16 @@ inline void _Swap(SQObject &a,SQObject &b)
 }
 
 
-struct SQDelegable : public SQRefCounted {
-	bool SetDelegate(SQTable *m);
-	virtual bool GetMetaMethod(SQVM *v,SQMetaMethod mm,SQObjectPtr &res);
+struct SQDelegable : public rabbit::RefCounted {
+	bool setDelegate(SQTable *m);
+	virtual bool getMetaMethod(SQVM *v,SQMetaMethod mm,SQObjectPtr &res);
 	SQTable *_delegate;
 };
 
-uint64_t TranslateIndex(const SQObjectPtr &idx);
+uint64_t translateIndex(const SQObjectPtr &idx);
 typedef sqvector<SQObjectPtr> SQObjectPtrVec;
 typedef sqvector<int64_t> SQIntVec;
-const SQChar *GetTypeName(const SQObjectPtr &obj1);
+const SQChar *getTypeName(const SQObjectPtr &obj1);
 const SQChar *IdType2Name(SQObjectType type);
 
 

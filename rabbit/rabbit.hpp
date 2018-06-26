@@ -27,19 +27,20 @@
 
 struct SQVM;
 struct SQTable;
-struct SQArray;
 struct SQString;
 struct SQClosure;
 struct SQGenerator;
 struct SQNativeClosure;
 struct SQFunctionProto;
-struct SQRefCounted;
 struct SQClass;
 struct SQInstance;
 struct SQDelegable;
 struct SQOuter;
 namespace rabbit {
 	class UserData;
+	class Array;
+	class RefCounted;
+	class WeakRef;
 	
 }
 #ifdef _UNICODE
@@ -116,7 +117,7 @@ typedef enum tagSQObjectType{
 typedef union tagSQObjectValue
 {
 	struct SQTable *pTable;
-	struct SQArray *pArray;
+	struct rabbit::Array *pArray;
 	struct SQClosure *pClosure;
 	struct SQOuter *pOuter;
 	struct SQGenerator *pGenerator;
@@ -127,12 +128,12 @@ typedef union tagSQObjectValue
 	float_t fFloat;
 	SQUserPointer pUserPointer;
 	struct SQFunctionProto *pFunctionProto;
-	struct SQRefCounted *pRefCounted;
+	struct rabbit::RefCounted *pRefCounted;
 	struct SQDelegable *pDelegable;
 	struct SQVM *pThread;
 	struct SQClass *pClass;
 	struct SQInstance *pInstance;
-	struct SQWeakRef *pWeakRef;
+	struct rabbit::WeakRef *pWeakRef;
 	SQRawObjectVal raw;
 }SQObjectValue;
 

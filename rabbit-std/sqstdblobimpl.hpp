@@ -39,7 +39,7 @@ struct SQBlob : public SQStream
 		_ptr += n;
 		return n;
 	}
-	bool Resize(int64_t n) {
+	bool resize(int64_t n) {
 		if(!_owns) return false;
 		if(n != _allocated) {
 			unsigned char *newbuf = (unsigned char *)sq_malloc(n);
@@ -63,9 +63,9 @@ struct SQBlob : public SQStream
 		bool ret = true;
 		if(_size + n > _allocated) {
 			if(_size + n > _size * 2)
-				ret = Resize(_size + n);
+				ret = resize(_size + n);
 			else
-				ret = Resize(_size * 2);
+				ret = resize(_size * 2);
 		}
 		_size = _size + n;
 		return ret;
@@ -101,7 +101,7 @@ struct SQBlob : public SQStream
 	int64_t Flush() { return 0; }
 	int64_t Tell() { return _ptr; }
 	int64_t Len() { return _size; }
-	SQUserPointer GetBuf(){ return _buf; }
+	SQUserPointer getBuf(){ return _buf; }
 private:
 	int64_t _size;
 	int64_t _allocated;

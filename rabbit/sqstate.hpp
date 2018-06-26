@@ -19,9 +19,9 @@ struct SQStringTable
 	SQStringTable(SQSharedState*ss);
 	~SQStringTable();
 	SQString *Add(const SQChar *,int64_t len);
-	void Remove(SQString *);
+	void remove(SQString *);
 private:
-	void Resize(int64_t size);
+	void resize(int64_t size);
 	void AllocNodes(int64_t size);
 	SQString **_strings;
 	uint64_t _numofslots;
@@ -38,13 +38,13 @@ struct RefTable {
 	RefTable();
 	~RefTable();
 	void AddRef(SQObject &obj);
-	SQBool Release(SQObject &obj);
-	uint64_t GetRefCount(SQObject &obj);
+	SQBool release(SQObject &obj);
+	uint64_t getRefCount(SQObject &obj);
 	void Finalize();
 private:
-	RefNode *Get(SQObject &obj,SQHash &mainpos,RefNode **prev,bool add);
+	RefNode *get(SQObject &obj,SQHash &mainpos,RefNode **prev,bool add);
 	RefNode *Add(SQHash mainpos,SQObject &obj);
-	void Resize(uint64_t size);
+	void resize(uint64_t size);
 	void AllocNodes(uint64_t size);
 	uint64_t _numofslots;
 	uint64_t _slotused;
@@ -54,7 +54,7 @@ private:
 };
 
 #define ADD_STRING(ss,str,len) ss->_stringtable->Add(str,len)
-#define REMOVE_STRING(ss,bstr) ss->_stringtable->Remove(bstr)
+#define REMOVE_STRING(ss,bstr) ss->_stringtable->remove(bstr)
 
 struct SQObjectPtr;
 
@@ -64,8 +64,8 @@ struct SQSharedState
 	~SQSharedState();
 	void Init();
 public:
-	SQChar* GetScratchPad(int64_t size);
-	int64_t GetMetaMethodIdxByName(const SQObjectPtr &name);
+	SQChar* getScratchPad(int64_t size);
+	int64_t getMetaMethodIdxByName(const SQObjectPtr &name);
 	SQObjectPtrVec *_metamethods;
 	SQObjectPtr _metamethodsmap;
 	SQObjectPtrVec *_systemstrings;
@@ -109,8 +109,8 @@ private:
 	int64_t _scratchpadsize;
 };
 
-#define _sp(s) (_sharedstate->GetScratchPad(s))
-#define _spval (_sharedstate->GetScratchPad(-1))
+#define _sp(s) (_sharedstate->getScratchPad(s))
+#define _spval (_sharedstate->getScratchPad(-1))
 
 #define _table_ddel	 _table(_sharedstate->_table_default_delegate)
 #define _array_ddel	 _table(_sharedstate->_array_default_delegate)

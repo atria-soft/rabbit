@@ -12,7 +12,7 @@
 #include <rabbit/sqclosure.hpp>
 #include <rabbit/sqstring.hpp>
 #include <rabbit/sqtable.hpp>
-#include <rabbit/sqarray.hpp>
+#include <rabbit/Array.hpp>
 #include <rabbit/UserData.hpp>
 #include <rabbit/sqclass.hpp>
 
@@ -28,11 +28,11 @@ SQSharedState::SQSharedState()
 }
 
 #define newsysstring(s) {   \
-	_systemstrings->push_back(SQString::Create(this,s));	\
+	_systemstrings->push_back(SQString::create(this,s));	\
 	}
 
 #define newmetamethod(s) {  \
-	_metamethods->push_back(SQString::Create(this,s));  \
+	_metamethods->push_back(SQString::create(this,s));  \
 	_table(_metamethodsmap)->NewSlot(_metamethods->back(),(int64_t)(_metamethods->size()-1)); \
 	}
 
@@ -77,17 +77,17 @@ bool CompileTypemask(SQIntVec &res,const SQChar *typemask)
 	return true;
 }
 
-SQTable *CreateDefaultDelegate(SQSharedState *ss,const SQRegFunction *funcz)
+SQTable *createDefaultDelegate(SQSharedState *ss,const SQRegFunction *funcz)
 {
 	int64_t i=0;
-	SQTable *t=SQTable::Create(ss,0);
+	SQTable *t=SQTable::create(ss,0);
 	while(funcz[i].name!=0){
-		SQNativeClosure *nc = SQNativeClosure::Create(ss,funcz[i].f,0);
+		SQNativeClosure *nc = SQNativeClosure::create(ss,funcz[i].f,0);
 		nc->_nparamscheck = funcz[i].nparamscheck;
-		nc->_name = SQString::Create(ss,funcz[i].name);
+		nc->_name = SQString::create(ss,funcz[i].name);
 		if(funcz[i].typemask && !CompileTypemask(nc->_typecheck,funcz[i].typemask))
 			return NULL;
-		t->NewSlot(SQString::Create(ss,funcz[i].name),nc);
+		t->NewSlot(SQString::create(ss,funcz[i].name),nc);
 		i++;
 	}
 	return t;
@@ -102,7 +102,7 @@ void SQSharedState::Init()
 	sq_new(_metamethods,SQObjectPtrVec);
 	sq_new(_systemstrings,SQObjectPtrVec);
 	sq_new(_types,SQObjectPtrVec);
-	_metamethodsmap = SQTable::Create(this,MT_LAST-1);
+	_metamethodsmap = SQTable::create(this,MT_LAST-1);
 	//adding type strings to avoid memory trashing
 	//types names
 	newsysstring(_SC("null"));
@@ -140,19 +140,19 @@ void SQSharedState::Init()
 	newmetamethod(MM_NEWMEMBER);
 	newmetamethod(MM_INHERITED);
 
-	_constructoridx = SQString::Create(this,_SC("constructor"));
-	_registry = SQTable::Create(this,0);
-	_consts = SQTable::Create(this,0);
-	_table_default_delegate = CreateDefaultDelegate(this,_table_default_delegate_funcz);
-	_array_default_delegate = CreateDefaultDelegate(this,_array_default_delegate_funcz);
-	_string_default_delegate = CreateDefaultDelegate(this,_string_default_delegate_funcz);
-	_number_default_delegate = CreateDefaultDelegate(this,_number_default_delegate_funcz);
-	_closure_default_delegate = CreateDefaultDelegate(this,_closure_default_delegate_funcz);
-	_generator_default_delegate = CreateDefaultDelegate(this,_generator_default_delegate_funcz);
-	_thread_default_delegate = CreateDefaultDelegate(this,_thread_default_delegate_funcz);
-	_class_default_delegate = CreateDefaultDelegate(this,_class_default_delegate_funcz);
-	_instance_default_delegate = CreateDefaultDelegate(this,_instance_default_delegate_funcz);
-	_weakref_default_delegate = CreateDefaultDelegate(this,_weakref_default_delegate_funcz);
+	_constructoridx = SQString::create(this,_SC("constructor"));
+	_registry = SQTable::create(this,0);
+	_consts = SQTable::create(this,0);
+	_table_default_delegate = createDefaultDelegate(this,_table_default_delegate_funcz);
+	_array_default_delegate = createDefaultDelegate(this,_array_default_delegate_funcz);
+	_string_default_delegate = createDefaultDelegate(this,_string_default_delegate_funcz);
+	_number_default_delegate = createDefaultDelegate(this,_number_default_delegate_funcz);
+	_closure_default_delegate = createDefaultDelegate(this,_closure_default_delegate_funcz);
+	_generator_default_delegate = createDefaultDelegate(this,_generator_default_delegate_funcz);
+	_thread_default_delegate = createDefaultDelegate(this,_thread_default_delegate_funcz);
+	_class_default_delegate = createDefaultDelegate(this,_class_default_delegate_funcz);
+	_instance_default_delegate = createDefaultDelegate(this,_instance_default_delegate_funcz);
+	_weakref_default_delegate = createDefaultDelegate(this,_weakref_default_delegate_funcz);
 }
 
 SQSharedState::~SQSharedState()
@@ -191,19 +191,19 @@ SQSharedState::~SQSharedState()
 }
 
 
-int64_t SQSharedState::GetMetaMethodIdxByName(const SQObjectPtr &name)
+int64_t SQSharedState::getMetaMethodIdxByName(const SQObjectPtr &name)
 {
 	if(sq_type(name) != OT_STRING)
 		return -1;
 	SQObjectPtr ret;
-	if(_table(_metamethodsmap)->Get(name,ret)) {
+	if(_table(_metamethodsmap)->get(name,ret)) {
 		return _integer(ret);
 	}
 	return -1;
 }
 
 
-SQChar* SQSharedState::GetScratchPad(int64_t size)
+SQChar* SQSharedState::getScratchPad(int64_t size)
 {
 	int64_t newsize;
 	if(size>0) {
@@ -245,24 +245,24 @@ void RefTable::AddRef(SQObject &obj)
 {
 	SQHash mainpos;
 	RefNode *prev;
-	RefNode *ref = Get(obj,mainpos,&prev,true);
+	RefNode *ref = get(obj,mainpos,&prev,true);
 	ref->refs++;
 }
 
-uint64_t RefTable::GetRefCount(SQObject &obj)
+uint64_t RefTable::getRefCount(SQObject &obj)
 {
 	 SQHash mainpos;
 	 RefNode *prev;
-	 RefNode *ref = Get(obj,mainpos,&prev,true);
+	 RefNode *ref = get(obj,mainpos,&prev,true);
 	 return ref->refs;
 }
 
 
-SQBool RefTable::Release(SQObject &obj)
+SQBool RefTable::release(SQObject &obj)
 {
 	SQHash mainpos;
 	RefNode *prev;
-	RefNode *ref = Get(obj,mainpos,&prev,false);
+	RefNode *ref = get(obj,mainpos,&prev,false);
 	if(ref) {
 		if(--ref->refs == 0) {
 			SQObjectPtr o = ref->obj;
@@ -286,7 +286,7 @@ SQBool RefTable::Release(SQObject &obj)
 	return SQFalse;
 }
 
-void RefTable::Resize(uint64_t size)
+void RefTable::resize(uint64_t size)
 {
 	RefNode **oldbucks = _buckets;
 	RefNode *t = _nodes;
@@ -322,7 +322,7 @@ RefTable::RefNode *RefTable::Add(SQHash mainpos,SQObject &obj)
 	return newnode;
 }
 
-RefTable::RefNode *RefTable::Get(SQObject &obj,SQHash &mainpos,RefNode **prev,bool add)
+RefTable::RefNode *RefTable::get(SQObject &obj,SQHash &mainpos,RefNode **prev,bool add)
 {
 	RefNode *ref;
 	mainpos = ::HashObj(obj)&(_numofslots-1);
@@ -336,7 +336,7 @@ RefTable::RefNode *RefTable::Get(SQObject &obj,SQHash &mainpos,RefNode **prev,bo
 	if(ref == NULL && add) {
 		if(_numofslots == _slotused) {
 			assert(_freelist == 0);
-			Resize(_numofslots*2);
+			resize(_numofslots*2);
 			mainpos = ::HashObj(obj)&(_numofslots-1);
 		}
 		ref = Add(mainpos,obj);
@@ -420,11 +420,11 @@ SQString *SQStringTable::Add(const SQChar *news,int64_t len)
 	_strings[h] = t;
 	_slotused++;
 	if (_slotused > _numofslots)  /* too crowded? */
-		Resize(_numofslots*2);
+		resize(_numofslots*2);
 	return t;
 }
 
-void SQStringTable::Resize(int64_t size)
+void SQStringTable::resize(int64_t size)
 {
 	int64_t oldsize=_numofslots;
 	SQString **oldtable=_strings;
@@ -442,7 +442,7 @@ void SQStringTable::Resize(int64_t size)
 	SQ_FREE(oldtable,oldsize*sizeof(SQString*));
 }
 
-void SQStringTable::Remove(SQString *bs)
+void SQStringTable::remove(SQString *bs)
 {
 	SQString *s;
 	SQString *prev=NULL;

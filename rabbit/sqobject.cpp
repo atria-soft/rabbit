@@ -8,7 +8,7 @@
 #include <rabbit/sqpcheader.hpp>
 #include <rabbit/sqvm.hpp>
 #include <rabbit/sqstring.hpp>
-#include <rabbit/sqarray.hpp>
+#include <rabbit/Array.hpp>
 #include <rabbit/sqtable.hpp>
 #include <rabbit/UserData.hpp>
 #include <rabbit/sqfuncproto.hpp>
@@ -45,25 +45,25 @@ const SQChar *IdType2Name(SQObjectType type)
 	}
 }
 
-const SQChar *GetTypeName(const SQObjectPtr &obj1)
+const SQChar *getTypeName(const SQObjectPtr &obj1)
 {
 	return IdType2Name(sq_type(obj1));
 }
 
-SQString *SQString::Create(SQSharedState *ss,const SQChar *s,int64_t len)
+SQString *SQString::create(SQSharedState *ss,const SQChar *s,int64_t len)
 {
 	SQString *str=ADD_STRING(ss,s,len);
 	return str;
 }
 
-void SQString::Release()
+void SQString::release()
 {
 	REMOVE_STRING(_sharedstate,this);
 }
 
-int64_t SQString::Next(const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval)
+int64_t SQString::next(const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval)
 {
-	int64_t idx = (int64_t)TranslateIndex(refpos);
+	int64_t idx = (int64_t)translateIndex(refpos);
 	while(idx < _len){
 		outkey = (int64_t)idx;
 		outval = (int64_t)((uint64_t)_val[idx]);
@@ -74,7 +74,7 @@ int64_t SQString::Next(const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectP
 	return -1;
 }
 
-uint64_t TranslateIndex(const SQObjectPtr &idx)
+uint64_t translateIndex(const SQObjectPtr &idx)
 {
 	switch(sq_type(idx)){
 		case OT_NULL:
@@ -86,42 +86,16 @@ uint64_t TranslateIndex(const SQObjectPtr &idx)
 	return 0;
 }
 
-SQWeakRef *SQRefCounted::GetWeakRef(SQObjectType type)
-{
-	if(!_weakref) {
-		sq_new(_weakref,SQWeakRef);
-#if defined(SQUSEDOUBLE) && !defined(_SQ64)
-		_weakref->_obj._unVal.raw = 0; //clean the whole union on 32 bits with double
-#endif
-		_weakref->_obj._type = type;
-		_weakref->_obj._unVal.pRefCounted = this;
-	}
-	return _weakref;
-}
 
-SQRefCounted::~SQRefCounted()
-{
-	if(_weakref) {
-		_weakref->_obj._type = OT_NULL;
-		_weakref->_obj._unVal.pRefCounted = NULL;
-	}
-}
 
-void SQWeakRef::Release() {
-	if(ISREFCOUNTED(_obj._type)) {
-		_obj._unVal.pRefCounted->_weakref = NULL;
-	}
-	sq_delete(this,SQWeakRef);
-}
-
-bool SQDelegable::GetMetaMethod(SQVM *v,SQMetaMethod mm,SQObjectPtr &res) {
+bool SQDelegable::getMetaMethod(SQVM *v,SQMetaMethod mm,SQObjectPtr &res) {
 	if(_delegate) {
-		return _delegate->Get((*_ss(v)->_metamethods)[mm],res);
+		return _delegate->get((*_ss(v)->_metamethods)[mm],res);
 	}
 	return false;
 }
 
-bool SQDelegable::SetDelegate(SQTable *mt)
+bool SQDelegable::setDelegate(SQTable *mt)
 {
 	SQTable *temp = mt;
 	if(temp == this) return false;
@@ -130,7 +104,7 @@ bool SQDelegable::SetDelegate(SQTable *mt)
 		temp = temp->_delegate;
 	}
 	if (mt) __ObjAddRef(mt);
-	__ObjRelease(_delegate);
+	__Objrelease(_delegate);
 	_delegate = mt;
 	return true;
 }
@@ -143,7 +117,7 @@ bool SQGenerator::Yield(SQVM *v,int64_t target)
 
 	_stack.resize(size);
 	SQObject _this = v->_stack[v->_stackbase];
-	_stack._vals[0] = ISREFCOUNTED(sq_type(_this)) ? SQObjectPtr(_refcounted(_this)->GetWeakRef(sq_type(_this))) : _this;
+	_stack._vals[0] = ISREFCOUNTED(sq_type(_this)) ? SQObjectPtr(_refcounted(_this)->getWeakRef(sq_type(_this))) : _this;
 	for(int64_t n =1; n<target; n++) {
 		_stack._vals[n] = v->_stack[v->_stackbase+n];
 	}
@@ -209,14 +183,14 @@ bool SQGenerator::Resume(SQVM *v,SQObjectPtr &dest)
 	return true;
 }
 
-void SQArray::Extend(const SQArray *a){
+void rabbit::Array::extend(const rabbit::Array *a){
 	int64_t xlen;
-	if((xlen=a->Size()))
+	if((xlen=a->size()))
 		for(int64_t i=0;i<xlen;i++)
-			Append(a->_values[i]);
+			append((*a)[i]);
 }
 
-const SQChar* SQFunctionProto::GetLocal(SQVM *vm,uint64_t stackbase,uint64_t nseq,uint64_t nop)
+const SQChar* SQFunctionProto::getLocal(SQVM *vm,uint64_t stackbase,uint64_t nseq,uint64_t nop)
 {
 	uint64_t nvars=_nlocalvarinfos;
 	const SQChar *res=NULL;
@@ -237,7 +211,7 @@ const SQChar* SQFunctionProto::GetLocal(SQVM *vm,uint64_t stackbase,uint64_t nse
 }
 
 
-int64_t SQFunctionProto::GetLine(SQInstruction *curr)
+int64_t SQFunctionProto::getLine(SQInstruction *curr)
 {
 	int64_t op = (int64_t)(curr-_instructions);
 	int64_t line=_lineinfos[0]._line;
@@ -273,9 +247,9 @@ int64_t SQFunctionProto::GetLine(SQInstruction *curr)
 
 SQClosure::~SQClosure()
 {
-	__ObjRelease(_root);
-	__ObjRelease(_env);
-	__ObjRelease(_base);
+	__Objrelease(_root);
+	__Objrelease(_env);
+	__Objrelease(_base);
 }
 
 #define _CHECK_IO(exp)  { if(!exp)return false; }
@@ -330,7 +304,7 @@ bool WriteObject(HRABBITVM v,SQUserPointer up,SQWRITEFUNC write,SQObjectPtr &o)
 	case OT_NULL:
 		break;
 	default:
-		v->Raise_Error(_SC("cannot serialize a %s"),GetTypeName(o));
+		v->Raise_Error(_SC("cannot serialize a %s"),getTypeName(o));
 		return false;
 	}
 	return true;
@@ -345,8 +319,8 @@ bool ReadObject(HRABBITVM v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &o)
 	case OT_STRING:{
 		int64_t len;
 		_CHECK_IO(SafeRead(v,read,up,&len,sizeof(int64_t)));
-		_CHECK_IO(SafeRead(v,read,up,_ss(v)->GetScratchPad(sq_rsl(len)),sq_rsl(len)));
-		o=SQString::Create(_ss(v),_ss(v)->GetScratchPad(-1),len);
+		_CHECK_IO(SafeRead(v,read,up,_ss(v)->getScratchPad(sq_rsl(len)),sq_rsl(len)));
+		o=SQString::create(_ss(v),_ss(v)->getScratchPad(-1),len);
 				   }
 		break;
 	case OT_INTEGER:{
@@ -391,7 +365,7 @@ bool SQClosure::Load(SQVM *v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &ret)
 	SQObjectPtr func;
 	_CHECK_IO(SQFunctionProto::Load(v,up,read,func));
 	_CHECK_IO(CheckTag(v,read,up,SQ_CLOSURESTREAM_TAIL));
-	ret = SQClosure::Create(_ss(v),_funcproto(func),_table(v->_roottable)->GetWeakRef(OT_TABLE));
+	ret = SQClosure::create(_ss(v),_funcproto(func),_table(v->_roottable)->getWeakRef(OT_TABLE));
 	//FIXME: load an root for this closure
 	return true;
 }
@@ -491,7 +465,7 @@ bool SQFunctionProto::Load(SQVM *v,SQUserPointer up,SQREADFUNC read,SQObjectPtr 
 	_CHECK_IO(SafeRead(v,read,up, &nfunctions, sizeof(nfunctions)));
 
 
-	SQFunctionProto *f = SQFunctionProto::Create(NULL,ninstructions,nliterals,nparameters,
+	SQFunctionProto *f = SQFunctionProto::create(NULL,ninstructions,nliterals,nparameters,
 			nfunctions,noutervalues,nlineinfos,nlocalvarinfos,ndefaultparams);
 	SQObjectPtr proto = f; //gets a ref in case of failure
 	f->_sourcename = sourcename;

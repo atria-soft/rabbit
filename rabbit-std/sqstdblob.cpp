@@ -25,7 +25,7 @@ static int64_t _blob_resize(HRABBITVM v)
 	SETUP_BLOB(v);
 	int64_t size;
 	sq_getinteger(v,2,&size);
-	if(!self->Resize(size))
+	if(!self->resize(size))
 		return sq_throwerror(v,_SC("resize failed"));
 	return 0;
 }
@@ -47,7 +47,7 @@ static int64_t _blob_swap4(HRABBITVM v)
 {
 	SETUP_BLOB(v);
 	int64_t num=(self->Len()-(self->Len()%4))>>2;
-	unsigned int *t=(unsigned int *)self->GetBuf();
+	unsigned int *t=(unsigned int *)self->getBuf();
 	for(int64_t i = 0; i < num; i++) {
 		__swap_dword(&t[i]);
 	}
@@ -58,7 +58,7 @@ static int64_t _blob_swap2(HRABBITVM v)
 {
 	SETUP_BLOB(v);
 	int64_t num=(self->Len()-(self->Len()%2))>>1;
-	unsigned short *t = (unsigned short *)self->GetBuf();
+	unsigned short *t = (unsigned short *)self->getBuf();
 	for(int64_t i = 0; i < num; i++) {
 		__swap_word(&t[i]);
 	}
@@ -73,7 +73,7 @@ static int64_t _blob__set(HRABBITVM v)
 	sq_getinteger(v,3,&val);
 	if(idx < 0 || idx >= self->Len())
 		return sq_throwerror(v,_SC("index out of range"));
-	((unsigned char *)self->GetBuf())[idx] = (unsigned char) val;
+	((unsigned char *)self->getBuf())[idx] = (unsigned char) val;
 	sq_push(v,3);
 	return 1;
 }
@@ -91,7 +91,7 @@ static int64_t _blob__get(HRABBITVM v)
 	sq_getinteger(v,2,&idx);
 	if(idx < 0 || idx >= self->Len())
 		return sq_throwerror(v,_SC("index out of range"));
-	sq_pushinteger(v,((unsigned char *)self->GetBuf())[idx]);
+	sq_pushinteger(v,((unsigned char *)self->getBuf())[idx]);
 	return 1;
 }
 
@@ -157,7 +157,7 @@ static int64_t _blob__cloned(HRABBITVM v)
 	}
 	//SQBlob *thisone = new SQBlob(other->Len());
 	SQBlob *thisone = new (sq_malloc(sizeof(SQBlob)))SQBlob(other->Len());
-	memcpy(thisone->GetBuf(),other->GetBuf(),thisone->Len());
+	memcpy(thisone->getBuf(),other->getBuf(),thisone->Len());
 	if(SQ_FAILED(sq_setinstanceup(v,1,thisone))) {
 		thisone->~SQBlob();
 		sq_free(thisone,sizeof(SQBlob));
@@ -244,7 +244,7 @@ SQRESULT sqstd_getblob(HRABBITVM v,int64_t idx,SQUserPointer *ptr)
 	SQBlob *blob;
 	if(SQ_FAILED(sq_getinstanceup(v,idx,(SQUserPointer *)&blob,(SQUserPointer)SQSTD_BLOB_TYPE_TAG)))
 		return -1;
-	*ptr = blob->GetBuf();
+	*ptr = blob->getBuf();
 	return SQ_OK;
 }
 
@@ -269,7 +269,7 @@ SQUserPointer sqstd_createblob(HRABBITVM v, int64_t size)
 		if(SQ_SUCCEEDED(sq_call(v,2,SQTrue,SQFalse))
 			&& SQ_SUCCEEDED(sq_getinstanceup(v,-1,(SQUserPointer *)&blob,(SQUserPointer)SQSTD_BLOB_TYPE_TAG))) {
 			sq_remove(v,-2);
-			return blob->GetBuf();
+			return blob->getBuf();
 		}
 	}
 	sq_settop(v,top);

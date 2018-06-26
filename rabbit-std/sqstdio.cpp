@@ -110,7 +110,7 @@ struct SQFile : public SQStream {
 	}
 	bool IsValid() { return _handle?true:false; }
 	bool EOS() { return Tell()==Len()?true:false;}
-	SQFILE GetHandle() {return _handle;}
+	SQFILE getHandle() {return _handle;}
 private:
 	SQFILE _handle;
 	bool _owns;
@@ -208,7 +208,7 @@ SQRESULT sqstd_getfile(HRABBITVM v, int64_t idx, SQFILE *file)
 {
 	SQFile *fileobj = NULL;
 	if(SQ_SUCCEEDED(sq_getinstanceup(v,idx,(SQUserPointer*)&fileobj,(SQUserPointer)SQSTD_FILE_TYPE_TAG))) {
-		*file = fileobj->GetHandle();
+		*file = fileobj->getHandle();
 		return SQ_OK;
 	}
 	return sq_throwerror(v,_SC("not a file"));

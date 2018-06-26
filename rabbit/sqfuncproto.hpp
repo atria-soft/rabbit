@@ -64,14 +64,14 @@ typedef sqvector<SQLineInfo> SQLineInfoVec;
 		+(localinf*sizeof(SQLocalVarInfo))+(defparams*sizeof(int64_t)))
 
 
-struct SQFunctionProto : public SQRefCounted
+struct SQFunctionProto : public rabbit::RefCounted
 {
 private:
 	SQFunctionProto(SQSharedState *ss);
 	~SQFunctionProto();
 
 public:
-	static SQFunctionProto *Create(SQSharedState *ss,int64_t ninstructions,
+	static SQFunctionProto *create(SQSharedState *ss,int64_t ninstructions,
 		int64_t nliterals,int64_t nparameters,
 		int64_t nfunctions,int64_t noutervalues,
 		int64_t nlineinfos,int64_t nlocalvarinfos,int64_t ndefaultparams)
@@ -104,7 +104,7 @@ public:
 		_CONSTRUCT_VECTOR(SQLocalVarInfo,f->_nlocalvarinfos,f->_localvarinfos);
 		return f;
 	}
-	void Release(){
+	void release(){
 		_DESTRUCT_VECTOR(SQObjectPtr,_nliterals,_literals);
 		_DESTRUCT_VECTOR(SQObjectPtr,_nparameters,_parameters);
 		_DESTRUCT_VECTOR(SQObjectPtr,_nfunctions,_functions);
@@ -116,8 +116,8 @@ public:
 		sq_vm_free(this,size);
 	}
 
-	const SQChar* GetLocal(SQVM *v,uint64_t stackbase,uint64_t nseq,uint64_t nop);
-	int64_t GetLine(SQInstruction *curr);
+	const SQChar* getLocal(SQVM *v,uint64_t stackbase,uint64_t nseq,uint64_t nop);
+	int64_t getLine(SQInstruction *curr);
 	bool Save(SQVM *v,SQUserPointer up,SQWRITEFUNC write);
 	static bool Load(SQVM *v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &ret);
 	SQObjectPtr _sourcename;

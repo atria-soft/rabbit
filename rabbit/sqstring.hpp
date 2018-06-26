@@ -16,14 +16,14 @@ inline SQHash _hashstr (const SQChar *s, size_t l)
 		return h;
 }
 
-struct SQString : public SQRefCounted
+struct SQString : public rabbit::RefCounted
 {
 	SQString(){}
 	~SQString(){}
 public:
-	static SQString *Create(SQSharedState *ss, const SQChar *, int64_t len = -1 );
-	int64_t Next(const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval);
-	void Release();
+	static SQString *create(SQSharedState *ss, const SQChar *, int64_t len = -1 );
+	int64_t next(const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval);
+	void release();
 	SQSharedState *_sharedstate;
 	SQString *_next; //chain for the string table
 	int64_t _len;

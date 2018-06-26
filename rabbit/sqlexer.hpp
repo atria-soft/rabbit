@@ -22,13 +22,13 @@ struct SQLexer
 	int64_t Lex();
 	const SQChar *Tok2Str(int64_t tok);
 private:
-	int64_t GetIDType(const SQChar *s,int64_t len);
+	int64_t getIDType(const SQChar *s,int64_t len);
 	int64_t ReadString(int64_t ndelim,bool verbatim);
 	int64_t ReadNumber();
 	void LexBlockComment();
 	void LexLineComment();
 	int64_t ReadID();
-	void Next();
+	void next();
 #ifdef SQUNICODE
 #if WCHAR_SIZE == 2
 	int64_t AddUTF16(uint64_t ch);

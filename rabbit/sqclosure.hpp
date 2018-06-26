@@ -11,7 +11,7 @@
 
 struct SQFunctionProto;
 struct SQClass;
-struct SQClosure : public SQRefCounted
+struct SQClosure : public rabbit::RefCounted
 {
 private:
 	SQClosure(SQSharedState *ss,SQFunctionProto *func){
@@ -21,7 +21,7 @@ private:
 		_root=NULL;
 	}
 public:
-	static SQClosure *Create(SQSharedState *ss,SQFunctionProto *func,SQWeakRef *root){
+	static SQClosure *create(SQSharedState *ss,SQFunctionProto *func,rabbit::WeakRef *root){
 		int64_t size = _CALC_CLOSURE_SIZE(func);
 		SQClosure *nc=(SQClosure*)SQ_MALLOC(size);
 		new (nc) SQClosure(ss,func);
@@ -33,25 +33,25 @@ public:
 		_CONSTRUCT_VECTOR(SQObjectPtr,func->_ndefaultparams,nc->_defaultparams);
 		return nc;
 	}
-	void Release(){
+	void release(){
 		SQFunctionProto *f = _function;
 		int64_t size = _CALC_CLOSURE_SIZE(f);
 		_DESTRUCT_VECTOR(SQObjectPtr,f->_noutervalues,_outervalues);
 		_DESTRUCT_VECTOR(SQObjectPtr,f->_ndefaultparams,_defaultparams);
-		__ObjRelease(_function);
+		__Objrelease(_function);
 		this->~SQClosure();
 		sq_vm_free(this,size);
 	}
-	void SetRoot(SQWeakRef *r)
+	void setRoot(rabbit::WeakRef *r)
 	{
-		__ObjRelease(_root);
+		__Objrelease(_root);
 		_root = r;
 		__ObjAddRef(_root);
 	}
-	SQClosure *Clone()
+	SQClosure *clone()
 	{
 		SQFunctionProto *f = _function;
-		SQClosure * ret = SQClosure::Create(NULL,f,_root);
+		SQClosure * ret = SQClosure::create(NULL,f,_root);
 		ret->_env = _env;
 		if(ret->_env) __ObjAddRef(ret->_env);
 		_COPY_VECTOR(ret->_outervalues,_outervalues,f->_noutervalues);
@@ -62,8 +62,8 @@ public:
 
 	bool Save(SQVM *v,SQUserPointer up,SQWRITEFUNC write);
 	static bool Load(SQVM *v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &ret);
-	SQWeakRef *_env;
-	SQWeakRef *_root;
+	rabbit::WeakRef *_env;
+	rabbit::WeakRef *_root;
 	SQClass *_base;
 	SQFunctionProto *_function;
 	SQObjectPtr *_outervalues;
@@ -71,7 +71,7 @@ public:
 };
 
 //////////////////////////////////////////////
-struct SQOuter : public SQRefCounted
+struct SQOuter : public rabbit::RefCounted
 {
 
 private:
@@ -81,7 +81,7 @@ private:
 	}
 
 public:
-	static SQOuter *Create(SQSharedState *ss, SQObjectPtr *outer)
+	static SQOuter *create(SQSharedState *ss, SQObjectPtr *outer)
 	{
 		SQOuter *nc  = (SQOuter*)SQ_MALLOC(sizeof(SQOuter));
 		new (nc) SQOuter(ss, outer);
@@ -91,7 +91,7 @@ public:
 		
 	}
 
-	void Release()
+	void release()
 	{
 		this->~SQOuter();
 		sq_vm_free(this,sizeof(SQOuter));
@@ -104,7 +104,7 @@ public:
 };
 
 //////////////////////////////////////////////
-struct SQGenerator : public SQRefCounted
+struct SQGenerator : public rabbit::RefCounted
 {
 	enum SQGeneratorState{eRunning,eSuspended,eDead};
 private:
@@ -114,7 +114,7 @@ private:
 		_ci._generator=NULL;
 	}
 public:
-	static SQGenerator *Create(SQSharedState *ss,SQClosure *closure){
+	static SQGenerator *create(SQSharedState *ss,SQClosure *closure){
 		SQGenerator *nc=(SQGenerator*)SQ_MALLOC(sizeof(SQGenerator));
 		new (nc) SQGenerator(ss,closure);
 		return nc;
@@ -127,7 +127,7 @@ public:
 		_state=eDead;
 		_stack.resize(0);
 		_closure.Null();}
-	void Release(){
+	void release(){
 		sq_delete(this,SQGenerator);
 	}
 
@@ -142,7 +142,7 @@ public:
 
 #define _CALC_NATVIVECLOSURE_SIZE(noutervalues) (sizeof(SQNativeClosure) + (noutervalues*sizeof(SQObjectPtr)))
 
-struct SQNativeClosure : public SQRefCounted
+struct SQNativeClosure : public rabbit::RefCounted
 {
 private:
 	SQNativeClosure(SQSharedState *ss,SQFUNCTION func){
@@ -150,7 +150,7 @@ private:
 		_env = NULL;
 	}
 public:
-	static SQNativeClosure *Create(SQSharedState *ss,SQFUNCTION func,int64_t nouters)
+	static SQNativeClosure *create(SQSharedState *ss,SQFUNCTION func,int64_t nouters)
 	{
 		int64_t size = _CALC_NATVIVECLOSURE_SIZE(nouters);
 		SQNativeClosure *nc=(SQNativeClosure*)SQ_MALLOC(size);
@@ -160,9 +160,9 @@ public:
 		_CONSTRUCT_VECTOR(SQObjectPtr,nc->_noutervalues,nc->_outervalues);
 		return nc;
 	}
-	SQNativeClosure *Clone()
+	SQNativeClosure *clone()
 	{
-		SQNativeClosure * ret = SQNativeClosure::Create(NULL,_function,_noutervalues);
+		SQNativeClosure * ret = SQNativeClosure::create(NULL,_function,_noutervalues);
 		ret->_env = _env;
 		if(ret->_env) __ObjAddRef(ret->_env);
 		ret->_name = _name;
@@ -173,9 +173,9 @@ public:
 	}
 	~SQNativeClosure()
 	{
-		__ObjRelease(_env);
+		__Objrelease(_env);
 	}
-	void Release(){
+	void release(){
 		int64_t size = _CALC_NATVIVECLOSURE_SIZE(_noutervalues);
 		_DESTRUCT_VECTOR(SQObjectPtr,_noutervalues,_outervalues);
 		this->~SQNativeClosure();
@@ -186,7 +186,7 @@ public:
 	SQIntVec _typecheck;
 	SQObjectPtr *_outervalues;
 	uint64_t _noutervalues;
-	SQWeakRef *_env;
+	rabbit::WeakRef *_env;
 	SQFUNCTION _function;
 	SQObjectPtr _name;
 };

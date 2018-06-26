@@ -9,7 +9,7 @@
 #include <rabbit/sqvm.hpp>
 #include <rabbit/sqstring.hpp>
 #include <rabbit/sqtable.hpp>
-#include <rabbit/sqarray.hpp>
+#include <rabbit/Array.hpp>
 #include <rabbit/sqfuncproto.hpp>
 #include <rabbit/sqclosure.hpp>
 #include <rabbit/UserData.hpp>
@@ -39,8 +39,8 @@ static bool sq_aux_gettypedarg(HRABBITVM v,int64_t idx,SQObjectType type,SQObjec
 int64_t sq_aux_invalidtype(HRABBITVM v,SQObjectType type)
 {
 	uint64_t buf_size = 100 *sizeof(SQChar);
-	scsprintf(_ss(v)->GetScratchPad(buf_size), buf_size, _SC("unexpected type %s"), IdType2Name(type));
-	return sq_throwerror(v, _ss(v)->GetScratchPad(-1));
+	scsprintf(_ss(v)->getScratchPad(buf_size), buf_size, _SC("unexpected type %s"), IdType2Name(type));
+	return sq_throwerror(v, _ss(v)->getScratchPad(-1));
 }
 
 HRABBITVM sq_open(int64_t initialstacksize)
@@ -133,7 +133,7 @@ SQRESULT sq_compile(HRABBITVM v,SQLEXREADFUNC read,SQUserPointer p,const SQChar 
 	SQObjectPtr o;
 #ifndef NO_COMPILER
 	if(Compile(v, read, p, sourcename, o, raiseerror?true:false, _ss(v)->_debuginfo)) {
-		v->Push(SQClosure::Create(_ss(v), _funcproto(o), _table(v->_roottable)->GetWeakRef(OT_TABLE)));
+		v->Push(SQClosure::create(_ss(v), _funcproto(o), _table(v->_roottable)->getWeakRef(OT_TABLE)));
 		return SQ_OK;
 	}
 	return SQ_ERROR;
@@ -161,21 +161,21 @@ void sq_addref(HRABBITVM v,HSQOBJECT *po)
 uint64_t sq_getrefcount(HRABBITVM v,HSQOBJECT *po)
 {
 	if(!ISREFCOUNTED(sq_type(*po))) return 0;
-   return po->_unVal.pRefCounted->_uiRef;
+   return po->_unVal.pRefCounted->refCountget();
 }
 
 SQBool sq_release(HRABBITVM v,HSQOBJECT *po)
 {
 	if(!ISREFCOUNTED(sq_type(*po))) return SQTrue;
-	bool ret = (po->_unVal.pRefCounted->_uiRef <= 1) ? SQTrue : SQFalse;
-	__Release(po->_type,po->_unVal);
+	bool ret = (po->_unVal.pRefCounted->refCountget() <= 1) ? SQTrue : SQFalse;
+	__release(po->_type,po->_unVal);
 	return ret; //the ret val doesn't work(and cannot be fixed)
 }
 
 uint64_t sq_getvmrefcount(HRABBITVM SQ_UNUSED_ARG(v), const HSQOBJECT *po)
 {
 	if (!ISREFCOUNTED(sq_type(*po))) return 0;
-	return po->_unVal.pRefCounted->_uiRef;
+	return po->_unVal.pRefCounted->refCountget();
 }
 
 const SQChar *sq_objtostring(const HSQOBJECT *o)
@@ -226,7 +226,7 @@ void sq_pushnull(HRABBITVM v)
 void sq_pushstring(HRABBITVM v,const SQChar *s,int64_t len)
 {
 	if(s)
-		v->Push(SQObjectPtr(SQString::Create(_ss(v), s, len)));
+		v->Push(SQObjectPtr(SQString::create(_ss(v), s, len)));
 	else v->PushNull();
 }
 
@@ -257,24 +257,24 @@ void sq_pushthread(HRABBITVM v, HRABBITVM thread)
 
 SQUserPointer sq_newuserdata(HRABBITVM v,uint64_t size)
 {
-	rabbit::UserData *ud = rabbit::UserData::Create(_ss(v), size + SQ_ALIGNMENT);
+	rabbit::UserData *ud = rabbit::UserData::create(_ss(v), size + SQ_ALIGNMENT);
 	v->Push(ud);
 	return (SQUserPointer)sq_aligning(ud + 1);
 }
 
 void sq_newtable(HRABBITVM v)
 {
-	v->Push(SQTable::Create(_ss(v), 0));
+	v->Push(SQTable::create(_ss(v), 0));
 }
 
 void sq_newtableex(HRABBITVM v,int64_t initialcapacity)
 {
-	v->Push(SQTable::Create(_ss(v), initialcapacity));
+	v->Push(SQTable::create(_ss(v), initialcapacity));
 }
 
 void sq_newarray(HRABBITVM v,int64_t size)
 {
-	v->Push(SQArray::Create(_ss(v), size));
+	v->Push(rabbit::Array::create(_ss(v), size));
 }
 
 SQRESULT sq_newclass(HRABBITVM v,SQBool hasbase)
@@ -286,7 +286,7 @@ SQRESULT sq_newclass(HRABBITVM v,SQBool hasbase)
 			return sq_throwerror(v,_SC("invalid base type"));
 		baseclass = _class(base);
 	}
-	SQClass *newclass = SQClass::Create(_ss(v), baseclass);
+	SQClass *newclass = SQClass::create(_ss(v), baseclass);
 	if(baseclass) v->Pop();
 	v->Push(newclass);
 	return SQ_OK;
@@ -306,7 +306,7 @@ SQRESULT sq_arrayappend(HRABBITVM v,int64_t idx)
 	sq_aux_paramscheck(v,2);
 	SQObjectPtr *arr;
 	_GETSAFE_OBJ(v, idx, OT_ARRAY,arr);
-	_array(*arr)->Append(v->GetUp(-1));
+	_array(*arr)->append(v->getUp(-1));
 	v->Pop();
 	return SQ_OK;
 }
@@ -316,9 +316,11 @@ SQRESULT sq_arraypop(HRABBITVM v,int64_t idx,SQBool pushval)
 	sq_aux_paramscheck(v, 1);
 	SQObjectPtr *arr;
 	_GETSAFE_OBJ(v, idx, OT_ARRAY,arr);
-	if(_array(*arr)->Size() > 0) {
-		if(pushval != 0){ v->Push(_array(*arr)->Top()); }
-		_array(*arr)->Pop();
+	if(_array(*arr)->size() > 0) {
+		if(pushval != 0){
+			v->Push(_array(*arr)->top());
+		}
+		_array(*arr)->pop();
 		return SQ_OK;
 	}
 	return sq_throwerror(v, _SC("empty array"));
@@ -330,7 +332,7 @@ SQRESULT sq_arrayresize(HRABBITVM v,int64_t idx,int64_t newsize)
 	SQObjectPtr *arr;
 	_GETSAFE_OBJ(v, idx, OT_ARRAY,arr);
 	if(newsize >= 0) {
-		_array(*arr)->Resize(newsize);
+		_array(*arr)->resize(newsize);
 		return SQ_OK;
 	}
 	return sq_throwerror(v,_SC("negative size"));
@@ -342,15 +344,16 @@ SQRESULT sq_arrayreverse(HRABBITVM v,int64_t idx)
 	sq_aux_paramscheck(v, 1);
 	SQObjectPtr *o;
 	_GETSAFE_OBJ(v, idx, OT_ARRAY,o);
-	SQArray *arr = _array(*o);
-	if(arr->Size() > 0) {
+	rabbit::Array *arr = _array(*o);
+	if(arr->size() > 0) {
 		SQObjectPtr t;
-		int64_t size = arr->Size();
+		int64_t size = arr->size();
 		int64_t n = size >> 1; size -= 1;
 		for(int64_t i = 0; i < n; i++) {
-			t = arr->_values[i];
-			arr->_values[i] = arr->_values[size-i];
-			arr->_values[size-i] = t;
+			// TODO: set a swap
+			t = (*arr)[i];
+			(*arr)[i] = (*arr)[size-i];
+			(*arr)[size-i] = t;
 		}
 		return SQ_OK;
 	}
@@ -362,7 +365,7 @@ SQRESULT sq_arrayremove(HRABBITVM v,int64_t idx,int64_t itemidx)
 	sq_aux_paramscheck(v, 1);
 	SQObjectPtr *arr;
 	_GETSAFE_OBJ(v, idx, OT_ARRAY,arr);
-	return _array(*arr)->Remove(itemidx) ? SQ_OK : sq_throwerror(v,_SC("index out of range"));
+	return _array(*arr)->remove(itemidx) ? SQ_OK : sq_throwerror(v,_SC("index out of range"));
 }
 
 SQRESULT sq_arrayinsert(HRABBITVM v,int64_t idx,int64_t destpos)
@@ -370,17 +373,17 @@ SQRESULT sq_arrayinsert(HRABBITVM v,int64_t idx,int64_t destpos)
 	sq_aux_paramscheck(v, 1);
 	SQObjectPtr *arr;
 	_GETSAFE_OBJ(v, idx, OT_ARRAY,arr);
-	SQRESULT ret = _array(*arr)->Insert(destpos, v->GetUp(-1)) ? SQ_OK : sq_throwerror(v,_SC("index out of range"));
+	SQRESULT ret = _array(*arr)->insert(destpos, v->getUp(-1)) ? SQ_OK : sq_throwerror(v,_SC("index out of range"));
 	v->Pop();
 	return ret;
 }
 
 void sq_newclosure(HRABBITVM v,SQFUNCTION func,uint64_t nfreevars)
 {
-	SQNativeClosure *nc = SQNativeClosure::Create(_ss(v), func,nfreevars);
+	SQNativeClosure *nc = SQNativeClosure::create(_ss(v), func,nfreevars);
 	nc->_nparamscheck = 0;
 	for(uint64_t i = 0; i < nfreevars; i++) {
-		nc->_outervalues[i] = v->Top();
+		nc->_outervalues[i] = v->top();
 		v->Pop();
 	}
 	v->Push(SQObjectPtr(nc));
@@ -411,7 +414,7 @@ SQRESULT sq_setnativeclosurename(HRABBITVM v,int64_t idx,const SQChar *name)
 	SQObject o = stack_get(v, idx);
 	if(sq_isnativeclosure(o)) {
 		SQNativeClosure *nc = _nativeclosure(o);
-		nc->_name = SQString::Create(_ss(v),name);
+		nc->_name = SQString::create(_ss(v),name);
 		return SQ_OK;
 	}
 	return sq_throwerror(v,_SC("the object is not a nativeclosure"));
@@ -451,11 +454,11 @@ SQRESULT sq_bindenv(HRABBITVM v,int64_t idx)
 		!sq_isclass(env) &&
 		!sq_isinstance(env))
 		return sq_throwerror(v,_SC("invalid environment"));
-	SQWeakRef *w = _refcounted(env)->GetWeakRef(sq_type(env));
+	rabbit::WeakRef *w = _refcounted(env)->getWeakRef(sq_type(env));
 	SQObjectPtr ret;
 	if(sq_isclosure(o)) {
-		SQClosure *c = _closure(o)->Clone();
-		__ObjRelease(c->_env);
+		SQClosure *c = _closure(o)->clone();
+		__Objrelease(c->_env);
 		c->_env = w;
 		__ObjAddRef(c->_env);
 		if(_closure(o)->_base) {
@@ -465,8 +468,8 @@ SQRESULT sq_bindenv(HRABBITVM v,int64_t idx)
 		ret = c;
 	}
 	else { //then must be a native closure
-		SQNativeClosure *c = _nativeclosure(o)->Clone();
-		__ObjRelease(c->_env);
+		SQNativeClosure *c = _nativeclosure(o)->clone();
+		__Objrelease(c->_env);
 		c->_env = w;
 		__ObjAddRef(c->_env);
 		ret = c;
@@ -498,7 +501,7 @@ SQRESULT sq_setclosureroot(HRABBITVM v,int64_t idx)
 	SQObject o = stack_get(v, -1);
 	if(!sq_isclosure(c)) return sq_throwerror(v, _SC("closure expected"));
 	if(sq_istable(o)) {
-		_closure(c)->SetRoot(_table(o)->GetWeakRef(OT_TABLE));
+		_closure(c)->setRoot(_table(o)->getWeakRef(OT_TABLE));
 		v->Pop();
 		return SQ_OK;
 	}
@@ -518,7 +521,7 @@ SQRESULT sq_clear(HRABBITVM v,int64_t idx)
 	SQObject &o=stack_get(v,idx);
 	switch(sq_type(o)) {
 		case OT_TABLE: _table(o)->Clear();  break;
-		case OT_ARRAY: _array(o)->Resize(0); break;
+		case OT_ARRAY: _array(o)->resize(0); break;
 		default:
 			return sq_throwerror(v, _SC("clear only works on table and array"));
 		break;
@@ -705,7 +708,7 @@ SQRESULT sq_clone(HRABBITVM v,int64_t idx)
 {
 	SQObjectPtr &o = stack_get(v,idx);
 	v->PushNull();
-	if(!v->Clone(o, stack_get(v, -1))){
+	if(!v->clone(o, stack_get(v, -1))){
 		v->Pop();
 		return SQ_ERROR;
 	}
@@ -719,8 +722,8 @@ int64_t sq_getsize(HRABBITVM v, int64_t idx)
 	switch(type) {
 	case OT_STRING:	 return _string(o)->_len;
 	case OT_TABLE:	  return _table(o)->CountUsed();
-	case OT_ARRAY:	  return _array(o)->Size();
-	case OT_USERDATA:   return _userdata(o)->getSize();
+	case OT_ARRAY:	  return _array(o)->size();
+	case OT_USERDATA:   return _userdata(o)->getsize();
 	case OT_INSTANCE:   return _instance(o)->_class->_udsize;
 	case OT_CLASS:	  return _class(o)->_udsize;
 	default:
@@ -852,7 +855,7 @@ void sq_poptop(HRABBITVM v)
 
 void sq_remove(HRABBITVM v, int64_t idx)
 {
-	v->Remove(idx);
+	v->remove(idx);
 }
 
 int64_t sq_cmp(HRABBITVM v)
@@ -867,9 +870,9 @@ SQRESULT sq_newslot(HRABBITVM v, int64_t idx, SQBool bstatic)
 	sq_aux_paramscheck(v, 3);
 	SQObjectPtr &self = stack_get(v, idx);
 	if(sq_type(self) == OT_TABLE || sq_type(self) == OT_CLASS) {
-		SQObjectPtr &key = v->GetUp(-2);
+		SQObjectPtr &key = v->getUp(-2);
 		if(sq_type(key) == OT_NULL) return sq_throwerror(v, _SC("null is not a valid key"));
-		v->NewSlot(self, key, v->GetUp(-1),bstatic?true:false);
+		v->NewSlot(self, key, v->getUp(-1),bstatic?true:false);
 		v->Pop(2);
 	}
 	return SQ_OK;
@@ -880,14 +883,14 @@ SQRESULT sq_deleteslot(HRABBITVM v,int64_t idx,SQBool pushval)
 	sq_aux_paramscheck(v, 2);
 	SQObjectPtr *self;
 	_GETSAFE_OBJ(v, idx, OT_TABLE,self);
-	SQObjectPtr &key = v->GetUp(-1);
+	SQObjectPtr &key = v->getUp(-1);
 	if(sq_type(key) == OT_NULL) return sq_throwerror(v, _SC("null is not a valid key"));
 	SQObjectPtr res;
 	if(!v->DeleteSlot(*self, key, res)){
 		v->Pop();
 		return SQ_ERROR;
 	}
-	if(pushval) v->GetUp(-1) = res;
+	if(pushval) v->getUp(-1) = res;
 	else v->Pop();
 	return SQ_OK;
 }
@@ -895,7 +898,7 @@ SQRESULT sq_deleteslot(HRABBITVM v,int64_t idx,SQBool pushval)
 SQRESULT sq_set(HRABBITVM v,int64_t idx)
 {
 	SQObjectPtr &self = stack_get(v, idx);
-	if(v->Set(self, v->GetUp(-2), v->GetUp(-1),DONT_FALL_BACK)) {
+	if(v->set(self, v->getUp(-2), v->getUp(-1),DONT_FALL_BACK)) {
 		v->Pop(2);
 		return SQ_OK;
 	}
@@ -905,30 +908,30 @@ SQRESULT sq_set(HRABBITVM v,int64_t idx)
 SQRESULT sq_rawset(HRABBITVM v,int64_t idx)
 {
 	SQObjectPtr &self = stack_get(v, idx);
-	SQObjectPtr &key = v->GetUp(-2);
+	SQObjectPtr &key = v->getUp(-2);
 	if(sq_type(key) == OT_NULL) {
 		v->Pop(2);
 		return sq_throwerror(v, _SC("null key"));
 	}
 	switch(sq_type(self)) {
 	case OT_TABLE:
-		_table(self)->NewSlot(key, v->GetUp(-1));
+		_table(self)->NewSlot(key, v->getUp(-1));
 		v->Pop(2);
 		return SQ_OK;
 	break;
 	case OT_CLASS:
-		_class(self)->NewSlot(_ss(v), key, v->GetUp(-1),false);
+		_class(self)->NewSlot(_ss(v), key, v->getUp(-1),false);
 		v->Pop(2);
 		return SQ_OK;
 	break;
 	case OT_INSTANCE:
-		if(_instance(self)->Set(key, v->GetUp(-1))) {
+		if(_instance(self)->set(key, v->getUp(-1))) {
 			v->Pop(2);
 			return SQ_OK;
 		}
 	break;
 	case OT_ARRAY:
-		if(v->Set(self, key, v->GetUp(-1),false)) {
+		if(v->set(self, key, v->getUp(-1),false)) {
 			v->Pop(2);
 			return SQ_OK;
 		}
@@ -937,16 +940,16 @@ SQRESULT sq_rawset(HRABBITVM v,int64_t idx)
 		v->Pop(2);
 		return sq_throwerror(v, _SC("rawset works only on array/table/class and instance"));
 	}
-	v->Raise_IdxError(v->GetUp(-2));return SQ_ERROR;
+	v->Raise_IdxError(v->getUp(-2));return SQ_ERROR;
 }
 
 SQRESULT sq_newmember(HRABBITVM v,int64_t idx,SQBool bstatic)
 {
 	SQObjectPtr &self = stack_get(v, idx);
 	if(sq_type(self) != OT_CLASS) return sq_throwerror(v, _SC("new member only works with classes"));
-	SQObjectPtr &key = v->GetUp(-3);
+	SQObjectPtr &key = v->getUp(-3);
 	if(sq_type(key) == OT_NULL) return sq_throwerror(v, _SC("null key"));
-	if(!v->NewSlotA(self,key,v->GetUp(-2),v->GetUp(-1),bstatic?true:false,false)) {
+	if(!v->NewSlotA(self,key,v->getUp(-2),v->getUp(-1),bstatic?true:false,false)) {
 		v->Pop(3);
 		return SQ_ERROR;
 	}
@@ -958,9 +961,9 @@ SQRESULT sq_rawnewmember(HRABBITVM v,int64_t idx,SQBool bstatic)
 {
 	SQObjectPtr &self = stack_get(v, idx);
 	if(sq_type(self) != OT_CLASS) return sq_throwerror(v, _SC("new member only works with classes"));
-	SQObjectPtr &key = v->GetUp(-3);
+	SQObjectPtr &key = v->getUp(-3);
 	if(sq_type(key) == OT_NULL) return sq_throwerror(v, _SC("null key"));
-	if(!v->NewSlotA(self,key,v->GetUp(-2),v->GetUp(-1),bstatic?true:false,true)) {
+	if(!v->NewSlotA(self,key,v->getUp(-2),v->getUp(-1),bstatic?true:false,true)) {
 		v->Pop(3);
 		return SQ_ERROR;
 	}
@@ -971,25 +974,25 @@ SQRESULT sq_rawnewmember(HRABBITVM v,int64_t idx,SQBool bstatic)
 SQRESULT sq_setdelegate(HRABBITVM v,int64_t idx)
 {
 	SQObjectPtr &self = stack_get(v, idx);
-	SQObjectPtr &mt = v->GetUp(-1);
+	SQObjectPtr &mt = v->getUp(-1);
 	SQObjectType type = sq_type(self);
 	switch(type) {
 	case OT_TABLE:
 		if(sq_type(mt) == OT_TABLE) {
-			if(!_table(self)->SetDelegate(_table(mt))) {
+			if(!_table(self)->setDelegate(_table(mt))) {
 				return sq_throwerror(v, _SC("delagate cycle"));
 			}
 			v->Pop();
 		}
 		else if(sq_type(mt)==OT_NULL) {
-			_table(self)->SetDelegate(NULL); v->Pop(); }
+			_table(self)->setDelegate(NULL); v->Pop(); }
 		else return sq_aux_invalidtype(v,type);
 		break;
 	case OT_USERDATA:
 		if(sq_type(mt)==OT_TABLE) {
-			_userdata(self)->SetDelegate(_table(mt)); v->Pop(); }
+			_userdata(self)->setDelegate(_table(mt)); v->Pop(); }
 		else if(sq_type(mt)==OT_NULL) {
-			_userdata(self)->SetDelegate(NULL); v->Pop(); }
+			_userdata(self)->setDelegate(NULL); v->Pop(); }
 		else return sq_aux_invalidtype(v, type);
 		break;
 	default:
@@ -1004,13 +1007,13 @@ SQRESULT sq_rawdeleteslot(HRABBITVM v,int64_t idx,SQBool pushval)
 	sq_aux_paramscheck(v, 2);
 	SQObjectPtr *self;
 	_GETSAFE_OBJ(v, idx, OT_TABLE,self);
-	SQObjectPtr &key = v->GetUp(-1);
+	SQObjectPtr &key = v->getUp(-1);
 	SQObjectPtr t;
-	if(_table(*self)->Get(key,t)) {
-		_table(*self)->Remove(key);
+	if(_table(*self)->get(key,t)) {
+		_table(*self)->remove(key);
 	}
 	if(pushval != 0)
-		v->GetUp(-1) = t;
+		v->getUp(-1) = t;
 	else
 		v->Pop();
 	return SQ_OK;
@@ -1037,8 +1040,8 @@ SQRESULT sq_getdelegate(HRABBITVM v,int64_t idx)
 SQRESULT sq_get(HRABBITVM v,int64_t idx)
 {
 	SQObjectPtr &self=stack_get(v,idx);
-	SQObjectPtr &obj = v->GetUp(-1);
-	if(v->Get(self,obj,obj,false,DONT_FALL_BACK))
+	SQObjectPtr &obj = v->getUp(-1);
+	if(v->get(self,obj,obj,false,DONT_FALL_BACK))
 		return SQ_OK;
 	v->Pop();
 	return SQ_ERROR;
@@ -1047,23 +1050,23 @@ SQRESULT sq_get(HRABBITVM v,int64_t idx)
 SQRESULT sq_rawget(HRABBITVM v,int64_t idx)
 {
 	SQObjectPtr &self=stack_get(v,idx);
-	SQObjectPtr &obj = v->GetUp(-1);
+	SQObjectPtr &obj = v->getUp(-1);
 	switch(sq_type(self)) {
 	case OT_TABLE:
-		if(_table(self)->Get(obj,obj))
+		if(_table(self)->get(obj,obj))
 			return SQ_OK;
 		break;
 	case OT_CLASS:
-		if(_class(self)->Get(obj,obj))
+		if(_class(self)->get(obj,obj))
 			return SQ_OK;
 		break;
 	case OT_INSTANCE:
-		if(_instance(self)->Get(obj,obj))
+		if(_instance(self)->get(obj,obj))
 			return SQ_OK;
 		break;
 	case OT_ARRAY:{
 		if(sq_isnumeric(obj)){
-			if(_array(self)->Get(tointeger(obj),obj)) {
+			if(_array(self)->get(tointeger(obj),obj)) {
 				return SQ_OK;
 			}
 		}
@@ -1107,7 +1110,7 @@ const SQChar *sq_getlocal(HRABBITVM v,uint64_t level,uint64_t idx)
 			return _stringval(func->_outervalues[idx]._name);
 		}
 		idx -= func->_noutervalues;
-		return func->GetLocal(v,stackbase,idx,(int64_t)(ci._ip-func->_instructions)-1);
+		return func->getLocal(v,stackbase,idx,(int64_t)(ci._ip-func->_instructions)-1);
 	}
 	return NULL;
 }
@@ -1124,13 +1127,13 @@ void sq_resetobject(HSQOBJECT *po)
 
 SQRESULT sq_throwerror(HRABBITVM v,const SQChar *err)
 {
-	v->_lasterror=SQString::Create(_ss(v),err);
+	v->_lasterror=SQString::create(_ss(v),err);
 	return SQ_ERROR;
 }
 
 SQRESULT sq_throwobject(HRABBITVM v)
 {
-	v->_lasterror = v->GetUp(-1);
+	v->_lasterror = v->getUp(-1);
 	v->Pop();
 	return SQ_ERROR;
 }
@@ -1159,10 +1162,10 @@ SQRESULT sq_reservestack(HRABBITVM v,int64_t nsize)
 
 SQRESULT sq_resume(HRABBITVM v,SQBool retval,SQBool raiseerror)
 {
-	if (sq_type(v->GetUp(-1)) == OT_GENERATOR)
+	if (sq_type(v->getUp(-1)) == OT_GENERATOR)
 	{
 		v->PushNull(); //retval
-		if (!v->Execute(v->GetUp(-2), 0, v->_top, v->GetUp(-1), raiseerror, SQVM::ET_RESUME_GENERATOR))
+		if (!v->Execute(v->getUp(-2), 0, v->_top, v->getUp(-1), raiseerror, SQVM::ET_RESUME_GENERATOR))
 		{v->Raise_Error(v->_lasterror); return SQ_ERROR;}
 		if(!retval)
 			v->Pop();
@@ -1174,7 +1177,7 @@ SQRESULT sq_resume(HRABBITVM v,SQBool retval,SQBool raiseerror)
 SQRESULT sq_call(HRABBITVM v,int64_t params,SQBool retval,SQBool raiseerror)
 {
 	SQObjectPtr res;
-	if(v->Call(v->GetUp(-(params+1)),params,v->_top-params,res,raiseerror?true:false)){
+	if(v->Call(v->getUp(-(params+1)),params,v->_top-params,res,raiseerror?true:false)){
 
 		if(!v->_suspended) {
 			v->Pop(params);//pop args
@@ -1195,7 +1198,7 @@ SQRESULT sq_call(HRABBITVM v,int64_t params,SQBool retval,SQBool raiseerror)
 
 SQRESULT sq_tailcall(HRABBITVM v, int64_t nparams)
 {
-	SQObjectPtr &res = v->GetUp(-(nparams + 1));
+	SQObjectPtr &res = v->getUp(-(nparams + 1));
 	if (sq_type(res) != OT_CLOSURE) {
 		return sq_throwerror(v, _SC("only closure can be tail called"));
 	}
@@ -1225,10 +1228,10 @@ SQRESULT sq_wakeupvm(HRABBITVM v,SQBool wakeupret,SQBool retval,SQBool raiseerro
 	int64_t target = v->_suspended_target;
 	if(wakeupret) {
 		if(target != -1) {
-			v->GetAt(v->_stackbase+v->_suspended_target)=v->GetUp(-1); //retval
+			v->getAt(v->_stackbase+v->_suspended_target)=v->getUp(-1); //retval
 		}
 		v->Pop();
-	} else if(target != -1) { v->GetAt(v->_stackbase+v->_suspended_target).Null(); }
+	} else if(target != -1) { v->getAt(v->_stackbase+v->_suspended_target).Null(); }
 	SQObjectPtr dummy;
 	if(!v->Execute(dummy,-1,-1,ret,raiseerror,throwerror?SQVM::ET_RESUME_THROW_VM : SQVM::ET_RESUME_VM)) {
 		return SQ_ERROR;
@@ -1311,7 +1314,7 @@ SQRESULT sq_readclosure(HRABBITVM v,SQREADFUNC r,SQUserPointer up)
 
 SQChar *sq_getscratchpad(HRABBITVM v,int64_t minsize)
 {
-	return _ss(v)->GetScratchPad(minsize);
+	return _ss(v)->getScratchPad(minsize);
 }
 
 SQRESULT sq_resurrectunreachable(HRABBITVM v)
@@ -1319,7 +1322,7 @@ SQRESULT sq_resurrectunreachable(HRABBITVM v)
 	return sq_throwerror(v,_SC("sq_resurrectunreachable requires a garbage collector build"));
 }
 
-// TODO: Remove this...
+// TODO: remove this...
 int64_t sq_collectgarbage(HRABBITVM v)
 {
 	return -1;
@@ -1403,8 +1406,8 @@ SQRESULT sq_setattributes(HRABBITVM v,int64_t idx)
 		v->Pop(2);
 		v->Push(attrs);
 		return SQ_OK;
-	}else if(_class(*o)->GetAttributes(key,attrs)) {
-		_class(*o)->SetAttributes(key,val);
+	}else if(_class(*o)->getAttributes(key,attrs)) {
+		_class(*o)->setAttributes(key,val);
 		v->Pop(2);
 		v->Push(attrs);
 		return SQ_OK;
@@ -1424,7 +1427,7 @@ SQRESULT sq_getattributes(HRABBITVM v,int64_t idx)
 		v->Push(attrs);
 		return SQ_OK;
 	}
-	else if(_class(*o)->GetAttributes(key,attrs)) {
+	else if(_class(*o)->getAttributes(key,attrs)) {
 		v->Pop();
 		v->Push(attrs);
 		return SQ_OK;
@@ -1439,7 +1442,7 @@ SQRESULT sq_getmemberhandle(HRABBITVM v,int64_t idx,HSQMEMBERHANDLE *handle)
 	SQObjectPtr &key = stack_get(v,-1);
 	SQTable *m = _class(*o)->_members;
 	SQObjectPtr val;
-	if(m->Get(key,val)) {
+	if(m->get(key,val)) {
 		handle->_static = _isfield(val) ? SQFalse : SQTrue;
 		handle->_index = _member_idx(val);
 		v->Pop();
@@ -1526,7 +1529,7 @@ SQRESULT sq_createinstance(HRABBITVM v,int64_t idx)
 {
 	SQObjectPtr *o = NULL;
 	_GETSAFE_OBJ(v, idx, OT_CLASS,o);
-	v->Push(_class(*o)->CreateInstance());
+	v->Push(_class(*o)->createInstance());
 	return SQ_OK;
 }
 
@@ -1534,7 +1537,7 @@ void sq_weakref(HRABBITVM v,int64_t idx)
 {
 	SQObject &o=stack_get(v,idx);
 	if(ISREFCOUNTED(sq_type(o))) {
-		v->Push(_refcounted(o)->GetWeakRef(sq_type(o)));
+		v->Push(_refcounted(o)->getWeakRef(sq_type(o)));
 		return;
 	}
 	v->Push(o);

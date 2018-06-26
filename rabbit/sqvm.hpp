@@ -37,7 +37,7 @@ struct SQExceptionTrap{
 
 typedef sqvector<SQExceptionTrap> ExceptionsTraps;
 
-struct SQVM : public SQRefCounted
+struct SQVM : public rabbit::RefCounted
 {
 	struct CallInfo{
 		//CallInfo() { _generator = NULL;}
@@ -67,22 +67,22 @@ public:
 	bool TailCall(SQClosure *closure, int64_t firstparam, int64_t nparams);
 	//starts a RABBIT call in the same "Execution loop"
 	bool StartCall(SQClosure *closure, int64_t target, int64_t nargs, int64_t stackbase, bool tailcall);
-	bool CreateClassInstance(SQClass *theclass, SQObjectPtr &inst, SQObjectPtr &constructor);
+	bool createClassInstance(SQClass *theclass, SQObjectPtr &inst, SQObjectPtr &constructor);
 	//call a generic closure pure RABBIT or NATIVE
 	bool Call(SQObjectPtr &closure, int64_t nparams, int64_t stackbase, SQObjectPtr &outres,SQBool raiseerror);
 	SQRESULT Suspend();
 
 	void CallDebugHook(int64_t type,int64_t forcedline=0);
 	void CallErrorHandler(SQObjectPtr &e);
-	bool Get(const SQObjectPtr &self, const SQObjectPtr &key, SQObjectPtr &dest, uint64_t getflags, int64_t selfidx);
-	int64_t FallBackGet(const SQObjectPtr &self,const SQObjectPtr &key,SQObjectPtr &dest);
+	bool get(const SQObjectPtr &self, const SQObjectPtr &key, SQObjectPtr &dest, uint64_t getflags, int64_t selfidx);
+	int64_t FallBackget(const SQObjectPtr &self,const SQObjectPtr &key,SQObjectPtr &dest);
 	bool InvokeDefaultDelegate(const SQObjectPtr &self,const SQObjectPtr &key,SQObjectPtr &dest);
-	bool Set(const SQObjectPtr &self, const SQObjectPtr &key, const SQObjectPtr &val, int64_t selfidx);
-	int64_t FallBackSet(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjectPtr &val);
+	bool set(const SQObjectPtr &self, const SQObjectPtr &key, const SQObjectPtr &val, int64_t selfidx);
+	int64_t FallBackset(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjectPtr &val);
 	bool NewSlot(const SQObjectPtr &self, const SQObjectPtr &key, const SQObjectPtr &val,bool bstatic);
 	bool NewSlotA(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjectPtr &val,const SQObjectPtr &attrs,bool bstatic,bool raw);
 	bool DeleteSlot(const SQObjectPtr &self, const SQObjectPtr &key, SQObjectPtr &res);
-	bool Clone(const SQObjectPtr &self, SQObjectPtr &target);
+	bool clone(const SQObjectPtr &self, SQObjectPtr &target);
 	bool ObjCmp(const SQObjectPtr &o1, const SQObjectPtr &o2,int64_t &res);
 	bool StringCat(const SQObjectPtr &str, const SQObjectPtr &obj, SQObjectPtr &dest);
 	static bool IsEqual(const SQObjectPtr &o1,const SQObjectPtr &o2,bool &res);
@@ -129,10 +129,10 @@ public:
 	}
 	bool EnterFrame(int64_t newbase, int64_t newtop, bool tailcall);
 	void LeaveFrame();
-	void Release(){ sq_delete(this,SQVM); }
+	void release(){ sq_delete(this,SQVM); }
 ////////////////////////////////////////////////////////////////////////////
 	//stack functions for the api
-	void Remove(int64_t n);
+	void remove(int64_t n);
 
 	static bool IsFalse(SQObjectPtr &o);
 
@@ -140,10 +140,10 @@ public:
 	void Pop(int64_t n);
 	void Push(const SQObjectPtr &o);
 	void PushNull();
-	SQObjectPtr &Top();
-	SQObjectPtr &PopGet();
-	SQObjectPtr &GetUp(int64_t n);
-	SQObjectPtr &GetAt(int64_t n);
+	SQObjectPtr &top();
+	SQObjectPtr &Popget();
+	SQObjectPtr &getUp(int64_t n);
+	SQObjectPtr &getAt(int64_t n);
 
 	SQObjectPtrVec _stack;
 
@@ -187,7 +187,7 @@ struct AutoDec{
 	int64_t *_n;
 };
 
-inline SQObjectPtr &stack_get(HRABBITVM v,int64_t idx){return ((idx>=0)?(v->GetAt(idx+v->_stackbase-1)):(v->GetUp(idx)));}
+inline SQObjectPtr &stack_get(HRABBITVM v,int64_t idx){return ((idx>=0)?(v->getAt(idx+v->_stackbase-1)):(v->getUp(idx)));}
 
 #define _ss(_vm_) (_vm_)->_sharedstate
 
