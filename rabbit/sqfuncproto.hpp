@@ -120,11 +120,6 @@ public:
     SQInteger GetLine(SQInstruction *curr);
     bool Save(SQVM *v,SQUserPointer up,SQWRITEFUNC write);
     static bool Load(SQVM *v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &ret);
-#ifndef NO_GARBAGE_COLLECTOR
-    void Mark(SQCollectable **chain);
-    void Finalize(){ _NULL_SQOBJECT_VECTOR(_literals,_nliterals); }
-    SQObjectType GetType() {return OT_FUNCPROTO;}
-#endif
     SQObjectPtr _sourcename;
     SQObjectPtr _name;
     SQInteger _stacksize;

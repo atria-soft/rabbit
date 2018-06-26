@@ -23,11 +23,6 @@ struct SQUserData : SQDelegable
         ud->_typetag = 0;
         return ud;
     }
-#ifndef NO_GARBAGE_COLLECTOR
-    void Mark(SQCollectable **chain);
-    void Finalize(){SetDelegate(NULL);}
-    SQObjectType GetType(){ return OT_USERDATA;}
-#endif
     void Release() {
         if (_hook) _hook((SQUserPointer)sq_aligning(this + 1),_size);
         SQInteger tsize = _size;

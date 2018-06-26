@@ -7,9 +7,9 @@
  */
 #pragma once
 
-SQUIRREL_API SQUserPointer sqstd_createblob(HSQUIRRELVM v, SQInteger size);
-SQUIRREL_API SQRESULT sqstd_getblob(HSQUIRRELVM v,SQInteger idx,SQUserPointer *ptr);
-SQUIRREL_API SQInteger sqstd_getblobsize(HSQUIRRELVM v,SQInteger idx);
+RABBIT_API SQUserPointer sqstd_createblob(HRABBITVM v, SQInteger size);
+RABBIT_API SQRESULT sqstd_getblob(HRABBITVM v,SQInteger idx,SQUserPointer *ptr);
+RABBIT_API SQInteger sqstd_getblobsize(HRABBITVM v,SQInteger idx);
 
-SQUIRREL_API SQRESULT sqstd_register_bloblib(HSQUIRRELVM v);
+RABBIT_API SQRESULT sqstd_register_bloblib(HRABBITVM v);
 

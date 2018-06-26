@@ -46,7 +46,7 @@ public:
     SQClosure *Clone()
     {
         SQFunctionProto *f = _function;
-        SQClosure * ret = SQClosure::Create(_opt_ss(this),f,_root);
+        SQClosure * ret = SQClosure::Create(NULL,f,_root);
         ret->_env = _env;
         if(ret->_env) __ObjAddRef(ret->_env);
         _COPY_VECTOR(ret->_outervalues,_outervalues,f->_noutervalues);
@@ -57,15 +57,6 @@ public:
 
     bool Save(SQVM *v,SQUserPointer up,SQWRITEFUNC write);
     static bool Load(SQVM *v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &ret);
-#ifndef NO_GARBAGE_COLLECTOR
-    void Mark(SQCollectable **chain);
-    void Finalize(){
-        SQFunctionProto *f = _function;
-        _NULL_SQOBJECT_VECTOR(_outervalues,f->_noutervalues);
-        _NULL_SQOBJECT_VECTOR(_defaultparams,f->_ndefaultparams);
-    }
-    SQObjectType GetType() {return OT_CLOSURE;}
-#endif
     SQWeakRef *_env;
     SQWeakRef *_root;
     SQClass *_base;
@@ -95,12 +86,6 @@ public:
         this->~SQOuter();
         sq_vm_free(this,sizeof(SQOuter));
     }
-
-#ifndef NO_GARBAGE_COLLECTOR
-    void Mark(SQCollectable **chain);
-    void Finalize() { _value.Null(); }
-    SQObjectType GetType() {return OT_OUTER;}
-#endif
 
     SQObjectPtr *_valptr;  /* pointer to value on stack, or _value below */
     SQInteger    _idx;     /* idx in stack array, for relocation */
@@ -134,11 +119,6 @@ public:
 
     bool Yield(SQVM *v,SQInteger target);
     bool Resume(SQVM *v,SQObjectPtr &dest);
-#ifndef NO_GARBAGE_COLLECTOR
-    void Mark(SQCollectable **chain);
-    void Finalize(){_stack.resize(0);_closure.Null();}
-    SQObjectType GetType() {return OT_GENERATOR;}
-#endif
     SQObjectPtr _closure;
     SQObjectPtrVec _stack;
     SQVM::CallInfo _ci;
@@ -165,7 +145,7 @@ public:
     }
     SQNativeClosure *Clone()
     {
-        SQNativeClosure * ret = SQNativeClosure::Create(_opt_ss(this),_function,_noutervalues);
+        SQNativeClosure * ret = SQNativeClosure::Create(NULL,_function,_noutervalues);
         ret->_env = _env;
         if(ret->_env) __ObjAddRef(ret->_env);
         ret->_name = _name;
@@ -186,11 +166,6 @@ public:
         sq_free(this,size);
     }
 
-#ifndef NO_GARBAGE_COLLECTOR
-    void Mark(SQCollectable **chain);
-    void Finalize() { _NULL_SQOBJECT_VECTOR(_outervalues,_noutervalues); }
-    SQObjectType GetType() {return OT_NATIVECLOSURE;}
-#endif
     SQInteger _nparamscheck;
     SQIntVec _typecheck;
     SQObjectPtr *_outervalues;

@@ -312,34 +312,10 @@ inline void _Swap(SQObject &a,SQObject &b)
     b._unVal = unOldVal;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////
-#ifndef NO_GARBAGE_COLLECTOR
-#define MARK_FLAG 0x80000000
-struct SQCollectable : public SQRefCounted {
-    SQCollectable *_next;
-    SQCollectable *_prev;
-    SQSharedState *_sharedstate;
-    virtual SQObjectType GetType()=0;
-    virtual void Release()=0;
-    virtual void Mark(SQCollectable **chain)=0;
-    void UnMark();
-    virtual void Finalize()=0;
-    static void AddToChain(SQCollectable **chain,SQCollectable *c);
-    static void RemoveFromChain(SQCollectable **chain,SQCollectable *c);
-};
-
-
-#define ADD_TO_CHAIN(chain,obj) AddToChain(chain,obj)
-#define REMOVE_FROM_CHAIN(chain,obj) {if(!(_uiRef&MARK_FLAG))RemoveFromChain(chain,obj);}
-#define CHAINABLE_OBJ SQCollectable
-#define INIT_CHAIN() {_next=NULL;_prev=NULL;_sharedstate=ss;}
-#else
-
 #define ADD_TO_CHAIN(chain,obj) ((void)0)
 #define REMOVE_FROM_CHAIN(chain,obj) ((void)0)
 #define CHAINABLE_OBJ SQRefCounted
 #define INIT_CHAIN() ((void)0)
-#endif
 
 struct SQDelegable : public CHAINABLE_OBJ {
     bool SetDelegate(SQTable *m);

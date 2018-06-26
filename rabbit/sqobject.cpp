@@ -280,7 +280,7 @@ SQClosure::~SQClosure()
 }
 
 #define _CHECK_IO(exp)  { if(!exp)return false; }
-bool SafeWrite(HSQUIRRELVM v,SQWRITEFUNC write,SQUserPointer up,SQUserPointer dest,SQInteger size)
+bool SafeWrite(HRABBITVM v,SQWRITEFUNC write,SQUserPointer up,SQUserPointer dest,SQInteger size)
 {
     if(write(up,dest,size) != size) {
         v->Raise_Error(_SC("io error (write function failure)"));
@@ -289,7 +289,7 @@ bool SafeWrite(HSQUIRRELVM v,SQWRITEFUNC write,SQUserPointer up,SQUserPointer de
     return true;
 }
 
-bool SafeRead(HSQUIRRELVM v,SQWRITEFUNC read,SQUserPointer up,SQUserPointer dest,SQInteger size)
+bool SafeRead(HRABBITVM v,SQWRITEFUNC read,SQUserPointer up,SQUserPointer dest,SQInteger size)
 {
     if(size && read(up,dest,size) != size) {
         v->Raise_Error(_SC("io error, read function failure, the origin stream could be corrupted/trucated"));
@@ -298,12 +298,12 @@ bool SafeRead(HSQUIRRELVM v,SQWRITEFUNC read,SQUserPointer up,SQUserPointer dest
     return true;
 }
 
-bool WriteTag(HSQUIRRELVM v,SQWRITEFUNC write,SQUserPointer up,SQUnsignedInteger32 tag)
+bool WriteTag(HRABBITVM v,SQWRITEFUNC write,SQUserPointer up,SQUnsignedInteger32 tag)
 {
     return SafeWrite(v,write,up,&tag,sizeof(tag));
 }
 
-bool CheckTag(HSQUIRRELVM v,SQWRITEFUNC read,SQUserPointer up,SQUnsignedInteger32 tag)
+bool CheckTag(HRABBITVM v,SQWRITEFUNC read,SQUserPointer up,SQUnsignedInteger32 tag)
 {
     SQUnsignedInteger32 t;
     _CHECK_IO(SafeRead(v,read,up,&t,sizeof(t)));
@@ -314,7 +314,7 @@ bool CheckTag(HSQUIRRELVM v,SQWRITEFUNC read,SQUserPointer up,SQUnsignedInteger3
     return true;
 }
 
-bool WriteObject(HSQUIRRELVM v,SQUserPointer up,SQWRITEFUNC write,SQObjectPtr &o)
+bool WriteObject(HRABBITVM v,SQUserPointer up,SQWRITEFUNC write,SQObjectPtr &o)
 {
     SQUnsignedInteger32 _type = (SQUnsignedInteger32)sq_type(o);
     _CHECK_IO(SafeWrite(v,write,up,&_type,sizeof(_type)));
@@ -337,7 +337,7 @@ bool WriteObject(HSQUIRRELVM v,SQUserPointer up,SQWRITEFUNC write,SQObjectPtr &o
     return true;
 }
 
-bool ReadObject(HSQUIRRELVM v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &o)
+bool ReadObject(HRABBITVM v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &o)
 {
     SQUnsignedInteger32 _type;
     _CHECK_IO(SafeRead(v,read,up,&_type,sizeof(_type)));
@@ -494,7 +494,7 @@ bool SQFunctionProto::Load(SQVM *v,SQUserPointer up,SQREADFUNC read,SQObjectPtr 
     _CHECK_IO(SafeRead(v,read,up, &nfunctions, sizeof(nfunctions)));
 
 
-    SQFunctionProto *f = SQFunctionProto::Create(_opt_ss(v),ninstructions,nliterals,nparameters,
+    SQFunctionProto *f = SQFunctionProto::Create(NULL,ninstructions,nliterals,nparameters,
             nfunctions,noutervalues,nlineinfos,nlocalvarinfos,ndefaultparams);
     SQObjectPtr proto = f; //gets a ref in case of failure
     f->_sourcename = sourcename;
@@ -553,129 +553,4 @@ bool SQFunctionProto::Load(SQVM *v,SQUserPointer up,SQREADFUNC read,SQObjectPtr 
     ret = f;
     return true;
 }
-
-#ifndef NO_GARBAGE_COLLECTOR
-
-#define START_MARK()    if(!(_uiRef&MARK_FLAG)){ \
-        _uiRef|=MARK_FLAG;
-
-#define END_MARK() RemoveFromChain(&_sharedstate->_gc_chain, this); \
-        AddToChain(chain, this); }
-
-void SQVM::Mark(SQCollectable **chain)
-{
-    START_MARK()
-        SQSharedState::MarkObject(_lasterror,chain);
-        SQSharedState::MarkObject(_errorhandler,chain);
-        SQSharedState::MarkObject(_debughook_closure,chain);
-        SQSharedState::MarkObject(_roottable, chain);
-        SQSharedState::MarkObject(temp_reg, chain);
-        for(SQUnsignedInteger i = 0; i < _stack.size(); i++) SQSharedState::MarkObject(_stack[i], chain);
-        for(SQInteger k = 0; k < _callsstacksize; k++) SQSharedState::MarkObject(_callsstack[k]._closure, chain);
-    END_MARK()
-}
-
-void SQArray::Mark(SQCollectable **chain)
-{
-    START_MARK()
-        SQInteger len = _values.size();
-        for(SQInteger i = 0;i < len; i++) SQSharedState::MarkObject(_values[i], chain);
-    END_MARK()
-}
-void SQTable::Mark(SQCollectable **chain)
-{
-    START_MARK()
-        if(_delegate) _delegate->Mark(chain);
-        SQInteger len = _numofnodes;
-        for(SQInteger i = 0; i < len; i++){
-            SQSharedState::MarkObject(_nodes[i].key, chain);
-            SQSharedState::MarkObject(_nodes[i].val, chain);
-        }
-    END_MARK()
-}
-
-void SQClass::Mark(SQCollectable **chain)
-{
-    START_MARK()
-        _members->Mark(chain);
-        if(_base) _base->Mark(chain);
-        SQSharedState::MarkObject(_attributes, chain);
-        for(SQUnsignedInteger i =0; i< _defaultvalues.size(); i++) {
-            SQSharedState::MarkObject(_defaultvalues[i].val, chain);
-            SQSharedState::MarkObject(_defaultvalues[i].attrs, chain);
-        }
-        for(SQUnsignedInteger j =0; j< _methods.size(); j++) {
-            SQSharedState::MarkObject(_methods[j].val, chain);
-            SQSharedState::MarkObject(_methods[j].attrs, chain);
-        }
-        for(SQUnsignedInteger k =0; k< MT_LAST; k++) {
-            SQSharedState::MarkObject(_metamethods[k], chain);
-        }
-    END_MARK()
-}
-
-void SQInstance::Mark(SQCollectable **chain)
-{
-    START_MARK()
-        _class->Mark(chain);
-        SQUnsignedInteger nvalues = _class->_defaultvalues.size();
-        for(SQUnsignedInteger i =0; i< nvalues; i++) {
-            SQSharedState::MarkObject(_values[i], chain);
-        }
-    END_MARK()
-}
-
-void SQGenerator::Mark(SQCollectable **chain)
-{
-    START_MARK()
-        for(SQUnsignedInteger i = 0; i < _stack.size(); i++) SQSharedState::MarkObject(_stack[i], chain);
-        SQSharedState::MarkObject(_closure, chain);
-    END_MARK()
-}
-
-void SQFunctionProto::Mark(SQCollectable **chain)
-{
-    START_MARK()
-        for(SQInteger i = 0; i < _nliterals; i++) SQSharedState::MarkObject(_literals[i], chain);
-        for(SQInteger k = 0; k < _nfunctions; k++) SQSharedState::MarkObject(_functions[k], chain);
-    END_MARK()
-}
-
-void SQClosure::Mark(SQCollectable **chain)
-{
-    START_MARK()
-        if(_base) _base->Mark(chain);
-        SQFunctionProto *fp = _function;
-        fp->Mark(chain);
-        for(SQInteger i = 0; i < fp->_noutervalues; i++) SQSharedState::MarkObject(_outervalues[i], chain);
-        for(SQInteger k = 0; k < fp->_ndefaultparams; k++) SQSharedState::MarkObject(_defaultparams[k], chain);
-    END_MARK()
-}
-
-void SQNativeClosure::Mark(SQCollectable **chain)
-{
-    START_MARK()
-        for(SQUnsignedInteger i = 0; i < _noutervalues; i++) SQSharedState::MarkObject(_outervalues[i], chain);
-    END_MARK()
-}
-
-void SQOuter::Mark(SQCollectable **chain)
-{
-    START_MARK()
-    /* If the valptr points to a closed value, that value is alive */
-    if(_valptr == &_value) {
-      SQSharedState::MarkObject(_value, chain);
-    }
-    END_MARK()
-}
-
-void SQUserData::Mark(SQCollectable **chain){
-    START_MARK()
-        if(_delegate) _delegate->Mark(chain);
-    END_MARK()
-}
-
-void SQCollectable::UnMark() { _uiRef&=~MARK_FLAG; }
-
-#endif
 

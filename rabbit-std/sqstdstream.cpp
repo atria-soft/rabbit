@@ -23,7 +23,7 @@
     if(!self || !self->IsValid())  \
         return sq_throwerror(v,_SC("the stream is invalid"));
 
-SQInteger _stream_readblob(HSQUIRRELVM v)
+SQInteger _stream_readblob(HRABBITVM v)
 {
     SETUP_STREAM(v);
     SQUserPointer data,blobp;
@@ -44,7 +44,7 @@ SQInteger _stream_readblob(HSQUIRRELVM v)
 #define SAFE_READN(ptr,len) { \
     if(self->Read(ptr,len) != len) return sq_throwerror(v,_SC("io error")); \
     }
-SQInteger _stream_readn(HSQUIRRELVM v)
+SQInteger _stream_readn(HRABBITVM v)
 {
     SETUP_STREAM(v);
     SQInteger format;
@@ -104,7 +104,7 @@ SQInteger _stream_readn(HSQUIRRELVM v)
     return 1;
 }
 
-SQInteger _stream_writeblob(HSQUIRRELVM v)
+SQInteger _stream_writeblob(HRABBITVM v)
 {
     SQUserPointer data;
     SQInteger size;
@@ -118,7 +118,7 @@ SQInteger _stream_writeblob(HSQUIRRELVM v)
     return 1;
 }
 
-SQInteger _stream_writen(HSQUIRRELVM v)
+SQInteger _stream_writen(HRABBITVM v)
 {
     SETUP_STREAM(v);
     SQInteger format, ti;
@@ -187,7 +187,7 @@ SQInteger _stream_writen(HSQUIRRELVM v)
     return 0;
 }
 
-SQInteger _stream_seek(HSQUIRRELVM v)
+SQInteger _stream_seek(HRABBITVM v)
 {
     SETUP_STREAM(v);
     SQInteger offset, origin = SQ_SEEK_SET;
@@ -206,21 +206,21 @@ SQInteger _stream_seek(HSQUIRRELVM v)
     return 1;
 }
 
-SQInteger _stream_tell(HSQUIRRELVM v)
+SQInteger _stream_tell(HRABBITVM v)
 {
     SETUP_STREAM(v);
     sq_pushinteger(v, self->Tell());
     return 1;
 }
 
-SQInteger _stream_len(HSQUIRRELVM v)
+SQInteger _stream_len(HRABBITVM v)
 {
     SETUP_STREAM(v);
     sq_pushinteger(v, self->Len());
     return 1;
 }
 
-SQInteger _stream_flush(HSQUIRRELVM v)
+SQInteger _stream_flush(HRABBITVM v)
 {
     SETUP_STREAM(v);
     if(!self->Flush())
@@ -230,7 +230,7 @@ SQInteger _stream_flush(HSQUIRRELVM v)
     return 1;
 }
 
-SQInteger _stream_eos(HSQUIRRELVM v)
+SQInteger _stream_eos(HRABBITVM v)
 {
     SETUP_STREAM(v);
     if(self->EOS())
@@ -240,7 +240,7 @@ SQInteger _stream_eos(HSQUIRRELVM v)
     return 1;
 }
 
- SQInteger _stream__cloned(HSQUIRRELVM v)
+ SQInteger _stream__cloned(HRABBITVM v)
  {
      return sq_throwerror(v,_SC("this object cannot be cloned"));
  }
@@ -259,7 +259,7 @@ static const SQRegFunction _stream_methods[] = {
     {NULL,(SQFUNCTION)0,0,NULL}
 };
 
-void init_streamclass(HSQUIRRELVM v)
+void init_streamclass(HRABBITVM v)
 {
     sq_pushregistrytable(v);
     sq_pushstring(v,_SC("std_stream"),-1);
@@ -290,7 +290,7 @@ void init_streamclass(HSQUIRRELVM v)
     sq_pop(v,1);
 }
 
-SQRESULT declare_stream(HSQUIRRELVM v,const SQChar* name,SQUserPointer typetag,const SQChar* reg_name,const SQRegFunction *methods,const SQRegFunction *globals)
+SQRESULT declare_stream(HRABBITVM v,const SQChar* name,SQUserPointer typetag,const SQChar* reg_name,const SQRegFunction *methods,const SQRegFunction *globals)
 {
     if(sq_gettype(v,-1) != OT_TABLE)
         return sq_throwerror(v,_SC("table expected"));

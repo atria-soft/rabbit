@@ -97,9 +97,6 @@ void SQSharedState::Init()
 {
     _scratchpad=NULL;
     _scratchpadsize=0;
-#ifndef NO_GARBAGE_COLLECTOR
-    _gc_chain=NULL;
-#endif
     _stringtable = (SQStringTable*)SQ_MALLOC(sizeof(SQStringTable));
     new (_stringtable) SQStringTable(this);
     sq_new(_metamethods,SQObjectPtrVec);
@@ -185,26 +182,6 @@ SQSharedState::~SQSharedState()
     _instance_default_delegate.Null();
     _weakref_default_delegate.Null();
     _refs_table.Finalize();
-#ifndef NO_GARBAGE_COLLECTOR
-    SQCollectable *t = _gc_chain;
-    SQCollectable *nx = NULL;
-    if(t) {
-        t->_uiRef++;
-        while(t) {
-            t->Finalize();
-            nx = t->_next;
-            if(nx) nx->_uiRef++;
-            if(--t->_uiRef == 0)
-                t->Release();
-            t = nx;
-        }
-    }
-    assert(_gc_chain==NULL); //just to proove a theory
-    while(_gc_chain){
-        _gc_chain->_uiRef++;
-        _gc_chain->Release();
-    }
-#endif
 
     sq_delete(_types,SQObjectPtrVec);
     sq_delete(_systemstrings,SQObjectPtrVec);
@@ -225,155 +202,6 @@ SQInteger SQSharedState::GetMetaMethodIdxByName(const SQObjectPtr &name)
     return -1;
 }
 
-#ifndef NO_GARBAGE_COLLECTOR
-
-void SQSharedState::MarkObject(SQObjectPtr &o,SQCollectable **chain)
-{
-    switch(sq_type(o)){
-    case OT_TABLE:_table(o)->Mark(chain);break;
-    case OT_ARRAY:_array(o)->Mark(chain);break;
-    case OT_USERDATA:_userdata(o)->Mark(chain);break;
-    case OT_CLOSURE:_closure(o)->Mark(chain);break;
-    case OT_NATIVECLOSURE:_nativeclosure(o)->Mark(chain);break;
-    case OT_GENERATOR:_generator(o)->Mark(chain);break;
-    case OT_THREAD:_thread(o)->Mark(chain);break;
-    case OT_CLASS:_class(o)->Mark(chain);break;
-    case OT_INSTANCE:_instance(o)->Mark(chain);break;
-    case OT_OUTER:_outer(o)->Mark(chain);break;
-    case OT_FUNCPROTO:_funcproto(o)->Mark(chain);break;
-    default: break; //shutup compiler
-    }
-}
-
-void SQSharedState::RunMark(SQVM* SQ_UNUSED_ARG(vm),SQCollectable **tchain)
-{
-    SQVM *vms = _thread(_root_vm);
-
-    vms->Mark(tchain);
-
-    _refs_table.Mark(tchain);
-    MarkObject(_registry,tchain);
-    MarkObject(_consts,tchain);
-    MarkObject(_metamethodsmap,tchain);
-    MarkObject(_table_default_delegate,tchain);
-    MarkObject(_array_default_delegate,tchain);
-    MarkObject(_string_default_delegate,tchain);
-    MarkObject(_number_default_delegate,tchain);
-    MarkObject(_generator_default_delegate,tchain);
-    MarkObject(_thread_default_delegate,tchain);
-    MarkObject(_closure_default_delegate,tchain);
-    MarkObject(_class_default_delegate,tchain);
-    MarkObject(_instance_default_delegate,tchain);
-    MarkObject(_weakref_default_delegate,tchain);
-
-}
-
-SQInteger SQSharedState::ResurrectUnreachable(SQVM *vm)
-{
-    SQInteger n=0;
-    SQCollectable *tchain=NULL;
-
-    RunMark(vm,&tchain);
-
-    SQCollectable *resurrected = _gc_chain;
-    SQCollectable *t = resurrected;
-
-    _gc_chain = tchain;
-
-    SQArray *ret = NULL;
-    if(resurrected) {
-        ret = SQArray::Create(this,0);
-        SQCollectable *rlast = NULL;
-        while(t) {
-            rlast = t;
-            SQObjectType type = t->GetType();
-            if(type != OT_FUNCPROTO && type != OT_OUTER) {
-                SQObject sqo;
-                sqo._type = type;
-                sqo._unVal.pRefCounted = t;
-                ret->Append(sqo);
-            }
-            t = t->_next;
-            n++;
-        }
-
-        assert(rlast->_next == NULL);
-        rlast->_next = _gc_chain;
-        if(_gc_chain)
-        {
-            _gc_chain->_prev = rlast;
-        }
-        _gc_chain = resurrected;
-    }
-
-    t = _gc_chain;
-    while(t) {
-        t->UnMark();
-        t = t->_next;
-    }
-
-    if(ret) {
-        SQObjectPtr temp = ret;
-        vm->Push(temp);
-    }
-    else {
-        vm->PushNull();
-    }
-    return n;
-}
-
-SQInteger SQSharedState::CollectGarbage(SQVM *vm)
-{
-    SQInteger n = 0;
-    SQCollectable *tchain = NULL;
-
-    RunMark(vm,&tchain);
-
-    SQCollectable *t = _gc_chain;
-    SQCollectable *nx = NULL;
-    if(t) {
-        t->_uiRef++;
-        while(t) {
-            t->Finalize();
-            nx = t->_next;
-            if(nx) nx->_uiRef++;
-            if(--t->_uiRef == 0)
-                t->Release();
-            t = nx;
-            n++;
-        }
-    }
-
-    t = tchain;
-    while(t) {
-        t->UnMark();
-        t = t->_next;
-    }
-    _gc_chain = tchain;
-
-    return n;
-}
-#endif
-
-#ifndef NO_GARBAGE_COLLECTOR
-void SQCollectable::AddToChain(SQCollectable **chain,SQCollectable *c)
-{
-    c->_prev = NULL;
-    c->_next = *chain;
-    if(*chain) (*chain)->_prev = c;
-    *chain = c;
-}
-
-void SQCollectable::RemoveFromChain(SQCollectable **chain,SQCollectable *c)
-{
-    if(c->_prev) c->_prev->_next = c->_next;
-    else *chain = c->_next;
-    if(c->_next)
-        c->_next->_prev = c->_prev;
-    c->_next = NULL;
-    c->_prev = NULL;
-}
-#endif
 
 SQChar* SQSharedState::GetScratchPad(SQInteger size)
 {
@@ -412,18 +240,6 @@ RefTable::~RefTable()
     SQ_FREE(_buckets,(_numofslots * sizeof(RefNode *)) + (_numofslots * sizeof(RefNode)));
 }
 
-#ifndef NO_GARBAGE_COLLECTOR
-void RefTable::Mark(SQCollectable **chain)
-{
-    RefNode *nodes = (RefNode *)_nodes;
-    for(SQUnsignedInteger n = 0; n < _numofslots; n++) {
-        if(sq_type(nodes->obj) != OT_NULL) {
-            SQSharedState::MarkObject(nodes->obj,chain);
-        }
-        nodes++;
-    }
-}
-#endif
 
 void RefTable::AddRef(SQObject &obj)
 {

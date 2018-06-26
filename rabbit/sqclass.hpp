@@ -70,10 +70,6 @@ public:
         sq_delete(this, SQClass);
     }
     void Finalize();
-#ifndef NO_GARBAGE_COLLECTOR
-    void Mark(SQCollectable ** );
-    SQObjectType GetType() {return OT_CLASS;}
-#endif
     SQInteger Next(const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval);
     SQInstance *CreateInstance();
     SQTable *_members;
@@ -150,10 +146,6 @@ public:
         SQ_FREE(this, size);
     }
     void Finalize();
-#ifndef NO_GARBAGE_COLLECTOR
-    void Mark(SQCollectable ** );
-    SQObjectType GetType() {return OT_INSTANCE;}
-#endif
     bool InstanceOf(SQClass *trg);
     bool GetMetaMethod(SQVM *v,SQMetaMethod mm,SQObjectPtr &res);
 

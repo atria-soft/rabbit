@@ -65,10 +65,6 @@ public:
         for (SQInteger i = 0; i < _numofnodes; i++) _nodes[i].~_HashNode();
         SQ_FREE(_nodes, _numofnodes * sizeof(_HashNode));
     }
-#ifndef NO_GARBAGE_COLLECTOR
-    void Mark(SQCollectable **chain);
-    SQObjectType GetType() {return OT_TABLE;}
-#endif
     inline _HashNode *_Get(const SQObjectPtr &key,SQHash hash)
     {
         _HashNode *n = &_nodes[hash];

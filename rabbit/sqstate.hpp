@@ -40,9 +40,6 @@ struct RefTable {
     void AddRef(SQObject &obj);
     SQBool Release(SQObject &obj);
     SQUnsignedInteger GetRefCount(SQObject &obj);
-#ifndef NO_GARBAGE_COLLECTOR
-    void Mark(SQCollectable **chain);
-#endif
     void Finalize();
 private:
     RefNode *Get(SQObject &obj,SQHash &mainpos,RefNode **prev,bool add);
@@ -69,12 +66,6 @@ struct SQSharedState
 public:
     SQChar* GetScratchPad(SQInteger size);
     SQInteger GetMetaMethodIdxByName(const SQObjectPtr &name);
-#ifndef NO_GARBAGE_COLLECTOR
-    SQInteger CollectGarbage(SQVM *vm);
-    void RunMark(SQVM *vm,SQCollectable **tchain);
-    SQInteger ResurrectUnreachable(SQVM *vm);
-    static void MarkObject(SQObjectPtr &o,SQCollectable **chain);
-#endif
     SQObjectPtrVec *_metamethods;
     SQObjectPtr _metamethodsmap;
     SQObjectPtrVec *_systemstrings;
@@ -84,9 +75,6 @@ public:
     SQObjectPtr _registry;
     SQObjectPtr _consts;
     SQObjectPtr _constructoridx;
-#ifndef NO_GARBAGE_COLLECTOR
-    SQCollectable *_gc_chain;
-#endif
     SQObjectPtr _root_vm;
     SQObjectPtr _table_default_delegate;
     static const SQRegFunction _table_default_delegate_funcz[];

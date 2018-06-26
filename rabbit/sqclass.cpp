@@ -105,7 +105,7 @@ bool SQClass::NewSlot(SQSharedState *ss,const SQObjectPtr &key,const SQObjectPtr
 SQInstance *SQClass::CreateInstance()
 {
     if(!_locked) Lock();
-    return SQInstance::Create(_opt_ss(this),this);
+    return SQInstance::Create(NULL,this);
 }
 
 SQInteger SQClass::Next(const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval)

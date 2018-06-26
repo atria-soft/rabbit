@@ -7,5 +7,7 @@
  */
 #pragma once
 
-SQUIRREL_API SQRESULT sqstd_register_mathlib(HSQUIRRELVM v);
+#include <rabbit/rabbit.hpp>
+
+RABBIT_API SQRESULT sqstd_register_mathlib(HRABBITVM v);
 

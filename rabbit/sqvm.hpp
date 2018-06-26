@@ -21,7 +21,7 @@
 #define GET_FLAG_RAW                0x00000001
 #define GET_FLAG_DO_NOT_RAISE_ERROR 0x00000002
 //base lib
-void sq_base_register(HSQUIRRELVM v);
+void sq_base_register(HRABBITVM v);
 
 struct SQExceptionTrap{
     SQExceptionTrap() {}
@@ -56,7 +56,7 @@ struct SQVM : public CHAINABLE_OBJ
 typedef sqvector<CallInfo> CallInfoVec;
 public:
     void DebugHookProxy(SQInteger type, const SQChar * sourcename, SQInteger line, const SQChar * funcname);
-    static void _DebugHookProxy(HSQUIRRELVM v, SQInteger type, const SQChar * sourcename, SQInteger line, const SQChar * funcname);
+    static void _DebugHookProxy(HRABBITVM v, SQInteger type, const SQChar * sourcename, SQInteger line, const SQChar * funcname);
     enum ExecutionType { ET_CALL, ET_RESUME_GENERATOR, ET_RESUME_VM,ET_RESUME_THROW_VM };
     SQVM(SQSharedState *ss);
     ~SQVM();
@@ -65,10 +65,10 @@ public:
     //starts a native call return when the NATIVE closure returns
     bool CallNative(SQNativeClosure *nclosure, SQInteger nargs, SQInteger newbase, SQObjectPtr &retval, SQInt32 target, bool &suspend,bool &tailcall);
 	bool TailCall(SQClosure *closure, SQInteger firstparam, SQInteger nparams);
-    //starts a SQUIRREL call in the same "Execution loop"
+    //starts a RABBIT call in the same "Execution loop"
     bool StartCall(SQClosure *closure, SQInteger target, SQInteger nargs, SQInteger stackbase, bool tailcall);
     bool CreateClassInstance(SQClass *theclass, SQObjectPtr &inst, SQObjectPtr &constructor);
-    //call a generic closure pure SQUIRREL or NATIVE
+    //call a generic closure pure RABBIT or NATIVE
     bool Call(SQObjectPtr &closure, SQInteger nparams, SQInteger stackbase, SQObjectPtr &outres,SQBool raiseerror);
     SQRESULT Suspend();
 
@@ -120,10 +120,6 @@ public:
     void dumpstack(SQInteger stackbase=-1, bool dumpall = false);
 #endif
 
-#ifndef NO_GARBAGE_COLLECTOR
-    void Mark(SQCollectable **chain);
-    SQObjectType GetType() {return OT_THREAD;}
-#endif
     void Finalize();
     void GrowCallStack() {
         SQInteger newsize = _alloccallsstacksize*2;
@@ -191,15 +187,9 @@ struct AutoDec{
     SQInteger *_n;
 };
 
-inline SQObjectPtr &stack_get(HSQUIRRELVM v,SQInteger idx){return ((idx>=0)?(v->GetAt(idx+v->_stackbase-1)):(v->GetUp(idx)));}
+inline SQObjectPtr &stack_get(HRABBITVM v,SQInteger idx){return ((idx>=0)?(v->GetAt(idx+v->_stackbase-1)):(v->GetUp(idx)));}
 
 #define _ss(_vm_) (_vm_)->_sharedstate
-
-#ifndef NO_GARBAGE_COLLECTOR
-#define _opt_ss(_vm_) (_vm_)->_sharedstate
-#else
-#define _opt_ss(_vm_) NULL
-#endif
 
 #define PUSH_CALLINFO(v,nci){ \
     SQInteger css = v->_callsstacksize; \

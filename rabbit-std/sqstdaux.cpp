@@ -10,7 +10,7 @@
 #include <rabbit-std/sqstdaux.hpp>
 #include <assert.h>
 
-void sqstd_printcallstack(HSQUIRRELVM v)
+void sqstd_printcallstack(HRABBITVM v)
 {
     SQPRINTFUNCTION pf = sq_geterrorfunc(v);
     if(pf) {
@@ -103,7 +103,7 @@ void sqstd_printcallstack(HSQUIRRELVM v)
     }
 }
 
-static SQInteger _sqstd_aux_printerror(HSQUIRRELVM v)
+static SQInteger _sqstd_aux_printerror(HRABBITVM v)
 {
     SQPRINTFUNCTION pf = sq_geterrorfunc(v);
     if(pf) {
@@ -121,7 +121,7 @@ static SQInteger _sqstd_aux_printerror(HSQUIRRELVM v)
     return 0;
 }
 
-void _sqstd_compiler_error(HSQUIRRELVM v,const SQChar *sErr,const SQChar *sSource,SQInteger line,SQInteger column)
+void _sqstd_compiler_error(HRABBITVM v,const SQChar *sErr,const SQChar *sSource,SQInteger line,SQInteger column)
 {
     SQPRINTFUNCTION pf = sq_geterrorfunc(v);
     if(pf) {
@@ -129,7 +129,7 @@ void _sqstd_compiler_error(HSQUIRRELVM v,const SQChar *sErr,const SQChar *sSourc
     }
 }
 
-void sqstd_seterrorhandlers(HSQUIRRELVM v)
+void sqstd_seterrorhandlers(HRABBITVM v)
 {
     sq_setcompilererrorhandler(v,_sqstd_compiler_error);
     sq_newclosure(v,_sqstd_aux_printerror,0);

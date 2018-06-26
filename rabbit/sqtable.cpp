@@ -77,7 +77,7 @@ void SQTable::Rehash(bool force)
 
 SQTable *SQTable::Clone()
 {
-    SQTable *nt=Create(_opt_ss(this),_numofnodes);
+    SQTable *nt=Create(NULL,_numofnodes);
 #ifdef _FAST_CLONE
     _HashNode *basesrc = _nodes;
     _HashNode *basedst = nt->_nodes;

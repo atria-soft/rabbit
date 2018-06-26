@@ -150,7 +150,7 @@ public:
         Lex();
         return ret;
     }
-    bool IsEndOfStatement() { return ((_lex._prevtoken == _SC('\n')) || (_token == SQUIRREL_EOB) || (_token == _SC('}')) || (_token == _SC(';'))); }
+    bool IsEndOfStatement() { return ((_lex._prevtoken == _SC('\n')) || (_token == RABBIT_EOB) || (_token == _SC('}')) || (_token == _SC(';'))); }
     void OptionalSemicolon()
     {
         if(_token == _SC(';')) { Lex(); return; }

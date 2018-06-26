@@ -48,7 +48,7 @@ int MemAllocHook(int allocType,
 #endif
 
 
-SQInteger quit(HSQUIRRELVM v)
+SQInteger quit(HRABBITVM v)
 {
     int *done;
     sq_getuserpointer(v,-1,(SQUserPointer*)&done);
@@ -56,7 +56,7 @@ SQInteger quit(HSQUIRRELVM v)
     return 0;
 }
 
-void printfunc(HSQUIRRELVM SQ_UNUSED_ARG(v),const SQChar *s,...)
+void printfunc(HRABBITVM SQ_UNUSED_ARG(v),const SQChar *s,...)
 {
     va_list vl;
     va_start(vl, s);
@@ -64,7 +64,7 @@ void printfunc(HSQUIRRELVM SQ_UNUSED_ARG(v),const SQChar *s,...)
     va_end(vl);
 }
 
-void errorfunc(HSQUIRRELVM SQ_UNUSED_ARG(v),const SQChar *s,...)
+void errorfunc(HRABBITVM SQ_UNUSED_ARG(v),const SQChar *s,...)
 {
     va_list vl;
     va_start(vl, s);
@@ -74,7 +74,7 @@ void errorfunc(HSQUIRRELVM SQ_UNUSED_ARG(v),const SQChar *s,...)
 
 void PrintVersionInfos()
 {
-    scfprintf(stdout,_SC("%s %s (%d bits)\n"),SQUIRREL_VERSION,SQUIRREL_COPYRIGHT,((int)(sizeof(SQInteger)*8)));
+    scfprintf(stdout,_SC("%s %s (%d bits)\n"),RABBIT_VERSION,RABBIT_COPYRIGHT,((int)(sizeof(SQInteger)*8)));
 }
 
 void PrintUsage()
@@ -93,7 +93,7 @@ void PrintUsage()
 #define _DONE 2
 #define _ERROR 3
 //<<FIXME>> this func is a mess
-int getargs(HSQUIRRELVM v,int argc, char* argv[],SQInteger *retval)
+int getargs(HRABBITVM v,int argc, char* argv[],SQInteger *retval)
 {
     int i;
     int compiles_only = 0;
@@ -231,7 +231,7 @@ int getargs(HSQUIRRELVM v,int argc, char* argv[],SQInteger *retval)
     return _INTERACTIVE;
 }
 
-void Interactive(HSQUIRRELVM v)
+void Interactive(HRABBITVM v)
 {
 
 #define MAXINPUT 1024
@@ -315,7 +315,7 @@ void Interactive(HSQUIRRELVM v)
 
 int main(int argc, char* argv[])
 {
-    HSQUIRRELVM v;
+    HRABBITVM v;
     SQInteger retval = 0;
 #if defined(_MSC_VER) && defined(_DEBUG)
     _CrtSetAllocHook(MemAllocHook);

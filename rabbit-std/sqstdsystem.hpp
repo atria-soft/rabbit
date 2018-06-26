@@ -7,4 +7,4 @@
  */
 #pragma once
 
-SQUIRREL_API SQInteger sqstd_register_systemlib(HSQUIRRELVM v);
+RABBIT_API SQInteger sqstd_register_systemlib(HRABBITVM v);

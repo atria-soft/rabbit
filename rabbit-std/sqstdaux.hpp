@@ -7,5 +7,5 @@
  */
 #pragma once
 
-SQUIRREL_API void sqstd_seterrorhandlers(HSQUIRRELVM v);
-SQUIRREL_API void sqstd_printcallstack(HSQUIRRELVM v);
+RABBIT_API void sqstd_seterrorhandlers(HRABBITVM v);
+RABBIT_API void sqstd_printcallstack(HRABBITVM v);

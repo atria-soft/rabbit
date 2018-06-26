@@ -16,7 +16,7 @@
 
 #define CUR_CHAR (_currdata)
 #define RETURN_TOKEN(t) { _prevtoken = _curtoken; _curtoken = t; return t;}
-#define IS_EOB() (CUR_CHAR <= SQUIRREL_EOB)
+#define IS_EOB() (CUR_CHAR <= RABBIT_EOB)
 #define NEXT() {Next();_currentcolumn++;}
 #define INIT_TEMP_STRING() { _longstr.resize(0);}
 #define APPEND_CHAR(c) { _longstr.push_back(c);}
@@ -97,7 +97,7 @@ void SQLexer::Next()
         _currdata = (LexChar)t;
         return;
     }
-    _currdata = SQUIRREL_EOB;
+    _currdata = RABBIT_EOB;
     _reached_eof = SQTrue;
 }
 
@@ -120,7 +120,7 @@ void SQLexer::LexBlockComment()
         switch(CUR_CHAR) {
             case _SC('*'): { NEXT(); if(CUR_CHAR == _SC('/')) { done = true; NEXT(); }}; continue;
             case _SC('\n'): _currentline++; NEXT(); continue;
-            case SQUIRREL_EOB: Error(_SC("missing \"*/\" in comment"));
+            case RABBIT_EOB: Error(_SC("missing \"*/\" in comment"));
             default: NEXT();
         }
     }
@@ -133,7 +133,7 @@ void SQLexer::LexLineComment()
 SQInteger SQLexer::Lex()
 {
     _lasttokenline = _currentline;
-    while(CUR_CHAR != SQUIRREL_EOB) {
+    while(CUR_CHAR != RABBIT_EOB) {
         switch(CUR_CHAR){
         case _SC('\t'): case _SC('\r'): case _SC(' '): NEXT(); continue;
         case _SC('\n'):
@@ -261,7 +261,7 @@ SQInteger SQLexer::Lex()
             if (CUR_CHAR == _SC('=')){ NEXT(); RETURN_TOKEN(TK_PLUSEQ);}
             else if (CUR_CHAR == _SC('+')){ NEXT(); RETURN_TOKEN(TK_PLUSPLUS);}
             else RETURN_TOKEN('+');
-        case SQUIRREL_EOB:
+        case RABBIT_EOB:
             return 0;
         default:{
                 if (scisdigit(CUR_CHAR)) {
@@ -363,7 +363,7 @@ SQInteger SQLexer::ReadString(SQInteger ndelim,bool verbatim)
         while(CUR_CHAR != ndelim) {
             SQInteger x = CUR_CHAR;
             switch (x) {
-            case SQUIRREL_EOB:
+            case RABBIT_EOB:
                 Error(_SC("unfinished string"));
                 return -1;
             case _SC('\n'):

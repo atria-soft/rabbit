@@ -21,10 +21,6 @@ public:
         new (newarray) SQArray(ss,nInitialSize);
         return newarray;
     }
-#ifndef NO_GARBAGE_COLLECTOR
-    void Mark(SQCollectable **chain);
-    SQObjectType GetType() {return OT_ARRAY;}
-#endif
     void Finalize(){
         _values.resize(0);
     }
@@ -59,7 +55,7 @@ public:
         //nothing to iterate anymore
         return -1;
     }
-    SQArray *Clone(){SQArray *anew=Create(_opt_ss(this),0); anew->_values.copy(_values); return anew; }
+    SQArray *Clone(){SQArray *anew=Create(NULL,0); anew->_values.copy(_values); return anew; }
     SQInteger Size() const {return _values.size();}
     void Resize(SQInteger size)
     {
