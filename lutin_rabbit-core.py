@@ -53,7 +53,7 @@ def configure(target, my_module):
 		'rabbit/rabbit.hpp',
 		'rabbit/sqobject.hpp',
 		'rabbit/sqopcodes.hpp',
-		'rabbit/squserdata.hpp',
+		'rabbit/UserData.hpp',
 		'rabbit/squtils.hpp',
 		'rabbit/sqpcheader.hpp',
 		'rabbit/sqfuncproto.hpp',

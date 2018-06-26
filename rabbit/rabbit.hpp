@@ -36,14 +36,16 @@ struct SQString;
 struct SQClosure;
 struct SQGenerator;
 struct SQNativeClosure;
-struct SQUserData;
 struct SQFunctionProto;
 struct SQRefCounted;
 struct SQClass;
 struct SQInstance;
 struct SQDelegable;
 struct SQOuter;
-
+namespace rabbit {
+	class UserData;
+	
+}
 #ifdef _UNICODE
 #define SQUNICODE
 #endif
@@ -124,7 +126,7 @@ typedef union tagSQObjectValue
 	struct SQGenerator *pGenerator;
 	struct SQNativeClosure *pNativeClosure;
 	struct SQString *pString;
-	struct SQUserData *pUserData;
+	struct rabbit::UserData *pUserData;
 	SQInteger nInteger;
 	SQFloat fFloat;
 	SQUserPointer pUserPointer;

@@ -10,7 +10,7 @@
 #include <rabbit/sqstring.hpp>
 #include <rabbit/sqarray.hpp>
 #include <rabbit/sqtable.hpp>
-#include <rabbit/squserdata.hpp>
+#include <rabbit/UserData.hpp>
 #include <rabbit/sqfuncproto.hpp>
 #include <rabbit/sqclass.hpp>
 #include <rabbit/sqclosure.hpp>

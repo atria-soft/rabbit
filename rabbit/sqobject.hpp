@@ -236,7 +236,7 @@ struct SQObjectPtr : public SQObject
 	_REF_TYPE_DECL(OT_OUTER,SQOuter,pOuter)
 	_REF_TYPE_DECL(OT_GENERATOR,SQGenerator,pGenerator)
 	_REF_TYPE_DECL(OT_STRING,SQString,pString)
-	_REF_TYPE_DECL(OT_USERDATA,SQUserData,pUserData)
+	_REF_TYPE_DECL(OT_USERDATA,rabbit::UserData,pUserData)
 	_REF_TYPE_DECL(OT_WEAKREF,SQWeakRef,pWeakRef)
 	_REF_TYPE_DECL(OT_THREAD,SQVM,pThread)
 	_REF_TYPE_DECL(OT_FUNCPROTO,SQFunctionProto,pFunctionProto)

@@ -12,7 +12,7 @@
 #include <rabbit/sqarray.hpp>
 #include <rabbit/sqfuncproto.hpp>
 #include <rabbit/sqclosure.hpp>
-#include <rabbit/squserdata.hpp>
+#include <rabbit/UserData.hpp>
 #include <rabbit/sqcompiler.hpp>
 #include <rabbit/sqfuncstate.hpp>
 #include <rabbit/sqclass.hpp>
@@ -257,7 +257,7 @@ void sq_pushthread(HRABBITVM v, HRABBITVM thread)
 
 SQUserPointer sq_newuserdata(HRABBITVM v,SQUnsignedInteger size)
 {
-	SQUserData *ud = SQUserData::Create(_ss(v), size + SQ_ALIGNMENT);
+	rabbit::UserData *ud = rabbit::UserData::Create(_ss(v), size + SQ_ALIGNMENT);
 	v->Push(ud);
 	return (SQUserPointer)sq_aligning(ud + 1);
 }
@@ -720,7 +720,7 @@ SQInteger sq_getsize(HRABBITVM v, SQInteger idx)
 	case OT_STRING:	 return _string(o)->_len;
 	case OT_TABLE:	  return _table(o)->CountUsed();
 	case OT_ARRAY:	  return _array(o)->Size();
-	case OT_USERDATA:   return _userdata(o)->_size;
+	case OT_USERDATA:   return _userdata(o)->getSize();
 	case OT_INSTANCE:   return _instance(o)->_class->_udsize;
 	case OT_CLASS:	  return _class(o)->_udsize;
 	default:
@@ -739,7 +739,9 @@ SQRESULT sq_getuserdata(HRABBITVM v,SQInteger idx,SQUserPointer *p,SQUserPointer
 	SQObjectPtr *o = NULL;
 	_GETSAFE_OBJ(v, idx, OT_USERDATA,o);
 	(*p) = _userdataval(*o);
-	if(typetag) *typetag = _userdata(*o)->_typetag;
+	if(typetag) {
+		*typetag = _userdata(*o)->getTypeTag();
+	}
 	return SQ_OK;
 }
 
@@ -747,9 +749,14 @@ SQRESULT sq_settypetag(HRABBITVM v,SQInteger idx,SQUserPointer typetag)
 {
 	SQObjectPtr &o = stack_get(v,idx);
 	switch(sq_type(o)) {
-		case OT_USERDATA:   _userdata(o)->_typetag = typetag;   break;
-		case OT_CLASS:	  _class(o)->_typetag = typetag;	  break;
-		default:			return sq_throwerror(v,_SC("invalid object type"));
+		case OT_USERDATA:
+			_userdata(o)->setTypeTag(typetag);
+			break;
+		case OT_CLASS:
+			_class(o)->_typetag = typetag;
+			break;
+		default:
+			return sq_throwerror(v,_SC("invalid object type"));
 	}
 	return SQ_OK;
 }
@@ -758,7 +765,7 @@ SQRESULT sq_getobjtypetag(const HSQOBJECT *o,SQUserPointer * typetag)
 {
   switch(sq_type(*o)) {
 	case OT_INSTANCE: *typetag = _instance(*o)->_class->_typetag; break;
-	case OT_USERDATA: *typetag = _userdata(*o)->_typetag; break;
+	case OT_USERDATA: *typetag = _userdata(*o)->getTypeTag(); break;
 	case OT_CLASS:	*typetag = _class(*o)->_typetag; break;
 	default: return SQ_ERROR;
   }
@@ -1226,8 +1233,9 @@ SQRESULT sq_wakeupvm(HRABBITVM v,SQBool wakeupret,SQBool retval,SQBool raiseerro
 	if(!v->Execute(dummy,-1,-1,ret,raiseerror,throwerror?SQVM::ET_RESUME_THROW_VM : SQVM::ET_RESUME_VM)) {
 		return SQ_ERROR;
 	}
-	if(retval)
+	if(retval) {
 		v->Push(ret);
+	}
 	return SQ_OK;
 }
 
@@ -1235,10 +1243,17 @@ void sq_setreleasehook(HRABBITVM v,SQInteger idx,SQRELEASEHOOK hook)
 {
 	SQObjectPtr &ud=stack_get(v,idx);
 	switch(sq_type(ud) ) {
-	case OT_USERDATA:   _userdata(ud)->_hook = hook;	break;
-	case OT_INSTANCE:   _instance(ud)->_hook = hook;	break;
-	case OT_CLASS:	  _class(ud)->_hook = hook;	   break;
-	default: return;
+		case OT_USERDATA:
+			_userdata(ud)->setHook(hook);
+			break;
+		case OT_INSTANCE:
+			_instance(ud)->_hook = hook;
+			break;
+		case OT_CLASS:
+			_class(ud)->_hook = hook;
+			break;
+		default:
+			return;
 	}
 }
 
@@ -1246,10 +1261,17 @@ SQRELEASEHOOK sq_getreleasehook(HRABBITVM v,SQInteger idx)
 {
 	SQObjectPtr &ud=stack_get(v,idx);
 	switch(sq_type(ud) ) {
-	case OT_USERDATA:   return _userdata(ud)->_hook;	break;
-	case OT_INSTANCE:   return _instance(ud)->_hook;	break;
-	case OT_CLASS:	  return _class(ud)->_hook;	   break;
-	default: return NULL;
+		case OT_USERDATA:
+			return _userdata(ud)->getHook();
+			break;
+		case OT_INSTANCE:
+			return _instance(ud)->_hook;
+			break;
+		case OT_CLASS:
+			return _class(ud)->_hook;
+			break;
+		default:
+			return NULL;
 	}
 }
 

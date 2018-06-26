@@ -13,7 +13,7 @@
 #include <rabbit/sqstring.hpp>
 #include <rabbit/sqtable.hpp>
 #include <rabbit/sqarray.hpp>
-#include <rabbit/squserdata.hpp>
+#include <rabbit/UserData.hpp>
 #include <rabbit/sqclass.hpp>
 
 SQSharedState::SQSharedState()
