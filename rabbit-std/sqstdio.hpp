@@ -11,12 +11,12 @@
 
 struct SQStream {
 	virtual ~SQStream() {}
-	virtual SQInteger Read(void *buffer, SQInteger size) = 0;
-	virtual SQInteger Write(void *buffer, SQInteger size) = 0;
-	virtual SQInteger Flush() = 0;
-	virtual SQInteger Tell() = 0;
-	virtual SQInteger Len() = 0;
-	virtual SQInteger Seek(SQInteger offset, SQInteger origin) = 0;
+	virtual int64_t Read(void *buffer, int64_t size) = 0;
+	virtual int64_t Write(void *buffer, int64_t size) = 0;
+	virtual int64_t Flush() = 0;
+	virtual int64_t Tell() = 0;
+	virtual int64_t Len() = 0;
+	virtual int64_t Seek(int64_t offset, int64_t origin) = 0;
 	virtual bool IsValid() = 0;
 	virtual bool EOS() = 0;
 };
@@ -28,16 +28,16 @@ struct SQStream {
 typedef void* SQFILE;
 
 RABBIT_API SQFILE sqstd_fopen(const SQChar *,const SQChar *);
-RABBIT_API SQInteger sqstd_fread(SQUserPointer, SQInteger, SQInteger, SQFILE);
-RABBIT_API SQInteger sqstd_fwrite(const SQUserPointer, SQInteger, SQInteger, SQFILE);
-RABBIT_API SQInteger sqstd_fseek(SQFILE , SQInteger , SQInteger);
-RABBIT_API SQInteger sqstd_ftell(SQFILE);
-RABBIT_API SQInteger sqstd_fflush(SQFILE);
-RABBIT_API SQInteger sqstd_fclose(SQFILE);
-RABBIT_API SQInteger sqstd_feof(SQFILE);
+RABBIT_API int64_t sqstd_fread(SQUserPointer, int64_t, int64_t, SQFILE);
+RABBIT_API int64_t sqstd_fwrite(const SQUserPointer, int64_t, int64_t, SQFILE);
+RABBIT_API int64_t sqstd_fseek(SQFILE , int64_t , int64_t);
+RABBIT_API int64_t sqstd_ftell(SQFILE);
+RABBIT_API int64_t sqstd_fflush(SQFILE);
+RABBIT_API int64_t sqstd_fclose(SQFILE);
+RABBIT_API int64_t sqstd_feof(SQFILE);
 
 RABBIT_API SQRESULT sqstd_createfile(HRABBITVM v, SQFILE file,SQBool own);
-RABBIT_API SQRESULT sqstd_getfile(HRABBITVM v, SQInteger idx, SQFILE *file);
+RABBIT_API SQRESULT sqstd_getfile(HRABBITVM v, int64_t idx, SQFILE *file);
 
 //compiler helpers
 RABBIT_API SQRESULT sqstd_loadfile(HRABBITVM v,const SQChar *filename,SQBool printerror);

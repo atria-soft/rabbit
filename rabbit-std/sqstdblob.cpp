@@ -7,7 +7,7 @@
 #include <rabbit-std/sqstdstream.hpp>
 #include <rabbit-std/sqstdblobimpl.hpp>
 
-#define SQSTD_BLOB_TYPE_TAG ((SQUnsignedInteger)(SQSTD_STREAM_TYPE_TAG | 0x00000002))
+#define SQSTD_BLOB_TYPE_TAG ((uint64_t)(SQSTD_STREAM_TYPE_TAG | 0x00000002))
 
 //Blob
 
@@ -20,10 +20,10 @@
 		return sq_throwerror(v,_SC("the blob is invalid"));
 
 
-static SQInteger _blob_resize(HRABBITVM v)
+static int64_t _blob_resize(HRABBITVM v)
 {
 	SETUP_BLOB(v);
-	SQInteger size;
+	int64_t size;
 	sq_getinteger(v,2,&size);
 	if(!self->Resize(size))
 		return sq_throwerror(v,_SC("resize failed"));
@@ -43,32 +43,32 @@ static void __swap_word(unsigned short *n)
 	*n=(unsigned short)((*n>>8)&0x00FF)| ((*n<<8)&0xFF00);
 }
 
-static SQInteger _blob_swap4(HRABBITVM v)
+static int64_t _blob_swap4(HRABBITVM v)
 {
 	SETUP_BLOB(v);
-	SQInteger num=(self->Len()-(self->Len()%4))>>2;
+	int64_t num=(self->Len()-(self->Len()%4))>>2;
 	unsigned int *t=(unsigned int *)self->GetBuf();
-	for(SQInteger i = 0; i < num; i++) {
+	for(int64_t i = 0; i < num; i++) {
 		__swap_dword(&t[i]);
 	}
 	return 0;
 }
 
-static SQInteger _blob_swap2(HRABBITVM v)
+static int64_t _blob_swap2(HRABBITVM v)
 {
 	SETUP_BLOB(v);
-	SQInteger num=(self->Len()-(self->Len()%2))>>1;
+	int64_t num=(self->Len()-(self->Len()%2))>>1;
 	unsigned short *t = (unsigned short *)self->GetBuf();
-	for(SQInteger i = 0; i < num; i++) {
+	for(int64_t i = 0; i < num; i++) {
 		__swap_word(&t[i]);
 	}
 	return 0;
 }
 
-static SQInteger _blob__set(HRABBITVM v)
+static int64_t _blob__set(HRABBITVM v)
 {
 	SETUP_BLOB(v);
-	SQInteger idx,val;
+	int64_t idx,val;
 	sq_getinteger(v,2,&idx);
 	sq_getinteger(v,3,&val);
 	if(idx < 0 || idx >= self->Len())
@@ -78,10 +78,10 @@ static SQInteger _blob__set(HRABBITVM v)
 	return 1;
 }
 
-static SQInteger _blob__get(HRABBITVM v)
+static int64_t _blob__get(HRABBITVM v)
 {
 	SETUP_BLOB(v);
-	SQInteger idx;
+	int64_t idx;
 	
 	if ((sq_gettype(v, 2) & SQOBJECT_NUMERIC) == 0)
 	{
@@ -95,14 +95,14 @@ static SQInteger _blob__get(HRABBITVM v)
 	return 1;
 }
 
-static SQInteger _blob__nexti(HRABBITVM v)
+static int64_t _blob__nexti(HRABBITVM v)
 {
 	SETUP_BLOB(v);
 	if(sq_gettype(v,2) == OT_NULL) {
 		sq_pushinteger(v, 0);
 		return 1;
 	}
-	SQInteger idx;
+	int64_t idx;
 	if(SQ_SUCCEEDED(sq_getinteger(v, 2, &idx))) {
 		if(idx+1 < self->Len()) {
 			sq_pushinteger(v, idx+1);
@@ -114,13 +114,13 @@ static SQInteger _blob__nexti(HRABBITVM v)
 	return sq_throwerror(v,_SC("internal error (_nexti) wrong argument type"));
 }
 
-static SQInteger _blob__typeof(HRABBITVM v)
+static int64_t _blob__typeof(HRABBITVM v)
 {
 	sq_pushstring(v,_SC("blob"),-1);
 	return 1;
 }
 
-static SQInteger _blob_releasehook(SQUserPointer p, SQInteger SQ_UNUSED_ARG(size))
+static int64_t _blob_releasehook(SQUserPointer p, int64_t SQ_UNUSED_ARG(size))
 {
 	SQBlob *self = (SQBlob*)p;
 	self->~SQBlob();
@@ -128,10 +128,10 @@ static SQInteger _blob_releasehook(SQUserPointer p, SQInteger SQ_UNUSED_ARG(size
 	return 1;
 }
 
-static SQInteger _blob_constructor(HRABBITVM v)
+static int64_t _blob_constructor(HRABBITVM v)
 {
-	SQInteger nparam = sq_gettop(v);
-	SQInteger size = 0;
+	int64_t nparam = sq_gettop(v);
+	int64_t size = 0;
 	if(nparam == 2) {
 		sq_getinteger(v, 2, &size);
 	}
@@ -148,7 +148,7 @@ static SQInteger _blob_constructor(HRABBITVM v)
 	return 0;
 }
 
-static SQInteger _blob__cloned(HRABBITVM v)
+static int64_t _blob__cloned(HRABBITVM v)
 {
 	SQBlob *other = NULL;
 	{
@@ -185,44 +185,44 @@ static const SQRegFunction _blob_methods[] = {
 
 //GLOBAL FUNCTIONS
 
-static SQInteger _g_blob_casti2f(HRABBITVM v)
+static int64_t _g_blob_casti2f(HRABBITVM v)
 {
-	SQInteger i;
+	int64_t i;
 	sq_getinteger(v,2,&i);
-	sq_pushfloat(v,*((const SQFloat *)&i));
+	sq_pushfloat(v,*((const float_t *)&i));
 	return 1;
 }
 
-static SQInteger _g_blob_castf2i(HRABBITVM v)
+static int64_t _g_blob_castf2i(HRABBITVM v)
 {
-	SQFloat f;
+	float_t f;
 	sq_getfloat(v,2,&f);
-	sq_pushinteger(v,*((const SQInteger *)&f));
+	sq_pushinteger(v,*((const int64_t *)&f));
 	return 1;
 }
 
-static SQInteger _g_blob_swap2(HRABBITVM v)
+static int64_t _g_blob_swap2(HRABBITVM v)
 {
-	SQInteger i;
+	int64_t i;
 	sq_getinteger(v,2,&i);
 	short s=(short)i;
 	sq_pushinteger(v,(s<<8)|((s>>8)&0x00FF));
 	return 1;
 }
 
-static SQInteger _g_blob_swap4(HRABBITVM v)
+static int64_t _g_blob_swap4(HRABBITVM v)
 {
-	SQInteger i;
+	int64_t i;
 	sq_getinteger(v,2,&i);
 	unsigned int t4 = (unsigned int)i;
 	__swap_dword(&t4);
-	sq_pushinteger(v,(SQInteger)t4);
+	sq_pushinteger(v,(int64_t)t4);
 	return 1;
 }
 
-static SQInteger _g_blob_swapfloat(HRABBITVM v)
+static int64_t _g_blob_swapfloat(HRABBITVM v)
 {
-	SQFloat f;
+	float_t f;
 	sq_getfloat(v,2,&f);
 	__swap_dword((unsigned int *)&f);
 	sq_pushfloat(v,f);
@@ -239,7 +239,7 @@ static const SQRegFunction bloblib_funcs[]={
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 
-SQRESULT sqstd_getblob(HRABBITVM v,SQInteger idx,SQUserPointer *ptr)
+SQRESULT sqstd_getblob(HRABBITVM v,int64_t idx,SQUserPointer *ptr)
 {
 	SQBlob *blob;
 	if(SQ_FAILED(sq_getinstanceup(v,idx,(SQUserPointer *)&blob,(SQUserPointer)SQSTD_BLOB_TYPE_TAG)))
@@ -248,7 +248,7 @@ SQRESULT sqstd_getblob(HRABBITVM v,SQInteger idx,SQUserPointer *ptr)
 	return SQ_OK;
 }
 
-SQInteger sqstd_getblobsize(HRABBITVM v,SQInteger idx)
+int64_t sqstd_getblobsize(HRABBITVM v,int64_t idx)
 {
 	SQBlob *blob;
 	if(SQ_FAILED(sq_getinstanceup(v,idx,(SQUserPointer *)&blob,(SQUserPointer)SQSTD_BLOB_TYPE_TAG)))
@@ -256,9 +256,9 @@ SQInteger sqstd_getblobsize(HRABBITVM v,SQInteger idx)
 	return blob->Len();
 }
 
-SQUserPointer sqstd_createblob(HRABBITVM v, SQInteger size)
+SQUserPointer sqstd_createblob(HRABBITVM v, int64_t size)
 {
-	SQInteger top = sq_gettop(v);
+	int64_t top = sq_gettop(v);
 	sq_pushregistrytable(v);
 	sq_pushstring(v,_SC("std_blob"),-1);
 	if(SQ_SUCCEEDED(sq_get(v,-2))) {

@@ -21,12 +21,12 @@ struct SQString : public SQRefCounted
 	SQString(){}
 	~SQString(){}
 public:
-	static SQString *Create(SQSharedState *ss, const SQChar *, SQInteger len = -1 );
-	SQInteger Next(const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval);
+	static SQString *Create(SQSharedState *ss, const SQChar *, int64_t len = -1 );
+	int64_t Next(const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval);
 	void Release();
 	SQSharedState *_sharedstate;
 	SQString *_next; //chain for the string table
-	SQInteger _len;
+	int64_t _len;
 	SQHash _hash;
 	SQChar _val[1];
 };

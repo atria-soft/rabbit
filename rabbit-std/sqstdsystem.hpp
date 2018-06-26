@@ -7,4 +7,4 @@
  */
 #pragma once
 
-RABBIT_API SQInteger sqstd_register_systemlib(HRABBITVM v);
+RABBIT_API int64_t sqstd_register_systemlib(HRABBITVM v);

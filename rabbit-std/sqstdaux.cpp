@@ -15,12 +15,12 @@ void sqstd_printcallstack(HRABBITVM v)
 	SQPRINTFUNCTION pf = sq_geterrorfunc(v);
 	if(pf) {
 		SQStackInfos si;
-		SQInteger i;
-		SQFloat f;
+		int64_t i;
+		float_t f;
 		const SQChar *s;
-		SQInteger level=1; //1 is to skip this function that is level 0
+		int64_t level=1; //1 is to skip this function that is level 0
 		const SQChar *name=0;
-		SQInteger seq=0;
+		int64_t seq=0;
 		pf(v,_SC("\nCALLSTACK\n"));
 		while(SQ_SUCCEEDED(sq_stackinfos(v,level,&si)))
 		{
@@ -103,7 +103,7 @@ void sqstd_printcallstack(HRABBITVM v)
 	}
 }
 
-static SQInteger _sqstd_aux_printerror(HRABBITVM v)
+static int64_t _sqstd_aux_printerror(HRABBITVM v)
 {
 	SQPRINTFUNCTION pf = sq_geterrorfunc(v);
 	if(pf) {
@@ -121,7 +121,7 @@ static SQInteger _sqstd_aux_printerror(HRABBITVM v)
 	return 0;
 }
 
-void _sqstd_compiler_error(HRABBITVM v,const SQChar *sErr,const SQChar *sSource,SQInteger line,SQInteger column)
+void _sqstd_compiler_error(HRABBITVM v,const SQChar *sErr,const SQChar *sSource,int64_t line,int64_t column)
 {
 	SQPRINTFUNCTION pf = sq_geterrorfunc(v);
 	if(pf) {

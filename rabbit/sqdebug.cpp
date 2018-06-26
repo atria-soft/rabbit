@@ -13,9 +13,9 @@
 #include <rabbit/sqclosure.hpp>
 #include <rabbit/sqstring.hpp>
 
-SQRESULT sq_getfunctioninfo(HRABBITVM v,SQInteger level,SQFunctionInfo *fi)
+SQRESULT sq_getfunctioninfo(HRABBITVM v,int64_t level,SQFunctionInfo *fi)
 {
-	SQInteger cssize = v->_callsstacksize;
+	int64_t cssize = v->_callsstacksize;
 	if (cssize > level) {
 		SQVM::CallInfo &ci = v->_callsstack[cssize-level-1];
 		if(sq_isclosure(ci._closure)) {
@@ -31,9 +31,9 @@ SQRESULT sq_getfunctioninfo(HRABBITVM v,SQInteger level,SQFunctionInfo *fi)
 	return sq_throwerror(v,_SC("the object is not a closure"));
 }
 
-SQRESULT sq_stackinfos(HRABBITVM v, SQInteger level, SQStackInfos *si)
+SQRESULT sq_stackinfos(HRABBITVM v, int64_t level, SQStackInfos *si)
 {
-	SQInteger cssize = v->_callsstacksize;
+	int64_t cssize = v->_callsstacksize;
 	if (cssize > level) {
 		memset(si, 0, sizeof(SQStackInfos));
 		SQVM::CallInfo &ci = v->_callsstack[cssize-level-1];
@@ -65,7 +65,7 @@ void SQVM::Raise_Error(const SQChar *s, ...)
 {
 	va_list vl;
 	va_start(vl, s);
-	SQInteger buffersize = (SQInteger)scstrlen(s)+(NUMBER_MAX_CHAR*2);
+	int64_t buffersize = (int64_t)scstrlen(s)+(NUMBER_MAX_CHAR*2);
 	scvsprintf(_sp(sq_rsl(buffersize)),buffersize, s, vl);
 	va_end(vl);
 	_lasterror = SQString::Create(_ss(this),_spval,-1);
@@ -106,13 +106,13 @@ void SQVM::Raise_CompareError(const SQObject &o1, const SQObject &o2)
 }
 
 
-void SQVM::Raise_ParamTypeError(SQInteger nparam,SQInteger typemask,SQInteger type)
+void SQVM::Raise_ParamTypeError(int64_t nparam,int64_t typemask,int64_t type)
 {
 	SQObjectPtr exptypes = SQString::Create(_ss(this), _SC(""), -1);
-	SQInteger found = 0;
-	for(SQInteger i=0; i<16; i++)
+	int64_t found = 0;
+	for(int64_t i=0; i<16; i++)
 	{
-		SQInteger mask = ((SQInteger)1) << i;
+		int64_t mask = ((int64_t)1) << i;
 		if(typemask & (mask)) {
 			if(found>0) StringCat(exptypes,SQString::Create(_ss(this), _SC("|"), -1), exptypes);
 			found ++;

@@ -27,7 +27,7 @@
 #define screname rename
 #endif
 
-static SQInteger _system_getenv(HRABBITVM v)
+static int64_t _system_getenv(HRABBITVM v)
 {
 	const SQChar *s;
 	if(SQ_SUCCEEDED(sq_getstring(v,2,&s))){
@@ -38,7 +38,7 @@ static SQInteger _system_getenv(HRABBITVM v)
 }
 
 
-static SQInteger _system_system(HRABBITVM v)
+static int64_t _system_system(HRABBITVM v)
 {
 	const SQChar *s;
 	if(SQ_SUCCEEDED(sq_getstring(v,2,&s))){
@@ -49,20 +49,20 @@ static SQInteger _system_system(HRABBITVM v)
 }
 
 
-static SQInteger _system_clock(HRABBITVM v)
+static int64_t _system_clock(HRABBITVM v)
 {
-	sq_pushfloat(v,((SQFloat)clock())/(SQFloat)CLOCKS_PER_SEC);
+	sq_pushfloat(v,((float_t)clock())/(float_t)CLOCKS_PER_SEC);
 	return 1;
 }
 
-static SQInteger _system_time(HRABBITVM v)
+static int64_t _system_time(HRABBITVM v)
 {
-	SQInteger t = (SQInteger)time(NULL);
+	int64_t t = (int64_t)time(NULL);
 	sq_pushinteger(v,t);
 	return 1;
 }
 
-static SQInteger _system_remove(HRABBITVM v)
+static int64_t _system_remove(HRABBITVM v)
 {
 	const SQChar *s;
 	sq_getstring(v,2,&s);
@@ -71,7 +71,7 @@ static SQInteger _system_remove(HRABBITVM v)
 	return 0;
 }
 
-static SQInteger _system_rename(HRABBITVM v)
+static int64_t _system_rename(HRABBITVM v)
 {
 	const SQChar *oldn,*newn;
 	sq_getstring(v,2,&oldn);
@@ -81,23 +81,23 @@ static SQInteger _system_rename(HRABBITVM v)
 	return 0;
 }
 
-static void _set_integer_slot(HRABBITVM v,const SQChar *name,SQInteger val)
+static void _set_integer_slot(HRABBITVM v,const SQChar *name,int64_t val)
 {
 	sq_pushstring(v,name,-1);
 	sq_pushinteger(v,val);
 	sq_rawset(v,-3);
 }
 
-static SQInteger _system_date(HRABBITVM v)
+static int64_t _system_date(HRABBITVM v)
 {
 	time_t t;
-	SQInteger it;
-	SQInteger format = 'l';
+	int64_t it;
+	int64_t format = 'l';
 	if(sq_gettop(v) > 1) {
 		sq_getinteger(v,2,&it);
 		t = it;
 		if(sq_gettop(v) > 2) {
-			sq_getinteger(v,3,(SQInteger*)&format);
+			sq_getinteger(v,3,(int64_t*)&format);
 		}
 	}
 	else {
@@ -137,9 +137,9 @@ static const SQRegFunction systemlib_funcs[]={
 };
 #undef _DECL_FUNC
 
-SQInteger sqstd_register_systemlib(HRABBITVM v)
+int64_t sqstd_register_systemlib(HRABBITVM v)
 {
-	SQInteger i=0;
+	int64_t i=0;
 	while(systemlib_funcs[i].name!=0)
 	{
 		sq_pushstring(v,systemlib_funcs[i].name,-1);

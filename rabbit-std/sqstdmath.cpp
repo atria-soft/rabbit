@@ -11,41 +11,41 @@
 #include <stdlib.h>
 #include <rabbit-std/sqstdmath.hpp>
 
-#define SINGLE_ARG_FUNC(_funcname) static SQInteger math_##_funcname(HRABBITVM v){ \
-	SQFloat f; \
+#define SINGLE_ARG_FUNC(_funcname) static int64_t math_##_funcname(HRABBITVM v){ \
+	float_t f; \
 	sq_getfloat(v,2,&f); \
-	sq_pushfloat(v,(SQFloat)_funcname(f)); \
+	sq_pushfloat(v,(float_t)_funcname(f)); \
 	return 1; \
 }
 
-#define TWO_ARGS_FUNC(_funcname) static SQInteger math_##_funcname(HRABBITVM v){ \
-	SQFloat p1,p2; \
+#define TWO_ARGS_FUNC(_funcname) static int64_t math_##_funcname(HRABBITVM v){ \
+	float_t p1,p2; \
 	sq_getfloat(v,2,&p1); \
 	sq_getfloat(v,3,&p2); \
-	sq_pushfloat(v,(SQFloat)_funcname(p1,p2)); \
+	sq_pushfloat(v,(float_t)_funcname(p1,p2)); \
 	return 1; \
 }
 
-static SQInteger math_srand(HRABBITVM v)
+static int64_t math_srand(HRABBITVM v)
 {
-	SQInteger i;
+	int64_t i;
 	if(SQ_FAILED(sq_getinteger(v,2,&i)))
 		return sq_throwerror(v,_SC("invalid param"));
 	srand((unsigned int)i);
 	return 0;
 }
 
-static SQInteger math_rand(HRABBITVM v)
+static int64_t math_rand(HRABBITVM v)
 {
 	sq_pushinteger(v,rand());
 	return 1;
 }
 
-static SQInteger math_abs(HRABBITVM v)
+static int64_t math_abs(HRABBITVM v)
 {
-	SQInteger n;
+	int64_t n;
 	sq_getinteger(v,2,&n);
-	sq_pushinteger(v,(SQInteger)abs((int)n));
+	sq_pushinteger(v,(int64_t)abs((int)n));
 	return 1;
 }
 
@@ -95,7 +95,7 @@ static const SQRegFunction mathlib_funcs[] = {
 
 SQRESULT sqstd_register_mathlib(HRABBITVM v)
 {
-	SQInteger i=0;
+	int64_t i=0;
 	while(mathlib_funcs[i].name!=0) {
 		sq_pushstring(v,mathlib_funcs[i].name,-1);
 		sq_newclosure(v,mathlib_funcs[i].f,0);
@@ -108,7 +108,7 @@ SQRESULT sqstd_register_mathlib(HRABBITVM v)
 	sq_pushinteger(v,RAND_MAX);
 	sq_newslot(v,-3,SQFalse);
 	sq_pushstring(v,_SC("PI"),-1);
-	sq_pushfloat(v,(SQFloat)M_PI);
+	sq_pushfloat(v,(float_t)M_PI);
 	sq_newslot(v,-3,SQFalse);
 	return SQ_OK;
 }

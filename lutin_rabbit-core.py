@@ -44,7 +44,8 @@ def configure(target, my_module):
 	my_module.add_depend([
 		'z',
 		'm',
-		'c'
+		'c',
+		'etk-base',
 		])
 	my_module.add_header_file([
 		'rabbit/sqclass.hpp',

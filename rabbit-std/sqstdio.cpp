@@ -12,7 +12,7 @@
 #include <rabbit-std/sqstdio.hpp>
 #include <rabbit-std/sqstdstream.hpp>
 
-#define SQSTD_FILE_TYPE_TAG ((SQUnsignedInteger)(SQSTD_STREAM_TYPE_TAG | 0x00000001))
+#define SQSTD_FILE_TYPE_TAG ((uint64_t)(SQSTD_STREAM_TYPE_TAG | 0x00000001))
 //basic API
 SQFILE sqstd_fopen(const SQChar *filename ,const SQChar *mode)
 {
@@ -23,20 +23,20 @@ SQFILE sqstd_fopen(const SQChar *filename ,const SQChar *mode)
 #endif
 }
 
-SQInteger sqstd_fread(void* buffer, SQInteger size, SQInteger count, SQFILE file)
+int64_t sqstd_fread(void* buffer, int64_t size, int64_t count, SQFILE file)
 {
-	SQInteger ret = (SQInteger)fread(buffer,size,count,(FILE *)file);
+	int64_t ret = (int64_t)fread(buffer,size,count,(FILE *)file);
 	return ret;
 }
 
-SQInteger sqstd_fwrite(const SQUserPointer buffer, SQInteger size, SQInteger count, SQFILE file)
+int64_t sqstd_fwrite(const SQUserPointer buffer, int64_t size, int64_t count, SQFILE file)
 {
-	return (SQInteger)fwrite(buffer,size,count,(FILE *)file);
+	return (int64_t)fwrite(buffer,size,count,(FILE *)file);
 }
 
-SQInteger sqstd_fseek(SQFILE file, SQInteger offset, SQInteger origin)
+int64_t sqstd_fseek(SQFILE file, int64_t offset, int64_t origin)
 {
-	SQInteger realorigin;
+	int64_t realorigin;
 	switch(origin) {
 		case SQ_SEEK_CUR: realorigin = SEEK_CUR; break;
 		case SQ_SEEK_END: realorigin = SEEK_END; break;
@@ -46,22 +46,22 @@ SQInteger sqstd_fseek(SQFILE file, SQInteger offset, SQInteger origin)
 	return fseek((FILE *)file,(long)offset,(int)realorigin);
 }
 
-SQInteger sqstd_ftell(SQFILE file)
+int64_t sqstd_ftell(SQFILE file)
 {
 	return ftell((FILE *)file);
 }
 
-SQInteger sqstd_fflush(SQFILE file)
+int64_t sqstd_fflush(SQFILE file)
 {
 	return fflush((FILE *)file);
 }
 
-SQInteger sqstd_fclose(SQFILE file)
+int64_t sqstd_fclose(SQFILE file)
 {
 	return fclose((FILE *)file);
 }
 
-SQInteger sqstd_feof(SQFILE file)
+int64_t sqstd_feof(SQFILE file)
 {
 	return feof((FILE *)file);
 }
@@ -86,26 +86,26 @@ struct SQFile : public SQStream {
 			_owns = false;
 		}
 	}
-	SQInteger Read(void *buffer,SQInteger size) {
+	int64_t Read(void *buffer,int64_t size) {
 		return sqstd_fread(buffer,1,size,_handle);
 	}
-	SQInteger Write(void *buffer,SQInteger size) {
+	int64_t Write(void *buffer,int64_t size) {
 		return sqstd_fwrite(buffer,1,size,_handle);
 	}
-	SQInteger Flush() {
+	int64_t Flush() {
 		return sqstd_fflush(_handle);
 	}
-	SQInteger Tell() {
+	int64_t Tell() {
 		return sqstd_ftell(_handle);
 	}
-	SQInteger Len() {
-		SQInteger prevpos=Tell();
+	int64_t Len() {
+		int64_t prevpos=Tell();
 		Seek(0,SQ_SEEK_END);
-		SQInteger size=Tell();
+		int64_t size=Tell();
 		Seek(prevpos,SQ_SEEK_SET);
 		return size;
 	}
-	SQInteger Seek(SQInteger offset, SQInteger origin)  {
+	int64_t Seek(int64_t offset, int64_t origin)  {
 		return sqstd_fseek(_handle,offset,origin);
 	}
 	bool IsValid() { return _handle?true:false; }
@@ -116,13 +116,13 @@ private:
 	bool _owns;
 };
 
-static SQInteger _file__typeof(HRABBITVM v)
+static int64_t _file__typeof(HRABBITVM v)
 {
 	sq_pushstring(v,_SC("file"),-1);
 	return 1;
 }
 
-static SQInteger _file_releasehook(SQUserPointer p, SQInteger SQ_UNUSED_ARG(size))
+static int64_t _file_releasehook(SQUserPointer p, int64_t SQ_UNUSED_ARG(size))
 {
 	SQFile *self = (SQFile*)p;
 	self->~SQFile();
@@ -130,7 +130,7 @@ static SQInteger _file_releasehook(SQUserPointer p, SQInteger SQ_UNUSED_ARG(size
 	return 1;
 }
 
-static SQInteger _file_constructor(HRABBITVM v)
+static int64_t _file_constructor(HRABBITVM v)
 {
 	const SQChar *filename,*mode;
 	bool owns = true;
@@ -158,7 +158,7 @@ static SQInteger _file_constructor(HRABBITVM v)
 	return 0;
 }
 
-static SQInteger _file_close(HRABBITVM v)
+static int64_t _file_close(HRABBITVM v)
 {
 	SQFile *self = NULL;
 	if(SQ_SUCCEEDED(sq_getinstanceup(v,1,(SQUserPointer*)&self,(SQUserPointer)SQSTD_FILE_TYPE_TAG))
@@ -182,7 +182,7 @@ static const SQRegFunction _file_methods[] = {
 
 SQRESULT sqstd_createfile(HRABBITVM v, SQFILE file,SQBool own)
 {
-	SQInteger top = sq_gettop(v);
+	int64_t top = sq_gettop(v);
 	sq_pushregistrytable(v);
 	sq_pushstring(v,_SC("std_file"),-1);
 	if(SQ_SUCCEEDED(sq_get(v,-2))) {
@@ -204,7 +204,7 @@ SQRESULT sqstd_createfile(HRABBITVM v, SQFILE file,SQBool own)
 	return SQ_ERROR;
 }
 
-SQRESULT sqstd_getfile(HRABBITVM v, SQInteger idx, SQFILE *file)
+SQRESULT sqstd_getfile(HRABBITVM v, int64_t idx, SQFILE *file)
 {
 	SQFile *fileobj = NULL;
 	if(SQ_SUCCEEDED(sq_getinstanceup(v,idx,(SQUserPointer*)&fileobj,(SQUserPointer)SQSTD_FILE_TYPE_TAG))) {
@@ -219,23 +219,23 @@ SQRESULT sqstd_getfile(HRABBITVM v, SQInteger idx, SQFILE *file)
 #define IO_BUFFER_SIZE 2048
 struct IOBuffer {
 	unsigned char buffer[IO_BUFFER_SIZE];
-	SQInteger size;
-	SQInteger ptr;
+	int64_t size;
+	int64_t ptr;
 	SQFILE file;
 };
 
-SQInteger _read_byte(IOBuffer *iobuffer)
+int64_t _read_byte(IOBuffer *iobuffer)
 {
 	if(iobuffer->ptr < iobuffer->size) {
 
-		SQInteger ret = iobuffer->buffer[iobuffer->ptr];
+		int64_t ret = iobuffer->buffer[iobuffer->ptr];
 		iobuffer->ptr++;
 		return ret;
 	}
 	else {
 		if( (iobuffer->size = sqstd_fread(iobuffer->buffer,1,IO_BUFFER_SIZE,iobuffer->file )) > 0 )
 		{
-			SQInteger ret = iobuffer->buffer[0];
+			int64_t ret = iobuffer->buffer[0];
 			iobuffer->ptr = 1;
 			return ret;
 		}
@@ -244,11 +244,11 @@ SQInteger _read_byte(IOBuffer *iobuffer)
 	return 0;
 }
 
-SQInteger _read_two_bytes(IOBuffer *iobuffer)
+int64_t _read_two_bytes(IOBuffer *iobuffer)
 {
 	if(iobuffer->ptr < iobuffer->size) {
 		if(iobuffer->size < 2) return 0;
-		SQInteger ret = *((const wchar_t*)&iobuffer->buffer[iobuffer->ptr]);
+		int64_t ret = *((const wchar_t*)&iobuffer->buffer[iobuffer->ptr]);
 		iobuffer->ptr += 2;
 		return ret;
 	}
@@ -256,7 +256,7 @@ SQInteger _read_two_bytes(IOBuffer *iobuffer)
 		if( (iobuffer->size = sqstd_fread(iobuffer->buffer,1,IO_BUFFER_SIZE,iobuffer->file )) > 0 )
 		{
 			if(iobuffer->size < 2) return 0;
-			SQInteger ret = *((const wchar_t*)&iobuffer->buffer[0]);
+			int64_t ret = *((const wchar_t*)&iobuffer->buffer[0]);
 			iobuffer->ptr = 2;
 			return ret;
 		}
@@ -265,7 +265,7 @@ SQInteger _read_two_bytes(IOBuffer *iobuffer)
 	return 0;
 }
 
-static SQInteger _io_file_lexfeed_PLAIN(SQUserPointer iobuf)
+static int64_t _io_file_lexfeed_PLAIN(SQUserPointer iobuf)
 {
 	IOBuffer *iobuffer = (IOBuffer *)iobuf;
 	return _read_byte(iobuffer);
@@ -273,14 +273,14 @@ static SQInteger _io_file_lexfeed_PLAIN(SQUserPointer iobuf)
 }
 
 #ifdef SQUNICODE
-static SQInteger _io_file_lexfeed_UTF8(SQUserPointer iobuf)
+static int64_t _io_file_lexfeed_UTF8(SQUserPointer iobuf)
 {
 	IOBuffer *iobuffer = (IOBuffer *)iobuf;
 #define READ(iobuf) \
 	if((inchar = (unsigned char)_read_byte(iobuf)) == 0) \
 		return 0;
 
-	static const SQInteger utf8_lengths[16] =
+	static const int64_t utf8_lengths[16] =
 	{
 		1,1,1,1,1,1,1,1,		/* 0000 to 0111 : 1 byte (plain ASCII) */
 		0,0,0,0,				/* 1000 to 1011 : not valid */
@@ -290,18 +290,18 @@ static SQInteger _io_file_lexfeed_UTF8(SQUserPointer iobuf)
 	};
 	static const unsigned char byte_masks[5] = {0,0,0x1f,0x0f,0x07};
 	unsigned char inchar;
-	SQInteger c = 0;
+	int64_t c = 0;
 	READ(iobuffer);
 	c = inchar;
 	//
 	if(c >= 0x80) {
-		SQInteger tmp;
-		SQInteger codelen = utf8_lengths[c>>4];
+		int64_t tmp;
+		int64_t codelen = utf8_lengths[c>>4];
 		if(codelen == 0)
 			return 0;
 			//"invalid UTF-8 stream";
 		tmp = c&byte_masks[codelen];
-		for(SQInteger n = 0; n < codelen-1; n++) {
+		for(int64_t n = 0; n < codelen-1; n++) {
 			tmp<<=6;
 			READ(iobuffer);
 			tmp |= inchar & 0x3F;
@@ -312,18 +312,18 @@ static SQInteger _io_file_lexfeed_UTF8(SQUserPointer iobuf)
 }
 #endif
 
-static SQInteger _io_file_lexfeed_UCS2_LE(SQUserPointer iobuf)
+static int64_t _io_file_lexfeed_UCS2_LE(SQUserPointer iobuf)
 {
-	SQInteger ret;
+	int64_t ret;
 	IOBuffer *iobuffer = (IOBuffer *)iobuf;
 	if( (ret = _read_two_bytes(iobuffer)) > 0 )
 		return ret;
 	return 0;
 }
 
-static SQInteger _io_file_lexfeed_UCS2_BE(SQUserPointer iobuf)
+static int64_t _io_file_lexfeed_UCS2_BE(SQUserPointer iobuf)
 {
-	SQInteger c;
+	int64_t c;
 	IOBuffer *iobuffer = (IOBuffer *)iobuf;
 	if( (c = _read_two_bytes(iobuffer)) > 0 ) {
 		c = ((c>>8)&0x00FF)| ((c<<8)&0xFF00);
@@ -332,14 +332,14 @@ static SQInteger _io_file_lexfeed_UCS2_BE(SQUserPointer iobuf)
 	return 0;
 }
 
-SQInteger file_read(SQUserPointer file,SQUserPointer buf,SQInteger size)
+int64_t file_read(SQUserPointer file,SQUserPointer buf,int64_t size)
 {
-	SQInteger ret;
+	int64_t ret;
 	if( ( ret = sqstd_fread(buf,1,size,(SQFILE)file ))!=0 )return ret;
 	return -1;
 }
 
-SQInteger file_write(SQUserPointer file,SQUserPointer p,SQInteger size)
+int64_t file_write(SQUserPointer file,SQUserPointer p,int64_t size)
 {
 	return sqstd_fwrite(p,1,size,(SQFILE)file);
 }
@@ -348,7 +348,7 @@ SQRESULT sqstd_loadfile(HRABBITVM v,const SQChar *filename,SQBool printerror)
 {
 	SQFILE file = sqstd_fopen(filename,_SC("rb"));
 
-	SQInteger ret;
+	int64_t ret;
 	unsigned short us;
 	unsigned char uc;
 	SQLEXREADFUNC func = _io_file_lexfeed_PLAIN;
@@ -433,7 +433,7 @@ SQRESULT sqstd_writeclosuretofile(HRABBITVM v,const SQChar *filename)
 	return SQ_ERROR; //forward the error
 }
 
-SQInteger _g_io_loadfile(HRABBITVM v)
+int64_t _g_io_loadfile(HRABBITVM v)
 {
 	const SQChar *filename;
 	SQBool printerror = SQFalse;
@@ -446,7 +446,7 @@ SQInteger _g_io_loadfile(HRABBITVM v)
 	return SQ_ERROR; //propagates the error
 }
 
-SQInteger _g_io_writeclosuretofile(HRABBITVM v)
+int64_t _g_io_writeclosuretofile(HRABBITVM v)
 {
 	const SQChar *filename;
 	sq_getstring(v,2,&filename);
@@ -455,7 +455,7 @@ SQInteger _g_io_writeclosuretofile(HRABBITVM v)
 	return SQ_ERROR; //propagates the error
 }
 
-SQInteger _g_io_dofile(HRABBITVM v)
+int64_t _g_io_dofile(HRABBITVM v)
 {
 	const SQChar *filename;
 	SQBool printerror = SQFalse;
@@ -479,7 +479,7 @@ static const SQRegFunction iolib_funcs[]={
 
 SQRESULT sqstd_register_iolib(HRABBITVM v)
 {
-	SQInteger top = sq_gettop(v);
+	int64_t top = sq_gettop(v);
 	//create delegate
 	declare_stream(v,_SC("file"),(SQUserPointer)SQSTD_FILE_TYPE_TAG,_SC("std_file"),_file_methods,iolib_funcs);
 	sq_pushstring(v,_SC("stdout"),-1);

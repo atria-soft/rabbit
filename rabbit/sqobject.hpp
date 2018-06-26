@@ -64,25 +64,25 @@ enum SQMetaMethod{
 
 
 #define _CONSTRUCT_VECTOR(type,size,ptr) { \
-	for(SQInteger n = 0; n < ((SQInteger)size); n++) { \
+	for(int64_t n = 0; n < ((int64_t)size); n++) { \
 			new (&ptr[n]) type(); \
 		} \
 }
 
 #define _DESTRUCT_VECTOR(type,size,ptr) { \
-	for(SQInteger nl = 0; nl < ((SQInteger)size); nl++) { \
+	for(int64_t nl = 0; nl < ((int64_t)size); nl++) { \
 			ptr[nl].~type(); \
 	} \
 }
 
 #define _COPY_VECTOR(dest,src,size) { \
-	for(SQInteger _n_ = 0; _n_ < ((SQInteger)size); _n_++) { \
+	for(int64_t _n_ = 0; _n_ < ((int64_t)size); _n_++) { \
 		dest[_n_] = src[_n_]; \
 	} \
 }
 
 #define _NULL_SQOBJECT_VECTOR(vec,size) { \
-	for(SQInteger _n_ = 0; _n_ < ((SQInteger)size); _n_++) { \
+	for(int64_t _n_ = 0; _n_ < ((int64_t)size); _n_++) { \
 		vec[_n_].Null(); \
 	} \
 }
@@ -91,7 +91,7 @@ enum SQMetaMethod{
 
 struct SQRefCounted
 {
-	SQUnsignedInteger _uiRef;
+	uint64_t _uiRef;
 	struct SQWeakRef *_weakref;
 	SQRefCounted() { _uiRef = 0; _weakref = NULL; }
 	virtual ~SQRefCounted();
@@ -159,8 +159,8 @@ struct SQObjectPtr;
 #define _stringval(obj) (obj)._unVal.pString->_val
 #define _userdataval(obj) ((SQUserPointer)sq_aligning((obj)._unVal.pUserData + 1))
 
-#define tofloat(num) ((sq_type(num)==OT_INTEGER)?(SQFloat)_integer(num):_float(num))
-#define tointeger(num) ((sq_type(num)==OT_FLOAT)?(SQInteger)_float(num):_integer(num))
+#define tofloat(num) ((sq_type(num)==OT_INTEGER)?(float_t)_integer(num):_float(num))
+#define tointeger(num) ((sq_type(num)==OT_FLOAT)?(int64_t)_float(num):_integer(num))
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
 #if defined(SQUSEDOUBLE) && !defined(_SQ64) || !defined(SQUSEDOUBLE) && defined(_SQ64)
@@ -241,8 +241,8 @@ struct SQObjectPtr : public SQObject
 	_REF_TYPE_DECL(OT_THREAD,SQVM,pThread)
 	_REF_TYPE_DECL(OT_FUNCPROTO,SQFunctionProto,pFunctionProto)
 
-	_SCALAR_TYPE_DECL(OT_INTEGER,SQInteger,nInteger)
-	_SCALAR_TYPE_DECL(OT_FLOAT,SQFloat,fFloat)
+	_SCALAR_TYPE_DECL(OT_INTEGER,int64_t,nInteger)
+	_SCALAR_TYPE_DECL(OT_FLOAT,float_t,fFloat)
 	_SCALAR_TYPE_DECL(OT_USERPOINTER,SQUserPointer,pUserPointer)
 
 	SQObjectPtr(bool bBool)
@@ -319,9 +319,9 @@ struct SQDelegable : public SQRefCounted {
 	SQTable *_delegate;
 };
 
-SQUnsignedInteger TranslateIndex(const SQObjectPtr &idx);
+uint64_t TranslateIndex(const SQObjectPtr &idx);
 typedef sqvector<SQObjectPtr> SQObjectPtrVec;
-typedef sqvector<SQInteger> SQIntVec;
+typedef sqvector<int64_t> SQIntVec;
 const SQChar *GetTypeName(const SQObjectPtr &obj1);
 const SQChar *IdType2Name(SQObjectType type);
 

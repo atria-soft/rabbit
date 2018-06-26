@@ -62,7 +62,7 @@ bool SQClass::NewSlot(SQSharedState *ss,const SQObjectPtr &key,const SQObjectPtr
 		return true;
 	}
 	if(belongs_to_static_table) {
-		SQInteger mmidx;
+		int64_t mmidx;
 		if((sq_type(val) == OT_CLOSURE || sq_type(val) == OT_NATIVECLOSURE) &&
 			(mmidx = ss->GetMetaMethodIdxByName(key)) != -1) {
 			_metamethods[mmidx] = val;
@@ -78,7 +78,7 @@ bool SQClass::NewSlot(SQSharedState *ss,const SQObjectPtr &key,const SQObjectPtr
 				bool isconstructor;
 				SQVM::IsEqual(ss->_constructoridx, key, isconstructor);
 				if(isconstructor) {
-					_constructoridx = (SQInteger)_methods.size();
+					_constructoridx = (int64_t)_methods.size();
 				}
 				SQClassMember m;
 				m.val = theval;
@@ -104,10 +104,10 @@ SQInstance *SQClass::CreateInstance()
 	return SQInstance::Create(NULL,this);
 }
 
-SQInteger SQClass::Next(const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval)
+int64_t SQClass::Next(const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval)
 {
 	SQObjectPtr oval;
-	SQInteger idx = _members->Next(false,refpos,outkey,oval);
+	int64_t idx = _members->Next(false,refpos,outkey,oval);
 	if(idx != -1) {
 		if(_ismethod(oval)) {
 			outval = _methods[_member_idx(oval)].val;
@@ -152,23 +152,23 @@ void SQInstance::Init(SQSharedState *ss)
 	_delegate = _class->_members;
 }
 
-SQInstance::SQInstance(SQSharedState *ss, SQClass *c, SQInteger memsize)
+SQInstance::SQInstance(SQSharedState *ss, SQClass *c, int64_t memsize)
 {
 	_memsize = memsize;
 	_class = c;
-	SQUnsignedInteger nvalues = _class->_defaultvalues.size();
-	for(SQUnsignedInteger n = 0; n < nvalues; n++) {
+	uint64_t nvalues = _class->_defaultvalues.size();
+	for(uint64_t n = 0; n < nvalues; n++) {
 		new (&_values[n]) SQObjectPtr(_class->_defaultvalues[n].val);
 	}
 	Init(ss);
 }
 
-SQInstance::SQInstance(SQSharedState *ss, SQInstance *i, SQInteger memsize)
+SQInstance::SQInstance(SQSharedState *ss, SQInstance *i, int64_t memsize)
 {
 	_memsize = memsize;
 	_class = i->_class;
-	SQUnsignedInteger nvalues = _class->_defaultvalues.size();
-	for(SQUnsignedInteger n = 0; n < nvalues; n++) {
+	uint64_t nvalues = _class->_defaultvalues.size();
+	for(uint64_t n = 0; n < nvalues; n++) {
 		new (&_values[n]) SQObjectPtr(i->_values[n]);
 	}
 	Init(ss);
@@ -176,7 +176,7 @@ SQInstance::SQInstance(SQSharedState *ss, SQInstance *i, SQInteger memsize)
 
 void SQInstance::Finalize()
 {
-	SQUnsignedInteger nvalues = _class->_defaultvalues.size();
+	uint64_t nvalues = _class->_defaultvalues.size();
 	__ObjRelease(_class);
 	_NULL_SQOBJECT_VECTOR(_values,nvalues);
 }

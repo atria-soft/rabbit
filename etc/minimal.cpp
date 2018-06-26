@@ -36,7 +36,7 @@ void errorfunc(HSQUIRRELVM v,const SQChar *s,...)
 
 void call_foo(HSQUIRRELVM v, int n,float f,const SQChar *s)
 {
-	SQInteger top = sq_gettop(v); //saves the stack size before the call
+	int64_t top = sq_gettop(v); //saves the stack size before the call
 	sq_pushroottable(v); //pushes the global table
 	sq_pushstring(v,_SC("foo"),-1);
 	if(SQ_SUCCEEDED(sq_get(v,-2))) { //gets the field 'foo' from the global table

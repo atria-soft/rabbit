@@ -19,35 +19,35 @@ struct SQLexer
 	~SQLexer();
 	void Init(SQSharedState *ss,SQLEXREADFUNC rg,SQUserPointer up,CompilerErrorFunc efunc,void *ed);
 	void Error(const SQChar *err);
-	SQInteger Lex();
-	const SQChar *Tok2Str(SQInteger tok);
+	int64_t Lex();
+	const SQChar *Tok2Str(int64_t tok);
 private:
-	SQInteger GetIDType(const SQChar *s,SQInteger len);
-	SQInteger ReadString(SQInteger ndelim,bool verbatim);
-	SQInteger ReadNumber();
+	int64_t GetIDType(const SQChar *s,int64_t len);
+	int64_t ReadString(int64_t ndelim,bool verbatim);
+	int64_t ReadNumber();
 	void LexBlockComment();
 	void LexLineComment();
-	SQInteger ReadID();
+	int64_t ReadID();
 	void Next();
 #ifdef SQUNICODE
 #if WCHAR_SIZE == 2
-	SQInteger AddUTF16(SQUnsignedInteger ch);
+	int64_t AddUTF16(uint64_t ch);
 #endif
 #else
-	SQInteger AddUTF8(SQUnsignedInteger ch);
+	int64_t AddUTF8(uint64_t ch);
 #endif
-	SQInteger ProcessStringHexEscape(SQChar *dest, SQInteger maxdigits);
-	SQInteger _curtoken;
+	int64_t ProcessStringHexEscape(SQChar *dest, int64_t maxdigits);
+	int64_t _curtoken;
 	SQTable *_keywords;
 	SQBool _reached_eof;
 public:
-	SQInteger _prevtoken;
-	SQInteger _currentline;
-	SQInteger _lasttokenline;
-	SQInteger _currentcolumn;
+	int64_t _prevtoken;
+	int64_t _currentline;
+	int64_t _lasttokenline;
+	int64_t _currentcolumn;
 	const SQChar *_svalue;
-	SQInteger _nvalue;
-	SQFloat _fvalue;
+	int64_t _nvalue;
+	float_t _fvalue;
 	SQLEXREADFUNC _readf;
 	SQUserPointer _up;
 	LexChar _currdata;

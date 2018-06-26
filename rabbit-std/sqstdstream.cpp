@@ -18,16 +18,16 @@
 
 #define SETUP_STREAM(v) \
 	SQStream *self = NULL; \
-	if(SQ_FAILED(sq_getinstanceup(v,1,(SQUserPointer*)&self,(SQUserPointer)((SQUnsignedInteger)SQSTD_STREAM_TYPE_TAG)))) \
+	if(SQ_FAILED(sq_getinstanceup(v,1,(SQUserPointer*)&self,(SQUserPointer)((uint64_t)SQSTD_STREAM_TYPE_TAG)))) \
 		return sq_throwerror(v,_SC("invalid type tag")); \
 	if(!self || !self->IsValid())  \
 		return sq_throwerror(v,_SC("the stream is invalid"));
 
-SQInteger _stream_readblob(HRABBITVM v)
+int64_t _stream_readblob(HRABBITVM v)
 {
 	SETUP_STREAM(v);
 	SQUserPointer data,blobp;
-	SQInteger size,res;
+	int64_t size,res;
 	sq_getinteger(v,2,&size);
 	if(size > self->Len()) {
 		size = self->Len();
@@ -44,20 +44,20 @@ SQInteger _stream_readblob(HRABBITVM v)
 #define SAFE_READN(ptr,len) { \
 	if(self->Read(ptr,len) != len) return sq_throwerror(v,_SC("io error")); \
 	}
-SQInteger _stream_readn(HRABBITVM v)
+int64_t _stream_readn(HRABBITVM v)
 {
 	SETUP_STREAM(v);
-	SQInteger format;
+	int64_t format;
 	sq_getinteger(v, 2, &format);
 	switch(format) {
 	case 'l': {
-		SQInteger i;
+		int64_t i;
 		SAFE_READN(&i, sizeof(i));
 		sq_pushinteger(v, i);
 			  }
 		break;
 	case 'i': {
-		SQInt32 i;
+		int32_t i;
 		SAFE_READN(&i, sizeof(i));
 		sq_pushinteger(v, i);
 			  }
@@ -95,7 +95,7 @@ SQInteger _stream_readn(HRABBITVM v)
 	case 'd': {
 		double d;
 		SAFE_READN(&d, sizeof(double));
-		sq_pushfloat(v, (SQFloat)d);
+		sq_pushfloat(v, (float_t)d);
 			  }
 		break;
 	default:
@@ -104,10 +104,10 @@ SQInteger _stream_readn(HRABBITVM v)
 	return 1;
 }
 
-SQInteger _stream_writeblob(HRABBITVM v)
+int64_t _stream_writeblob(HRABBITVM v)
 {
 	SQUserPointer data;
-	SQInteger size;
+	int64_t size;
 	SETUP_STREAM(v);
 	if(SQ_FAILED(sqstd_getblob(v,2,&data)))
 		return sq_throwerror(v,_SC("invalid parameter"));
@@ -118,25 +118,25 @@ SQInteger _stream_writeblob(HRABBITVM v)
 	return 1;
 }
 
-SQInteger _stream_writen(HRABBITVM v)
+int64_t _stream_writen(HRABBITVM v)
 {
 	SETUP_STREAM(v);
-	SQInteger format, ti;
-	SQFloat tf;
+	int64_t format, ti;
+	float_t tf;
 	sq_getinteger(v, 3, &format);
 	switch(format) {
 	case 'l': {
-		SQInteger i;
+		int64_t i;
 		sq_getinteger(v, 2, &ti);
 		i = ti;
-		self->Write(&i, sizeof(SQInteger));
+		self->Write(&i, sizeof(int64_t));
 			  }
 		break;
 	case 'i': {
-		SQInt32 i;
+		int32_t i;
 		sq_getinteger(v, 2, &ti);
-		i = (SQInt32)ti;
-		self->Write(&i, sizeof(SQInt32));
+		i = (int32_t)ti;
+		self->Write(&i, sizeof(int32_t));
 			  }
 		break;
 	case 's': {
@@ -187,13 +187,13 @@ SQInteger _stream_writen(HRABBITVM v)
 	return 0;
 }
 
-SQInteger _stream_seek(HRABBITVM v)
+int64_t _stream_seek(HRABBITVM v)
 {
 	SETUP_STREAM(v);
-	SQInteger offset, origin = SQ_SEEK_SET;
+	int64_t offset, origin = SQ_SEEK_SET;
 	sq_getinteger(v, 2, &offset);
 	if(sq_gettop(v) > 2) {
-		SQInteger t;
+		int64_t t;
 		sq_getinteger(v, 3, &t);
 		switch(t) {
 			case 'b': origin = SQ_SEEK_SET; break;
@@ -206,21 +206,21 @@ SQInteger _stream_seek(HRABBITVM v)
 	return 1;
 }
 
-SQInteger _stream_tell(HRABBITVM v)
+int64_t _stream_tell(HRABBITVM v)
 {
 	SETUP_STREAM(v);
 	sq_pushinteger(v, self->Tell());
 	return 1;
 }
 
-SQInteger _stream_len(HRABBITVM v)
+int64_t _stream_len(HRABBITVM v)
 {
 	SETUP_STREAM(v);
 	sq_pushinteger(v, self->Len());
 	return 1;
 }
 
-SQInteger _stream_flush(HRABBITVM v)
+int64_t _stream_flush(HRABBITVM v)
 {
 	SETUP_STREAM(v);
 	if(!self->Flush())
@@ -230,7 +230,7 @@ SQInteger _stream_flush(HRABBITVM v)
 	return 1;
 }
 
-SQInteger _stream_eos(HRABBITVM v)
+int64_t _stream_eos(HRABBITVM v)
 {
 	SETUP_STREAM(v);
 	if(self->EOS())
@@ -240,7 +240,7 @@ SQInteger _stream_eos(HRABBITVM v)
 	return 1;
 }
 
- SQInteger _stream__cloned(HRABBITVM v)
+ int64_t _stream__cloned(HRABBITVM v)
  {
 	 return sq_throwerror(v,_SC("this object cannot be cloned"));
  }
@@ -266,8 +266,8 @@ void init_streamclass(HRABBITVM v)
 	if(SQ_FAILED(sq_get(v,-2))) {
 		sq_pushstring(v,_SC("std_stream"),-1);
 		sq_newclass(v,SQFalse);
-		sq_settypetag(v,-1,(SQUserPointer)((SQUnsignedInteger)SQSTD_STREAM_TYPE_TAG));
-		SQInteger i = 0;
+		sq_settypetag(v,-1,(SQUserPointer)((uint64_t)SQSTD_STREAM_TYPE_TAG));
+		int64_t i = 0;
 		while(_stream_methods[i].name != 0) {
 			const SQRegFunction &f = _stream_methods[i];
 			sq_pushstring(v,f.name,-1);
@@ -294,7 +294,7 @@ SQRESULT declare_stream(HRABBITVM v,const SQChar* name,SQUserPointer typetag,con
 {
 	if(sq_gettype(v,-1) != OT_TABLE)
 		return sq_throwerror(v,_SC("table expected"));
-	SQInteger top = sq_gettop(v);
+	int64_t top = sq_gettop(v);
 	//create delegate
 	init_streamclass(v);
 	sq_pushregistrytable(v);
@@ -303,7 +303,7 @@ SQRESULT declare_stream(HRABBITVM v,const SQChar* name,SQUserPointer typetag,con
 	if(SQ_SUCCEEDED(sq_get(v,-3))) {
 		sq_newclass(v,SQTrue);
 		sq_settypetag(v,-1,typetag);
-		SQInteger i = 0;
+		int64_t i = 0;
 		while(methods[i].name != 0) {
 			const SQRegFunction &f = methods[i];
 			sq_pushstring(v,f.name,-1);

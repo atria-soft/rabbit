@@ -25,8 +25,8 @@ typedef sqvector<SQClassMember> SQClassMemberVec;
 
 #define _ismethod(o) (_integer(o)&MEMBER_TYPE_METHOD)
 #define _isfield(o) (_integer(o)&MEMBER_TYPE_FIELD)
-#define _make_method_idx(i) ((SQInteger)(MEMBER_TYPE_METHOD|i))
-#define _make_field_idx(i) ((SQInteger)(MEMBER_TYPE_FIELD|i))
+#define _make_method_idx(i) ((int64_t)(MEMBER_TYPE_METHOD|i))
+#define _make_field_idx(i) ((int64_t)(MEMBER_TYPE_FIELD|i))
 #define _member_type(o) (_integer(o)&0xFF000000)
 #define _member_idx(o) (_integer(o)&0x00FFFFFF)
 
@@ -70,7 +70,7 @@ public:
 		sq_delete(this, SQClass);
 	}
 	void Finalize();
-	SQInteger Next(const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval);
+	int64_t Next(const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval);
 	SQInstance *CreateInstance();
 	SQTable *_members;
 	SQClass *_base;
@@ -81,8 +81,8 @@ public:
 	SQUserPointer _typetag;
 	SQRELEASEHOOK _hook;
 	bool _locked;
-	SQInteger _constructoridx;
-	SQInteger _udsize;
+	int64_t _constructoridx;
+	int64_t _udsize;
 };
 
 #define calcinstancesize(_theclass_) \
@@ -91,12 +91,12 @@ public:
 struct SQInstance : public SQDelegable
 {
 	void Init(SQSharedState *ss);
-	SQInstance(SQSharedState *ss, SQClass *c, SQInteger memsize);
-	SQInstance(SQSharedState *ss, SQInstance *c, SQInteger memsize);
+	SQInstance(SQSharedState *ss, SQClass *c, int64_t memsize);
+	SQInstance(SQSharedState *ss, SQInstance *c, int64_t memsize);
 public:
 	static SQInstance* Create(SQSharedState *ss,SQClass *theclass) {
 
-		SQInteger size = calcinstancesize(theclass);
+		int64_t size = calcinstancesize(theclass);
 		SQInstance *newinst = (SQInstance *)SQ_MALLOC(size);
 		new (newinst) SQInstance(ss, theclass,size);
 		if(theclass->_udsize) {
@@ -106,7 +106,7 @@ public:
 	}
 	SQInstance *Clone(SQSharedState *ss)
 	{
-		SQInteger size = calcinstancesize(_class);
+		int64_t size = calcinstancesize(_class);
 		SQInstance *newinst = (SQInstance *)SQ_MALLOC(size);
 		new (newinst) SQInstance(ss, this,size);
 		if(_class->_udsize) {
@@ -141,7 +141,7 @@ public:
 		if (_hook) { _hook(_userpointer,0);}
 		_uiRef--;
 		if(_uiRef > 0) return;
-		SQInteger size = _memsize;
+		int64_t size = _memsize;
 		this->~SQInstance();
 		SQ_FREE(this, size);
 	}
@@ -152,7 +152,7 @@ public:
 	SQClass *_class;
 	SQUserPointer _userpointer;
 	SQRELEASEHOOK _hook;
-	SQInteger _memsize;
+	int64_t _memsize;
 	SQObjectPtr _values[1];
 };
 

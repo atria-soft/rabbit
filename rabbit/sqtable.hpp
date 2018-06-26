@@ -16,14 +16,14 @@
 #include <rabbit/sqstring.hpp>
 
 
-#define hashptr(p)  ((SQHash)(((SQInteger)p) >> 3))
+#define hashptr(p)  ((SQHash)(((int64_t)p) >> 3))
 
 inline SQHash HashObj(const SQObjectPtr &key)
 {
 	switch(sq_type(key)) {
 		case OT_STRING:	 return _string(key)->_hash;
-		case OT_FLOAT:	  return (SQHash)((SQInteger)_float(key));
-		case OT_BOOL: case OT_INTEGER:  return (SQHash)((SQInteger)_integer(key));
+		case OT_FLOAT:	  return (SQHash)((int64_t)_float(key));
+		case OT_BOOL: case OT_INTEGER:  return (SQHash)((int64_t)_integer(key));
 		default:			return hashptr(key._unVal.pRefCounted);
 	}
 }
@@ -40,16 +40,16 @@ private:
 	};
 	_HashNode *_firstfree;
 	_HashNode *_nodes;
-	SQInteger _numofnodes;
-	SQInteger _usednodes;
+	int64_t _numofnodes;
+	int64_t _usednodes;
 
 ///////////////////////////
-	void AllocNodes(SQInteger nSize);
+	void AllocNodes(int64_t nSize);
 	void Rehash(bool force);
-	SQTable(SQSharedState *ss, SQInteger nInitialSize);
+	SQTable(SQSharedState *ss, int64_t nInitialSize);
 	void _ClearNodes();
 public:
-	static SQTable* Create(SQSharedState *ss,SQInteger nInitialSize)
+	static SQTable* Create(SQSharedState *ss,int64_t nInitialSize)
 	{
 		SQTable *newtable = (SQTable*)SQ_MALLOC(sizeof(SQTable));
 		new (newtable) SQTable(ss, nInitialSize);
@@ -61,7 +61,7 @@ public:
 	~SQTable()
 	{
 		SetDelegate(NULL);
-		for (SQInteger i = 0; i < _numofnodes; i++) _nodes[i].~_HashNode();
+		for (int64_t i = 0; i < _numofnodes; i++) _nodes[i].~_HashNode();
 		SQ_FREE(_nodes, _numofnodes * sizeof(_HashNode));
 	}
 	inline _HashNode *_Get(const SQObjectPtr &key,SQHash hash)
@@ -75,7 +75,7 @@ public:
 		return NULL;
 	}
 	//for compiler use
-	inline bool GetStr(const SQChar* key,SQInteger keylen,SQObjectPtr &val)
+	inline bool GetStr(const SQChar* key,int64_t keylen,SQObjectPtr &val)
 	{
 		SQHash hash = _hashstr(key,keylen);
 		_HashNode *n = &_nodes[hash & (_numofnodes - 1)];
@@ -97,9 +97,9 @@ public:
 	bool Set(const SQObjectPtr &key, const SQObjectPtr &val);
 	//returns true if a new slot has been created false if it was already present
 	bool NewSlot(const SQObjectPtr &key,const SQObjectPtr &val);
-	SQInteger Next(bool getweakrefs,const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval);
+	int64_t Next(bool getweakrefs,const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval);
 
-	SQInteger CountUsed(){ return _usednodes;}
+	int64_t CountUsed(){ return _usednodes;}
 	void Clear();
 	void Release()
 	{

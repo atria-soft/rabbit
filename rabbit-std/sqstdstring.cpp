@@ -26,12 +26,12 @@ static SQBool isfmtchr(SQChar ch)
 	return SQFalse;
 }
 
-static SQInteger validate_format(HRABBITVM v, SQChar *fmt, const SQChar *src, SQInteger n,SQInteger &width)
+static int64_t validate_format(HRABBITVM v, SQChar *fmt, const SQChar *src, int64_t n,int64_t &width)
 {
 	SQChar *dummy;
 	SQChar swidth[MAX_WFORMAT_LEN];
-	SQInteger wc = 0;
-	SQInteger start = n;
+	int64_t wc = 0;
+	int64_t start = n;
 	fmt[0] = '%';
 	while (isfmtchr(src[n])) n++;
 	while (scisdigit(src[n])) {
@@ -71,7 +71,7 @@ static SQInteger validate_format(HRABBITVM v, SQChar *fmt, const SQChar *src, SQ
 	return n;
 }
 
-SQRESULT sqstd_format(HRABBITVM v,SQInteger nformatstringidx,SQInteger *outlen,SQChar **output)
+SQRESULT sqstd_format(HRABBITVM v,int64_t nformatstringidx,int64_t *outlen,SQChar **output)
 {
 	const SQChar *format;
 	SQChar *dest;
@@ -80,10 +80,10 @@ SQRESULT sqstd_format(HRABBITVM v,SQInteger nformatstringidx,SQInteger *outlen,S
 	if (SQ_FAILED(res)) {
 		return res; // propagate the error
 	}
-	SQInteger format_size = sq_getsize(v,nformatstringidx);
-	SQInteger allocated = (format_size+2)*sizeof(SQChar);
+	int64_t format_size = sq_getsize(v,nformatstringidx);
+	int64_t allocated = (format_size+2)*sizeof(SQChar);
 	dest = sq_getscratchpad(v,allocated);
-	SQInteger n = 0,i = 0, nparam = nformatstringidx+1, w = 0;
+	int64_t n = 0,i = 0, nparam = nformatstringidx+1, w = 0;
 	//while(format[n] != '\0')
 	while(n < format_size)
 	{
@@ -102,11 +102,11 @@ SQRESULT sqstd_format(HRABBITVM v,SQInteger nformatstringidx,SQInteger *outlen,S
 				return sq_throwerror(v,_SC("not enough parameters for the given format string"));
 			n = validate_format(v,fmt,format,n,w);
 			if(n < 0) return -1;
-			SQInteger addlen = 0;
-			SQInteger valtype = 0;
+			int64_t addlen = 0;
+			int64_t valtype = 0;
 			const SQChar *ts = NULL;
-			SQInteger ti = 0;
-			SQFloat tf = 0;
+			int64_t ti = 0;
+			float_t tf = 0;
 			switch(format[n]) {
 			case 's':
 				if(SQ_FAILED(sq_getstring(v,nparam,&ts)))
@@ -118,7 +118,7 @@ SQRESULT sqstd_format(HRABBITVM v,SQInteger nformatstringidx,SQInteger *outlen,S
 #ifdef _SQ64
 				{
 				size_t flen = scstrlen(fmt);
-				SQInteger fpos = flen - 1;
+				int64_t fpos = flen - 1;
 				SQChar f = fmt[fpos];
 				const SQChar *prec = (const SQChar *)_PRINT_INT_PREC;
 				while(*prec != _SC('\0')) {
@@ -160,10 +160,10 @@ SQRESULT sqstd_format(HRABBITVM v,SQInteger nformatstringidx,SQInteger *outlen,S
 	return SQ_OK;
 }
 
-static SQInteger _string_printf(HRABBITVM v)
+static int64_t _string_printf(HRABBITVM v)
 {
 	SQChar *dest = NULL;
-	SQInteger length = 0;
+	int64_t length = 0;
 	if(SQ_FAILED(sqstd_format(v,2,&length,&dest)))
 		return -1;
 
@@ -173,10 +173,10 @@ static SQInteger _string_printf(HRABBITVM v)
 	return 0;
 }
 
-static SQInteger _string_format(HRABBITVM v)
+static int64_t _string_format(HRABBITVM v)
 {
 	SQChar *dest = NULL;
-	SQInteger length = 0;
+	int64_t length = 0;
 	if(SQ_FAILED(sqstd_format(v,2,&length,&dest)))
 		return -1;
 	sq_pushstring(v,dest,length);
@@ -190,7 +190,7 @@ static void __strip_l(const SQChar *str,const SQChar **start)
 	*start = t;
 }
 
-static void __strip_r(const SQChar *str,SQInteger len,const SQChar **end)
+static void __strip_r(const SQChar *str,int64_t len,const SQChar **end)
 {
 	if(len == 0) {
 		*end = str;
@@ -201,18 +201,18 @@ static void __strip_r(const SQChar *str,SQInteger len,const SQChar **end)
 	*end = t + 1;
 }
 
-static SQInteger _string_strip(HRABBITVM v)
+static int64_t _string_strip(HRABBITVM v)
 {
 	const SQChar *str,*start,*end;
 	sq_getstring(v,2,&str);
-	SQInteger len = sq_getsize(v,2);
+	int64_t len = sq_getsize(v,2);
 	__strip_l(str,&start);
 	__strip_r(str,len,&end);
 	sq_pushstring(v,start,end - start);
 	return 1;
 }
 
-static SQInteger _string_lstrip(HRABBITVM v)
+static int64_t _string_lstrip(HRABBITVM v)
 {
 	const SQChar *str,*start;
 	sq_getstring(v,2,&str);
@@ -221,25 +221,25 @@ static SQInteger _string_lstrip(HRABBITVM v)
 	return 1;
 }
 
-static SQInteger _string_rstrip(HRABBITVM v)
+static int64_t _string_rstrip(HRABBITVM v)
 {
 	const SQChar *str,*end;
 	sq_getstring(v,2,&str);
-	SQInteger len = sq_getsize(v,2);
+	int64_t len = sq_getsize(v,2);
 	__strip_r(str,len,&end);
 	sq_pushstring(v,str,end - str);
 	return 1;
 }
 
-static SQInteger _string_split(HRABBITVM v)
+static int64_t _string_split(HRABBITVM v)
 {
 	const SQChar *str,*seps;
 	SQChar *stemp;
 	sq_getstring(v,2,&str);
 	sq_getstring(v,3,&seps);
-	SQInteger sepsize = sq_getsize(v,3);
+	int64_t sepsize = sq_getsize(v,3);
 	if(sepsize == 0) return sq_throwerror(v,_SC("empty separators string"));
-	SQInteger memsize = (sq_getsize(v,2)+1)*sizeof(SQChar);
+	int64_t memsize = (sq_getsize(v,2)+1)*sizeof(SQChar);
 	stemp = sq_getscratchpad(v,memsize);
 	memcpy(stemp,str,memsize);
 	SQChar *start = stemp;
@@ -248,7 +248,7 @@ static SQInteger _string_split(HRABBITVM v)
 	while(*end != '\0')
 	{
 		SQChar cur = *end;
-		for(SQInteger i = 0; i < sepsize; i++)
+		for(int64_t i = 0; i < sepsize; i++)
 		{
 			if(cur == seps[i])
 			{
@@ -269,11 +269,11 @@ static SQInteger _string_split(HRABBITVM v)
 	return 1;
 }
 
-static SQInteger _string_escape(HRABBITVM v)
+static int64_t _string_escape(HRABBITVM v)
 {
 	const SQChar *str;
 	SQChar *dest,*resstr;
-	SQInteger size;
+	int64_t size;
 	sq_getstring(v,2,&str);
 	size = sq_getsize(v,2);
 	if(size == 0) {
@@ -283,20 +283,20 @@ static SQInteger _string_escape(HRABBITVM v)
 #ifdef SQUNICODE
 #if WCHAR_SIZE == 2
 	const SQChar *escpat = _SC("\\x%04x");
-	const SQInteger maxescsize = 6;
+	const int64_t maxescsize = 6;
 #else //WCHAR_SIZE == 4
 	const SQChar *escpat = _SC("\\x%08x");
-	const SQInteger maxescsize = 10;
+	const int64_t maxescsize = 10;
 #endif
 #else
 	const SQChar *escpat = _SC("\\x%02x");
-	const SQInteger maxescsize = 4;
+	const int64_t maxescsize = 4;
 #endif
-	SQInteger destcharsize = (size * maxescsize); //assumes every char could be escaped
+	int64_t destcharsize = (size * maxescsize); //assumes every char could be escaped
 	resstr = dest = (SQChar *)sq_getscratchpad(v,destcharsize * sizeof(SQChar));
 	SQChar c;
 	SQChar escch;
-	SQInteger escaped = 0;
+	int64_t escaped = 0;
 	for(int n = 0; n < size; n++){
 		c = *str++;
 		escch = 0;
@@ -339,13 +339,13 @@ static SQInteger _string_escape(HRABBITVM v)
 	return 1;
 }
 
-static SQInteger _string_startswith(HRABBITVM v)
+static int64_t _string_startswith(HRABBITVM v)
 {
 	const SQChar *str,*cmp;
 	sq_getstring(v,2,&str);
 	sq_getstring(v,3,&cmp);
-	SQInteger len = sq_getsize(v,2);
-	SQInteger cmplen = sq_getsize(v,3);
+	int64_t len = sq_getsize(v,2);
+	int64_t cmplen = sq_getsize(v,3);
 	SQBool ret = SQFalse;
 	if(cmplen <= len) {
 		ret = memcmp(str,cmp,sq_rsl(cmplen)) == 0 ? SQTrue : SQFalse;
@@ -354,13 +354,13 @@ static SQInteger _string_startswith(HRABBITVM v)
 	return 1;
 }
 
-static SQInteger _string_endswith(HRABBITVM v)
+static int64_t _string_endswith(HRABBITVM v)
 {
 	const SQChar *str,*cmp;
 	sq_getstring(v,2,&str);
 	sq_getstring(v,3,&cmp);
-	SQInteger len = sq_getsize(v,2);
-	SQInteger cmplen = sq_getsize(v,3);
+	int64_t len = sq_getsize(v,2);
+	int64_t cmplen = sq_getsize(v,3);
 	SQBool ret = SQFalse;
 	if(cmplen <= len) {
 		ret = memcmp(&str[len - cmplen],cmp,sq_rsl(cmplen)) == 0 ? SQTrue : SQFalse;
@@ -373,14 +373,14 @@ static SQInteger _string_endswith(HRABBITVM v)
 	SQRex *self = NULL; \
 	sq_getinstanceup(v,1,(SQUserPointer *)&self,0);
 
-static SQInteger _rexobj_releasehook(SQUserPointer p, SQInteger SQ_UNUSED_ARG(size))
+static int64_t _rexobj_releasehook(SQUserPointer p, int64_t SQ_UNUSED_ARG(size))
 {
 	SQRex *self = ((SQRex *)p);
 	sqstd_rex_free(self);
 	return 1;
 }
 
-static SQInteger _regexp_match(HRABBITVM v)
+static int64_t _regexp_match(HRABBITVM v)
 {
 	SETUP_REX(v);
 	const SQChar *str;
@@ -405,11 +405,11 @@ static void _addrexmatch(HRABBITVM v,const SQChar *str,const SQChar *begin,const
 	sq_rawset(v,-3);
 }
 
-static SQInteger _regexp_search(HRABBITVM v)
+static int64_t _regexp_search(HRABBITVM v)
 {
 	SETUP_REX(v);
 	const SQChar *str,*begin,*end;
-	SQInteger start = 0;
+	int64_t start = 0;
 	sq_getstring(v,2,&str);
 	if(sq_gettop(v) > 2) sq_getinteger(v,3,&start);
 	if(sqstd_rex_search(self,str+start,&begin,&end) == SQTrue) {
@@ -419,18 +419,18 @@ static SQInteger _regexp_search(HRABBITVM v)
 	return 0;
 }
 
-static SQInteger _regexp_capture(HRABBITVM v)
+static int64_t _regexp_capture(HRABBITVM v)
 {
 	SETUP_REX(v);
 	const SQChar *str,*begin,*end;
-	SQInteger start = 0;
+	int64_t start = 0;
 	sq_getstring(v,2,&str);
 	if(sq_gettop(v) > 2) sq_getinteger(v,3,&start);
 	if(sqstd_rex_search(self,str+start,&begin,&end) == SQTrue) {
-		SQInteger n = sqstd_rex_getsubexpcount(self);
+		int64_t n = sqstd_rex_getsubexpcount(self);
 		SQRexMatch match;
 		sq_newarray(v,0);
-		for(SQInteger i = 0;i < n; i++) {
+		for(int64_t i = 0;i < n; i++) {
 			sqstd_rex_getsubexp(self,i,&match);
 			if(match.len > 0)
 				_addrexmatch(v,str,match.begin,match.begin+match.len);
@@ -443,14 +443,14 @@ static SQInteger _regexp_capture(HRABBITVM v)
 	return 0;
 }
 
-static SQInteger _regexp_subexpcount(HRABBITVM v)
+static int64_t _regexp_subexpcount(HRABBITVM v)
 {
 	SETUP_REX(v);
 	sq_pushinteger(v,sqstd_rex_getsubexpcount(self));
 	return 1;
 }
 
-static SQInteger _regexp_constructor(HRABBITVM v)
+static int64_t _regexp_constructor(HRABBITVM v)
 {
 	const SQChar *error,*pattern;
 	sq_getstring(v,2,&pattern);
@@ -461,7 +461,7 @@ static SQInteger _regexp_constructor(HRABBITVM v)
 	return 0;
 }
 
-static SQInteger _regexp__typeof(HRABBITVM v)
+static int64_t _regexp__typeof(HRABBITVM v)
 {
 	sq_pushstring(v,_SC("regexp"),-1);
 	return 1;
@@ -495,11 +495,11 @@ static const SQRegFunction stringlib_funcs[]={
 #undef _DECL_FUNC
 
 
-SQInteger sqstd_register_stringlib(HRABBITVM v)
+int64_t sqstd_register_stringlib(HRABBITVM v)
 {
 	sq_pushstring(v,_SC("regexp"),-1);
 	sq_newclass(v,SQFalse);
-	SQInteger i = 0;
+	int64_t i = 0;
 	while(rexobj_funcs[i].name != 0) {
 		const SQRegFunction &f = rexobj_funcs[i];
 		sq_pushstring(v,f.name,-1);

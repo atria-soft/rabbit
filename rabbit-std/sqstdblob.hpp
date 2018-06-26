@@ -7,9 +7,9 @@
  */
 #pragma once
 
-RABBIT_API SQUserPointer sqstd_createblob(HRABBITVM v, SQInteger size);
-RABBIT_API SQRESULT sqstd_getblob(HRABBITVM v,SQInteger idx,SQUserPointer *ptr);
-RABBIT_API SQInteger sqstd_getblobsize(HRABBITVM v,SQInteger idx);
+RABBIT_API SQUserPointer sqstd_createblob(HRABBITVM v, int64_t size);
+RABBIT_API SQRESULT sqstd_getblob(HRABBITVM v,int64_t idx,SQUserPointer *ptr);
+RABBIT_API int64_t sqstd_getblobsize(HRABBITVM v,int64_t idx);
 
 RABBIT_API SQRESULT sqstd_register_bloblib(HRABBITVM v);
 

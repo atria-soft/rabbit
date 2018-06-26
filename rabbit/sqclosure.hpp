@@ -22,7 +22,7 @@ private:
 	}
 public:
 	static SQClosure *Create(SQSharedState *ss,SQFunctionProto *func,SQWeakRef *root){
-		SQInteger size = _CALC_CLOSURE_SIZE(func);
+		int64_t size = _CALC_CLOSURE_SIZE(func);
 		SQClosure *nc=(SQClosure*)SQ_MALLOC(size);
 		new (nc) SQClosure(ss,func);
 		nc->_outervalues = (SQObjectPtr *)(nc + 1);
@@ -35,7 +35,7 @@ public:
 	}
 	void Release(){
 		SQFunctionProto *f = _function;
-		SQInteger size = _CALC_CLOSURE_SIZE(f);
+		int64_t size = _CALC_CLOSURE_SIZE(f);
 		_DESTRUCT_VECTOR(SQObjectPtr,f->_noutervalues,_outervalues);
 		_DESTRUCT_VECTOR(SQObjectPtr,f->_ndefaultparams,_defaultparams);
 		__ObjRelease(_function);
@@ -98,7 +98,7 @@ public:
 	}
 
 	SQObjectPtr *_valptr;  /* pointer to value on stack, or _value below */
-	SQInteger	_idx;	 /* idx in stack array, for relocation */
+	int64_t	_idx;	 /* idx in stack array, for relocation */
 	SQObjectPtr  _value;   /* value of outer after stack frame is closed */
 	SQOuter	 *_next;	/* pointer to next outer when frame is open   */
 };
@@ -131,7 +131,7 @@ public:
 		sq_delete(this,SQGenerator);
 	}
 
-	bool Yield(SQVM *v,SQInteger target);
+	bool Yield(SQVM *v,int64_t target);
 	bool Resume(SQVM *v,SQObjectPtr &dest);
 	SQObjectPtr _closure;
 	SQObjectPtrVec _stack;
@@ -150,9 +150,9 @@ private:
 		_env = NULL;
 	}
 public:
-	static SQNativeClosure *Create(SQSharedState *ss,SQFUNCTION func,SQInteger nouters)
+	static SQNativeClosure *Create(SQSharedState *ss,SQFUNCTION func,int64_t nouters)
 	{
-		SQInteger size = _CALC_NATVIVECLOSURE_SIZE(nouters);
+		int64_t size = _CALC_NATVIVECLOSURE_SIZE(nouters);
 		SQNativeClosure *nc=(SQNativeClosure*)SQ_MALLOC(size);
 		new (nc) SQNativeClosure(ss,func);
 		nc->_outervalues = (SQObjectPtr *)(nc + 1);
@@ -176,16 +176,16 @@ public:
 		__ObjRelease(_env);
 	}
 	void Release(){
-		SQInteger size = _CALC_NATVIVECLOSURE_SIZE(_noutervalues);
+		int64_t size = _CALC_NATVIVECLOSURE_SIZE(_noutervalues);
 		_DESTRUCT_VECTOR(SQObjectPtr,_noutervalues,_outervalues);
 		this->~SQNativeClosure();
 		sq_free(this,size);
 	}
 
-	SQInteger _nparamscheck;
+	int64_t _nparamscheck;
 	SQIntVec _typecheck;
 	SQObjectPtr *_outervalues;
-	SQUnsignedInteger _noutervalues;
+	uint64_t _noutervalues;
 	SQWeakRef *_env;
 	SQFUNCTION _function;
 	SQObjectPtr _name;

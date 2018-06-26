@@ -48,7 +48,7 @@ int MemAllocHook(int allocType,
 #endif
 
 
-SQInteger quit(HRABBITVM v)
+int64_t quit(HRABBITVM v)
 {
 	int *done;
 	sq_getuserpointer(v,-1,(SQUserPointer*)&done);
@@ -74,7 +74,7 @@ void errorfunc(HRABBITVM SQ_UNUSED_ARG(v),const SQChar *s,...)
 
 void PrintVersionInfos()
 {
-	scfprintf(stdout,_SC("%s %s (%d bits)\n"),RABBIT_VERSION,RABBIT_COPYRIGHT,((int)(sizeof(SQInteger)*8)));
+	scfprintf(stdout,_SC("%s %s (%d bits)\n"),RABBIT_VERSION,RABBIT_COPYRIGHT,((int)(sizeof(int64_t)*8)));
 }
 
 void PrintUsage()
@@ -93,7 +93,7 @@ void PrintUsage()
 #define _DONE 2
 #define _ERROR 3
 //<<FIXME>> this func is a mess
-int getargs(HRABBITVM v,int argc, char* argv[],SQInteger *retval)
+int getargs(HRABBITVM v,int argc, char* argv[],int64_t *retval)
 {
 	int i;
 	int compiles_only = 0;
@@ -236,10 +236,10 @@ void Interactive(HRABBITVM v)
 
 #define MAXINPUT 1024
 	SQChar buffer[MAXINPUT];
-	SQInteger blocks =0;
-	SQInteger string=0;
-	SQInteger retval=0;
-	SQInteger done=0;
+	int64_t blocks =0;
+	int64_t string=0;
+	int64_t retval=0;
+	int64_t done=0;
 	PrintVersionInfos();
 
 	sq_pushroottable(v);
@@ -252,7 +252,7 @@ void Interactive(HRABBITVM v)
 
 	while (!done)
 	{
-		SQInteger i = 0;
+		int64_t i = 0;
 		scprintf(_SC("\nrabbit> "));
 		for(;;) {
 			int c;
@@ -292,7 +292,7 @@ void Interactive(HRABBITVM v)
 		}
 		i=scstrlen(buffer);
 		if(i>0){
-			SQInteger oldtop=sq_gettop(v);
+			int64_t oldtop=sq_gettop(v);
 			if(SQ_SUCCEEDED(sq_compilebuffer(v,buffer,i,_SC("interactive console"),SQTrue))){
 				sq_pushroottable(v);
 				if(SQ_SUCCEEDED(sq_call(v,1,retval,SQTrue)) &&  retval){
@@ -316,7 +316,7 @@ void Interactive(HRABBITVM v)
 int main(int argc, char* argv[])
 {
 	HRABBITVM v;
-	SQInteger retval = 0;
+	int64_t retval = 0;
 #if defined(_MSC_VER) && defined(_DEBUG)
 	_CrtSetAllocHook(MemAllocHook);
 #endif

@@ -17,7 +17,7 @@ namespace rabbit {
 			~UserData() {
 				SetDelegate(NULL);
 			}
-			static UserData* Create(SQSharedState *ss, SQInteger size) {
+			static UserData* Create(SQSharedState *ss, int64_t size) {
 				UserData* ud = (UserData*)SQ_MALLOC(sq_aligning(sizeof(UserData))+size);
 				new (ud) UserData(ss);
 				ud->m_size = size;
@@ -28,11 +28,11 @@ namespace rabbit {
 				if (m_hook) {
 					m_hook((SQUserPointer)sq_aligning(this + 1),m_size);
 				}
-				SQInteger tsize = m_size;
+				int64_t tsize = m_size;
 				this->~UserData();
 				SQ_FREE(this, sq_aligning(sizeof(UserData)) + tsize);
 			}
-			const SQInteger& getSize() const {
+			const int64_t& getSize() const {
 				return m_size;
 			}
 			const SQUserPointer& getTypeTag() const {
@@ -48,7 +48,7 @@ namespace rabbit {
 				m_hook = _value;
 			}
 		protected:
-			SQInteger m_size;
+			int64_t m_size;
 			SQRELEASEHOOK m_hook;
 			SQUserPointer m_typetag;
 	};

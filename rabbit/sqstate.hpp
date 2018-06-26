@@ -18,36 +18,36 @@ struct SQStringTable
 {
 	SQStringTable(SQSharedState*ss);
 	~SQStringTable();
-	SQString *Add(const SQChar *,SQInteger len);
+	SQString *Add(const SQChar *,int64_t len);
 	void Remove(SQString *);
 private:
-	void Resize(SQInteger size);
-	void AllocNodes(SQInteger size);
+	void Resize(int64_t size);
+	void AllocNodes(int64_t size);
 	SQString **_strings;
-	SQUnsignedInteger _numofslots;
-	SQUnsignedInteger _slotused;
+	uint64_t _numofslots;
+	uint64_t _slotused;
 	SQSharedState *_sharedstate;
 };
 
 struct RefTable {
 	struct RefNode {
 		SQObjectPtr obj;
-		SQUnsignedInteger refs;
+		uint64_t refs;
 		struct RefNode *next;
 	};
 	RefTable();
 	~RefTable();
 	void AddRef(SQObject &obj);
 	SQBool Release(SQObject &obj);
-	SQUnsignedInteger GetRefCount(SQObject &obj);
+	uint64_t GetRefCount(SQObject &obj);
 	void Finalize();
 private:
 	RefNode *Get(SQObject &obj,SQHash &mainpos,RefNode **prev,bool add);
 	RefNode *Add(SQHash mainpos,SQObject &obj);
-	void Resize(SQUnsignedInteger size);
-	void AllocNodes(SQUnsignedInteger size);
-	SQUnsignedInteger _numofslots;
-	SQUnsignedInteger _slotused;
+	void Resize(uint64_t size);
+	void AllocNodes(uint64_t size);
+	uint64_t _numofslots;
+	uint64_t _slotused;
 	RefNode *_nodes;
 	RefNode *_freelist;
 	RefNode **_buckets;
@@ -64,8 +64,8 @@ struct SQSharedState
 	~SQSharedState();
 	void Init();
 public:
-	SQChar* GetScratchPad(SQInteger size);
-	SQInteger GetMetaMethodIdxByName(const SQObjectPtr &name);
+	SQChar* GetScratchPad(int64_t size);
+	int64_t GetMetaMethodIdxByName(const SQObjectPtr &name);
 	SQObjectPtrVec *_metamethods;
 	SQObjectPtr _metamethodsmap;
 	SQObjectPtrVec *_systemstrings;
@@ -106,7 +106,7 @@ public:
 	SQRELEASEHOOK _releasehook;
 private:
 	SQChar *_scratchpad;
-	SQInteger _scratchpadsize;
+	int64_t _scratchpadsize;
 };
 
 #define _sp(s) (_sharedstate->GetScratchPad(s))

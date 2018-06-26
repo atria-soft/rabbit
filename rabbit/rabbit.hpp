@@ -11,10 +11,6 @@
 #include _SQ_CONFIG_INCLUDE
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifndef RABBIT_API
 #define RABBIT_API extern
 #endif
@@ -127,8 +123,8 @@ typedef union tagSQObjectValue
 	struct SQNativeClosure *pNativeClosure;
 	struct SQString *pString;
 	struct rabbit::UserData *pUserData;
-	SQInteger nInteger;
-	SQFloat fFloat;
+	int64_t nInteger;
+	float_t fFloat;
 	SQUserPointer pUserPointer;
 	struct SQFunctionProto *pFunctionProto;
 	struct SQRefCounted *pRefCounted;
@@ -149,32 +145,32 @@ typedef struct tagSQObject
 
 typedef struct  tagSQMemberHandle{
 	SQBool _static;
-	SQInteger _index;
+	int64_t _index;
 }SQMemberHandle;
 
 typedef struct tagSQStackInfos{
 	const SQChar* funcname;
 	const SQChar* source;
-	SQInteger line;
+	int64_t line;
 }SQStackInfos;
 
 typedef struct SQVM* HRABBITVM;
 typedef SQObject HSQOBJECT;
 typedef SQMemberHandle HSQMEMBERHANDLE;
-typedef SQInteger (*SQFUNCTION)(HRABBITVM);
-typedef SQInteger (*SQRELEASEHOOK)(SQUserPointer,SQInteger size);
-typedef void (*SQCOMPILERERROR)(HRABBITVM,const SQChar * /*desc*/,const SQChar * /*source*/,SQInteger /*line*/,SQInteger /*column*/);
+typedef int64_t (*SQFUNCTION)(HRABBITVM);
+typedef int64_t (*SQRELEASEHOOK)(SQUserPointer,int64_t size);
+typedef void (*SQCOMPILERERROR)(HRABBITVM,const SQChar * /*desc*/,const SQChar * /*source*/,int64_t /*line*/,int64_t /*column*/);
 typedef void (*SQPRINTFUNCTION)(HRABBITVM,const SQChar * ,...);
-typedef void (*SQDEBUGHOOK)(HRABBITVM /*v*/, SQInteger /*type*/, const SQChar * /*sourcename*/, SQInteger /*line*/, const SQChar * /*funcname*/);
-typedef SQInteger (*SQWRITEFUNC)(SQUserPointer,SQUserPointer,SQInteger);
-typedef SQInteger (*SQREADFUNC)(SQUserPointer,SQUserPointer,SQInteger);
+typedef void (*SQDEBUGHOOK)(HRABBITVM /*v*/, int64_t /*type*/, const SQChar * /*sourcename*/, int64_t /*line*/, const SQChar * /*funcname*/);
+typedef int64_t (*SQWRITEFUNC)(SQUserPointer,SQUserPointer,int64_t);
+typedef int64_t (*SQREADFUNC)(SQUserPointer,SQUserPointer,int64_t);
 
-typedef SQInteger (*SQLEXREADFUNC)(SQUserPointer);
+typedef int64_t (*SQLEXREADFUNC)(SQUserPointer);
 
 typedef struct tagSQRegFunction{
 	const SQChar *name;
 	SQFUNCTION f;
-	SQInteger nparamscheck;
+	int64_t nparamscheck;
 	const SQChar *typemask;
 }SQRegFunction;
 
@@ -182,12 +178,12 @@ typedef struct tagSQFunctionInfo {
 	SQUserPointer funcid;
 	const SQChar *name;
 	const SQChar *source;
-	SQInteger line;
+	int64_t line;
 }SQFunctionInfo;
 
 /*vm*/
-RABBIT_API HRABBITVM sq_open(SQInteger initialstacksize);
-RABBIT_API HRABBITVM sq_newthread(HRABBITVM friendvm, SQInteger initialstacksize);
+RABBIT_API HRABBITVM sq_open(int64_t initialstacksize);
+RABBIT_API HRABBITVM sq_newthread(HRABBITVM friendvm, int64_t initialstacksize);
 RABBIT_API void sq_seterrorhandler(HRABBITVM v);
 RABBIT_API void sq_close(HRABBITVM v);
 RABBIT_API void sq_setforeignptr(HRABBITVM v,SQUserPointer p);
@@ -203,82 +199,82 @@ RABBIT_API SQPRINTFUNCTION sq_getprintfunc(HRABBITVM v);
 RABBIT_API SQPRINTFUNCTION sq_geterrorfunc(HRABBITVM v);
 RABBIT_API SQRESULT sq_suspendvm(HRABBITVM v);
 RABBIT_API SQRESULT sq_wakeupvm(HRABBITVM v,SQBool resumedret,SQBool retval,SQBool raiseerror,SQBool throwerror);
-RABBIT_API SQInteger sq_getvmstate(HRABBITVM v);
-RABBIT_API SQInteger sq_getversion();
+RABBIT_API int64_t sq_getvmstate(HRABBITVM v);
+RABBIT_API int64_t sq_getversion();
 
 /*compiler*/
 RABBIT_API SQRESULT sq_compile(HRABBITVM v,SQLEXREADFUNC read,SQUserPointer p,const SQChar *sourcename,SQBool raiseerror);
-RABBIT_API SQRESULT sq_compilebuffer(HRABBITVM v,const SQChar *s,SQInteger size,const SQChar *sourcename,SQBool raiseerror);
+RABBIT_API SQRESULT sq_compilebuffer(HRABBITVM v,const SQChar *s,int64_t size,const SQChar *sourcename,SQBool raiseerror);
 RABBIT_API void sq_enabledebuginfo(HRABBITVM v, SQBool enable);
 RABBIT_API void sq_notifyallexceptions(HRABBITVM v, SQBool enable);
 RABBIT_API void sq_setcompilererrorhandler(HRABBITVM v,SQCOMPILERERROR f);
 
 /*stack operations*/
-RABBIT_API void sq_push(HRABBITVM v,SQInteger idx);
-RABBIT_API void sq_pop(HRABBITVM v,SQInteger nelemstopop);
+RABBIT_API void sq_push(HRABBITVM v,int64_t idx);
+RABBIT_API void sq_pop(HRABBITVM v,int64_t nelemstopop);
 RABBIT_API void sq_poptop(HRABBITVM v);
-RABBIT_API void sq_remove(HRABBITVM v,SQInteger idx);
-RABBIT_API SQInteger sq_gettop(HRABBITVM v);
-RABBIT_API void sq_settop(HRABBITVM v,SQInteger newtop);
-RABBIT_API SQRESULT sq_reservestack(HRABBITVM v,SQInteger nsize);
-RABBIT_API SQInteger sq_cmp(HRABBITVM v);
-RABBIT_API void sq_move(HRABBITVM dest,HRABBITVM src,SQInteger idx);
+RABBIT_API void sq_remove(HRABBITVM v,int64_t idx);
+RABBIT_API int64_t sq_gettop(HRABBITVM v);
+RABBIT_API void sq_settop(HRABBITVM v,int64_t newtop);
+RABBIT_API SQRESULT sq_reservestack(HRABBITVM v,int64_t nsize);
+RABBIT_API int64_t sq_cmp(HRABBITVM v);
+RABBIT_API void sq_move(HRABBITVM dest,HRABBITVM src,int64_t idx);
 
 /*object creation handling*/
-RABBIT_API SQUserPointer sq_newuserdata(HRABBITVM v,SQUnsignedInteger size);
+RABBIT_API SQUserPointer sq_newuserdata(HRABBITVM v,uint64_t size);
 RABBIT_API void sq_newtable(HRABBITVM v);
-RABBIT_API void sq_newtableex(HRABBITVM v,SQInteger initialcapacity);
-RABBIT_API void sq_newarray(HRABBITVM v,SQInteger size);
-RABBIT_API void sq_newclosure(HRABBITVM v,SQFUNCTION func,SQUnsignedInteger nfreevars);
-RABBIT_API SQRESULT sq_setparamscheck(HRABBITVM v,SQInteger nparamscheck,const SQChar *typemask);
-RABBIT_API SQRESULT sq_bindenv(HRABBITVM v,SQInteger idx);
-RABBIT_API SQRESULT sq_setclosureroot(HRABBITVM v,SQInteger idx);
-RABBIT_API SQRESULT sq_getclosureroot(HRABBITVM v,SQInteger idx);
-RABBIT_API void sq_pushstring(HRABBITVM v,const SQChar *s,SQInteger len);
-RABBIT_API void sq_pushfloat(HRABBITVM v,SQFloat f);
-RABBIT_API void sq_pushinteger(HRABBITVM v,SQInteger n);
+RABBIT_API void sq_newtableex(HRABBITVM v,int64_t initialcapacity);
+RABBIT_API void sq_newarray(HRABBITVM v,int64_t size);
+RABBIT_API void sq_newclosure(HRABBITVM v,SQFUNCTION func,uint64_t nfreevars);
+RABBIT_API SQRESULT sq_setparamscheck(HRABBITVM v,int64_t nparamscheck,const SQChar *typemask);
+RABBIT_API SQRESULT sq_bindenv(HRABBITVM v,int64_t idx);
+RABBIT_API SQRESULT sq_setclosureroot(HRABBITVM v,int64_t idx);
+RABBIT_API SQRESULT sq_getclosureroot(HRABBITVM v,int64_t idx);
+RABBIT_API void sq_pushstring(HRABBITVM v,const SQChar *s,int64_t len);
+RABBIT_API void sq_pushfloat(HRABBITVM v,float_t f);
+RABBIT_API void sq_pushinteger(HRABBITVM v,int64_t n);
 RABBIT_API void sq_pushbool(HRABBITVM v,SQBool b);
 RABBIT_API void sq_pushuserpointer(HRABBITVM v,SQUserPointer p);
 RABBIT_API void sq_pushnull(HRABBITVM v);
 RABBIT_API void sq_pushthread(HRABBITVM v, HRABBITVM thread);
-RABBIT_API SQObjectType sq_gettype(HRABBITVM v,SQInteger idx);
-RABBIT_API SQRESULT sq_typeof(HRABBITVM v,SQInteger idx);
-RABBIT_API SQInteger sq_getsize(HRABBITVM v,SQInteger idx);
-RABBIT_API SQHash sq_gethash(HRABBITVM v, SQInteger idx);
-RABBIT_API SQRESULT sq_getbase(HRABBITVM v,SQInteger idx);
+RABBIT_API SQObjectType sq_gettype(HRABBITVM v,int64_t idx);
+RABBIT_API SQRESULT sq_typeof(HRABBITVM v,int64_t idx);
+RABBIT_API int64_t sq_getsize(HRABBITVM v,int64_t idx);
+RABBIT_API SQHash sq_gethash(HRABBITVM v, int64_t idx);
+RABBIT_API SQRESULT sq_getbase(HRABBITVM v,int64_t idx);
 RABBIT_API SQBool sq_instanceof(HRABBITVM v);
-RABBIT_API SQRESULT sq_tostring(HRABBITVM v,SQInteger idx);
-RABBIT_API void sq_tobool(HRABBITVM v, SQInteger idx, SQBool *b);
-RABBIT_API SQRESULT sq_getstringandsize(HRABBITVM v,SQInteger idx,const SQChar **c,SQInteger *size);
-RABBIT_API SQRESULT sq_getstring(HRABBITVM v,SQInteger idx,const SQChar **c);
-RABBIT_API SQRESULT sq_getinteger(HRABBITVM v,SQInteger idx,SQInteger *i);
-RABBIT_API SQRESULT sq_getfloat(HRABBITVM v,SQInteger idx,SQFloat *f);
-RABBIT_API SQRESULT sq_getbool(HRABBITVM v,SQInteger idx,SQBool *b);
-RABBIT_API SQRESULT sq_getthread(HRABBITVM v,SQInteger idx,HRABBITVM *thread);
-RABBIT_API SQRESULT sq_getuserpointer(HRABBITVM v,SQInteger idx,SQUserPointer *p);
-RABBIT_API SQRESULT sq_getuserdata(HRABBITVM v,SQInteger idx,SQUserPointer *p,SQUserPointer *typetag);
-RABBIT_API SQRESULT sq_settypetag(HRABBITVM v,SQInteger idx,SQUserPointer typetag);
-RABBIT_API SQRESULT sq_gettypetag(HRABBITVM v,SQInteger idx,SQUserPointer *typetag);
-RABBIT_API void sq_setreleasehook(HRABBITVM v,SQInteger idx,SQRELEASEHOOK hook);
-RABBIT_API SQRELEASEHOOK sq_getreleasehook(HRABBITVM v,SQInteger idx);
-RABBIT_API SQChar *sq_getscratchpad(HRABBITVM v,SQInteger minsize);
-RABBIT_API SQRESULT sq_getfunctioninfo(HRABBITVM v,SQInteger level,SQFunctionInfo *fi);
-RABBIT_API SQRESULT sq_getclosureinfo(HRABBITVM v,SQInteger idx,SQUnsignedInteger *nparams,SQUnsignedInteger *nfreevars);
-RABBIT_API SQRESULT sq_getclosurename(HRABBITVM v,SQInteger idx);
-RABBIT_API SQRESULT sq_setnativeclosurename(HRABBITVM v,SQInteger idx,const SQChar *name);
-RABBIT_API SQRESULT sq_setinstanceup(HRABBITVM v, SQInteger idx, SQUserPointer p);
-RABBIT_API SQRESULT sq_getinstanceup(HRABBITVM v, SQInteger idx, SQUserPointer *p,SQUserPointer typetag);
-RABBIT_API SQRESULT sq_setclassudsize(HRABBITVM v, SQInteger idx, SQInteger udsize);
+RABBIT_API SQRESULT sq_tostring(HRABBITVM v,int64_t idx);
+RABBIT_API void sq_tobool(HRABBITVM v, int64_t idx, SQBool *b);
+RABBIT_API SQRESULT sq_getstringandsize(HRABBITVM v,int64_t idx,const SQChar **c,int64_t *size);
+RABBIT_API SQRESULT sq_getstring(HRABBITVM v,int64_t idx,const SQChar **c);
+RABBIT_API SQRESULT sq_getinteger(HRABBITVM v,int64_t idx,int64_t *i);
+RABBIT_API SQRESULT sq_getfloat(HRABBITVM v,int64_t idx,float_t *f);
+RABBIT_API SQRESULT sq_getbool(HRABBITVM v,int64_t idx,SQBool *b);
+RABBIT_API SQRESULT sq_getthread(HRABBITVM v,int64_t idx,HRABBITVM *thread);
+RABBIT_API SQRESULT sq_getuserpointer(HRABBITVM v,int64_t idx,SQUserPointer *p);
+RABBIT_API SQRESULT sq_getuserdata(HRABBITVM v,int64_t idx,SQUserPointer *p,SQUserPointer *typetag);
+RABBIT_API SQRESULT sq_settypetag(HRABBITVM v,int64_t idx,SQUserPointer typetag);
+RABBIT_API SQRESULT sq_gettypetag(HRABBITVM v,int64_t idx,SQUserPointer *typetag);
+RABBIT_API void sq_setreleasehook(HRABBITVM v,int64_t idx,SQRELEASEHOOK hook);
+RABBIT_API SQRELEASEHOOK sq_getreleasehook(HRABBITVM v,int64_t idx);
+RABBIT_API SQChar *sq_getscratchpad(HRABBITVM v,int64_t minsize);
+RABBIT_API SQRESULT sq_getfunctioninfo(HRABBITVM v,int64_t level,SQFunctionInfo *fi);
+RABBIT_API SQRESULT sq_getclosureinfo(HRABBITVM v,int64_t idx,uint64_t *nparams,uint64_t *nfreevars);
+RABBIT_API SQRESULT sq_getclosurename(HRABBITVM v,int64_t idx);
+RABBIT_API SQRESULT sq_setnativeclosurename(HRABBITVM v,int64_t idx,const SQChar *name);
+RABBIT_API SQRESULT sq_setinstanceup(HRABBITVM v, int64_t idx, SQUserPointer p);
+RABBIT_API SQRESULT sq_getinstanceup(HRABBITVM v, int64_t idx, SQUserPointer *p,SQUserPointer typetag);
+RABBIT_API SQRESULT sq_setclassudsize(HRABBITVM v, int64_t idx, int64_t udsize);
 RABBIT_API SQRESULT sq_newclass(HRABBITVM v,SQBool hasbase);
-RABBIT_API SQRESULT sq_createinstance(HRABBITVM v,SQInteger idx);
-RABBIT_API SQRESULT sq_setattributes(HRABBITVM v,SQInteger idx);
-RABBIT_API SQRESULT sq_getattributes(HRABBITVM v,SQInteger idx);
-RABBIT_API SQRESULT sq_getclass(HRABBITVM v,SQInteger idx);
-RABBIT_API void sq_weakref(HRABBITVM v,SQInteger idx);
+RABBIT_API SQRESULT sq_createinstance(HRABBITVM v,int64_t idx);
+RABBIT_API SQRESULT sq_setattributes(HRABBITVM v,int64_t idx);
+RABBIT_API SQRESULT sq_getattributes(HRABBITVM v,int64_t idx);
+RABBIT_API SQRESULT sq_getclass(HRABBITVM v,int64_t idx);
+RABBIT_API void sq_weakref(HRABBITVM v,int64_t idx);
 RABBIT_API SQRESULT sq_getdefaultdelegate(HRABBITVM v,SQObjectType t);
-RABBIT_API SQRESULT sq_getmemberhandle(HRABBITVM v,SQInteger idx,HSQMEMBERHANDLE *handle);
-RABBIT_API SQRESULT sq_getbyhandle(HRABBITVM v,SQInteger idx,const HSQMEMBERHANDLE *handle);
-RABBIT_API SQRESULT sq_setbyhandle(HRABBITVM v,SQInteger idx,const HSQMEMBERHANDLE *handle);
+RABBIT_API SQRESULT sq_getmemberhandle(HRABBITVM v,int64_t idx,HSQMEMBERHANDLE *handle);
+RABBIT_API SQRESULT sq_getbyhandle(HRABBITVM v,int64_t idx,const HSQMEMBERHANDLE *handle);
+RABBIT_API SQRESULT sq_setbyhandle(HRABBITVM v,int64_t idx,const HSQMEMBERHANDLE *handle);
 
 /*object manipulation*/
 RABBIT_API void sq_pushroottable(HRABBITVM v);
@@ -286,59 +282,59 @@ RABBIT_API void sq_pushregistrytable(HRABBITVM v);
 RABBIT_API void sq_pushconsttable(HRABBITVM v);
 RABBIT_API SQRESULT sq_setroottable(HRABBITVM v);
 RABBIT_API SQRESULT sq_setconsttable(HRABBITVM v);
-RABBIT_API SQRESULT sq_newslot(HRABBITVM v, SQInteger idx, SQBool bstatic);
-RABBIT_API SQRESULT sq_deleteslot(HRABBITVM v,SQInteger idx,SQBool pushval);
-RABBIT_API SQRESULT sq_set(HRABBITVM v,SQInteger idx);
-RABBIT_API SQRESULT sq_get(HRABBITVM v,SQInteger idx);
-RABBIT_API SQRESULT sq_rawget(HRABBITVM v,SQInteger idx);
-RABBIT_API SQRESULT sq_rawset(HRABBITVM v,SQInteger idx);
-RABBIT_API SQRESULT sq_rawdeleteslot(HRABBITVM v,SQInteger idx,SQBool pushval);
-RABBIT_API SQRESULT sq_newmember(HRABBITVM v,SQInteger idx,SQBool bstatic);
-RABBIT_API SQRESULT sq_rawnewmember(HRABBITVM v,SQInteger idx,SQBool bstatic);
-RABBIT_API SQRESULT sq_arrayappend(HRABBITVM v,SQInteger idx);
-RABBIT_API SQRESULT sq_arraypop(HRABBITVM v,SQInteger idx,SQBool pushval);
-RABBIT_API SQRESULT sq_arrayresize(HRABBITVM v,SQInteger idx,SQInteger newsize);
-RABBIT_API SQRESULT sq_arrayreverse(HRABBITVM v,SQInteger idx);
-RABBIT_API SQRESULT sq_arrayremove(HRABBITVM v,SQInteger idx,SQInteger itemidx);
-RABBIT_API SQRESULT sq_arrayinsert(HRABBITVM v,SQInteger idx,SQInteger destpos);
-RABBIT_API SQRESULT sq_setdelegate(HRABBITVM v,SQInteger idx);
-RABBIT_API SQRESULT sq_getdelegate(HRABBITVM v,SQInteger idx);
-RABBIT_API SQRESULT sq_clone(HRABBITVM v,SQInteger idx);
-RABBIT_API SQRESULT sq_setfreevariable(HRABBITVM v,SQInteger idx,SQUnsignedInteger nval);
-RABBIT_API SQRESULT sq_next(HRABBITVM v,SQInteger idx);
-RABBIT_API SQRESULT sq_getweakrefval(HRABBITVM v,SQInteger idx);
-RABBIT_API SQRESULT sq_clear(HRABBITVM v,SQInteger idx);
+RABBIT_API SQRESULT sq_newslot(HRABBITVM v, int64_t idx, SQBool bstatic);
+RABBIT_API SQRESULT sq_deleteslot(HRABBITVM v,int64_t idx,SQBool pushval);
+RABBIT_API SQRESULT sq_set(HRABBITVM v,int64_t idx);
+RABBIT_API SQRESULT sq_get(HRABBITVM v,int64_t idx);
+RABBIT_API SQRESULT sq_rawget(HRABBITVM v,int64_t idx);
+RABBIT_API SQRESULT sq_rawset(HRABBITVM v,int64_t idx);
+RABBIT_API SQRESULT sq_rawdeleteslot(HRABBITVM v,int64_t idx,SQBool pushval);
+RABBIT_API SQRESULT sq_newmember(HRABBITVM v,int64_t idx,SQBool bstatic);
+RABBIT_API SQRESULT sq_rawnewmember(HRABBITVM v,int64_t idx,SQBool bstatic);
+RABBIT_API SQRESULT sq_arrayappend(HRABBITVM v,int64_t idx);
+RABBIT_API SQRESULT sq_arraypop(HRABBITVM v,int64_t idx,SQBool pushval);
+RABBIT_API SQRESULT sq_arrayresize(HRABBITVM v,int64_t idx,int64_t newsize);
+RABBIT_API SQRESULT sq_arrayreverse(HRABBITVM v,int64_t idx);
+RABBIT_API SQRESULT sq_arrayremove(HRABBITVM v,int64_t idx,int64_t itemidx);
+RABBIT_API SQRESULT sq_arrayinsert(HRABBITVM v,int64_t idx,int64_t destpos);
+RABBIT_API SQRESULT sq_setdelegate(HRABBITVM v,int64_t idx);
+RABBIT_API SQRESULT sq_getdelegate(HRABBITVM v,int64_t idx);
+RABBIT_API SQRESULT sq_clone(HRABBITVM v,int64_t idx);
+RABBIT_API SQRESULT sq_setfreevariable(HRABBITVM v,int64_t idx,uint64_t nval);
+RABBIT_API SQRESULT sq_next(HRABBITVM v,int64_t idx);
+RABBIT_API SQRESULT sq_getweakrefval(HRABBITVM v,int64_t idx);
+RABBIT_API SQRESULT sq_clear(HRABBITVM v,int64_t idx);
 
 /*calls*/
-RABBIT_API SQRESULT sq_call(HRABBITVM v,SQInteger params,SQBool retval,SQBool raiseerror);
+RABBIT_API SQRESULT sq_call(HRABBITVM v,int64_t params,SQBool retval,SQBool raiseerror);
 RABBIT_API SQRESULT sq_resume(HRABBITVM v,SQBool retval,SQBool raiseerror);
-RABBIT_API const SQChar *sq_getlocal(HRABBITVM v,SQUnsignedInteger level,SQUnsignedInteger idx);
+RABBIT_API const SQChar *sq_getlocal(HRABBITVM v,uint64_t level,uint64_t idx);
 RABBIT_API SQRESULT sq_getcallee(HRABBITVM v);
-RABBIT_API const SQChar *sq_getfreevariable(HRABBITVM v,SQInteger idx,SQUnsignedInteger nval);
+RABBIT_API const SQChar *sq_getfreevariable(HRABBITVM v,int64_t idx,uint64_t nval);
 RABBIT_API SQRESULT sq_throwerror(HRABBITVM v,const SQChar *err);
 RABBIT_API SQRESULT sq_throwobject(HRABBITVM v);
 RABBIT_API void sq_reseterror(HRABBITVM v);
 RABBIT_API void sq_getlasterror(HRABBITVM v);
-RABBIT_API SQRESULT sq_tailcall(HRABBITVM v, SQInteger nparams);
+RABBIT_API SQRESULT sq_tailcall(HRABBITVM v, int64_t nparams);
 
 /*raw object handling*/
-RABBIT_API SQRESULT sq_getstackobj(HRABBITVM v,SQInteger idx,HSQOBJECT *po);
+RABBIT_API SQRESULT sq_getstackobj(HRABBITVM v,int64_t idx,HSQOBJECT *po);
 RABBIT_API void sq_pushobject(HRABBITVM v,HSQOBJECT obj);
 RABBIT_API void sq_addref(HRABBITVM v,HSQOBJECT *po);
 RABBIT_API SQBool sq_release(HRABBITVM v,HSQOBJECT *po);
-RABBIT_API SQUnsignedInteger sq_getrefcount(HRABBITVM v,HSQOBJECT *po);
+RABBIT_API uint64_t sq_getrefcount(HRABBITVM v,HSQOBJECT *po);
 RABBIT_API void sq_resetobject(HSQOBJECT *po);
 RABBIT_API const SQChar *sq_objtostring(const HSQOBJECT *o);
 RABBIT_API SQBool sq_objtobool(const HSQOBJECT *o);
-RABBIT_API SQInteger sq_objtointeger(const HSQOBJECT *o);
-RABBIT_API SQFloat sq_objtofloat(const HSQOBJECT *o);
+RABBIT_API int64_t sq_objtointeger(const HSQOBJECT *o);
+RABBIT_API float_t sq_objtofloat(const HSQOBJECT *o);
 RABBIT_API SQUserPointer sq_objtouserpointer(const HSQOBJECT *o);
 RABBIT_API SQRESULT sq_getobjtypetag(const HSQOBJECT *o,SQUserPointer * typetag);
-RABBIT_API SQUnsignedInteger sq_getvmrefcount(HRABBITVM v, const HSQOBJECT *po);
+RABBIT_API uint64_t sq_getvmrefcount(HRABBITVM v, const HSQOBJECT *po);
 
 
 /*GC*/
-RABBIT_API SQInteger sq_collectgarbage(HRABBITVM v);
+RABBIT_API int64_t sq_collectgarbage(HRABBITVM v);
 RABBIT_API SQRESULT sq_resurrectunreachable(HRABBITVM v);
 
 /*serialization*/
@@ -346,12 +342,12 @@ RABBIT_API SQRESULT sq_writeclosure(HRABBITVM vm,SQWRITEFUNC writef,SQUserPointe
 RABBIT_API SQRESULT sq_readclosure(HRABBITVM vm,SQREADFUNC readf,SQUserPointer up);
 
 /*mem allocation*/
-RABBIT_API void *sq_malloc(SQUnsignedInteger size);
-RABBIT_API void *sq_realloc(void* p,SQUnsignedInteger oldsize,SQUnsignedInteger newsize);
-RABBIT_API void sq_free(void *p,SQUnsignedInteger size);
+RABBIT_API void *sq_malloc(uint64_t size);
+RABBIT_API void *sq_realloc(void* p,uint64_t oldsize,uint64_t newsize);
+RABBIT_API void sq_free(void *p,uint64_t size);
 
 /*debug*/
-RABBIT_API SQRESULT sq_stackinfos(HRABBITVM v,SQInteger level,SQStackInfos *si);
+RABBIT_API SQRESULT sq_stackinfos(HRABBITVM v,int64_t level,SQStackInfos *si);
 RABBIT_API void sq_setdebughook(HRABBITVM v);
 RABBIT_API void sq_setnativedebughook(HRABBITVM v,SQDEBUGHOOK hook);
 
@@ -389,9 +385,5 @@ RABBIT_API void sq_setnativedebughook(HRABBITVM v,SQDEBUGHOOK hook);
 # define SQ_UNUSED_ARG(x) x __attribute__((__unused__))
 #else
 # define SQ_UNUSED_ARG(x) x
-#endif
-
-#ifdef __cplusplus
-} /*extern "C"*/
 #endif
 
