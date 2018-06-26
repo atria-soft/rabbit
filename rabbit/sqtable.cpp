@@ -19,8 +19,6 @@ SQTable::SQTable(SQSharedState *ss,SQInteger nInitialSize)
 	AllocNodes(pow2size);
 	_usednodes = 0;
 	_delegate = NULL;
-	INIT_CHAIN();
-	ADD_TO_CHAIN(&_sharedstate->_gc_chain,this);
 }
 
 void SQTable::Remove(const SQObjectPtr &key)

@@ -32,9 +32,6 @@ SQClass::SQClass(SQSharedState *ss,SQClass *base)
 	}
 	_members = base?base->_members->Clone() : SQTable::Create(ss,0);
 	__ObjAddRef(_members);
-
-	INIT_CHAIN();
-	ADD_TO_CHAIN(&_sharedstate->_gc_chain, this);
 }
 
 void SQClass::Finalize() {
@@ -50,7 +47,6 @@ void SQClass::Finalize() {
 
 SQClass::~SQClass()
 {
-	REMOVE_FROM_CHAIN(&_sharedstate->_gc_chain, this);
 	Finalize();
 }
 
@@ -154,8 +150,6 @@ void SQInstance::Init(SQSharedState *ss)
 	_hook = NULL;
 	__ObjAddRef(_class);
 	_delegate = _class->_members;
-	INIT_CHAIN();
-	ADD_TO_CHAIN(&_sharedstate->_gc_chain, this);
 }
 
 SQInstance::SQInstance(SQSharedState *ss, SQClass *c, SQInteger memsize)
@@ -189,7 +183,6 @@ void SQInstance::Finalize()
 
 SQInstance::~SQInstance()
 {
-	REMOVE_FROM_CHAIN(&_sharedstate->_gc_chain, this);
 	if(_class){ Finalize(); } //if _class is null it was already finalized by the GC
 }
 

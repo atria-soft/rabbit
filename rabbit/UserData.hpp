@@ -13,11 +13,8 @@ namespace rabbit {
 			UserData(SQSharedState *ss) {
 				_delegate = 0;
 				m_hook = NULL;
-				INIT_CHAIN();
-				ADD_TO_CHAIN(&_ss(this)->_gc_chain, this);
 			}
 			~UserData() {
-				REMOVE_FROM_CHAIN(&_ss(this)->_gc_chain, this);
 				SetDelegate(NULL);
 			}
 			static UserData* Create(SQSharedState *ss, SQInteger size) {

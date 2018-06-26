@@ -129,7 +129,6 @@ SQVM::SQVM(SQSharedState *ss)
 	_openouters = NULL;
 	ci = NULL;
 	_releasehook = NULL;
-	INIT_CHAIN();ADD_TO_CHAIN(&_ss(this)->_gc_chain,this);
 }
 
 void SQVM::Finalize()
@@ -152,7 +151,6 @@ void SQVM::Finalize()
 SQVM::~SQVM()
 {
 	Finalize();
-	REMOVE_FROM_CHAIN(&_ss(this)->_gc_chain,this);
 }
 
 bool SQVM::ArithMetaMethod(SQInteger op,const SQObjectPtr &o1,const SQObjectPtr &o2,SQObjectPtr &dest)

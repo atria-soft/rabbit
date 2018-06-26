@@ -64,7 +64,7 @@ typedef sqvector<SQLineInfo> SQLineInfoVec;
 		+(localinf*sizeof(SQLocalVarInfo))+(defparams*sizeof(SQInteger)))
 
 
-struct SQFunctionProto : public CHAINABLE_OBJ
+struct SQFunctionProto : public SQRefCounted
 {
 private:
 	SQFunctionProto(SQSharedState *ss);

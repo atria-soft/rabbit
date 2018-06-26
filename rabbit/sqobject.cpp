@@ -276,7 +276,6 @@ SQClosure::~SQClosure()
 	__ObjRelease(_root);
 	__ObjRelease(_env);
 	__ObjRelease(_base);
-	REMOVE_FROM_CHAIN(&_ss(this)->_gc_chain,this);
 }
 
 #define _CHECK_IO(exp)  { if(!exp)return false; }
@@ -401,12 +400,10 @@ SQFunctionProto::SQFunctionProto(SQSharedState *ss)
 {
 	_stacksize=0;
 	_bgenerator=false;
-	INIT_CHAIN();ADD_TO_CHAIN(&_ss(this)->_gc_chain,this);
 }
 
 SQFunctionProto::~SQFunctionProto()
 {
-	REMOVE_FROM_CHAIN(&_ss(this)->_gc_chain,this);
 }
 
 bool SQFunctionProto::Save(SQVM *v,SQUserPointer up,SQWRITEFUNC write)

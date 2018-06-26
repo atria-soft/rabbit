@@ -10,10 +10,11 @@
 struct SQArray : public CHAINABLE_OBJ
 {
 private:
-	SQArray(SQSharedState *ss,SQInteger nsize){_values.resize(nsize); INIT_CHAIN();ADD_TO_CHAIN(&_ss(this)->_gc_chain,this);}
+	SQArray(SQSharedState *ss,SQInteger nsize) {
+		_values.resize(nsize);
+	}
 	~SQArray()
 	{
-		REMOVE_FROM_CHAIN(&_ss(this)->_gc_chain,this);
 	}
 public:
 	static SQArray* Create(SQSharedState *ss,SQInteger nInitialSize){

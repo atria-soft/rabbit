@@ -11,10 +11,15 @@
 
 struct SQFunctionProto;
 struct SQClass;
-struct SQClosure : public CHAINABLE_OBJ
+struct SQClosure : public SQRefCounted
 {
 private:
-	SQClosure(SQSharedState *ss,SQFunctionProto *func){_function = func; __ObjAddRef(_function); _base = NULL; INIT_CHAIN();ADD_TO_CHAIN(&_ss(this)->_gc_chain,this); _env = NULL; _root=NULL;}
+	SQClosure(SQSharedState *ss,SQFunctionProto *func){
+		_function = func;
+		__ObjAddRef(_function); _base = NULL;
+		_env = NULL;
+		_root=NULL;
+	}
 public:
 	static SQClosure *Create(SQSharedState *ss,SQFunctionProto *func,SQWeakRef *root){
 		SQInteger size = _CALC_CLOSURE_SIZE(func);
@@ -66,11 +71,14 @@ public:
 };
 
 //////////////////////////////////////////////
-struct SQOuter : public CHAINABLE_OBJ
+struct SQOuter : public SQRefCounted
 {
 
 private:
-	SQOuter(SQSharedState *ss, SQObjectPtr *outer){_valptr = outer; _next = NULL; INIT_CHAIN(); ADD_TO_CHAIN(&_ss(this)->_gc_chain,this); }
+	SQOuter(SQSharedState *ss, SQObjectPtr *outer){
+		_valptr = outer;
+		_next = NULL;
+	}
 
 public:
 	static SQOuter *Create(SQSharedState *ss, SQObjectPtr *outer)
@@ -79,7 +87,9 @@ public:
 		new (nc) SQOuter(ss, outer);
 		return nc;
 	}
-	~SQOuter() { REMOVE_FROM_CHAIN(&_ss(this)->_gc_chain,this); }
+	~SQOuter() {
+		
+	}
 
 	void Release()
 	{
@@ -94,11 +104,15 @@ public:
 };
 
 //////////////////////////////////////////////
-struct SQGenerator : public CHAINABLE_OBJ
+struct SQGenerator : public SQRefCounted
 {
 	enum SQGeneratorState{eRunning,eSuspended,eDead};
 private:
-	SQGenerator(SQSharedState *ss,SQClosure *closure){_closure=closure;_state=eRunning;_ci._generator=NULL;INIT_CHAIN();ADD_TO_CHAIN(&_ss(this)->_gc_chain,this);}
+	SQGenerator(SQSharedState *ss,SQClosure *closure){
+		_closure=closure;
+		_state=eRunning;
+		_ci._generator=NULL;
+	}
 public:
 	static SQGenerator *Create(SQSharedState *ss,SQClosure *closure){
 		SQGenerator *nc=(SQGenerator*)SQ_MALLOC(sizeof(SQGenerator));
@@ -107,7 +121,7 @@ public:
 	}
 	~SQGenerator()
 	{
-		REMOVE_FROM_CHAIN(&_ss(this)->_gc_chain,this);
+		
 	}
 	void Kill(){
 		_state=eDead;
@@ -128,10 +142,13 @@ public:
 
 #define _CALC_NATVIVECLOSURE_SIZE(noutervalues) (sizeof(SQNativeClosure) + (noutervalues*sizeof(SQObjectPtr)))
 
-struct SQNativeClosure : public CHAINABLE_OBJ
+struct SQNativeClosure : public SQRefCounted
 {
 private:
-	SQNativeClosure(SQSharedState *ss,SQFUNCTION func){_function=func;INIT_CHAIN();ADD_TO_CHAIN(&_ss(this)->_gc_chain,this); _env = NULL;}
+	SQNativeClosure(SQSharedState *ss,SQFUNCTION func){
+		_function=func;
+		_env = NULL;
+	}
 public:
 	static SQNativeClosure *Create(SQSharedState *ss,SQFUNCTION func,SQInteger nouters)
 	{
@@ -157,7 +174,6 @@ public:
 	~SQNativeClosure()
 	{
 		__ObjRelease(_env);
-		REMOVE_FROM_CHAIN(&_ss(this)->_gc_chain,this);
 	}
 	void Release(){
 		SQInteger size = _CALC_NATVIVECLOSURE_SIZE(_noutervalues);

@@ -37,7 +37,7 @@ struct SQExceptionTrap{
 
 typedef sqvector<SQExceptionTrap> ExceptionsTraps;
 
-struct SQVM : public CHAINABLE_OBJ
+struct SQVM : public SQRefCounted
 {
 	struct CallInfo{
 		//CallInfo() { _generator = NULL;}

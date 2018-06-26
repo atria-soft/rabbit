@@ -312,12 +312,8 @@ inline void _Swap(SQObject &a,SQObject &b)
 	b._unVal = unOldVal;
 }
 
-#define ADD_TO_CHAIN(chain,obj) ((void)0)
-#define REMOVE_FROM_CHAIN(chain,obj) ((void)0)
-#define CHAINABLE_OBJ SQRefCounted
-#define INIT_CHAIN() ((void)0)
 
-struct SQDelegable : public CHAINABLE_OBJ {
+struct SQDelegable : public SQRefCounted {
 	bool SetDelegate(SQTable *m);
 	virtual bool GetMetaMethod(SQVM *v,SQMetaMethod mm,SQObjectPtr &res);
 	SQTable *_delegate;

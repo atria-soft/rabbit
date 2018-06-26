@@ -30,7 +30,7 @@ typedef sqvector<SQClassMember> SQClassMemberVec;
 #define _member_type(o) (_integer(o)&0xFF000000)
 #define _member_idx(o) (_integer(o)&0x00FFFFFF)
 
-struct SQClass : public CHAINABLE_OBJ
+struct SQClass : public SQRefCounted
 {
 	SQClass(SQSharedState *ss,SQClass *base);
 public:
