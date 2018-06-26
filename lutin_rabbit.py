@@ -27,14 +27,14 @@ def get_version():
 
 def configure(target, my_module):
 	my_module.add_src_file([
-	    'cmdLine/rabbit.cpp',
-	    ])
+		'cmdLine/rabbit.cpp',
+		])
 	my_module.compile_version("c++", 2011)
 	my_module.add_depend([
-	    'rabbit-core',
-	    'rabbit-std',
-	    'cxx',
-	    ])
+		'rabbit-core',
+		'rabbit-std',
+		'cxx',
+		])
 	return True
 
 

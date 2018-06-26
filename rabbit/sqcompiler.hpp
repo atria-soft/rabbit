@@ -12,7 +12,7 @@ struct SQVM;
 #define TK_IDENTIFIER   258
 #define TK_STRING_LITERAL   259
 #define TK_INTEGER  260
-#define TK_FLOAT    261
+#define TK_FLOAT	261
 #define TK_BASE 262
 #define TK_DELETE   263
 #define TK_EQ   264
@@ -20,13 +20,13 @@ struct SQVM;
 #define TK_LE   266
 #define TK_GE   267
 #define TK_SWITCH   268
-#define TK_ARROW    269
+#define TK_ARROW	269
 #define TK_AND  270
 #define TK_OR   271
 #define TK_IF   272
 #define TK_ELSE 273
-#define TK_WHILE    274
-#define TK_BREAK    275
+#define TK_WHILE	274
+#define TK_BREAK	275
 #define TK_FOR  276
 #define TK_DO   277
 #define TK_NULL 278
@@ -34,8 +34,8 @@ struct SQVM;
 #define TK_IN   280
 #define TK_NEWSLOT  281
 #define TK_MODULO   282
-#define TK_LOCAL    283
-#define TK_CLONE    284
+#define TK_LOCAL	283
+#define TK_CLONE	284
 #define TK_FUNCTION 285
 #define TK_RETURN   286
 #define TK_TYPEOF   287

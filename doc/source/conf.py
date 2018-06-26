@@ -30,7 +30,7 @@ import time
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.pngmath',
+	'sphinx.ext.pngmath',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -225,10 +225,10 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 _stdauthor = r'Alberto Demichelis'
 latex_documents = [
-    ('reference/index', 'reference.tex',
-     'Squirrel Reference Manual', _stdauthor, 'manual'),
-     ('stdlib/index', 'stdlib.tex',
-     'Squirrel Standard Library', _stdauthor, 'manual'),
+	('reference/index', 'reference.tex',
+	 'Squirrel Reference Manual', _stdauthor, 'manual'),
+	 ('stdlib/index', 'stdlib.tex',
+	 'Squirrel Standard Library', _stdauthor, 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -257,8 +257,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'Squirrel', u'Squirrel Documentation',
-     [author], 1)
+	(master_doc, 'Squirrel', u'Squirrel Documentation',
+	 [author], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -271,9 +271,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'Squirrel', u'Squirrel Documentation',
-     author, 'Squirrel', 'The Programming Language.',
-     'Miscellaneous'),
+	(master_doc, 'Squirrel', u'Squirrel Documentation',
+	 author, 'Squirrel', 'The Programming Language.',
+	 'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.

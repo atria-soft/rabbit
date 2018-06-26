@@ -67,23 +67,23 @@ typedef SQInteger SQRESULT;
 typedef wchar_t SQChar;
 
 
-#define scstrcmp    wcscmp
+#define scstrcmp	wcscmp
 #ifdef _WIN32
 #define scsprintf   _snwprintf
 #else
 #define scsprintf   swprintf
 #endif
-#define scstrlen    wcslen
-#define scstrtod    wcstod
+#define scstrlen	wcslen
+#define scstrtod	wcstod
 #ifdef _SQ64
-#define scstrtol    wcstoll
+#define scstrtol	wcstoll
 #else
-#define scstrtol    wcstol
+#define scstrtol	wcstol
 #endif
 #define scstrtoul   wcstoul
 #define scvsprintf  vswprintf
-#define scstrstr    wcsstr
-#define scprintf    wprintf
+#define scstrstr	wcsstr
+#define scprintf	wprintf
 
 #ifdef _WIN32
 #define WCHAR_SIZE 2
@@ -112,26 +112,26 @@ typedef wchar_t SQChar;
 #else
 typedef char SQChar;
 #define _SC(a) a
-#define scstrcmp    strcmp
+#define scstrcmp	strcmp
 #ifdef _MSC_VER
 #define scsprintf   _snprintf
 #else
 #define scsprintf   snprintf
 #endif
-#define scstrlen    strlen
-#define scstrtod    strtod
+#define scstrlen	strlen
+#define scstrtod	strtod
 #ifdef _SQ64
 #ifdef _MSC_VER
-#define scstrtol    _strtoi64
+#define scstrtol	_strtoi64
 #else
-#define scstrtol    strtoll
+#define scstrtol	strtoll
 #endif
 #else
-#define scstrtol    strtol
+#define scstrtol	strtol
 #endif
 #define scstrtoul   strtoul
 #define scvsprintf  vsnprintf
-#define scstrstr    strstr
+#define scstrstr	strstr
 #define scisspace   isspace
 #define scisdigit   isdigit
 #define scisprint   isprint
@@ -139,7 +139,7 @@ typedef char SQChar;
 #define sciscntrl   iscntrl
 #define scisalpha   isalpha
 #define scisalnum   isalnum
-#define scprintf    printf
+#define scprintf	printf
 #define MAX_CHAR 0xFF
 
 #define sq_rsl(l) (l)

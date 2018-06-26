@@ -11,8 +11,8 @@ typedef unsigned int SQRexBool;
 typedef struct SQRex SQRex;
 
 typedef struct {
-    const SQChar *begin;
-    SQInteger len;
+	const SQChar *begin;
+	SQInteger len;
 } SQRexMatch;
 
 RABBIT_API SQRex *sqstd_rex_compile(const SQChar *pattern,const SQChar **error);
