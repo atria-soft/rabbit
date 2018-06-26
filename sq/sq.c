@@ -9,13 +9,13 @@
 #include <crtdbg.h>
 #include <conio.h>
 #endif
-#include <squirrel.h>
-#include <sqstdblob.h>
-#include <sqstdsystem.h>
-#include <sqstdio.h>
-#include <sqstdmath.h>
-#include <sqstdstring.h>
-#include <sqstdaux.h>
+#include <squirrel/squirrel.h>
+#include <squirrel/sqstdblob.h>
+#include <squirrel/sqstdsystem.h>
+#include <squirrel/sqstdio.h>
+#include <squirrel/sqstdmath.h>
+#include <squirrel/sqstdstring.h>
+#include <squirrel/sqstdaux.h>
 
 #ifdef SQUNICODE
 #define scfprintf fwprintf

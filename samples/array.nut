@@ -12,8 +12,10 @@ if(vargv.len()!=0) {
   n = 1;
 }
 
-local x = []; x.resize(n);
-local y = []; y.resize(n);
+local x = [];
+x.resize(n);
+local y = [];
+y.resize(n);
 
 for (i = 0; i < n; i+=1) {
   x[i] = i + 1;

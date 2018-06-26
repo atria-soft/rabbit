@@ -13,7 +13,7 @@
 #include <assert.h>
 #include <new>
 //squirrel stuff
-#include <squirrel.h>
+#include <squirrel/squirrel.h>
 #include "sqobject.h"
 #include "sqstate.h"
 

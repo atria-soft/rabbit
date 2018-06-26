@@ -3,9 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <squirrel.h>
-#include <sqstdio.h>
-#include <sqstdblob.h>
+#include <squirrel/squirrel.h>
+#include <squirrel/sqstdio.h>
+#include <squirrel/sqstdblob.h>
 #include "sqstdstream.h"
 #include "sqstdblobimpl.h"
 

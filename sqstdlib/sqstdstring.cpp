@@ -1,6 +1,6 @@
 /* see copyright notice in squirrel.h */
-#include <squirrel.h>
-#include <sqstdstring.h>
+#include <squirrel/squirrel.h>
+#include <squirrel/sqstdstring.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
