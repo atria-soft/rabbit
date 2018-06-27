@@ -14,7 +14,7 @@
 
 #define SETUP_BLOB(v) \
 	SQBlob *self = NULL; \
-	{ if(SQ_FAILED(sq_getinstanceup(v,1,(SQUserPointer*)&self,(SQUserPointer)SQSTD_BLOB_TYPE_TAG))) \
+	{ if(SQ_FAILED(sq_getinstanceup(v,1,(rabbit::UserPointer*)&self,(rabbit::UserPointer)SQSTD_BLOB_TYPE_TAG))) \
 		return sq_throwerror(v,_SC("invalid type tag"));  } \
 	if(!self || !self->IsValid())  \
 		return sq_throwerror(v,_SC("the blob is invalid"));
@@ -98,7 +98,7 @@ static int64_t _blob__get(rabbit::VirtualMachine* v)
 static int64_t _blob__nexti(rabbit::VirtualMachine* v)
 {
 	SETUP_BLOB(v);
-	if(sq_gettype(v,2) == OT_NULL) {
+	if(sq_gettype(v,2) == rabbit::OT_NULL) {
 		sq_pushinteger(v, 0);
 		return 1;
 	}
@@ -120,7 +120,7 @@ static int64_t _blob__typeof(rabbit::VirtualMachine* v)
 	return 1;
 }
 
-static int64_t _blob_releasehook(SQUserPointer p, int64_t SQ_UNUSED_ARG(size))
+static int64_t _blob_releasehook(rabbit::UserPointer p, int64_t SQ_UNUSED_ARG(size))
 {
 	SQBlob *self = (SQBlob*)p;
 	self->~SQBlob();
@@ -152,7 +152,7 @@ static int64_t _blob__cloned(rabbit::VirtualMachine* v)
 {
 	SQBlob *other = NULL;
 	{
-		if(SQ_FAILED(sq_getinstanceup(v,2,(SQUserPointer*)&other,(SQUserPointer)SQSTD_BLOB_TYPE_TAG)))
+		if(SQ_FAILED(sq_getinstanceup(v,2,(rabbit::UserPointer*)&other,(rabbit::UserPointer)SQSTD_BLOB_TYPE_TAG)))
 			return SQ_ERROR;
 	}
 	//SQBlob *thisone = new SQBlob(other->Len());
@@ -168,7 +168,7 @@ static int64_t _blob__cloned(rabbit::VirtualMachine* v)
 }
 
 #define _DECL_BLOB_FUNC(name,nparams,typecheck) {_SC(#name),_blob_##name,nparams,typecheck}
-static const SQRegFunction _blob_methods[] = {
+static const rabbit::RegFunction _blob_methods[] = {
 	_DECL_BLOB_FUNC(constructor,-1,_SC("xn")),
 	_DECL_BLOB_FUNC(resize,2,_SC("xn")),
 	_DECL_BLOB_FUNC(swap2,1,_SC("x")),
@@ -230,7 +230,7 @@ static int64_t _g_blob_swapfloat(rabbit::VirtualMachine* v)
 }
 
 #define _DECL_GLOBALBLOB_FUNC(name,nparams,typecheck) {_SC(#name),_g_blob_##name,nparams,typecheck}
-static const SQRegFunction bloblib_funcs[]={
+static const rabbit::RegFunction bloblib_funcs[]={
 	_DECL_GLOBALBLOB_FUNC(casti2f,2,_SC(".n")),
 	_DECL_GLOBALBLOB_FUNC(castf2i,2,_SC(".n")),
 	_DECL_GLOBALBLOB_FUNC(swap2,2,_SC(".n")),
@@ -239,10 +239,10 @@ static const SQRegFunction bloblib_funcs[]={
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 
-SQRESULT sqstd_getblob(rabbit::VirtualMachine* v,int64_t idx,SQUserPointer *ptr)
+rabbit::Result sqstd_getblob(rabbit::VirtualMachine* v,int64_t idx,rabbit::UserPointer *ptr)
 {
 	SQBlob *blob;
-	if(SQ_FAILED(sq_getinstanceup(v,idx,(SQUserPointer *)&blob,(SQUserPointer)SQSTD_BLOB_TYPE_TAG)))
+	if(SQ_FAILED(sq_getinstanceup(v,idx,(rabbit::UserPointer *)&blob,(rabbit::UserPointer)SQSTD_BLOB_TYPE_TAG)))
 		return -1;
 	*ptr = blob->getBuf();
 	return SQ_OK;
@@ -251,12 +251,12 @@ SQRESULT sqstd_getblob(rabbit::VirtualMachine* v,int64_t idx,SQUserPointer *ptr)
 int64_t sqstd_getblobsize(rabbit::VirtualMachine* v,int64_t idx)
 {
 	SQBlob *blob;
-	if(SQ_FAILED(sq_getinstanceup(v,idx,(SQUserPointer *)&blob,(SQUserPointer)SQSTD_BLOB_TYPE_TAG)))
+	if(SQ_FAILED(sq_getinstanceup(v,idx,(rabbit::UserPointer *)&blob,(rabbit::UserPointer)SQSTD_BLOB_TYPE_TAG)))
 		return -1;
 	return blob->Len();
 }
 
-SQUserPointer sqstd_createblob(rabbit::VirtualMachine* v, int64_t size)
+rabbit::UserPointer sqstd_createblob(rabbit::VirtualMachine* v, int64_t size)
 {
 	int64_t top = sq_gettop(v);
 	sq_pushregistrytable(v);
@@ -267,7 +267,7 @@ SQUserPointer sqstd_createblob(rabbit::VirtualMachine* v, int64_t size)
 		sq_pushinteger(v,size); //size
 		SQBlob *blob = NULL;
 		if(SQ_SUCCEEDED(sq_call(v,2,SQTrue,SQFalse))
-			&& SQ_SUCCEEDED(sq_getinstanceup(v,-1,(SQUserPointer *)&blob,(SQUserPointer)SQSTD_BLOB_TYPE_TAG))) {
+			&& SQ_SUCCEEDED(sq_getinstanceup(v,-1,(rabbit::UserPointer *)&blob,(rabbit::UserPointer)SQSTD_BLOB_TYPE_TAG))) {
 			sq_remove(v,-2);
 			return blob->getBuf();
 		}
@@ -276,8 +276,8 @@ SQUserPointer sqstd_createblob(rabbit::VirtualMachine* v, int64_t size)
 	return NULL;
 }
 
-SQRESULT sqstd_register_bloblib(rabbit::VirtualMachine* v)
+rabbit::Result sqstd_register_bloblib(rabbit::VirtualMachine* v)
 {
-	return declare_stream(v,_SC("blob"),(SQUserPointer)SQSTD_BLOB_TYPE_TAG,_SC("std_blob"),_blob_methods,bloblib_funcs);
+	return declare_stream(v,_SC("blob"),(rabbit::UserPointer)SQSTD_BLOB_TYPE_TAG,_SC("std_blob"),_blob_methods,bloblib_funcs);
 }
 

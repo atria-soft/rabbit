@@ -10,8 +10,8 @@
 struct SQInstance;
 
 struct SQClassMember {
-	SQObjectPtr val;
-	SQObjectPtr attrs;
+	rabbit::ObjectPtr val;
+	rabbit::ObjectPtr attrs;
 	void Null() {
 		val.Null();
 		attrs.Null();
@@ -40,11 +40,11 @@ public:
 		return newclass;
 	}
 	~SQClass();
-	bool newSlot(SQSharedState *ss, const SQObjectPtr &key,const SQObjectPtr &val,bool bstatic);
-	bool get(const SQObjectPtr &key,SQObjectPtr &val) {
+	bool newSlot(SQSharedState *ss, const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val,bool bstatic);
+	bool get(const rabbit::ObjectPtr &key,rabbit::ObjectPtr &val) {
 		if(_members->get(key,val)) {
 			if(_isfield(val)) {
-				SQObjectPtr &o = _defaultvalues[_member_idx(val)].val;
+				rabbit::ObjectPtr &o = _defaultvalues[_member_idx(val)].val;
 				val = _realval(o);
 			}
 			else {
@@ -54,7 +54,7 @@ public:
 		}
 		return false;
 	}
-	bool getConstructor(SQObjectPtr &ctor)
+	bool getConstructor(rabbit::ObjectPtr &ctor)
 	{
 		if(_constructoridx != -1) {
 			ctor = _methods[_constructoridx].val;
@@ -62,23 +62,23 @@ public:
 		}
 		return false;
 	}
-	bool setAttributes(const SQObjectPtr &key,const SQObjectPtr &val);
-	bool getAttributes(const SQObjectPtr &key,SQObjectPtr &outval);
+	bool setAttributes(const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val);
+	bool getAttributes(const rabbit::ObjectPtr &key,rabbit::ObjectPtr &outval);
 	void lock() { _locked = true; if(_base) _base->lock(); }
 	void release() {
 		if (_hook) { _hook(_typetag,0);}
 		sq_delete(this, SQClass);
 	}
 	void finalize();
-	int64_t next(const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval);
+	int64_t next(const rabbit::ObjectPtr &refpos, rabbit::ObjectPtr &outkey, rabbit::ObjectPtr &outval);
 	SQInstance *createInstance();
 	SQTable *_members;
 	SQClass *_base;
 	SQClassMemberVec _defaultvalues;
 	SQClassMemberVec _methods;
-	SQObjectPtr _metamethods[MT_LAST];
-	SQObjectPtr _attributes;
-	SQUserPointer _typetag;
+	rabbit::ObjectPtr _metamethods[MT_LAST];
+	rabbit::ObjectPtr _attributes;
+	rabbit::UserPointer _typetag;
 	SQRELEASEHOOK _hook;
 	bool _locked;
 	int64_t _constructoridx;
@@ -86,9 +86,9 @@ public:
 };
 
 #define calcinstancesize(_theclass_) \
-	(_theclass_->_udsize + sq_aligning(sizeof(SQInstance) +  (sizeof(SQObjectPtr)*(_theclass_->_defaultvalues.size()>0?_theclass_->_defaultvalues.size()-1:0))))
+	(_theclass_->_udsize + sq_aligning(sizeof(SQInstance) +  (sizeof(rabbit::ObjectPtr)*(_theclass_->_defaultvalues.size()>0?_theclass_->_defaultvalues.size()-1:0))))
 
-struct SQInstance : public SQDelegable
+struct SQInstance : public rabbit::Delegable
 {
 	void init(SQSharedState *ss);
 	SQInstance(SQSharedState *ss, SQClass *c, int64_t memsize);
@@ -115,10 +115,10 @@ public:
 		return newinst;
 	}
 	~SQInstance();
-	bool get(const SQObjectPtr &key,SQObjectPtr &val)  {
+	bool get(const rabbit::ObjectPtr &key,rabbit::ObjectPtr &val)  {
 		if(_class->_members->get(key,val)) {
 			if(_isfield(val)) {
-				SQObjectPtr &o = _values[_member_idx(val)];
+				rabbit::ObjectPtr &o = _values[_member_idx(val)];
 				val = _realval(o);
 			}
 			else {
@@ -128,8 +128,8 @@ public:
 		}
 		return false;
 	}
-	bool set(const SQObjectPtr &key,const SQObjectPtr &val) {
-		SQObjectPtr idx;
+	bool set(const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val) {
+		rabbit::ObjectPtr idx;
 		if(_class->_members->get(key,idx) && _isfield(idx)) {
 			_values[_member_idx(idx)] = val;
 			return true;
@@ -147,12 +147,12 @@ public:
 	}
 	void finalize();
 	bool instanceOf(SQClass *trg);
-	bool getMetaMethod(rabbit::VirtualMachine *v,SQMetaMethod mm,SQObjectPtr &res);
+	bool getMetaMethod(rabbit::VirtualMachine *v,rabbit::MetaMethod mm,rabbit::ObjectPtr &res);
 
 	SQClass *_class;
-	SQUserPointer _userpointer;
+	rabbit::UserPointer _userpointer;
 	SQRELEASEHOOK _hook;
 	int64_t _memsize;
-	SQObjectPtr _values[1];
+	rabbit::ObjectPtr _values[1];
 };
 

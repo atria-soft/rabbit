@@ -22,10 +22,10 @@
 #define TARGET _stack[_stackbase+arg0]
 #define STK(a) _stack[_stackbase+(a)]
 
-bool rabbit::VirtualMachine::BW_OP(uint64_t op,SQObjectPtr &trg,const SQObjectPtr &o1,const SQObjectPtr &o2)
+bool rabbit::VirtualMachine::BW_OP(uint64_t op,rabbit::ObjectPtr &trg,const rabbit::ObjectPtr &o1,const rabbit::ObjectPtr &o2)
 {
 	int64_t res;
-	if((sq_type(o1)| sq_type(o2)) == OT_INTEGER)
+	if((sq_type(o1)| sq_type(o2)) == rabbit::OT_INTEGER)
 	{
 		int64_t i1 = _integer(o1), i2 = _integer(o2);
 		switch(op) {
@@ -47,9 +47,9 @@ bool rabbit::VirtualMachine::BW_OP(uint64_t op,SQObjectPtr &trg,const SQObjectPt
 { \
 	int64_t tmask = sq_type(o1)|sq_type(o2); \
 	switch(tmask) { \
-		case OT_INTEGER: trg = _integer(o1) op _integer(o2);break; \
-		case (OT_FLOAT|OT_INTEGER): \
-		case (OT_FLOAT): trg = tofloat(o1) op tofloat(o2); break;\
+		case rabbit::OT_INTEGER: trg = _integer(o1) op _integer(o2);break; \
+		case (rabbit::OT_FLOAT|OT_INTEGER): \
+		case (rabbit::OT_FLOAT): trg = tofloat(o1) op tofloat(o2); break;\
 		default: _GUARD(ARITH_OP((#op)[0],trg,o1,o2)); break;\
 	} \
 }
@@ -58,18 +58,18 @@ bool rabbit::VirtualMachine::BW_OP(uint64_t op,SQObjectPtr &trg,const SQObjectPt
 { \
 	int64_t tmask = sq_type(o1)|sq_type(o2); \
 	switch(tmask) { \
-		case OT_INTEGER: { int64_t i2 = _integer(o2); if(i2 == 0) { raise_error(err); SQ_THROW(); } trg = _integer(o1) op i2; } break;\
-		case (OT_FLOAT|OT_INTEGER): \
-		case (OT_FLOAT): trg = tofloat(o1) op tofloat(o2); break;\
+		case rabbit::OT_INTEGER: { int64_t i2 = _integer(o2); if(i2 == 0) { raise_error(err); SQ_THROW(); } trg = _integer(o1) op i2; } break;\
+		case (rabbit::OT_FLOAT|OT_INTEGER): \
+		case (rabbit::OT_FLOAT): trg = tofloat(o1) op tofloat(o2); break;\
 		default: _GUARD(ARITH_OP((#op)[0],trg,o1,o2)); break;\
 	} \
 }
 
-bool rabbit::VirtualMachine::ARITH_OP(uint64_t op,SQObjectPtr &trg,const SQObjectPtr &o1,const SQObjectPtr &o2)
+bool rabbit::VirtualMachine::ARITH_OP(uint64_t op,rabbit::ObjectPtr &trg,const rabbit::ObjectPtr &o1,const rabbit::ObjectPtr &o2)
 {
 	int64_t tmask = sq_type(o1)| sq_type(o2);
 	switch(tmask) {
-		case OT_INTEGER:{
+		case rabbit::OT_INTEGER:{
 			int64_t res, i1 = _integer(o1), i2 = _integer(o2);
 			switch(op) {
 			case '+': res = i1 + i2; break;
@@ -87,8 +87,8 @@ bool rabbit::VirtualMachine::ARITH_OP(uint64_t op,SQObjectPtr &trg,const SQObjec
 			}
 			trg = res; }
 			break;
-		case (OT_FLOAT|OT_INTEGER):
-		case (OT_FLOAT):{
+		case (rabbit::OT_FLOAT|OT_INTEGER):
+		case (rabbit::OT_FLOAT):{
 			float_t res, f1 = tofloat(o1), f2 = tofloat(o2);
 			switch(op) {
 			case '+': res = f1 + f2; break;
@@ -153,9 +153,9 @@ rabbit::VirtualMachine::~VirtualMachine()
 	finalize();
 }
 
-bool rabbit::VirtualMachine::arithMetaMethod(int64_t op,const SQObjectPtr &o1,const SQObjectPtr &o2,SQObjectPtr &dest)
+bool rabbit::VirtualMachine::arithMetaMethod(int64_t op,const rabbit::ObjectPtr &o1,const rabbit::ObjectPtr &o2,rabbit::ObjectPtr &dest)
 {
-	SQMetaMethod mm;
+	rabbit::MetaMethod mm;
 	switch(op){
 		case _SC('+'): mm=MT_ADD; break;
 		case _SC('-'): mm=MT_SUB; break;
@@ -166,7 +166,7 @@ bool rabbit::VirtualMachine::arithMetaMethod(int64_t op,const SQObjectPtr &o1,co
 	}
 	if(is_delegable(o1) && _delegable(o1)->_delegate) {
 
-		SQObjectPtr closure;
+		rabbit::ObjectPtr closure;
 		if(_delegable(o1)->getMetaMethod(this, mm, closure)) {
 			push(o1);
 			push(o2);
@@ -177,21 +177,21 @@ bool rabbit::VirtualMachine::arithMetaMethod(int64_t op,const SQObjectPtr &o1,co
 	return false;
 }
 
-bool rabbit::VirtualMachine::NEG_OP(SQObjectPtr &trg,const SQObjectPtr &o)
+bool rabbit::VirtualMachine::NEG_OP(rabbit::ObjectPtr &trg,const rabbit::ObjectPtr &o)
 {
 
 	switch(sq_type(o)) {
-	case OT_INTEGER:
+	case rabbit::OT_INTEGER:
 		trg = -_integer(o);
 		return true;
-	case OT_FLOAT:
+	case rabbit::OT_FLOAT:
 		trg = -_float(o);
 		return true;
-	case OT_TABLE:
-	case OT_USERDATA:
-	case OT_INSTANCE:
+	case rabbit::OT_TABLE:
+	case rabbit::OT_USERDATA:
+	case rabbit::OT_INSTANCE:
 		if(_delegable(o)->_delegate) {
-			SQObjectPtr closure;
+			rabbit::ObjectPtr closure;
 			if(_delegable(o)->getMetaMethod(this, MT_UNM, closure)) {
 				push(o);
 				if(!callMetaMethod(closure, MT_UNM, 1, temp_reg)) return false;
@@ -207,28 +207,28 @@ bool rabbit::VirtualMachine::NEG_OP(SQObjectPtr &trg,const SQObjectPtr &o)
 }
 
 #define _RET_SUCCEED(exp) { result = (exp); return true; }
-bool rabbit::VirtualMachine::objCmp(const SQObjectPtr &o1,const SQObjectPtr &o2,int64_t &result)
+bool rabbit::VirtualMachine::objCmp(const rabbit::ObjectPtr &o1,const rabbit::ObjectPtr &o2,int64_t &result)
 {
-	SQObjectType t1 = sq_type(o1), t2 = sq_type(o2);
+	rabbit::ObjectType t1 = sq_type(o1), t2 = sq_type(o2);
 	if(t1 == t2) {
 		if(_rawval(o1) == _rawval(o2))_RET_SUCCEED(0);
-		SQObjectPtr res;
+		rabbit::ObjectPtr res;
 		switch(t1){
-		case OT_STRING:
+		case rabbit::OT_STRING:
 			_RET_SUCCEED(scstrcmp(_stringval(o1),_stringval(o2)));
-		case OT_INTEGER:
+		case rabbit::OT_INTEGER:
 			_RET_SUCCEED((_integer(o1)<_integer(o2))?-1:1);
-		case OT_FLOAT:
+		case rabbit::OT_FLOAT:
 			_RET_SUCCEED((_float(o1)<_float(o2))?-1:1);
-		case OT_TABLE:
-		case OT_USERDATA:
-		case OT_INSTANCE:
+		case rabbit::OT_TABLE:
+		case rabbit::OT_USERDATA:
+		case rabbit::OT_INSTANCE:
 			if(_delegable(o1)->_delegate) {
-				SQObjectPtr closure;
+				rabbit::ObjectPtr closure;
 				if(_delegable(o1)->getMetaMethod(this, MT_CMP, closure)) {
 					push(o1);push(o2);
 					if(callMetaMethod(closure,MT_CMP,2,res)) {
-						if(sq_type(res) != OT_INTEGER) {
+						if(sq_type(res) != rabbit::OT_INTEGER) {
 							raise_error(_SC("_cmp must return an integer"));
 							return false;
 						}
@@ -242,13 +242,13 @@ bool rabbit::VirtualMachine::objCmp(const SQObjectPtr &o1,const SQObjectPtr &o2,
 			_RET_SUCCEED( _userpointer(o1) < _userpointer(o2)?-1:1 );
 		}
 		assert(0);
-		//if(type(res)!=OT_INTEGER) { raise_Compareerror(o1,o2); return false; }
+		//if(type(res)!=rabbit::OT_INTEGER) { raise_Compareerror(o1,o2); return false; }
 		//  _RET_SUCCEED(_integer(res));
 
 	}
 	else{
 		if(sq_isnumeric(o1) && sq_isnumeric(o2)){
-			if((t1==OT_INTEGER) && (t2==OT_FLOAT)) {
+			if((t1==rabbit::OT_INTEGER) && (t2==OT_FLOAT)) {
 				if( _integer(o1)==_float(o2) ) { _RET_SUCCEED(0); }
 				else if( _integer(o1)<_float(o2) ) { _RET_SUCCEED(-1); }
 				_RET_SUCCEED(1);
@@ -259,8 +259,8 @@ bool rabbit::VirtualMachine::objCmp(const SQObjectPtr &o1,const SQObjectPtr &o2,
 				_RET_SUCCEED(1);
 			}
 		}
-		else if(t1==OT_NULL) {_RET_SUCCEED(-1);}
-		else if(t2==OT_NULL) {_RET_SUCCEED(1);}
+		else if(t1==rabbit::OT_NULL) {_RET_SUCCEED(-1);}
+		else if(t2==rabbit::OT_NULL) {_RET_SUCCEED(1);}
 		else { raise_Compareerror(o1,o2); return false; }
 
 	}
@@ -268,7 +268,7 @@ bool rabbit::VirtualMachine::objCmp(const SQObjectPtr &o1,const SQObjectPtr &o2,
 	_RET_SUCCEED(0); //cannot happen
 }
 
-bool rabbit::VirtualMachine::CMP_OP(CmpOP op, const SQObjectPtr &o1,const SQObjectPtr &o2,SQObjectPtr &res)
+bool rabbit::VirtualMachine::CMP_OP(CmpOP op, const rabbit::ObjectPtr &o1,const rabbit::ObjectPtr &o2,rabbit::ObjectPtr &res)
 {
 	int64_t r;
 	if(objCmp(o1,o2,r)) {
@@ -284,30 +284,30 @@ bool rabbit::VirtualMachine::CMP_OP(CmpOP op, const SQObjectPtr &o1,const SQObje
 	return false;
 }
 
-bool rabbit::VirtualMachine::toString(const SQObjectPtr &o,SQObjectPtr &res)
+bool rabbit::VirtualMachine::toString(const rabbit::ObjectPtr &o,rabbit::ObjectPtr &res)
 {
 	switch(sq_type(o)) {
-	case OT_STRING:
+	case rabbit::OT_STRING:
 		res = o;
 		return true;
-	case OT_FLOAT:
+	case rabbit::OT_FLOAT:
 		scsprintf(_sp(sq_rsl(NUMBER_MAX_CHAR+1)),sq_rsl(NUMBER_MAX_CHAR),_SC("%g"),_float(o));
 		break;
-	case OT_INTEGER:
+	case rabbit::OT_INTEGER:
 		scsprintf(_sp(sq_rsl(NUMBER_MAX_CHAR+1)),sq_rsl(NUMBER_MAX_CHAR),_PRINT_INT_FMT,_integer(o));
 		break;
-	case OT_BOOL:
+	case rabbit::OT_BOOL:
 		scsprintf(_sp(sq_rsl(6)),sq_rsl(6),_integer(o)?_SC("true"):_SC("false"));
 		break;
-	case OT_TABLE:
-	case OT_USERDATA:
-	case OT_INSTANCE:
+	case rabbit::OT_TABLE:
+	case rabbit::OT_USERDATA:
+	case rabbit::OT_INSTANCE:
 		if(_delegable(o)->_delegate) {
-			SQObjectPtr closure;
+			rabbit::ObjectPtr closure;
 			if(_delegable(o)->getMetaMethod(this, MT_TOSTRING, closure)) {
 				push(o);
 				if(callMetaMethod(closure,MT_TOSTRING,1,res)) {
-					if(sq_type(res) == OT_STRING)
+					if(sq_type(res) == rabbit::OT_STRING)
 						return true;
 				}
 				else {
@@ -318,34 +318,34 @@ bool rabbit::VirtualMachine::toString(const SQObjectPtr &o,SQObjectPtr &res)
 	default:
 		scsprintf(_sp(sq_rsl((sizeof(void*)*2)+NUMBER_MAX_CHAR)),sq_rsl((sizeof(void*)*2)+NUMBER_MAX_CHAR),_SC("(%s : 0x%p)"),getTypeName(o),(void*)_rawval(o));
 	}
-	res = SQString::create(_ss(this),_spval);
+	res = SQString::create(_get_shared_state(this),_spval);
 	return true;
 }
 
 
-bool rabbit::VirtualMachine::stringCat(const SQObjectPtr &str,const SQObjectPtr &obj,SQObjectPtr &dest)
+bool rabbit::VirtualMachine::stringCat(const rabbit::ObjectPtr &str,const rabbit::ObjectPtr &obj,rabbit::ObjectPtr &dest)
 {
-	SQObjectPtr a, b;
+	rabbit::ObjectPtr a, b;
 	if(!toString(str, a)) return false;
 	if(!toString(obj, b)) return false;
 	int64_t l = _string(a)->_len , ol = _string(b)->_len;
-	SQChar *s = _sp(sq_rsl(l + ol + 1));
+	rabbit::Char *s = _sp(sq_rsl(l + ol + 1));
 	memcpy(s, _stringval(a), sq_rsl(l));
 	memcpy(s + l, _stringval(b), sq_rsl(ol));
-	dest = SQString::create(_ss(this), _spval, l + ol);
+	dest = SQString::create(_get_shared_state(this), _spval, l + ol);
 	return true;
 }
 
-bool rabbit::VirtualMachine::typeOf(const SQObjectPtr &obj1,SQObjectPtr &dest)
+bool rabbit::VirtualMachine::typeOf(const rabbit::ObjectPtr &obj1,rabbit::ObjectPtr &dest)
 {
 	if(is_delegable(obj1) && _delegable(obj1)->_delegate) {
-		SQObjectPtr closure;
+		rabbit::ObjectPtr closure;
 		if(_delegable(obj1)->getMetaMethod(this, MT_TYPEOF, closure)) {
 			push(obj1);
 			return callMetaMethod(closure,MT_TYPEOF,1,dest);
 		}
 	}
-	dest = SQString::create(_ss(this),getTypeName(obj1));
+	dest = SQString::create(_get_shared_state(this),getTypeName(obj1));
 	return true;
 }
 
@@ -359,7 +359,7 @@ bool rabbit::VirtualMachine::init(rabbit::VirtualMachine *friendvm, int64_t stac
 	_stackbase = 0;
 	_top = 0;
 	if(!friendvm) {
-		_roottable = SQTable::create(_ss(this), 0);
+		_roottable = SQTable::create(_get_shared_state(this), 0);
 		sq_base_register(this);
 	}
 	else {
@@ -392,7 +392,7 @@ bool rabbit::VirtualMachine::startcall(SQClosure *closure,int64_t target,int64_t
 
 		//dumpstack(stackbase);
 		int64_t nvargs = nargs - paramssize;
-		rabbit::Array *arr = rabbit::Array::create(_ss(this),nvargs);
+		rabbit::Array *arr = rabbit::Array::create(_get_shared_state(this),nvargs);
 		int64_t pbase = stackbase+paramssize;
 		for(int64_t n = 0; n < nvargs; n++) {
 			(*arr)[n] = _stack[pbase];
@@ -434,10 +434,10 @@ bool rabbit::VirtualMachine::startcall(SQClosure *closure,int64_t target,int64_t
 
 	if (closure->_function->_bgenerator) {
 		SQFunctionProto *f = closure->_function;
-		SQGenerator *gen = SQGenerator::create(_ss(this), closure);
+		SQGenerator *gen = SQGenerator::create(_get_shared_state(this), closure);
 		if(!gen->yield(this,f->_stacksize))
 			return false;
-		SQObjectPtr temp;
+		rabbit::ObjectPtr temp;
 		Return(1, target, temp);
 		STK(target) = gen;
 	}
@@ -446,9 +446,9 @@ bool rabbit::VirtualMachine::startcall(SQClosure *closure,int64_t target,int64_t
 	return true;
 }
 
-bool rabbit::VirtualMachine::Return(int64_t _arg0, int64_t _arg1, SQObjectPtr &retval)
+bool rabbit::VirtualMachine::Return(int64_t _arg0, int64_t _arg1, rabbit::ObjectPtr &retval)
 {
-	SQBool	_isroot	  = ci->_root;
+	rabbit::Bool	_isroot	  = ci->_root;
 	int64_t callerbase   = _stackbase - ci->_prevstkbase;
 
 	if (_debughook) {
@@ -457,7 +457,7 @@ bool rabbit::VirtualMachine::Return(int64_t _arg0, int64_t _arg1, SQObjectPtr &r
 		}
 	}
 
-	SQObjectPtr *dest;
+	rabbit::ObjectPtr *dest;
 	if (_isroot) {
 		dest = &(retval);
 	} else if (ci->_target == -1) {
@@ -480,18 +480,18 @@ bool rabbit::VirtualMachine::Return(int64_t _arg0, int64_t _arg1, SQObjectPtr &r
 
 #define _RET_ON_FAIL(exp) { if(!exp) return false; }
 
-bool rabbit::VirtualMachine::PLOCAL_INC(int64_t op,SQObjectPtr &target, SQObjectPtr &a, SQObjectPtr &incr)
+bool rabbit::VirtualMachine::PLOCAL_INC(int64_t op,rabbit::ObjectPtr &target, rabbit::ObjectPtr &a, rabbit::ObjectPtr &incr)
 {
-	SQObjectPtr trg;
+	rabbit::ObjectPtr trg;
 	_RET_ON_FAIL(ARITH_OP( op , trg, a, incr));
 	target = a;
 	a = trg;
 	return true;
 }
 
-bool rabbit::VirtualMachine::derefInc(int64_t op,SQObjectPtr &target, SQObjectPtr &self, SQObjectPtr &key, SQObjectPtr &incr, bool postfix,int64_t selfidx)
+bool rabbit::VirtualMachine::derefInc(int64_t op,rabbit::ObjectPtr &target, rabbit::ObjectPtr &self, rabbit::ObjectPtr &key, rabbit::ObjectPtr &incr, bool postfix,int64_t selfidx)
 {
-	SQObjectPtr tmp, tself = self, tkey = key;
+	rabbit::ObjectPtr tmp, tself = self, tkey = key;
 	if (!get(tself, tkey, tmp, 0, selfidx)) { return false; }
 	_RET_ON_FAIL(ARITH_OP( op , target, tmp, incr))
 	if (!set(tself, tkey, target,selfidx)) { return false; }
@@ -507,7 +507,7 @@ bool rabbit::VirtualMachine::derefInc(int64_t op,SQObjectPtr &target, SQObjectPt
 #define arg3 (_i_._arg3)
 #define sarg3 ((int64_t)*((const signed char *)&_i_._arg3))
 
-SQRESULT rabbit::VirtualMachine::Suspend()
+rabbit::Result rabbit::VirtualMachine::Suspend()
 {
 	if (_suspended)
 		return sq_throwerror(this, _SC("cannot suspend an already suspended vm"));
@@ -518,34 +518,34 @@ SQRESULT rabbit::VirtualMachine::Suspend()
 
 
 #define _FINISH(howmuchtojump) {jump = howmuchtojump; return true; }
-bool rabbit::VirtualMachine::FOREACH_OP(SQObjectPtr &o1,SQObjectPtr &o2,SQObjectPtr
-&o3,SQObjectPtr &o4,int64_t SQ_UNUSED_ARG(arg_2),int exitpos,int &jump)
+bool rabbit::VirtualMachine::FOREACH_OP(rabbit::ObjectPtr &o1,rabbit::ObjectPtr &o2,rabbit::ObjectPtr
+&o3,rabbit::ObjectPtr &o4,int64_t SQ_UNUSED_ARG(arg_2),int exitpos,int &jump)
 {
 	int64_t nrefidx;
 	switch(sq_type(o1)) {
-	case OT_TABLE:
+	case rabbit::OT_TABLE:
 		if((nrefidx = _table(o1)->next(false,o4, o2, o3)) == -1) _FINISH(exitpos);
 		o4 = (int64_t)nrefidx; _FINISH(1);
-	case OT_ARRAY:
+	case rabbit::OT_ARRAY:
 		if((nrefidx = _array(o1)->next(o4, o2, o3)) == -1) _FINISH(exitpos);
 		o4 = (int64_t) nrefidx; _FINISH(1);
-	case OT_STRING:
+	case rabbit::OT_STRING:
 		if((nrefidx = _string(o1)->next(o4, o2, o3)) == -1)_FINISH(exitpos);
 		o4 = (int64_t)nrefidx; _FINISH(1);
-	case OT_CLASS:
+	case rabbit::OT_CLASS:
 		if((nrefidx = _class(o1)->next(o4, o2, o3)) == -1)_FINISH(exitpos);
 		o4 = (int64_t)nrefidx; _FINISH(1);
-	case OT_USERDATA:
-	case OT_INSTANCE:
+	case rabbit::OT_USERDATA:
+	case rabbit::OT_INSTANCE:
 		if(_delegable(o1)->_delegate) {
-			SQObjectPtr itr;
-			SQObjectPtr closure;
+			rabbit::ObjectPtr itr;
+			rabbit::ObjectPtr closure;
 			if(_delegable(o1)->getMetaMethod(this, MT_NEXTI, closure)) {
 				push(o1);
 				push(o4);
 				if(callMetaMethod(closure, MT_NEXTI, 2, itr)) {
 					o4 = o2 = itr;
-					if(sq_type(itr) == OT_NULL) _FINISH(exitpos);
+					if(sq_type(itr) == rabbit::OT_NULL) _FINISH(exitpos);
 					if(!get(o1, itr, o3, 0, DONT_FALL_BACK)) {
 						raise_error(_SC("_nexti returned an invalid idx")); // cloud be changed
 						return false;
@@ -560,11 +560,11 @@ bool rabbit::VirtualMachine::FOREACH_OP(SQObjectPtr &o1,SQObjectPtr &o2,SQObject
 			return false;
 		}
 		break;
-	case OT_GENERATOR:
+	case rabbit::OT_GENERATOR:
 		if(_generator(o1)->_state == SQGenerator::eDead) _FINISH(exitpos);
 		if(_generator(o1)->_state == SQGenerator::eSuspended) {
 			int64_t idx = 0;
-			if(sq_type(o4) == OT_INTEGER) {
+			if(sq_type(o4) == rabbit::OT_INTEGER) {
 				idx = _integer(o4) + 1;
 			}
 			o2 = idx;
@@ -584,10 +584,10 @@ bool rabbit::VirtualMachine::FOREACH_OP(SQObjectPtr &o1,SQObjectPtr &o2,SQObject
 
 #define _GUARD(exp) { if(!exp) { SQ_THROW();} }
 
-bool rabbit::VirtualMachine::CLOSURE_OP(SQObjectPtr &target, SQFunctionProto *func)
+bool rabbit::VirtualMachine::CLOSURE_OP(rabbit::ObjectPtr &target, SQFunctionProto *func)
 {
 	int64_t nouters;
-	SQClosure *closure = SQClosure::create(_ss(this), func,_table(_roottable)->getWeakRef(OT_TABLE));
+	SQClosure *closure = SQClosure::create(_get_shared_state(this), func,_table(_roottable)->getWeakRef(rabbit::OT_TABLE));
 	if((nouters = func->_noutervalues)) {
 		for(int64_t i = 0; i<nouters; i++) {
 			SQOuterVar &v = func->_outervalues[i];
@@ -614,21 +614,21 @@ bool rabbit::VirtualMachine::CLOSURE_OP(SQObjectPtr &target, SQFunctionProto *fu
 }
 
 
-bool rabbit::VirtualMachine::CLASS_OP(SQObjectPtr &target,int64_t baseclass,int64_t attributes)
+bool rabbit::VirtualMachine::CLASS_OP(rabbit::ObjectPtr &target,int64_t baseclass,int64_t attributes)
 {
 	SQClass *base = NULL;
-	SQObjectPtr attrs;
+	rabbit::ObjectPtr attrs;
 	if(baseclass != -1) {
-		if(sq_type(_stack[_stackbase+baseclass]) != OT_CLASS) { raise_error(_SC("trying to inherit from a %s"),getTypeName(_stack[_stackbase+baseclass])); return false; }
+		if(sq_type(_stack[_stackbase+baseclass]) != rabbit::OT_CLASS) { raise_error(_SC("trying to inherit from a %s"),getTypeName(_stack[_stackbase+baseclass])); return false; }
 		base = _class(_stack[_stackbase + baseclass]);
 	}
 	if(attributes != MAX_FUNC_STACKSIZE) {
 		attrs = _stack[_stackbase+attributes];
 	}
-	target = SQClass::create(_ss(this),base);
-	if(sq_type(_class(target)->_metamethods[MT_INHERITED]) != OT_NULL) {
+	target = SQClass::create(_get_shared_state(this),base);
+	if(sq_type(_class(target)->_metamethods[MT_INHERITED]) != rabbit::OT_NULL) {
 		int nparams = 2;
-		SQObjectPtr ret;
+		rabbit::ObjectPtr ret;
 		push(target); push(attrs);
 		if(!call(_class(target)->_metamethods[MT_INHERITED],nparams,_top - nparams, ret, false)) {
 			pop(nparams);
@@ -640,7 +640,7 @@ bool rabbit::VirtualMachine::CLASS_OP(SQObjectPtr &target,int64_t baseclass,int6
 	return true;
 }
 
-bool rabbit::VirtualMachine::isEqual(const SQObjectPtr &o1,const SQObjectPtr &o2,bool &res)
+bool rabbit::VirtualMachine::isEqual(const rabbit::ObjectPtr &o1,const rabbit::ObjectPtr &o2,bool &res)
 {
 	if(sq_type(o1) == sq_type(o2)) {
 		res = (_rawval(o1) == _rawval(o2));
@@ -656,14 +656,14 @@ bool rabbit::VirtualMachine::isEqual(const SQObjectPtr &o1,const SQObjectPtr &o2
 	return true;
 }
 
-bool rabbit::VirtualMachine::IsFalse(SQObjectPtr &o)
+bool rabbit::VirtualMachine::IsFalse(rabbit::ObjectPtr &o)
 {
 	if(((sq_type(o) & SQOBJECT_CANBEFALSE)
-		&& ( ((sq_type(o) == OT_FLOAT) && (_float(o) == float_t(0.0))) ))
+		&& ( ((sq_type(o) == rabbit::OT_FLOAT) && (_float(o) == float_t(0.0))) ))
 #if !defined(SQUSEDOUBLE) || (defined(SQUSEDOUBLE) && defined(_SQ64))
-		|| (_integer(o) == 0) )  //OT_NULL|OT_INTEGER|OT_BOOL
+		|| (_integer(o) == 0) )  //rabbit::OT_NULL|OT_INTEGER|OT_BOOL
 #else
-		|| (((type(o) != OT_FLOAT) && (_integer(o) == 0))) )  //OT_NULL|OT_INTEGER|OT_BOOL
+		|| (((type(o) != rabbit::OT_FLOAT) && (_integer(o) == 0))) )  //OT_NULL|OT_INTEGER|OT_BOOL
 #endif
 	{
 		return true;
@@ -671,7 +671,7 @@ bool rabbit::VirtualMachine::IsFalse(SQObjectPtr &o)
 	return false;
 }
 extern SQInstructionDesc g_InstrDesc[];
-bool rabbit::VirtualMachine::execute(SQObjectPtr &closure, int64_t nargs, int64_t stackbase,SQObjectPtr &outres, SQBool raiseerror,ExecutionType et)
+bool rabbit::VirtualMachine::execute(rabbit::ObjectPtr &closure, int64_t nargs, int64_t stackbase,rabbit::ObjectPtr &outres, rabbit::Bool raiseerror,ExecutionType et)
 {
 	if ((_nnativecalls + 1) > MAX_NATIVE_CALLS) { raise_error(_SC("Native stack overflow")); return false; }
 	_nnativecalls++;
@@ -725,10 +725,10 @@ exception_restore:
 			case _OP_LOADFLOAT: TARGET = *((const float_t *)&arg1); continue;
 			case _OP_DLOAD: TARGET = ci->_literals[arg1]; STK(arg2) = ci->_literals[arg3];continue;
 			case _OP_TAILCALL:{
-				SQObjectPtr &t = STK(arg1);
-				if (sq_type(t) == OT_CLOSURE
+				rabbit::ObjectPtr &t = STK(arg1);
+				if (sq_type(t) == rabbit::OT_CLOSURE
 					&& (!_closure(t)->_function->_bgenerator)){
-					SQObjectPtr clo = t;
+					rabbit::ObjectPtr clo = t;
 					int64_t last_top = _top;
 					if(_openouters) closeOuters(&(_stack[_stackbase]));
 					for (int64_t i = 0; i < arg3; i++) STK(i) = STK(arg2 + i);
@@ -740,12 +740,12 @@ exception_restore:
 				}
 							  }
 			case _OP_CALL: {
-					SQObjectPtr clo = STK(arg1);
+					rabbit::ObjectPtr clo = STK(arg1);
 					switch (sq_type(clo)) {
-					case OT_CLOSURE:
+					case rabbit::OT_CLOSURE:
 						_GUARD(startcall(_closure(clo), sarg0, arg3, _stackbase+arg2, false));
 						continue;
-					case OT_NATIVECLOSURE: {
+					case rabbit::OT_NATIVECLOSURE: {
 						bool suspend;
 						bool tailcall;
 						_GUARD(callNative(_nativeclosure(clo), arg3, _stackbase+arg2, clo, (int32_t)sarg0, suspend, tailcall));
@@ -762,20 +762,20 @@ exception_restore:
 						}
 										   }
 						continue;
-					case OT_CLASS:{
-						SQObjectPtr inst;
+					case rabbit::OT_CLASS:{
+						rabbit::ObjectPtr inst;
 						_GUARD(createClassInstance(_class(clo),inst,clo));
 						if(sarg0 != -1) {
 							STK(arg0) = inst;
 						}
 						int64_t stkbase;
 						switch(sq_type(clo)) {
-							case OT_CLOSURE:
+							case rabbit::OT_CLOSURE:
 								stkbase = _stackbase+arg2;
 								_stack[stkbase] = inst;
 								_GUARD(startcall(_closure(clo), -1, arg3, stkbase, false));
 								break;
-							case OT_NATIVECLOSURE:
+							case rabbit::OT_NATIVECLOSURE:
 								bool dummy;
 								stkbase = _stackbase+arg2;
 								_stack[stkbase] = inst;
@@ -785,10 +785,10 @@ exception_restore:
 						}
 						}
 						break;
-					case OT_TABLE:
-					case OT_USERDATA:
-					case OT_INSTANCE:{
-						SQObjectPtr closure;
+					case rabbit::OT_TABLE:
+					case rabbit::OT_USERDATA:
+					case rabbit::OT_INSTANCE:{
+						rabbit::ObjectPtr closure;
 						if(_delegable(clo)->_delegate && _delegable(clo)->getMetaMethod(this,MT_CALL,closure)) {
 							push(clo);
 							for (int64_t i = 0; i < arg3; i++) push(STK(arg2 + i));
@@ -810,8 +810,8 @@ exception_restore:
 				  continue;
 			case _OP_PREPCALL:
 			case _OP_PREPCALLK: {
-					SQObjectPtr &key = _i_.op == _OP_PREPCALLK?(ci->_literals)[arg1]:STK(arg1);
-					SQObjectPtr &o = STK(arg2);
+					rabbit::ObjectPtr &key = _i_.op == _OP_PREPCALLK?(ci->_literals)[arg1]:STK(arg1);
+					rabbit::ObjectPtr &o = STK(arg2);
 					if (!get(o, key, temp_reg,0,arg2)) {
 						SQ_THROW();
 					}
@@ -867,7 +867,7 @@ exception_restore:
 			case _OP_LOADNULLS:{ for(int32_t n=0; n < arg1; n++) STK(arg0+n).Null(); }continue;
 			case _OP_LOADROOT:  {
 				rabbit::WeakRef *w = _closure(ci->_closure)->_root;
-				if(sq_type(w->_obj) != OT_NULL) {
+				if(sq_type(w->_obj) != rabbit::OT_NULL) {
 					TARGET = w->_obj;
 				} else {
 					TARGET = _roottable; //shoud this be like this? or null
@@ -900,14 +900,14 @@ exception_restore:
 			continue;
 			case _OP_NEWOBJ:
 				switch(arg3) {
-					case NOT_TABLE: TARGET = SQTable::create(_ss(this), arg1); continue;
-					case NOT_ARRAY: TARGET = rabbit::Array::create(_ss(this), 0); _array(TARGET)->reserve(arg1); continue;
+					case NOT_TABLE: TARGET = SQTable::create(_get_shared_state(this), arg1); continue;
+					case NOT_ARRAY: TARGET = rabbit::Array::create(_get_shared_state(this), 0); _array(TARGET)->reserve(arg1); continue;
 					case NOT_CLASS: _GUARD(CLASS_OP(TARGET,arg1,arg2)); continue;
 					default: assert(0); continue;
 				}
 			case _OP_APPENDARRAY:
 				{
-					SQObject val;
+					rabbit::Object val;
 					val._unVal.raw = 0;
 				switch(arg2) {
 				case AAT_STACK:
@@ -915,7 +915,7 @@ exception_restore:
 				case AAT_LITERAL:
 					val = ci->_literals[arg1]; break;
 				case AAT_INT:
-					val._type = OT_INTEGER;
+					val._type = rabbit::OT_INTEGER;
 #ifndef _SQ64
 					val._unVal.nInteger = (int64_t)arg1;
 #else
@@ -923,14 +923,14 @@ exception_restore:
 #endif
 					break;
 				case AAT_FLOAT:
-					val._type = OT_FLOAT;
+					val._type = rabbit::OT_FLOAT;
 					val._unVal.fFloat = *((const float_t *)&arg1);
 					break;
 				case AAT_BOOL:
-					val._type = OT_BOOL;
+					val._type = rabbit::OT_BOOL;
 					val._unVal.nInteger = arg1;
 					break;
-				default: val._type = OT_INTEGER; assert(0); break;
+				default: val._type = rabbit::OT_INTEGER; assert(0); break;
 
 				}
 				_array(STK(arg0))->append(val); continue;
@@ -940,35 +940,35 @@ exception_restore:
 				_GUARD(derefInc(arg3, TARGET, STK(selfidx), STK(arg2), STK(arg1&0x0000FFFF), false, selfidx));
 								}
 				continue;
-			case _OP_INC: {SQObjectPtr o(sarg3); _GUARD(derefInc('+',TARGET, STK(arg1), STK(arg2), o, false, arg1));} continue;
+			case _OP_INC: {rabbit::ObjectPtr o(sarg3); _GUARD(derefInc('+',TARGET, STK(arg1), STK(arg2), o, false, arg1));} continue;
 			case _OP_INCL: {
-				SQObjectPtr &a = STK(arg1);
-				if(sq_type(a) == OT_INTEGER) {
+				rabbit::ObjectPtr &a = STK(arg1);
+				if(sq_type(a) == rabbit::OT_INTEGER) {
 					a._unVal.nInteger = _integer(a) + sarg3;
 				}
 				else {
-					SQObjectPtr o(sarg3); //_GUARD(LOCAL_INC('+',TARGET, STK(arg1), o));
+					rabbit::ObjectPtr o(sarg3); //_GUARD(LOCAL_INC('+',TARGET, STK(arg1), o));
 					_ARITH_(+,a,a,o);
 				}
 						   } continue;
-			case _OP_PINC: {SQObjectPtr o(sarg3); _GUARD(derefInc('+',TARGET, STK(arg1), STK(arg2), o, true, arg1));} continue;
+			case _OP_PINC: {rabbit::ObjectPtr o(sarg3); _GUARD(derefInc('+',TARGET, STK(arg1), STK(arg2), o, true, arg1));} continue;
 			case _OP_PINCL: {
-				SQObjectPtr &a = STK(arg1);
-				if(sq_type(a) == OT_INTEGER) {
+				rabbit::ObjectPtr &a = STK(arg1);
+				if(sq_type(a) == rabbit::OT_INTEGER) {
 					TARGET = a;
 					a._unVal.nInteger = _integer(a) + sarg3;
 				}
 				else {
-					SQObjectPtr o(sarg3); _GUARD(PLOCAL_INC('+',TARGET, STK(arg1), o));
+					rabbit::ObjectPtr o(sarg3); _GUARD(PLOCAL_INC('+',TARGET, STK(arg1), o));
 				}
 
 						} continue;
 			case _OP_CMP:   _GUARD(CMP_OP((CmpOP)arg3,STK(arg2),STK(arg1),TARGET))  continue;
 			case _OP_EXISTS: TARGET = get(STK(arg1), STK(arg2), temp_reg, GET_FLAG_DO_NOT_RAISE_ERROR | GET_FLAG_RAW, DONT_FALL_BACK) ? true : false; continue;
 			case _OP_INSTANCEOF:
-				if(sq_type(STK(arg1)) != OT_CLASS)
+				if(sq_type(STK(arg1)) != rabbit::OT_CLASS)
 				{raise_error(_SC("cannot apply instanceof between a %s and a %s"),getTypeName(STK(arg1)),getTypeName(STK(arg2))); SQ_THROW();}
-				TARGET = (sq_type(STK(arg2)) == OT_INSTANCE) ? (_instance(STK(arg2))->instanceOf(_class(STK(arg1)))?true:false) : false;
+				TARGET = (sq_type(STK(arg2)) == rabbit::OT_INSTANCE) ? (_instance(STK(arg2))->instanceOf(_class(STK(arg1)))?true:false) : false;
 				continue;
 			case _OP_AND:
 				if(IsFalse(STK(arg2))) {
@@ -985,7 +985,7 @@ exception_restore:
 			case _OP_NEG: _GUARD(NEG_OP(TARGET,STK(arg1))); continue;
 			case _OP_NOT: TARGET = IsFalse(STK(arg1)); continue;
 			case _OP_BWNOT:
-				if(sq_type(STK(arg1)) == OT_INTEGER) {
+				if(sq_type(STK(arg1)) == rabbit::OT_INTEGER) {
 					int64_t t = _integer(STK(arg1));
 					TARGET = int64_t(~t);
 					continue;
@@ -1015,7 +1015,7 @@ exception_restore:
 				}
 				continue;
 			case _OP_RESUME:
-				if(sq_type(STK(arg1)) != OT_GENERATOR){ raise_error(_SC("trying to resume a '%s',only genenerator can be resumed"), getTypeName(STK(arg1))); SQ_THROW();}
+				if(sq_type(STK(arg1)) != rabbit::OT_GENERATOR){ raise_error(_SC("trying to resume a '%s',only genenerator can be resumed"), getTypeName(STK(arg1))); SQ_THROW();}
 				_GUARD(_generator(STK(arg1))->resume(this, TARGET));
 				traps += ci->_etraps;
 				continue;
@@ -1024,7 +1024,7 @@ exception_restore:
 				ci->_ip += tojump; }
 				continue;
 			case _OP_POSTFOREACH:
-				assert(sq_type(STK(arg0)) == OT_GENERATOR);
+				assert(sq_type(STK(arg0)) == rabbit::OT_GENERATOR);
 				if(_generator(STK(arg0))->_state == SQGenerator::eDead)
 					ci->_ip += (sarg1 - 1);
 				continue;
@@ -1032,7 +1032,7 @@ exception_restore:
 			case _OP_TYPEOF: _GUARD(typeOf(STK(arg1), TARGET)) continue;
 			case _OP_PUSHTRAP:{
 				SQInstruction *_iv = _closure(ci->_closure)->_function->_instructions;
-				_etraps.pushBack(SQExceptionTrap(_top,_stackbase, &_iv[(ci->_ip-_iv)+arg1], arg0)); traps++;
+				_etraps.pushBack(rabbit::ExceptionTrap(_top,_stackbase, &_iv[(ci->_ip-_iv)+arg1], arg0)); traps++;
 				ci->_etraps++;
 							  }
 				continue;
@@ -1045,7 +1045,7 @@ exception_restore:
 				continue;
 			case _OP_THROW: raise_error(TARGET); SQ_THROW(); continue;
 			case _OP_NEWSLOTA:
-				_GUARD(newSlotA(STK(arg1),STK(arg2),STK(arg3),(arg0&NEW_SLOT_ATTRIBUTES_FLAG) ? STK(arg2-1) : SQObjectPtr(),(arg0&NEW_SLOT_STATIC_FLAG)?true:false,false));
+				_GUARD(newSlotA(STK(arg1),STK(arg2),STK(arg3),(arg0&NEW_SLOT_ATTRIBUTES_FLAG) ? STK(arg2-1) : rabbit::ObjectPtr(),(arg0&NEW_SLOT_STATIC_FLAG)?true:false,false));
 				continue;
 			case _OP_GETBASE:{
 				SQClosure *clo = _closure(ci->_closure);
@@ -1066,16 +1066,16 @@ exception_restore:
 	}
 exception_trap:
 	{
-		SQObjectPtr currerror = _lasterror;
+		rabbit::ObjectPtr currerror = _lasterror;
 //	  dumpstack(_stackbase);
 //	  int64_t n = 0;
 		int64_t last_top = _top;
 
-		if(_ss(this)->_notifyallexceptions || (!traps && raiseerror)) callerrorHandler(currerror);
+		if(_get_shared_state(this)->_notifyallexceptions || (!traps && raiseerror)) callerrorHandler(currerror);
 
 		while( ci ) {
 			if(ci->_etraps > 0) {
-				SQExceptionTrap &et = _etraps.back();
+				rabbit::ExceptionTrap &et = _etraps.back();
 				ci->_ip = et._ip;
 				_top = et._stacksize;
 				_stackbase = et._stackbase;
@@ -1103,7 +1103,7 @@ exception_trap:
 	assert(0);
 }
 
-bool rabbit::VirtualMachine::createClassInstance(SQClass *theclass, SQObjectPtr &inst, SQObjectPtr &constructor)
+bool rabbit::VirtualMachine::createClassInstance(SQClass *theclass, rabbit::ObjectPtr &inst, rabbit::ObjectPtr &constructor)
 {
 	inst = theclass->createInstance();
 	if(!theclass->getConstructor(constructor)) {
@@ -1112,10 +1112,10 @@ bool rabbit::VirtualMachine::createClassInstance(SQClass *theclass, SQObjectPtr 
 	return true;
 }
 
-void rabbit::VirtualMachine::callerrorHandler(SQObjectPtr &error)
+void rabbit::VirtualMachine::callerrorHandler(rabbit::ObjectPtr &error)
 {
-	if(sq_type(_errorhandler) != OT_NULL) {
-		SQObjectPtr out;
+	if(sq_type(_errorhandler) != rabbit::OT_NULL) {
+		rabbit::ObjectPtr out;
 		push(_roottable); push(error);
 		call(_errorhandler, 2, _top-2, out,SQFalse);
 		pop(2);
@@ -1128,13 +1128,13 @@ void rabbit::VirtualMachine::callDebugHook(int64_t type,int64_t forcedline)
 	_debughook = false;
 	SQFunctionProto *func=_closure(ci->_closure)->_function;
 	if(_debughook_native) {
-		const SQChar *src = sq_type(func->_sourcename) == OT_STRING?_stringval(func->_sourcename):NULL;
-		const SQChar *fname = sq_type(func->_name) == OT_STRING?_stringval(func->_name):NULL;
+		const rabbit::Char *src = sq_type(func->_sourcename) == rabbit::OT_STRING?_stringval(func->_sourcename):NULL;
+		const rabbit::Char *fname = sq_type(func->_name) == rabbit::OT_STRING?_stringval(func->_name):NULL;
 		int64_t line = forcedline?forcedline:func->getLine(ci->_ip);
 		_debughook_native(this,type,src,line,fname);
 	}
 	else {
-		SQObjectPtr temp_reg;
+		rabbit::ObjectPtr temp_reg;
 		int64_t nparams=5;
 		push(_roottable);
 		push(type);
@@ -1147,7 +1147,7 @@ void rabbit::VirtualMachine::callDebugHook(int64_t type,int64_t forcedline)
 	_debughook = true;
 }
 
-bool rabbit::VirtualMachine::callNative(SQNativeClosure *nclosure, int64_t nargs, int64_t newbase, SQObjectPtr &retval, int32_t target,bool &suspend, bool &tailcall)
+bool rabbit::VirtualMachine::callNative(SQNativeClosure *nclosure, int64_t nargs, int64_t newbase, rabbit::ObjectPtr &retval, int32_t target,bool &suspend, bool &tailcall)
 {
 	int64_t nparamscheck = nclosure->_nparamscheck;
 	int64_t newtop = newbase + nargs + nclosure->_noutervalues;
@@ -1165,7 +1165,7 @@ bool rabbit::VirtualMachine::callNative(SQNativeClosure *nclosure, int64_t nargs
 	}
 
 	int64_t tcs;
-	SQIntVec &tc = nclosure->_typecheck;
+	etk::Vector<int64_t> &tc = nclosure->_typecheck;
 	if((tcs = tc.size())) {
 		for(int64_t i = 0; i < nargs && i < tcs; i++) {
 			if((tc[i] != -1) && !(sq_type(_stack[newbase+i]) & tc[i])) {
@@ -1219,7 +1219,7 @@ bool rabbit::VirtualMachine::callNative(SQNativeClosure *nclosure, int64_t nargs
 bool rabbit::VirtualMachine::tailcall(SQClosure *closure, int64_t parambase,int64_t nparams)
 {
 	int64_t last_top = _top;
-	SQObjectPtr clo = closure;
+	rabbit::ObjectPtr clo = closure;
 	if (ci->_root)
 	{
 		raise_error("root calls cannot invoke tailcalls");
@@ -1237,22 +1237,22 @@ bool rabbit::VirtualMachine::tailcall(SQClosure *closure, int64_t parambase,int6
 #define FALLBACK_NO_MATCH   1
 #define FALLBACK_ERROR	  2
 
-bool rabbit::VirtualMachine::get(const SQObjectPtr &self, const SQObjectPtr &key, SQObjectPtr &dest, uint64_t getflags, int64_t selfidx)
+bool rabbit::VirtualMachine::get(const rabbit::ObjectPtr &self, const rabbit::ObjectPtr &key, rabbit::ObjectPtr &dest, uint64_t getflags, int64_t selfidx)
 {
 	switch(sq_type(self)){
-	case OT_TABLE:
+	case rabbit::OT_TABLE:
 		if(_table(self)->get(key,dest))return true;
 		break;
-	case OT_ARRAY:
+	case rabbit::OT_ARRAY:
 		if (sq_isnumeric(key)) { if (_array(self)->get(tointeger(key), dest)) { return true; } if ((getflags & GET_FLAG_DO_NOT_RAISE_ERROR) == 0) raise_Idxerror(key); return false; }
 		break;
-	case OT_INSTANCE:
+	case rabbit::OT_INSTANCE:
 		if(_instance(self)->get(key,dest)) return true;
 		break;
-	case OT_CLASS:
+	case rabbit::OT_CLASS:
 		if(_class(self)->get(key,dest)) return true;
 		break;
-	case OT_STRING:
+	case rabbit::OT_STRING:
 		if(sq_isnumeric(key)){
 			int64_t n = tointeger(key);
 			int64_t len = _string(self)->_len;
@@ -1277,12 +1277,12 @@ bool rabbit::VirtualMachine::get(const SQObjectPtr &self, const SQObjectPtr &key
 			return true;
 		}
 	}
-//#ifdef ROOT_FALLBACK
+//#ifdef ROrabbit::OT_FALLBACK
 	if(selfidx == 0) {
 		rabbit::WeakRef *w = _closure(ci->_closure)->_root;
-		if(sq_type(w->_obj) != OT_NULL)
+		if(sq_type(w->_obj) != rabbit::OT_NULL)
 		{
-			if(get(*((const SQObjectPtr *)&w->_obj),key,dest,0,DONT_FALL_BACK)) return true;
+			if(get(*((const rabbit::ObjectPtr *)&w->_obj),key,dest,0,DONT_FALL_BACK)) return true;
 		}
 
 	}
@@ -1291,41 +1291,41 @@ bool rabbit::VirtualMachine::get(const SQObjectPtr &self, const SQObjectPtr &key
 	return false;
 }
 
-bool rabbit::VirtualMachine::invokeDefaultDelegate(const SQObjectPtr &self,const SQObjectPtr &key,SQObjectPtr &dest)
+bool rabbit::VirtualMachine::invokeDefaultDelegate(const rabbit::ObjectPtr &self,const rabbit::ObjectPtr &key,rabbit::ObjectPtr &dest)
 {
 	SQTable *ddel = NULL;
 	switch(sq_type(self)) {
-		case OT_CLASS: ddel = _class_ddel; break;
-		case OT_TABLE: ddel = _table_ddel; break;
-		case OT_ARRAY: ddel = _array_ddel; break;
-		case OT_STRING: ddel = _string_ddel; break;
-		case OT_INSTANCE: ddel = _instance_ddel; break;
-		case OT_INTEGER:case OT_FLOAT:case OT_BOOL: ddel = _number_ddel; break;
-		case OT_GENERATOR: ddel = _generator_ddel; break;
-		case OT_CLOSURE: case OT_NATIVECLOSURE: ddel = _closure_ddel; break;
-		case OT_THREAD: ddel = _thread_ddel; break;
-		case OT_WEAKREF: ddel = _weakref_ddel; break;
+		case rabbit::OT_CLASS: ddel = _class_ddel; break;
+		case rabbit::OT_TABLE: ddel = _table_ddel; break;
+		case rabbit::OT_ARRAY: ddel = _array_ddel; break;
+		case rabbit::OT_STRING: ddel = _string_ddel; break;
+		case rabbit::OT_INSTANCE: ddel = _instance_ddel; break;
+		case rabbit::OT_INTEGER:case OT_FLOAT:case OT_BOOL: ddel = _number_ddel; break;
+		case rabbit::OT_GENERATOR: ddel = _generator_ddel; break;
+		case rabbit::OT_CLOSURE: case OT_NATIVECLOSURE: ddel = _closure_ddel; break;
+		case rabbit::OT_THREAD: ddel = _thread_ddel; break;
+		case rabbit::OT_WEAKREF: ddel = _weakref_ddel; break;
 		default: return false;
 	}
 	return  ddel->get(key,dest);
 }
 
 
-int64_t rabbit::VirtualMachine::fallBackGet(const SQObjectPtr &self,const SQObjectPtr &key,SQObjectPtr &dest)
+int64_t rabbit::VirtualMachine::fallBackGet(const rabbit::ObjectPtr &self,const rabbit::ObjectPtr &key,rabbit::ObjectPtr &dest)
 {
 	switch(sq_type(self)){
-	case OT_TABLE:
-	case OT_USERDATA:
+	case rabbit::OT_TABLE:
+	case rabbit::OT_USERDATA:
 		//delegation
 		if(_delegable(self)->_delegate) {
-			if(get(SQObjectPtr(_delegable(self)->_delegate),key,dest,0,DONT_FALL_BACK)) return FALLBACK_OK;
+			if(get(rabbit::ObjectPtr(_delegable(self)->_delegate),key,dest,0,DONT_FALL_BACK)) return FALLBACK_OK;
 		}
 		else {
 			return FALLBACK_NO_MATCH;
 		}
 		//go through
-	case OT_INSTANCE: {
-		SQObjectPtr closure;
+	case rabbit::OT_INSTANCE: {
+		rabbit::ObjectPtr closure;
 		if(_delegable(self)->getMetaMethod(this, MT_GET, closure)) {
 			push(self);push(key);
 			_nmetamethodscall++;
@@ -1336,7 +1336,7 @@ int64_t rabbit::VirtualMachine::fallBackGet(const SQObjectPtr &self,const SQObje
 			}
 			else {
 				pop(2);
-				if(sq_type(_lasterror) != OT_NULL) { //NULL means "clean failure" (not found)
+				if(sq_type(_lasterror) != rabbit::OT_NULL) { //NULL means "clean failure" (not found)
 					return FALLBACK_ERROR;
 				}
 			}
@@ -1349,23 +1349,23 @@ int64_t rabbit::VirtualMachine::fallBackGet(const SQObjectPtr &self,const SQObje
 	return FALLBACK_NO_MATCH;
 }
 
-bool rabbit::VirtualMachine::set(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjectPtr &val,int64_t selfidx)
+bool rabbit::VirtualMachine::set(const rabbit::ObjectPtr &self,const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val,int64_t selfidx)
 {
 	switch(sq_type(self)){
-	case OT_TABLE:
+	case rabbit::OT_TABLE:
 		if(_table(self)->set(key,val)) return true;
 		break;
-	case OT_INSTANCE:
+	case rabbit::OT_INSTANCE:
 		if(_instance(self)->set(key,val)) return true;
 		break;
-	case OT_ARRAY:
+	case rabbit::OT_ARRAY:
 		if(!sq_isnumeric(key)) { raise_error(_SC("indexing %s with %s"),getTypeName(self),getTypeName(key)); return false; }
 		if(!_array(self)->set(tointeger(key),val)) {
 			raise_Idxerror(key);
 			return false;
 		}
 		return true;
-	case OT_USERDATA: break; // must fall back
+	case rabbit::OT_USERDATA: break; // must fall back
 	default:
 		raise_error(_SC("trying to set '%s'"),getTypeName(self));
 		return false;
@@ -1384,18 +1384,18 @@ bool rabbit::VirtualMachine::set(const SQObjectPtr &self,const SQObjectPtr &key,
 	return false;
 }
 
-int64_t rabbit::VirtualMachine::fallBackSet(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjectPtr &val)
+int64_t rabbit::VirtualMachine::fallBackSet(const rabbit::ObjectPtr &self,const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val)
 {
 	switch(sq_type(self)) {
-	case OT_TABLE:
+	case rabbit::OT_TABLE:
 		if(_table(self)->_delegate) {
 			if(set(_table(self)->_delegate,key,val,DONT_FALL_BACK)) return FALLBACK_OK;
 		}
 		//keps on going
-	case OT_INSTANCE:
-	case OT_USERDATA:{
-		SQObjectPtr closure;
-		SQObjectPtr t;
+	case rabbit::OT_INSTANCE:
+	case rabbit::OT_USERDATA:{
+		rabbit::ObjectPtr closure;
+		rabbit::ObjectPtr t;
 		if(_delegable(self)->getMetaMethod(this, MT_SET, closure)) {
 			push(self);push(key);push(val);
 			_nmetamethodscall++;
@@ -1406,7 +1406,7 @@ int64_t rabbit::VirtualMachine::fallBackSet(const SQObjectPtr &self,const SQObje
 			}
 			else {
 				pop(3);
-				if(sq_type(_lasterror) != OT_NULL) { //NULL means "clean failure" (not found)
+				if(sq_type(_lasterror) != rabbit::OT_NULL) { //NULL means "clean failure" (not found)
 					return FALLBACK_ERROR;
 				}
 			}
@@ -1419,18 +1419,18 @@ int64_t rabbit::VirtualMachine::fallBackSet(const SQObjectPtr &self,const SQObje
 	return FALLBACK_NO_MATCH;
 }
 
-bool rabbit::VirtualMachine::clone(const SQObjectPtr &self,SQObjectPtr &target)
+bool rabbit::VirtualMachine::clone(const rabbit::ObjectPtr &self,rabbit::ObjectPtr &target)
 {
-	SQObjectPtr temp_reg;
-	SQObjectPtr newobj;
+	rabbit::ObjectPtr temp_reg;
+	rabbit::ObjectPtr newobj;
 	switch(sq_type(self)){
-	case OT_TABLE:
+	case rabbit::OT_TABLE:
 		newobj = _table(self)->clone();
 		goto cloned_mt;
-	case OT_INSTANCE: {
-		newobj = _instance(self)->clone(_ss(this));
+	case rabbit::OT_INSTANCE: {
+		newobj = _instance(self)->clone(_get_shared_state(this));
 cloned_mt:
-		SQObjectPtr closure;
+		rabbit::ObjectPtr closure;
 		if(_delegable(newobj)->_delegate && _delegable(newobj)->getMetaMethod(this,MT_CLONED,closure)) {
 			push(newobj);
 			push(self);
@@ -1440,7 +1440,7 @@ cloned_mt:
 		}
 		target = newobj;
 		return true;
-	case OT_ARRAY:
+	case rabbit::OT_ARRAY:
 		target = _array(self)->clone();
 		return true;
 	default:
@@ -1449,16 +1449,16 @@ cloned_mt:
 	}
 }
 
-bool rabbit::VirtualMachine::newSlotA(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjectPtr &val,const SQObjectPtr &attrs,bool bstatic,bool raw)
+bool rabbit::VirtualMachine::newSlotA(const rabbit::ObjectPtr &self,const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val,const rabbit::ObjectPtr &attrs,bool bstatic,bool raw)
 {
-	if(sq_type(self) != OT_CLASS) {
+	if(sq_type(self) != rabbit::OT_CLASS) {
 		raise_error(_SC("object must be a class"));
 		return false;
 	}
 	SQClass *c = _class(self);
 	if(!raw) {
-		SQObjectPtr &mm = c->_metamethods[MT_NEWMEMBER];
-		if(sq_type(mm) != OT_NULL ) {
+		rabbit::ObjectPtr &mm = c->_metamethods[MT_NEWMEMBER];
+		if(sq_type(mm) != rabbit::OT_NULL ) {
 			push(self); push(key); push(val);
 			push(attrs);
 			push(bstatic);
@@ -1467,22 +1467,22 @@ bool rabbit::VirtualMachine::newSlotA(const SQObjectPtr &self,const SQObjectPtr 
 	}
 	if(!newSlot(self, key, val,bstatic))
 		return false;
-	if(sq_type(attrs) != OT_NULL) {
+	if(sq_type(attrs) != rabbit::OT_NULL) {
 		c->setAttributes(key,attrs);
 	}
 	return true;
 }
 
-bool rabbit::VirtualMachine::newSlot(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjectPtr &val,bool bstatic)
+bool rabbit::VirtualMachine::newSlot(const rabbit::ObjectPtr &self,const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val,bool bstatic)
 {
-	if(sq_type(key) == OT_NULL) { raise_error(_SC("null cannot be used as index")); return false; }
+	if(sq_type(key) == rabbit::OT_NULL) { raise_error(_SC("null cannot be used as index")); return false; }
 	switch(sq_type(self)) {
-	case OT_TABLE: {
+	case rabbit::OT_TABLE: {
 		bool rawcall = true;
 		if(_table(self)->_delegate) {
-			SQObjectPtr res;
+			rabbit::ObjectPtr res;
 			if(!_table(self)->get(key,res)) {
-				SQObjectPtr closure;
+				rabbit::ObjectPtr closure;
 				if(_delegable(self)->_delegate && _delegable(self)->getMetaMethod(this,MT_NEWSLOT,closure)) {
 					push(self);push(key);push(val);
 					if(!callMetaMethod(closure,MT_NEWSLOT,3,res)) {
@@ -1498,9 +1498,9 @@ bool rabbit::VirtualMachine::newSlot(const SQObjectPtr &self,const SQObjectPtr &
 		if(rawcall) _table(self)->newSlot(key,val); //cannot fail
 
 		break;}
-	case OT_INSTANCE: {
-		SQObjectPtr res;
-		SQObjectPtr closure;
+	case rabbit::OT_INSTANCE: {
+		rabbit::ObjectPtr res;
+		rabbit::ObjectPtr closure;
 		if(_delegable(self)->_delegate && _delegable(self)->getMetaMethod(this,MT_NEWSLOT,closure)) {
 			push(self);push(key);push(val);
 			if(!callMetaMethod(closure,MT_NEWSLOT,3,res)) {
@@ -1511,14 +1511,14 @@ bool rabbit::VirtualMachine::newSlot(const SQObjectPtr &self,const SQObjectPtr &
 		raise_error(_SC("class instances do not support the new slot operator"));
 		return false;
 		break;}
-	case OT_CLASS:
-		if(!_class(self)->newSlot(_ss(this),key,val,bstatic)) {
+	case rabbit::OT_CLASS:
+		if(!_class(self)->newSlot(_get_shared_state(this),key,val,bstatic)) {
 			if(_class(self)->_locked) {
 				raise_error(_SC("trying to modify a class that has already been instantiated"));
 				return false;
 			}
 			else {
-				SQObjectPtr oval = printObjVal(key);
+				rabbit::ObjectPtr oval = printObjVal(key);
 				raise_error(_SC("the property '%s' already exists"),_stringval(oval));
 				return false;
 			}
@@ -1534,26 +1534,26 @@ bool rabbit::VirtualMachine::newSlot(const SQObjectPtr &self,const SQObjectPtr &
 
 
 
-bool rabbit::VirtualMachine::deleteSlot(const SQObjectPtr &self,const SQObjectPtr &key,SQObjectPtr &res)
+bool rabbit::VirtualMachine::deleteSlot(const rabbit::ObjectPtr &self,const rabbit::ObjectPtr &key,rabbit::ObjectPtr &res)
 {
 	switch(sq_type(self)) {
-	case OT_TABLE:
-	case OT_INSTANCE:
-	case OT_USERDATA: {
-		SQObjectPtr t;
+	case rabbit::OT_TABLE:
+	case rabbit::OT_INSTANCE:
+	case rabbit::OT_USERDATA: {
+		rabbit::ObjectPtr t;
 		//bool handled = false;
-		SQObjectPtr closure;
+		rabbit::ObjectPtr closure;
 		if(_delegable(self)->_delegate && _delegable(self)->getMetaMethod(this,MT_DELSLOT,closure)) {
 			push(self);push(key);
 			return callMetaMethod(closure,MT_DELSLOT,2,res);
 		}
 		else {
-			if(sq_type(self) == OT_TABLE) {
+			if(sq_type(self) == rabbit::OT_TABLE) {
 				if(_table(self)->get(key,t)) {
 					_table(self)->remove(key);
 				}
 				else {
-					raise_Idxerror((const SQObject &)key);
+					raise_Idxerror((const rabbit::Object &)key);
 					return false;
 				}
 			}
@@ -1572,27 +1572,27 @@ bool rabbit::VirtualMachine::deleteSlot(const SQObjectPtr &self,const SQObjectPt
 	return true;
 }
 
-bool rabbit::VirtualMachine::call(SQObjectPtr &closure,int64_t nparams,int64_t stackbase,SQObjectPtr &outres,SQBool raiseerror)
+bool rabbit::VirtualMachine::call(rabbit::ObjectPtr &closure,int64_t nparams,int64_t stackbase,rabbit::ObjectPtr &outres,rabbit::Bool raiseerror)
 {
 #ifdef _DEBUG
 int64_t prevstackbase = _stackbase;
 #endif
 	switch(sq_type(closure)) {
-	case OT_CLOSURE:
+	case rabbit::OT_CLOSURE:
 		return execute(closure, nparams, stackbase, outres, raiseerror);
 		break;
-	case OT_NATIVECLOSURE:{
+	case rabbit::OT_NATIVECLOSURE:{
 		bool dummy;
 		return callNative(_nativeclosure(closure), nparams, stackbase, outres, -1, dummy, dummy);
 
 						  }
 		break;
-	case OT_CLASS: {
-		SQObjectPtr constr;
-		SQObjectPtr temp;
+	case rabbit::OT_CLASS: {
+		rabbit::ObjectPtr constr;
+		rabbit::ObjectPtr temp;
 		createClassInstance(_class(closure),outres,constr);
-		SQObjectType ctype = sq_type(constr);
-		if (ctype == OT_NATIVECLOSURE || ctype == OT_CLOSURE) {
+		rabbit::ObjectType ctype = sq_type(constr);
+		if (ctype == rabbit::OT_NATIVECLOSURE || ctype == OT_CLOSURE) {
 			_stack[stackbase] = outres;
 			return call(constr,nparams,stackbase,temp,raiseerror);
 		}
@@ -1610,9 +1610,9 @@ int64_t prevstackbase = _stackbase;
 	return true;
 }
 
-bool rabbit::VirtualMachine::callMetaMethod(SQObjectPtr &closure,SQMetaMethod SQ_UNUSED_ARG(mm),int64_t nparams,SQObjectPtr &outres)
+bool rabbit::VirtualMachine::callMetaMethod(rabbit::ObjectPtr &closure,rabbit::MetaMethod SQ_UNUSED_ARG(mm),int64_t nparams,rabbit::ObjectPtr &outres)
 {
-	//SQObjectPtr closure;
+	//rabbit::ObjectPtr closure;
 
 	_nmetamethodscall++;
 	if(call(closure, nparams, _top - nparams, outres, SQFalse)) {
@@ -1626,7 +1626,7 @@ bool rabbit::VirtualMachine::callMetaMethod(SQObjectPtr &closure,SQMetaMethod SQ
 	return false;
 }
 
-void rabbit::VirtualMachine::findOuter(SQObjectPtr &target, SQObjectPtr *stackindex)
+void rabbit::VirtualMachine::findOuter(rabbit::ObjectPtr &target, rabbit::ObjectPtr *stackindex)
 {
 	SQOuter **pp = &_openouters;
 	SQOuter *p;
@@ -1634,18 +1634,18 @@ void rabbit::VirtualMachine::findOuter(SQObjectPtr &target, SQObjectPtr *stackin
 
 	while ((p = *pp) != NULL && p->_valptr >= stackindex) {
 		if (p->_valptr == stackindex) {
-			target = SQObjectPtr(p);
+			target = rabbit::ObjectPtr(p);
 			return;
 		}
 		pp = &p->_next;
 	}
-	otr = SQOuter::create(_ss(this), stackindex);
+	otr = SQOuter::create(_get_shared_state(this), stackindex);
 	otr->_next = *pp;
 	// TODO: rework this, this is absolutly not safe...
 	otr->_idx  = (stackindex - &_stack[0]);
 	__ObjaddRef(otr);
 	*pp = otr;
-	target = SQObjectPtr(otr);
+	target = rabbit::ObjectPtr(otr);
 }
 
 bool rabbit::VirtualMachine::enterFrame(int64_t newbase, int64_t newtop, bool tailcall)
@@ -1705,7 +1705,7 @@ void rabbit::VirtualMachine::relocateOuters()
 	}
 }
 
-void rabbit::VirtualMachine::closeOuters(SQObjectPtr *stackindex) {
+void rabbit::VirtualMachine::closeOuters(rabbit::ObjectPtr *stackindex) {
   SQOuter *p;
   while ((p = _openouters) != NULL && p->_valptr >= stackindex) {
 	p->_value = *(p->_valptr);
@@ -1735,11 +1735,11 @@ void rabbit::VirtualMachine::pop(int64_t n) {
 }
 
 void rabbit::VirtualMachine::pushNull() { _stack[_top++].Null(); }
-void rabbit::VirtualMachine::push(const SQObjectPtr &o) { _stack[_top++] = o; }
-SQObjectPtr &rabbit::VirtualMachine::top() { return _stack[_top-1]; }
-SQObjectPtr &rabbit::VirtualMachine::popGet() { return _stack[--_top]; }
-SQObjectPtr &rabbit::VirtualMachine::getUp(int64_t n) { return _stack[_top+n]; }
-SQObjectPtr &rabbit::VirtualMachine::getAt(int64_t n) { return _stack[n]; }
+void rabbit::VirtualMachine::push(const rabbit::ObjectPtr &o) { _stack[_top++] = o; }
+rabbit::ObjectPtr &rabbit::VirtualMachine::top() { return _stack[_top-1]; }
+rabbit::ObjectPtr &rabbit::VirtualMachine::popGet() { return _stack[--_top]; }
+rabbit::ObjectPtr &rabbit::VirtualMachine::getUp(int64_t n) { return _stack[_top+n]; }
+rabbit::ObjectPtr &rabbit::VirtualMachine::getAt(int64_t n) { return _stack[n]; }
 
 #ifdef _DEBUG_DUMP
 void rabbit::VirtualMachine::dumpstack(int64_t stackbase,bool dumpall)
@@ -1752,26 +1752,26 @@ void rabbit::VirtualMachine::dumpstack(int64_t stackbase,bool dumpall)
 	scprintf(_SC("prev stack base: %d\n"),ci._prevstkbase);
 	scprintf(_SC("prev top: %d\n"),ci._prevtop);
 	for(int64_t i=0;i<size;i++){
-		SQObjectPtr &obj=_stack[i];
+		rabbit::ObjectPtr &obj=_stack[i];
 		if(stackbase==i)scprintf(_SC(">"));else scprintf(_SC(" "));
 		scprintf(_SC("[" _PRINT_INT_FMT "]:"),n);
 		switch(sq_type(obj)){
-		case OT_FLOAT:		  scprintf(_SC("FLOAT %.3f"),_float(obj));break;
-		case OT_INTEGER:		scprintf(_SC("INTEGER " _PRINT_INT_FMT),_integer(obj));break;
-		case OT_BOOL:		   scprintf(_SC("BOOL %s"),_integer(obj)?"true":"false");break;
-		case OT_STRING:		 scprintf(_SC("STRING %s"),_stringval(obj));break;
-		case OT_NULL:		   scprintf(_SC("NULL"));  break;
-		case OT_TABLE:		  scprintf(_SC("TABLE %p[%p]"),_table(obj),_table(obj)->_delegate);break;
-		case OT_ARRAY:		  scprintf(_SC("ARRAY %p"),_array(obj));break;
-		case OT_CLOSURE:		scprintf(_SC("CLOSURE [%p]"),_closure(obj));break;
-		case OT_NATIVECLOSURE:  scprintf(_SC("NATIVECLOSURE"));break;
-		case OT_USERDATA:	   scprintf(_SC("USERDATA %p[%p]"),_userdataval(obj),_userdata(obj)->_delegate);break;
-		case OT_GENERATOR:	  scprintf(_SC("GENERATOR %p"),_generator(obj));break;
-		case OT_THREAD:		 scprintf(_SC("THREAD [%p]"),_thread(obj));break;
-		case OT_USERPOINTER:	scprintf(_SC("USERPOINTER %p"),_userpointer(obj));break;
-		case OT_CLASS:		  scprintf(_SC("CLASS %p"),_class(obj));break;
-		case OT_INSTANCE:	   scprintf(_SC("INSTANCE %p"),_instance(obj));break;
-		case OT_WEAKREF:		scprintf(_SC("WEAKERF %p"),_weakref(obj));break;
+		case rabbit::OT_FLOAT:		  scprintf(_SC("FLOAT %.3f"),_float(obj));break;
+		case rabbit::OT_INTEGER:		scprintf(_SC("INTEGER " _PRINT_INT_FMT),_integer(obj));break;
+		case rabbit::OT_BOOL:		   scprintf(_SC("BOOL %s"),_integer(obj)?"true":"false");break;
+		case rabbit::OT_STRING:		 scprintf(_SC("STRING %s"),_stringval(obj));break;
+		case rabbit::OT_NULL:		   scprintf(_SC("NULL"));  break;
+		case rabbit::OT_TABLE:		  scprintf(_SC("TABLE %p[%p]"),_table(obj),_table(obj)->_delegate);break;
+		case rabbit::OT_ARRAY:		  scprintf(_SC("ARRAY %p"),_array(obj));break;
+		case rabbit::OT_CLOSURE:		scprintf(_SC("CLOSURE [%p]"),_closure(obj));break;
+		case rabbit::OT_NATIVECLOSURE:  scprintf(_SC("NATIVECLOSURE"));break;
+		case rabbit::OT_USERDATA:	   scprintf(_SC("USERDATA %p[%p]"),_userdataval(obj),_userdata(obj)->_delegate);break;
+		case rabbit::OT_GENERATOR:	  scprintf(_SC("GENERATOR %p"),_generator(obj));break;
+		case rabbit::OT_THREAD:		 scprintf(_SC("THREAD [%p]"),_thread(obj));break;
+		case rabbit::OT_USERPOINTER:	scprintf(_SC("USERPOINTER %p"),_userpointer(obj));break;
+		case rabbit::OT_CLASS:		  scprintf(_SC("CLASS %p"),_class(obj));break;
+		case rabbit::OT_INSTANCE:	   scprintf(_SC("INSTANCE %p"),_instance(obj));break;
+		case rabbit::OT_WEAKREF:		scprintf(_SC("WEAKERF %p"),_weakref(obj));break;
 		default:
 			assert(0);
 			break;

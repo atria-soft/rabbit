@@ -8,7 +8,7 @@
 #pragma once
 
 #include <etk/types.hpp>
-#include <rabbit/rabbit.hpp>
+#include <rabbit/ObjectType.hpp>
 
 namespace rabbit {
 	class WeakRef;
@@ -19,12 +19,25 @@ namespace rabbit {
 		public:
 			RefCounted() {}
 			virtual ~RefCounted();
-			WeakRef *getWeakRef(SQObjectType _type);
+			WeakRef *getWeakRef(rabbit::ObjectType _type);
 			virtual void release() = 0;
 			void refCountIncrement();
 			int64_t refCountDecrement();
 			int64_t refCountget();
 			friend WeakRef;
 	};
+	#define __Objrelease(obj) { \
+		if((obj)) { \
+			auto val = (obj)->refCountDecrement(); \
+			if(val == 0) { \
+				(obj)->release(); \
+			} \
+			(obj) = NULL;   \
+		} \
+	}
+	#define __ObjaddRef(obj) { \
+		(obj)->refCountIncrement(); \
+	}
+
 }
 

@@ -29,7 +29,7 @@
 
 static int64_t _system_getenv(rabbit::VirtualMachine* v)
 {
-	const SQChar *s;
+	const rabbit::Char *s;
 	if(SQ_SUCCEEDED(sq_getstring(v,2,&s))){
 		sq_pushstring(v,scgetenv(s),-1);
 		return 1;
@@ -40,7 +40,7 @@ static int64_t _system_getenv(rabbit::VirtualMachine* v)
 
 static int64_t _system_system(rabbit::VirtualMachine* v)
 {
-	const SQChar *s;
+	const rabbit::Char *s;
 	if(SQ_SUCCEEDED(sq_getstring(v,2,&s))){
 		sq_pushinteger(v,scsystem(s));
 		return 1;
@@ -64,7 +64,7 @@ static int64_t _system_time(rabbit::VirtualMachine* v)
 
 static int64_t _system_remove(rabbit::VirtualMachine* v)
 {
-	const SQChar *s;
+	const rabbit::Char *s;
 	sq_getstring(v,2,&s);
 	if(scremove(s)==-1)
 		return sq_throwerror(v,_SC("remove() failed"));
@@ -73,7 +73,7 @@ static int64_t _system_remove(rabbit::VirtualMachine* v)
 
 static int64_t _system_rename(rabbit::VirtualMachine* v)
 {
-	const SQChar *oldn,*newn;
+	const rabbit::Char *oldn,*newn;
 	sq_getstring(v,2,&oldn);
 	sq_getstring(v,3,&newn);
 	if(screname(oldn,newn)==-1)
@@ -81,7 +81,7 @@ static int64_t _system_rename(rabbit::VirtualMachine* v)
 	return 0;
 }
 
-static void _set_integer_slot(rabbit::VirtualMachine* v,const SQChar *name,int64_t val)
+static void _set_integer_slot(rabbit::VirtualMachine* v,const rabbit::Char *name,int64_t val)
 {
 	sq_pushstring(v,name,-1);
 	sq_pushinteger(v,val);
@@ -125,7 +125,7 @@ static int64_t _system_date(rabbit::VirtualMachine* v)
 
 
 #define _DECL_FUNC(name,nparams,pmask) {_SC(#name),_system_##name,nparams,pmask}
-static const SQRegFunction systemlib_funcs[]={
+static const rabbit::RegFunction systemlib_funcs[]={
 	_DECL_FUNC(getenv,2,_SC(".s")),
 	_DECL_FUNC(system,2,_SC(".s")),
 	_DECL_FUNC(clock,0,NULL),

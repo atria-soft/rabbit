@@ -51,12 +51,12 @@ int MemAllocHook(int allocType,
 int64_t quit(rabbit::VirtualMachine* v)
 {
 	int *done;
-	sq_getuserpointer(v,-1,(SQUserPointer*)&done);
+	sq_getuserpointer(v,-1,(rabbit::UserPointer*)&done);
 	*done=1;
 	return 0;
 }
 
-void printfunc(rabbit::VirtualMachine* SQ_UNUSED_ARG(v),const SQChar *s,...)
+void printfunc(rabbit::VirtualMachine* SQ_UNUSED_ARG(v),const rabbit::Char *s,...)
 {
 	va_list vl;
 	va_start(vl, s);
@@ -64,7 +64,7 @@ void printfunc(rabbit::VirtualMachine* SQ_UNUSED_ARG(v),const SQChar *s,...)
 	va_end(vl);
 }
 
-void errorfunc(rabbit::VirtualMachine* SQ_UNUSED_ARG(v),const SQChar *s,...)
+void errorfunc(rabbit::VirtualMachine* SQ_UNUSED_ARG(v),const rabbit::Char *s,...)
 {
 	va_list vl;
 	va_start(vl, s);
@@ -98,7 +98,7 @@ int getargs(rabbit::VirtualMachine* v,int argc, char* argv[],int64_t *retval)
 	int i;
 	int compiles_only = 0;
 #ifdef SQUNICODE
-	static SQChar temp[500];
+	static rabbit::Char temp[500];
 #endif
 	char * output = NULL;
 	*retval = 0;
@@ -147,7 +147,7 @@ int getargs(rabbit::VirtualMachine* v,int argc, char* argv[],int64_t *retval)
 		// src file
 
 		if(arg<argc) {
-			const SQChar *filename=NULL;
+			const rabbit::Char *filename=NULL;
 #ifdef SQUNICODE
 			mbstowcs(temp,argv[arg],strlen(argv[arg]));
 			filename=temp;
@@ -164,11 +164,11 @@ int getargs(rabbit::VirtualMachine* v,int argc, char* argv[],int64_t *retval)
 			//sq_pop(v,1);
 			if(compiles_only) {
 				if(SQ_SUCCEEDED(sqstd_loadfile(v,filename,SQTrue))){
-					const SQChar *outfile = _SC("out.karrot");
+					const rabbit::Char *outfile = _SC("out.karrot");
 					if(output) {
 #ifdef SQUNICODE
 						int len = (int)(strlen(output)+1);
-						mbstowcs(sq_getscratchpad(v,len*sizeof(SQChar)),output,len);
+						mbstowcs(sq_getscratchpad(v,len*sizeof(rabbit::Char)),output,len);
 						outfile = sq_getscratchpad(v,-1);
 #else
 						outfile = output;
@@ -187,10 +187,10 @@ int getargs(rabbit::VirtualMachine* v,int argc, char* argv[],int64_t *retval)
 					sq_pushroottable(v);
 					for(i=arg;i<argc;i++)
 					{
-						const SQChar *a;
+						const rabbit::Char *a;
 #ifdef SQUNICODE
 						int alen=(int)strlen(argv[i]);
-						a=sq_getscratchpad(v,(int)(alen*sizeof(SQChar)));
+						a=sq_getscratchpad(v,(int)(alen*sizeof(rabbit::Char)));
 						mbstowcs(sq_getscratchpad(v,-1),argv[i],alen);
 						sq_getscratchpad(v,-1)[alen] = _SC('\0');
 #else
@@ -201,8 +201,8 @@ int getargs(rabbit::VirtualMachine* v,int argc, char* argv[],int64_t *retval)
 						//sq_arrayappend(v,-2);
 					}
 					if(SQ_SUCCEEDED(sq_call(v,callargs,SQTrue,SQTrue))) {
-						SQObjectType type = sq_gettype(v,-1);
-						if(type == OT_INTEGER) {
+						rabbit::ObjectType type = sq_gettype(v,-1);
+						if(type == rabbit::OT_INTEGER) {
 							*retval = type;
 							sq_getinteger(v,-1,retval);
 						}
@@ -216,7 +216,7 @@ int getargs(rabbit::VirtualMachine* v,int argc, char* argv[],int64_t *retval)
 			}
 			//if this point is reached an error occurred
 			{
-				const SQChar *err;
+				const rabbit::Char *err;
 				sq_getlasterror(v);
 				if(SQ_SUCCEEDED(sq_getstring(v,-1,&err))) {
 					scprintf(_SC("error [%s]\n"),err);
@@ -235,7 +235,7 @@ void Interactive(rabbit::VirtualMachine* v)
 {
 
 #define MAXINPUT 1024
-	SQChar buffer[MAXINPUT];
+	rabbit::Char buffer[MAXINPUT];
 	int64_t blocks =0;
 	int64_t string=0;
 	int64_t retval=0;
@@ -266,28 +266,28 @@ void Interactive(rabbit::VirtualMachine* v)
 				else if(blocks==0)break;
 				buffer[i++] = _SC('\n');
 			}
-			else if (c==_SC('}')) {blocks--; buffer[i++] = (SQChar)c;}
+			else if (c==_SC('}')) {blocks--; buffer[i++] = (rabbit::Char)c;}
 			else if(c==_SC('{') && !string){
 					blocks++;
-					buffer[i++] = (SQChar)c;
+					buffer[i++] = (rabbit::Char)c;
 			}
 			else if(c==_SC('"') || c==_SC('\'')){
 					string=!string;
-					buffer[i++] = (SQChar)c;
+					buffer[i++] = (rabbit::Char)c;
 			}
 			else if (i >= MAXINPUT-1) {
 				scfprintf(stderr, _SC("sq : input line too long\n"));
 				break;
 			}
 			else{
-				buffer[i++] = (SQChar)c;
+				buffer[i++] = (rabbit::Char)c;
 			}
 		}
 		buffer[i] = _SC('\0');
 
 		if(buffer[0]==_SC('=')){
 			scsprintf(sq_getscratchpad(v,MAXINPUT),(size_t)MAXINPUT,_SC("return (%s)"),&buffer[1]);
-			memcpy(buffer,sq_getscratchpad(v,-1),(scstrlen(sq_getscratchpad(v,-1))+1)*sizeof(SQChar));
+			memcpy(buffer,sq_getscratchpad(v,-1),(scstrlen(sq_getscratchpad(v,-1))+1)*sizeof(rabbit::Char));
 			retval=1;
 		}
 		i=scstrlen(buffer);

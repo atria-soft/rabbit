@@ -14,28 +14,38 @@
 */
 
 #include <rabbit/sqstring.hpp>
+#include <rabbit/Delegable.hpp>
+#include <rabbit/squtils.hpp>
+#include <etk/Allocator.hpp>
+#include <rabbit/Object.hpp>
+#include <rabbit/WeakRef.hpp>
 
 
 #define hashptr(p)  ((SQHash)(((int64_t)p) >> 3))
 
-inline SQHash HashObj(const SQObjectPtr &key)
+inline SQHash HashObj(const rabbit::ObjectPtr &key)
 {
 	switch(sq_type(key)) {
-		case OT_STRING:	 return _string(key)->_hash;
-		case OT_FLOAT:	  return (SQHash)((int64_t)_float(key));
-		case OT_BOOL: case OT_INTEGER:  return (SQHash)((int64_t)_integer(key));
-		default:			return hashptr(key._unVal.pRefCounted);
+		case rabbit::OT_STRING:
+			return _string(key)->_hash;
+		case rabbit::OT_FLOAT:
+			return (SQHash)((int64_t)_float(key));
+		case rabbit::OT_BOOL:
+		case rabbit::OT_INTEGER:
+			return (SQHash)((int64_t)_integer(key));
+		default:
+			return hashptr(key._unVal.pRefCounted);
 	}
 }
 
-struct SQTable : public SQDelegable
+struct SQTable : public rabbit::Delegable
 {
 private:
 	struct _HashNode
 	{
 		_HashNode() { next = NULL; }
-		SQObjectPtr val;
-		SQObjectPtr key;
+		rabbit::ObjectPtr val;
+		rabbit::ObjectPtr key;
 		_HashNode *next;
 	};
 	_HashNode *_firstfree;
@@ -51,8 +61,8 @@ private:
 public:
 	static SQTable* create(SQSharedState *ss,int64_t ninitialsize)
 	{
-		SQTable *newtable = (SQTable*)SQ_MALLOC(sizeof(SQTable));
-		new (newtable) SQTable(ss, ninitialsize);
+		char* tmp = (char*)SQ_MALLOC(sizeof(SQTable));
+		SQTable *newtable = new (tmp) SQTable(ss, ninitialsize);
 		newtable->_delegate = NULL;
 		return newtable;
 	}
@@ -64,7 +74,7 @@ public:
 		for (int64_t i = 0; i < _numofnodes; i++) _nodes[i].~_HashNode();
 		SQ_FREE(_nodes, _numofnodes * sizeof(_HashNode));
 	}
-	inline _HashNode *_get(const SQObjectPtr &key,SQHash hash)
+	inline _HashNode *_get(const rabbit::ObjectPtr &key,SQHash hash)
 	{
 		_HashNode *n = &_nodes[hash];
 		do{
@@ -75,13 +85,13 @@ public:
 		return NULL;
 	}
 	//for compiler use
-	inline bool getStr(const SQChar* key,int64_t keylen,SQObjectPtr &val)
+	inline bool getStr(const rabbit::Char* key,int64_t keylen,rabbit::ObjectPtr &val)
 	{
 		SQHash hash = _hashstr(key,keylen);
 		_HashNode *n = &_nodes[hash & (_numofnodes - 1)];
 		_HashNode *res = NULL;
 		do{
-			if(sq_type(n->key) == OT_STRING && (scstrcmp(_stringval(n->key),key) == 0)){
+			if(sq_type(n->key) == rabbit::OT_STRING && (scstrcmp(_stringval(n->key),key) == 0)){
 				res = n;
 				break;
 			}
@@ -92,12 +102,12 @@ public:
 		}
 		return false;
 	}
-	bool get(const SQObjectPtr &key,SQObjectPtr &val);
-	void remove(const SQObjectPtr &key);
-	bool set(const SQObjectPtr &key, const SQObjectPtr &val);
+	bool get(const rabbit::ObjectPtr &key,rabbit::ObjectPtr &val);
+	void remove(const rabbit::ObjectPtr &key);
+	bool set(const rabbit::ObjectPtr &key, const rabbit::ObjectPtr &val);
 	//returns true if a new slot has been created false if it was already present
-	bool newSlot(const SQObjectPtr &key,const SQObjectPtr &val);
-	int64_t next(bool getweakrefs,const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval);
+	bool newSlot(const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val);
+	int64_t next(bool getweakrefs,const rabbit::ObjectPtr &refpos, rabbit::ObjectPtr &outkey, rabbit::ObjectPtr &outval);
 
 	int64_t countUsed(){ return _usednodes;}
 	void clear();

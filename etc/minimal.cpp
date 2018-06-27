@@ -18,7 +18,7 @@
 #define scvprintf vfprintf
 #endif
 
-void printfunc(HSQUIRRELVM v,const SQChar *s,...)
+void printfunc(HSQUIRRELVM v,const rabbit::Char *s,...)
 {
 	va_list vl;
 	va_start(vl, s);
@@ -26,7 +26,7 @@ void printfunc(HSQUIRRELVM v,const SQChar *s,...)
 	va_end(vl);
 }
 
-void errorfunc(HSQUIRRELVM v,const SQChar *s,...)
+void errorfunc(HSQUIRRELVM v,const rabbit::Char *s,...)
 {
 	va_list vl;
 	va_start(vl, s);
@@ -34,7 +34,7 @@ void errorfunc(HSQUIRRELVM v,const SQChar *s,...)
 	va_end(vl);
 }
 
-void call_foo(HSQUIRRELVM v, int n,float f,const SQChar *s)
+void call_foo(HSQUIRRELVM v, int n,float f,const rabbit::Char *s)
 {
 	int64_t top = sq_gettop(v); //saves the stack size before the call
 	sq_pushroottable(v); //pushes the global table

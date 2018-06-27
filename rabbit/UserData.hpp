@@ -8,7 +8,7 @@
 #pragma once
 
 namespace rabbit {
-	class UserData : public SQDelegable {
+	class UserData : public rabbit::Delegable {
 		public:
 			UserData(SQSharedState *ss) {
 				_delegate = 0;
@@ -26,7 +26,7 @@ namespace rabbit {
 			}
 			void release() {
 				if (m_hook) {
-					m_hook((SQUserPointer)sq_aligning(this + 1),m_size);
+					m_hook((rabbit::UserPointer)sq_aligning(this + 1),m_size);
 				}
 				int64_t tsize = m_size;
 				this->~UserData();
@@ -35,10 +35,10 @@ namespace rabbit {
 			const int64_t& getsize() const {
 				return m_size;
 			}
-			const SQUserPointer& getTypeTag() const {
+			const rabbit::UserPointer& getTypeTag() const {
 				return m_typetag;
 			}
-			void setTypeTag(const SQUserPointer& _value) {
+			void setTypeTag(const rabbit::UserPointer& _value) {
 				m_typetag = _value;
 			}
 			const SQRELEASEHOOK& getHook() const {
@@ -50,6 +50,6 @@ namespace rabbit {
 		protected:
 			int64_t m_size;
 			SQRELEASEHOOK m_hook;
-			SQUserPointer m_typetag;
+			rabbit::UserPointer m_typetag;
 	};
 }

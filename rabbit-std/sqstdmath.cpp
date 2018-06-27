@@ -66,7 +66,7 @@ SINGLE_ARG_FUNC(ceil)
 SINGLE_ARG_FUNC(exp)
 
 #define _DECL_FUNC(name,nparams,tycheck) {_SC(#name),math_##name,nparams,tycheck}
-static const SQRegFunction mathlib_funcs[] = {
+static const rabbit::RegFunction mathlib_funcs[] = {
 	_DECL_FUNC(sqrt,2,_SC(".n")),
 	_DECL_FUNC(sin,2,_SC(".n")),
 	_DECL_FUNC(cos,2,_SC(".n")),
@@ -93,7 +93,7 @@ static const SQRegFunction mathlib_funcs[] = {
 #define M_PI (3.14159265358979323846)
 #endif
 
-SQRESULT sqstd_register_mathlib(rabbit::VirtualMachine* v)
+rabbit::Result sqstd_register_mathlib(rabbit::VirtualMachine* v)
 {
 	int64_t i=0;
 	while(mathlib_funcs[i].name!=0) {

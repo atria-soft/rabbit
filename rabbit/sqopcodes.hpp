@@ -108,7 +108,7 @@ enum SQOpcode
 };
 
 struct SQInstructionDesc {
-	const SQChar *name;
+	const rabbit::Char *name;
 };
 
 struct SQInstruction

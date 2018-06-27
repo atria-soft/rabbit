@@ -10,6 +10,9 @@
 #include <rabbit/sqopcodes.hpp>
 #include <rabbit/sqobject.hpp>
 #include <rabbit/AutoDec.hpp>
+#include <rabbit/sqconfig.hpp>
+#include <rabbit/ExceptionTrap.hpp>
+
 
 #define MAX_NATIVE_CALLS 100
 #define MIN_STACK_OVERHEAD 15
@@ -25,15 +28,6 @@
 //base lib
 void sq_base_register(rabbit::VirtualMachine* v);
 
-struct SQExceptionTrap {
-	SQExceptionTrap() {}
-	SQExceptionTrap(int64_t ss, int64_t stackbase,SQInstruction *ip, int64_t ex_target){ _stacksize = ss; _stackbase = stackbase; _ip = ip; _extarget = ex_target;}
-	SQExceptionTrap(const SQExceptionTrap &et) { (*this) = et;  }
-	int64_t _stackbase;
-	int64_t _stacksize;
-	SQInstruction *_ip;
-	int64_t _extarget;
-};
 
 #define _INLINE
 
@@ -43,20 +37,20 @@ namespace rabbit {
 		public:
 			struct callInfo{
 				SQInstruction *_ip;
-				SQObjectPtr *_literals;
-				SQObjectPtr _closure;
+				rabbit::ObjectPtr *_literals;
+				rabbit::ObjectPtr _closure;
 				SQGenerator *_generator;
 				int32_t _etraps;
 				int32_t _prevstkbase;
 				int32_t _prevtop;
 				int32_t _target;
 				int32_t _ncalls;
-				SQBool _root;
+				rabbit::Bool _root;
 			};
 	
 		public:
-			void DebugHookProxy(int64_t type, const SQChar * sourcename, int64_t line, const SQChar * funcname);
-			static void _DebugHookProxy(rabbit::VirtualMachine* v, int64_t type, const SQChar * sourcename, int64_t line, const SQChar * funcname);
+			void DebugHookProxy(int64_t type, const rabbit::Char * sourcename, int64_t line, const rabbit::Char * funcname);
+			static void _DebugHookProxy(rabbit::VirtualMachine* v, int64_t type, const rabbit::Char * sourcename, int64_t line, const rabbit::Char * funcname);
 			enum ExecutionType {
 				ET_CALL,
 				ET_RESUME_GENERATOR,
@@ -66,61 +60,61 @@ namespace rabbit {
 			VirtualMachine(SQSharedState *ss);
 			~VirtualMachine();
 			bool init(VirtualMachine *friendvm, int64_t stacksize);
-			bool execute(SQObjectPtr &func, int64_t nargs, int64_t stackbase, SQObjectPtr &outres, SQBool raiseerror, ExecutionType et = ET_CALL);
+			bool execute(rabbit::ObjectPtr &func, int64_t nargs, int64_t stackbase, rabbit::ObjectPtr &outres, rabbit::Bool raiseerror, ExecutionType et = ET_CALL);
 			//starts a native call return when the NATIVE closure returns
-			bool callNative(SQNativeClosure *nclosure, int64_t nargs, int64_t newbase, SQObjectPtr &retval, int32_t target, bool &suspend,bool &tailcall);
+			bool callNative(SQNativeClosure *nclosure, int64_t nargs, int64_t newbase, rabbit::ObjectPtr &retval, int32_t target, bool &suspend,bool &tailcall);
 			bool tailcall(SQClosure *closure, int64_t firstparam, int64_t nparams);
 			//starts a RABBIT call in the same "Execution loop"
 			bool startcall(SQClosure *closure, int64_t target, int64_t nargs, int64_t stackbase, bool tailcall);
-			bool createClassInstance(SQClass *theclass, SQObjectPtr &inst, SQObjectPtr &constructor);
+			bool createClassInstance(SQClass *theclass, rabbit::ObjectPtr &inst, rabbit::ObjectPtr &constructor);
 			//call a generic closure pure RABBIT or NATIVE
-			bool call(SQObjectPtr &closure, int64_t nparams, int64_t stackbase, SQObjectPtr &outres,SQBool raiseerror);
-			SQRESULT Suspend();
+			bool call(rabbit::ObjectPtr &closure, int64_t nparams, int64_t stackbase, rabbit::ObjectPtr &outres,rabbit::Bool raiseerror);
+			rabbit::Result Suspend();
 		
 			void callDebugHook(int64_t type,int64_t forcedline=0);
-			void callerrorHandler(SQObjectPtr &e);
-			bool get(const SQObjectPtr &self, const SQObjectPtr &key, SQObjectPtr &dest, uint64_t getflags, int64_t selfidx);
-			int64_t fallBackGet(const SQObjectPtr &self,const SQObjectPtr &key,SQObjectPtr &dest);
-			bool invokeDefaultDelegate(const SQObjectPtr &self,const SQObjectPtr &key,SQObjectPtr &dest);
-			bool set(const SQObjectPtr &self, const SQObjectPtr &key, const SQObjectPtr &val, int64_t selfidx);
-			int64_t fallBackSet(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjectPtr &val);
-			bool newSlot(const SQObjectPtr &self, const SQObjectPtr &key, const SQObjectPtr &val,bool bstatic);
-			bool newSlotA(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjectPtr &val,const SQObjectPtr &attrs,bool bstatic,bool raw);
-			bool deleteSlot(const SQObjectPtr &self, const SQObjectPtr &key, SQObjectPtr &res);
-			bool clone(const SQObjectPtr &self, SQObjectPtr &target);
-			bool objCmp(const SQObjectPtr &o1, const SQObjectPtr &o2,int64_t &res);
-			bool stringCat(const SQObjectPtr &str, const SQObjectPtr &obj, SQObjectPtr &dest);
-			static bool isEqual(const SQObjectPtr &o1,const SQObjectPtr &o2,bool &res);
-			bool toString(const SQObjectPtr &o,SQObjectPtr &res);
-			SQString *printObjVal(const SQObjectPtr &o);
+			void callerrorHandler(rabbit::ObjectPtr &e);
+			bool get(const rabbit::ObjectPtr &self, const rabbit::ObjectPtr &key, rabbit::ObjectPtr &dest, uint64_t getflags, int64_t selfidx);
+			int64_t fallBackGet(const rabbit::ObjectPtr &self,const rabbit::ObjectPtr &key,rabbit::ObjectPtr &dest);
+			bool invokeDefaultDelegate(const rabbit::ObjectPtr &self,const rabbit::ObjectPtr &key,rabbit::ObjectPtr &dest);
+			bool set(const rabbit::ObjectPtr &self, const rabbit::ObjectPtr &key, const rabbit::ObjectPtr &val, int64_t selfidx);
+			int64_t fallBackSet(const rabbit::ObjectPtr &self,const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val);
+			bool newSlot(const rabbit::ObjectPtr &self, const rabbit::ObjectPtr &key, const rabbit::ObjectPtr &val,bool bstatic);
+			bool newSlotA(const rabbit::ObjectPtr &self,const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val,const rabbit::ObjectPtr &attrs,bool bstatic,bool raw);
+			bool deleteSlot(const rabbit::ObjectPtr &self, const rabbit::ObjectPtr &key, rabbit::ObjectPtr &res);
+			bool clone(const rabbit::ObjectPtr &self, rabbit::ObjectPtr &target);
+			bool objCmp(const rabbit::ObjectPtr &o1, const rabbit::ObjectPtr &o2,int64_t &res);
+			bool stringCat(const rabbit::ObjectPtr &str, const rabbit::ObjectPtr &obj, rabbit::ObjectPtr &dest);
+			static bool isEqual(const rabbit::ObjectPtr &o1,const rabbit::ObjectPtr &o2,bool &res);
+			bool toString(const rabbit::ObjectPtr &o,rabbit::ObjectPtr &res);
+			SQString *printObjVal(const rabbit::ObjectPtr &o);
 		
 		
-			void raise_error(const SQChar *s, ...);
-			void raise_error(const SQObjectPtr &desc);
-			void raise_Idxerror(const SQObjectPtr &o);
-			void raise_Compareerror(const SQObject &o1, const SQObject &o2);
+			void raise_error(const rabbit::Char *s, ...);
+			void raise_error(const rabbit::ObjectPtr &desc);
+			void raise_Idxerror(const rabbit::ObjectPtr &o);
+			void raise_Compareerror(const rabbit::Object &o1, const rabbit::Object &o2);
 			void raise_ParamTypeerror(int64_t nparam,int64_t typemask,int64_t type);
 		
-			void findOuter(SQObjectPtr &target, SQObjectPtr *stackindex);
+			void findOuter(rabbit::ObjectPtr &target, rabbit::ObjectPtr *stackindex);
 			void relocateOuters();
-			void closeOuters(SQObjectPtr *stackindex);
+			void closeOuters(rabbit::ObjectPtr *stackindex);
 		
-			bool typeOf(const SQObjectPtr &obj1, SQObjectPtr &dest);
-			bool callMetaMethod(SQObjectPtr &closure, SQMetaMethod mm, int64_t nparams, SQObjectPtr &outres);
-			bool arithMetaMethod(int64_t op, const SQObjectPtr &o1, const SQObjectPtr &o2, SQObjectPtr &dest);
-			bool Return(int64_t _arg0, int64_t _arg1, SQObjectPtr &retval);
+			bool typeOf(const rabbit::ObjectPtr &obj1, rabbit::ObjectPtr &dest);
+			bool callMetaMethod(rabbit::ObjectPtr &closure, rabbit::MetaMethod mm, int64_t nparams, rabbit::ObjectPtr &outres);
+			bool arithMetaMethod(int64_t op, const rabbit::ObjectPtr &o1, const rabbit::ObjectPtr &o2, rabbit::ObjectPtr &dest);
+			bool Return(int64_t _arg0, int64_t _arg1, rabbit::ObjectPtr &retval);
 			//new stuff
-			bool ARITH_OP(uint64_t op,SQObjectPtr &trg,const SQObjectPtr &o1,const SQObjectPtr &o2);
-			bool BW_OP(uint64_t op,SQObjectPtr &trg,const SQObjectPtr &o1,const SQObjectPtr &o2);
-			bool NEG_OP(SQObjectPtr &trg,const SQObjectPtr &o1);
-			bool CMP_OP(CmpOP op, const SQObjectPtr &o1,const SQObjectPtr &o2,SQObjectPtr &res);
-			bool CLOSURE_OP(SQObjectPtr &target, SQFunctionProto *func);
-			bool CLASS_OP(SQObjectPtr &target,int64_t base,int64_t attrs);
+			bool ARITH_OP(uint64_t op,rabbit::ObjectPtr &trg,const rabbit::ObjectPtr &o1,const rabbit::ObjectPtr &o2);
+			bool BW_OP(uint64_t op,rabbit::ObjectPtr &trg,const rabbit::ObjectPtr &o1,const rabbit::ObjectPtr &o2);
+			bool NEG_OP(rabbit::ObjectPtr &trg,const rabbit::ObjectPtr &o1);
+			bool CMP_OP(CmpOP op, const rabbit::ObjectPtr &o1,const rabbit::ObjectPtr &o2,rabbit::ObjectPtr &res);
+			bool CLOSURE_OP(rabbit::ObjectPtr &target, SQFunctionProto *func);
+			bool CLASS_OP(rabbit::ObjectPtr &target,int64_t base,int64_t attrs);
 			//return true if the loop is finished
-			bool FOREACH_OP(SQObjectPtr &o1,SQObjectPtr &o2,SQObjectPtr &o3,SQObjectPtr &o4,int64_t arg_2,int exitpos,int &jump);
-			//bool LOCAL_INC(int64_t op,SQObjectPtr &target, SQObjectPtr &a, SQObjectPtr &incr);
-			bool PLOCAL_INC(int64_t op,SQObjectPtr &target, SQObjectPtr &a, SQObjectPtr &incr);
-			bool derefInc(int64_t op,SQObjectPtr &target, SQObjectPtr &self, SQObjectPtr &key, SQObjectPtr &incr, bool postfix,int64_t arg0);
+			bool FOREACH_OP(rabbit::ObjectPtr &o1,rabbit::ObjectPtr &o2,rabbit::ObjectPtr &o3,rabbit::ObjectPtr &o4,int64_t arg_2,int exitpos,int &jump);
+			//bool LOCAL_INC(int64_t op,rabbit::ObjectPtr &target, rabbit::ObjectPtr &a, rabbit::ObjectPtr &incr);
+			bool PLOCAL_INC(int64_t op,rabbit::ObjectPtr &target, rabbit::ObjectPtr &a, rabbit::ObjectPtr &incr);
+			bool derefInc(int64_t op,rabbit::ObjectPtr &target, rabbit::ObjectPtr &self, rabbit::ObjectPtr &key, rabbit::ObjectPtr &incr, bool postfix,int64_t arg0);
 		#ifdef _DEBUG_DUMP
 			void dumpstack(int64_t stackbase=-1, bool dumpall = false);
 		#endif
@@ -141,31 +135,31 @@ namespace rabbit {
 			//stack functions for the api
 			void remove(int64_t n);
 		
-			static bool IsFalse(SQObjectPtr &o);
+			static bool IsFalse(rabbit::ObjectPtr &o);
 		
 			void pop();
 			void pop(int64_t n);
-			void push(const SQObjectPtr &o);
+			void push(const rabbit::ObjectPtr &o);
 			void pushNull();
-			SQObjectPtr& top();
-			SQObjectPtr& popGet();
-			SQObjectPtr& getUp(int64_t n);
-			SQObjectPtr& getAt(int64_t n);
+			rabbit::ObjectPtr& top();
+			rabbit::ObjectPtr& popGet();
+			rabbit::ObjectPtr& getUp(int64_t n);
+			rabbit::ObjectPtr& getAt(int64_t n);
 		
-			SQObjectPtrVec _stack;
+			etk::Vector<rabbit::ObjectPtr> _stack;
 		
 			int64_t _top;
 			int64_t _stackbase;
 			SQOuter* _openouters;
-			SQObjectPtr _roottable;
-			SQObjectPtr _lasterror;
-			SQObjectPtr _errorhandler;
+			rabbit::ObjectPtr _roottable;
+			rabbit::ObjectPtr _lasterror;
+			rabbit::ObjectPtr _errorhandler;
 		
 			bool _debughook;
 			SQDEBUGHOOK _debughook_native;
-			SQObjectPtr _debughook_closure;
+			rabbit::ObjectPtr _debughook_closure;
 		
-			SQObjectPtr temp_reg;
+			rabbit::ObjectPtr temp_reg;
 		
 		
 			callInfo* _callsstack;
@@ -173,23 +167,23 @@ namespace rabbit {
 			int64_t _alloccallsstacksize;
 			etk::Vector<callInfo> _callstackdata;
 		
-			etk::Vector<SQExceptionTrap> _etraps;
+			etk::Vector<rabbit::ExceptionTrap> _etraps;
 			callInfo *ci;
-			SQUserPointer _foreignptr;
+			rabbit::UserPointer _foreignptr;
 			//VMs sharing the same state
 			SQSharedState *_sharedstate;
 			int64_t _nnativecalls;
 			int64_t _nmetamethodscall;
 			SQRELEASEHOOK _releasehook;
 			//suspend infos
-			SQBool _suspended;
-			SQBool _suspended_root;
+			rabbit::Bool _suspended;
+			rabbit::Bool _suspended_root;
 			int64_t _suspended_target;
 			int64_t _suspended_traps;
 	};
 	
 	
-	inline SQObjectPtr &stack_get(rabbit::VirtualMachine* _vm,int64_t _idx) {
+	inline rabbit::ObjectPtr &stack_get(rabbit::VirtualMachine* _vm,int64_t _idx) {
 		if (_idx>=0) {
 			return _vm->getAt(_idx+_vm->_stackbase-1);
 		}
@@ -197,7 +191,7 @@ namespace rabbit {
 	}
 }
 
-#define _ss(_vm_) (_vm_)->_sharedstate
+#define _get_shared_state(_vm_) (_vm_)->_sharedstate
 
 #define PUSH_CALLINFO(v,nci){ \
 	int64_t css = v->_callsstacksize; \

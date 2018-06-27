@@ -80,13 +80,13 @@ SQInstructionDesc g_InstrDesc[]={
 	{_SC("_OP_CLOSE")},
 };
 #endif
-void dumpLiteral(SQObjectPtr &o)
+void dumpLiteral(rabbit::ObjectPtr &o)
 {
 	switch(sq_type(o)){
-		case OT_STRING: scprintf(_SC("\"%s\""),_stringval(o));break;
-		case OT_FLOAT: scprintf(_SC("{%f}"),_float(o));break;
-		case OT_INTEGER: scprintf(_SC("{") _PRINT_INT_FMT _SC("}"),_integer(o));break;
-		case OT_BOOL: scprintf(_SC("%s"),_integer(o)?_SC("true"):_SC("false"));break;
+		case rabbit::OT_STRING: scprintf(_SC("\"%s\""),_stringval(o));break;
+		case rabbit::OT_FLOAT: scprintf(_SC("{%f}"),_float(o));break;
+		case rabbit::OT_INTEGER: scprintf(_SC("{") _PRINT_INT_FMT _SC("}"),_integer(o));break;
+		case rabbit::OT_BOOL: scprintf(_SC("%s"),_integer(o)?_SC("true"):_SC("false"));break;
 		default: scprintf(_SC("(%s %p)"),getTypeName(o),(void*)_rawval(o));break; break; //shut up compiler
 	}
 }
@@ -112,7 +112,7 @@ SQFuncState::SQFuncState(SQSharedState *ss,SQFuncState *parent,compilererrorFunc
 
 }
 
-void SQFuncState::error(const SQChar *err)
+void SQFuncState::error(const rabbit::Char *err)
 {
 	_errfunc(_errtarget,err);
 }
@@ -123,13 +123,13 @@ void SQFuncState::dump(SQFunctionProto *func)
 	uint64_t n=0,i;
 	int64_t si;
 	scprintf(_SC("SQInstruction sizeof %d\n"),(int32_t)sizeof(SQInstruction));
-	scprintf(_SC("SQObject sizeof %d\n"), (int32_t)sizeof(SQObject));
+	scprintf(_SC("rabbit::Object sizeof %d\n"), (int32_t)sizeof(rabbit::Object));
 	scprintf(_SC("--------------------------------------------------------------------\n"));
-	scprintf(_SC("*****FUNCTION [%s]\n"),sq_type(func->_name)==OT_STRING?_stringval(func->_name):_SC("unknown"));
+	scprintf(_SC("*****FUNCTION [%s]\n"),sq_type(func->_name)==rabbit::OT_STRING?_stringval(func->_name):_SC("unknown"));
 	scprintf(_SC("-----LITERALS\n"));
-	SQObjectPtr refidx,key,val;
+	rabbit::ObjectPtr refidx,key,val;
 	int64_t idx;
-	SQObjectPtrVec templiterals;
+	etk::Vector<rabbit::ObjectPtr> templiterals;
 	templiterals.resize(_nliterals);
 	while((idx=_table(_literals)->next(false,refidx,key,val))!=-1) {
 		refidx=idx;
@@ -175,7 +175,7 @@ void SQFuncState::dump(SQFunctionProto *func)
 				scprintf(_SC("null"));
 			else {
 				int64_t refidx;
-				SQObjectPtr val,key,refo;
+				rabbit::ObjectPtr val,key,refo;
 				while(((refidx=_table(_literals)->next(false,refo,key,val))!= -1) && (_integer(val) != lidx)) {
 					refo = refidx;
 				}
@@ -191,7 +191,7 @@ void SQFuncState::dump(SQFunctionProto *func)
 					scprintf(_SC("null"));
 				else {
 					int64_t refidx;
-					SQObjectPtr val,key,refo;
+					rabbit::ObjectPtr val,key,refo;
 					while(((refidx=_table(_literals)->next(false,refo,key,val))!= -1) && (_integer(val) != lidx)) {
 						refo = refidx;
 				}
@@ -219,17 +219,17 @@ void SQFuncState::dump(SQFunctionProto *func)
 
 int64_t SQFuncState::getNumericConstant(const int64_t cons)
 {
-	return getConstant(SQObjectPtr(cons));
+	return getConstant(rabbit::ObjectPtr(cons));
 }
 
 int64_t SQFuncState::getNumericConstant(const float_t cons)
 {
-	return getConstant(SQObjectPtr(cons));
+	return getConstant(rabbit::ObjectPtr(cons));
 }
 
-int64_t SQFuncState::getConstant(const SQObject &cons)
+int64_t SQFuncState::getConstant(const rabbit::Object &cons)
 {
-	SQObjectPtr val;
+	rabbit::ObjectPtr val;
 	if(!_table(_literals)->get(cons,val))
 	{
 		val = _nliterals;
@@ -295,7 +295,7 @@ int64_t SQFuncState::popTarget()
 	uint64_t npos=_targetstack.back();
 	assert(npos < _vlocals.size());
 	SQLocalVarInfo &t = _vlocals[npos];
-	if(sq_type(t._name)==OT_NULL){
+	if(sq_type(t._name)==rabbit::OT_NULL){
 		_vlocals.popBack();
 	}
 	_targetstack.popBack();
@@ -327,7 +327,7 @@ void SQFuncState::setStacksize(int64_t n)
 	while(size>n){
 		size--;
 		SQLocalVarInfo lvi = _vlocals.back();
-		if(sq_type(lvi._name)!=OT_NULL){
+		if(sq_type(lvi._name)!=rabbit::OT_NULL){
 			if(lvi._end_op == UINT_MINUS_ONE) { //this means is an outer
 				_outers--;
 			}
@@ -338,9 +338,9 @@ void SQFuncState::setStacksize(int64_t n)
 	}
 }
 
-bool SQFuncState::isConstant(const SQObject &name,SQObject &e)
+bool SQFuncState::isConstant(const rabbit::Object &name,rabbit::Object &e)
 {
-	SQObjectPtr val;
+	rabbit::ObjectPtr val;
 	if(_table(_sharedstate->_consts)->get(name,val)) {
 		e = val;
 		return true;
@@ -351,11 +351,11 @@ bool SQFuncState::isConstant(const SQObject &name,SQObject &e)
 bool SQFuncState::isLocal(uint64_t stkpos)
 {
 	if(stkpos>=_vlocals.size())return false;
-	else if(sq_type(_vlocals[stkpos]._name)!=OT_NULL)return true;
+	else if(sq_type(_vlocals[stkpos]._name)!=rabbit::OT_NULL)return true;
 	return false;
 }
 
-int64_t SQFuncState::pushLocalVariable(const SQObject &name)
+int64_t SQFuncState::pushLocalVariable(const rabbit::Object &name)
 {
 	int64_t pos=_vlocals.size();
 	SQLocalVarInfo lvi;
@@ -369,12 +369,12 @@ int64_t SQFuncState::pushLocalVariable(const SQObject &name)
 
 
 
-int64_t SQFuncState::getLocalVariable(const SQObject &name)
+int64_t SQFuncState::getLocalVariable(const rabbit::Object &name)
 {
 	int64_t locals=_vlocals.size();
 	while(locals>=1){
 		SQLocalVarInfo &lvi = _vlocals[locals-1];
-		if(sq_type(lvi._name)==OT_STRING && _string(lvi._name)==_string(name)){
+		if(sq_type(lvi._name)==rabbit::OT_STRING && _string(lvi._name)==_string(name)){
 			return locals-1;
 		}
 		locals--;
@@ -389,7 +389,7 @@ void SQFuncState::markLocalAsOuter(int64_t pos)
 	_outers++;
 }
 
-int64_t SQFuncState::getOuterVariable(const SQObject &name)
+int64_t SQFuncState::getOuterVariable(const rabbit::Object &name)
 {
 	int64_t outers = _outervalues.size();
 	for(int64_t i = 0; i<outers; i++) {
@@ -402,13 +402,13 @@ int64_t SQFuncState::getOuterVariable(const SQObject &name)
 		if(pos == -1) {
 			pos = _parent->getOuterVariable(name);
 			if(pos != -1) {
-				_outervalues.pushBack(SQOuterVar(name,SQObjectPtr(int64_t(pos)),otOUTER)); //local
+				_outervalues.pushBack(SQOuterVar(name,rabbit::ObjectPtr(int64_t(pos)),otOUTER)); //local
 				return _outervalues.size() - 1;
 			}
 		}
 		else {
 			_parent->markLocalAsOuter(pos);
-			_outervalues.pushBack(SQOuterVar(name,SQObjectPtr(int64_t(pos)),otLOCAL)); //local
+			_outervalues.pushBack(SQOuterVar(name,rabbit::ObjectPtr(int64_t(pos)),otLOCAL)); //local
 			return _outervalues.size() - 1;
 
 
@@ -417,7 +417,7 @@ int64_t SQFuncState::getOuterVariable(const SQObject &name)
 	return -1;
 }
 
-void SQFuncState::addParameter(const SQObject &name)
+void SQFuncState::addParameter(const rabbit::Object &name)
 {
 	pushLocalVariable(name);
 	_parameters.pushBack(name);
@@ -584,16 +584,16 @@ void SQFuncState::addInstruction(SQInstruction &i)
 	_instructions.pushBack(i);
 }
 
-SQObject SQFuncState::createString(const SQChar *s,int64_t len)
+rabbit::Object SQFuncState::createString(const rabbit::Char *s,int64_t len)
 {
-	SQObjectPtr ns(SQString::create(_sharedstate,s,len));
+	rabbit::ObjectPtr ns(SQString::create(_sharedstate,s,len));
 	_table(_strings)->newSlot(ns,(int64_t)1);
 	return ns;
 }
 
-SQObject SQFuncState::createTable()
+rabbit::Object SQFuncState::createTable()
 {
-	SQObjectPtr nt(SQTable::create(_sharedstate,0));
+	rabbit::ObjectPtr nt(SQTable::create(_sharedstate,0));
 	_table(_strings)->newSlot(nt,(int64_t)1);
 	return nt;
 }
@@ -605,7 +605,7 @@ SQFunctionProto *SQFuncState::buildProto()
 		_nliterals,_parameters.size(),_functions.size(),_outervalues.size(),
 		_lineinfos.size(),_localvarinfos.size(),_defaultparams.size());
 
-	SQObjectPtr refidx,key,val;
+	rabbit::ObjectPtr refidx,key,val;
 	int64_t idx;
 
 	f->_stacksize = _stacksize;

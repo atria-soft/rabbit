@@ -18,7 +18,7 @@
 
 #define SETUP_STREAM(v) \
 	SQStream *self = NULL; \
-	if(SQ_FAILED(sq_getinstanceup(v,1,(SQUserPointer*)&self,(SQUserPointer)((uint64_t)SQSTD_STREAM_TYPE_TAG)))) \
+	if(SQ_FAILED(sq_getinstanceup(v,1,(rabbit::UserPointer*)&self,(rabbit::UserPointer)((uint64_t)SQSTD_STREAM_TYPE_TAG)))) \
 		return sq_throwerror(v,_SC("invalid type tag")); \
 	if(!self || !self->IsValid())  \
 		return sq_throwerror(v,_SC("the stream is invalid"));
@@ -26,7 +26,7 @@
 int64_t _stream_readblob(rabbit::VirtualMachine* v)
 {
 	SETUP_STREAM(v);
-	SQUserPointer data,blobp;
+	rabbit::UserPointer data,blobp;
 	int64_t size,res;
 	sq_getinteger(v,2,&size);
 	if(size > self->Len()) {
@@ -106,7 +106,7 @@ int64_t _stream_readn(rabbit::VirtualMachine* v)
 
 int64_t _stream_writeblob(rabbit::VirtualMachine* v)
 {
-	SQUserPointer data;
+	rabbit::UserPointer data;
 	int64_t size;
 	SETUP_STREAM(v);
 	if(SQ_FAILED(sqstd_getblob(v,2,&data)))
@@ -245,7 +245,7 @@ int64_t _stream_eos(rabbit::VirtualMachine* v)
 	 return sq_throwerror(v,_SC("this object cannot be cloned"));
  }
 
-static const SQRegFunction _stream_methods[] = {
+static const rabbit::RegFunction _stream_methods[] = {
 	_DECL_STREAM_FUNC(readblob,2,_SC("xn")),
 	_DECL_STREAM_FUNC(readn,2,_SC("xn")),
 	_DECL_STREAM_FUNC(writeblob,-2,_SC("xx")),
@@ -266,10 +266,10 @@ void init_streamclass(rabbit::VirtualMachine* v)
 	if(SQ_FAILED(sq_get(v,-2))) {
 		sq_pushstring(v,_SC("std_stream"),-1);
 		sq_newclass(v,SQFalse);
-		sq_settypetag(v,-1,(SQUserPointer)((uint64_t)SQSTD_STREAM_TYPE_TAG));
+		sq_settypetag(v,-1,(rabbit::UserPointer)((uint64_t)SQSTD_STREAM_TYPE_TAG));
 		int64_t i = 0;
 		while(_stream_methods[i].name != 0) {
-			const SQRegFunction &f = _stream_methods[i];
+			const rabbit::RegFunction &f = _stream_methods[i];
 			sq_pushstring(v,f.name,-1);
 			sq_newclosure(v,f.f,0);
 			sq_setparamscheck(v,f.nparamscheck,f.typemask);
@@ -290,9 +290,9 @@ void init_streamclass(rabbit::VirtualMachine* v)
 	sq_pop(v,1);
 }
 
-SQRESULT declare_stream(rabbit::VirtualMachine* v,const SQChar* name,SQUserPointer typetag,const SQChar* reg_name,const SQRegFunction *methods,const SQRegFunction *globals)
+rabbit::Result declare_stream(rabbit::VirtualMachine* v,const rabbit::Char* name,rabbit::UserPointer typetag,const rabbit::Char* reg_name,const rabbit::RegFunction *methods,const rabbit::RegFunction *globals)
 {
-	if(sq_gettype(v,-1) != OT_TABLE)
+	if(sq_gettype(v,-1) != rabbit::OT_TABLE)
 		return sq_throwerror(v,_SC("table expected"));
 	int64_t top = sq_gettop(v);
 	//create delegate
@@ -305,7 +305,7 @@ SQRESULT declare_stream(rabbit::VirtualMachine* v,const SQChar* name,SQUserPoint
 		sq_settypetag(v,-1,typetag);
 		int64_t i = 0;
 		while(methods[i].name != 0) {
-			const SQRegFunction &f = methods[i];
+			const rabbit::RegFunction &f = methods[i];
 			sq_pushstring(v,f.name,-1);
 			sq_newclosure(v,f.f,0);
 			sq_setparamscheck(v,f.nparamscheck,f.typemask);
@@ -319,7 +319,7 @@ SQRESULT declare_stream(rabbit::VirtualMachine* v,const SQChar* name,SQUserPoint
 		i = 0;
 		while(globals[i].name!=0)
 		{
-			const SQRegFunction &f = globals[i];
+			const rabbit::RegFunction &f = globals[i];
 			sq_pushstring(v,f.name,-1);
 			sq_newclosure(v,f.f,0);
 			sq_setparamscheck(v,f.nparamscheck,f.typemask);

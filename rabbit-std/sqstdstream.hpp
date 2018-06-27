@@ -19,4 +19,4 @@ int64_t _stream_eos(rabbit::VirtualMachine* v);
 int64_t _stream_flush(rabbit::VirtualMachine* v);
 
 #define _DECL_STREAM_FUNC(name,nparams,typecheck) {_SC(#name),_stream_##name,nparams,typecheck}
-SQRESULT declare_stream(rabbit::VirtualMachine* v,const SQChar* name,SQUserPointer typetag,const SQChar* reg_name,const SQRegFunction *methods,const SQRegFunction *globals);
+rabbit::Result declare_stream(rabbit::VirtualMachine* v,const rabbit::Char* name,rabbit::UserPointer typetag,const rabbit::Char* reg_name,const rabbit::RegFunction *methods,const rabbit::RegFunction *globals);

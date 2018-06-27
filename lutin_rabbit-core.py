@@ -42,6 +42,17 @@ def configure(target, my_module):
 		'rabbit/sqfuncstate.cpp',
 		'rabbit/RefCounted.cpp',
 		'rabbit/WeakRef.cpp',
+		'rabbit/Delegable.cpp',
+		'rabbit/ObjectType.cpp',
+		'rabbit/ObjectValue.cpp',
+		'rabbit/Object.cpp',
+		'rabbit/ObjectPtr.cpp',
+		'rabbit/MemberHandle.cpp',
+		'rabbit/StackInfos.cpp',
+		'rabbit/RegFunction.cpp',
+		'rabbit/FunctionInfo.cpp',
+		'rabbit/MetaMethod.cpp',
+		'rabbit/ExceptionTrap.cpp',
 		])
 	my_module.compile_version("c++", 2011)
 	my_module.add_depend([
@@ -72,7 +83,19 @@ def configure(target, my_module):
 		'rabbit/sqtable.hpp',
 		'rabbit/RefCounted.hpp',
 		'rabbit/WeakRef.hpp',
+		'rabbit/Delegable.hpp',
+		'rabbit/ObjectType.hpp',
+		'rabbit/ObjectValue.hpp',
+		'rabbit/Object.hpp',
+		'rabbit/ObjectPtr.hpp',
+		'rabbit/MemberHandle.hpp',
+		'rabbit/StackInfos.hpp',
+		'rabbit/RegFunction.hpp',
+		'rabbit/FunctionInfo.hpp',
+		'rabbit/MetaMethod.hpp',
+		'rabbit/ExceptionTrap.hpp',
 		])
+
 	return True
 
 

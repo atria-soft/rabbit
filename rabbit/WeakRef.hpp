@@ -9,13 +9,14 @@
 
 #include <etk/types.hpp>
 #include <rabbit/RefCounted.hpp>
+#include <rabbit/Object.hpp>
 
 namespace rabbit {
 	class WeakRef: public RefCounted {
 		public:
 			void release();
 		public:
-			SQObject _obj;
+			rabbit::Object _obj;
 		protected:
 			friend RefCounted;
 	};

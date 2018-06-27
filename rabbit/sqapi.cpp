@@ -17,11 +17,11 @@
 #include <rabbit/sqfuncstate.hpp>
 #include <rabbit/sqclass.hpp>
 
-static bool sq_aux_gettypedarg(rabbit::VirtualMachine* v,int64_t idx,SQObjectType type,SQObjectPtr **o)
+static bool sq_aux_gettypedarg(rabbit::VirtualMachine* v,int64_t idx,rabbit::ObjectType type,rabbit::ObjectPtr **o)
 {
 	*o = &stack_get(v,idx);
 	if(sq_type(**o) != type){
-		SQObjectPtr oval = v->printObjVal(**o);
+		rabbit::ObjectPtr oval = v->printObjVal(**o);
 		v->raise_error(_SC("wrong argument type, expected '%s' got '%.50s'"),IdType2Name(type),_stringval(oval));
 		return false;
 	}
@@ -36,11 +36,11 @@ static bool sq_aux_gettypedarg(rabbit::VirtualMachine* v,int64_t idx,SQObjectTyp
 }
 
 
-int64_t sq_aux_invalidtype(rabbit::VirtualMachine* v,SQObjectType type)
+int64_t sq_aux_invalidtype(rabbit::VirtualMachine* v,rabbit::ObjectType type)
 {
-	uint64_t buf_size = 100 *sizeof(SQChar);
-	scsprintf(_ss(v)->getScratchPad(buf_size), buf_size, _SC("unexpected type %s"), IdType2Name(type));
-	return sq_throwerror(v, _ss(v)->getScratchPad(-1));
+	uint64_t buf_size = 100 *sizeof(rabbit::Char);
+	scsprintf(_get_shared_state(v)->getScratchPad(buf_size), buf_size, _SC("unexpected type %s"), IdType2Name(type));
+	return sq_throwerror(v, _get_shared_state(v)->getScratchPad(-1));
 }
 
 rabbit::VirtualMachine* sq_open(int64_t initialstacksize)
@@ -66,7 +66,7 @@ rabbit::VirtualMachine* sq_open(int64_t initialstacksize)
 rabbit::VirtualMachine* sq_newthread(rabbit::VirtualMachine* friendvm, int64_t initialstacksize)
 {
 	SQSharedState *ss;
-	ss=_ss(friendvm);
+	ss=_get_shared_state(friendvm);
 	
 	char* allocatedData = (char*)SQ_MALLOC(sizeof(rabbit::VirtualMachine));
 	rabbit::VirtualMachine *v = new (allocatedData) rabbit::VirtualMachine(ss);
@@ -94,7 +94,7 @@ int64_t sq_getvmstate(rabbit::VirtualMachine* v)
 
 void sq_seterrorhandler(rabbit::VirtualMachine* v)
 {
-	SQObject o = stack_get(v, -1);
+	rabbit::Object o = stack_get(v, -1);
 	if(sq_isclosure(o) || sq_isnativeclosure(o) || sq_isnull(o)) {
 		v->_errorhandler = o;
 		v->pop();
@@ -110,7 +110,7 @@ void sq_setnativedebughook(rabbit::VirtualMachine* v,SQDEBUGHOOK hook)
 
 void sq_setdebughook(rabbit::VirtualMachine* v)
 {
-	SQObject o = stack_get(v,-1);
+	rabbit::Object o = stack_get(v,-1);
 	if(sq_isclosure(o) || sq_isnativeclosure(o) || sq_isnull(o)) {
 		v->_debughook_closure = o;
 		v->_debughook_native = NULL;
@@ -121,7 +121,7 @@ void sq_setdebughook(rabbit::VirtualMachine* v)
 
 void sq_close(rabbit::VirtualMachine* v)
 {
-	SQSharedState *ss = _ss(v);
+	SQSharedState *ss = _get_shared_state(v);
 	_thread(ss->_root_vm)->finalize();
 	sq_delete(ss, SQSharedState);
 }
@@ -131,12 +131,12 @@ int64_t sq_getversion()
 	return RABBIT_VERSION_NUMBER;
 }
 
-SQRESULT sq_compile(rabbit::VirtualMachine* v,SQLEXREADFUNC read,SQUserPointer p,const SQChar *sourcename,SQBool raiseerror)
+rabbit::Result sq_compile(rabbit::VirtualMachine* v,SQLEXREADFUNC read,rabbit::UserPointer p,const rabbit::Char *sourcename,rabbit::Bool raiseerror)
 {
-	SQObjectPtr o;
+	rabbit::ObjectPtr o;
 #ifndef NO_COMPILER
-	if(compile(v, read, p, sourcename, o, raiseerror?true:false, _ss(v)->_debuginfo)) {
-		v->push(SQClosure::create(_ss(v), _funcproto(o), _table(v->_roottable)->getWeakRef(OT_TABLE)));
+	if(compile(v, read, p, sourcename, o, raiseerror?true:false, _get_shared_state(v)->_debuginfo)) {
+		v->push(SQClosure::create(_get_shared_state(v), _funcproto(o), _table(v->_roottable)->getWeakRef(rabbit::OT_TABLE)));
 		return SQ_OK;
 	}
 	return SQ_ERROR;
@@ -145,29 +145,29 @@ SQRESULT sq_compile(rabbit::VirtualMachine* v,SQLEXREADFUNC read,SQUserPointer p
 #endif
 }
 
-void sq_enabledebuginfo(rabbit::VirtualMachine* v, SQBool enable)
+void sq_enabledebuginfo(rabbit::VirtualMachine* v, rabbit::Bool enable)
 {
-	_ss(v)->_debuginfo = enable?true:false;
+	_get_shared_state(v)->_debuginfo = enable?true:false;
 }
 
-void sq_notifyallexceptions(rabbit::VirtualMachine* v, SQBool enable)
+void sq_notifyallexceptions(rabbit::VirtualMachine* v, rabbit::Bool enable)
 {
-	_ss(v)->_notifyallexceptions = enable?true:false;
+	_get_shared_state(v)->_notifyallexceptions = enable?true:false;
 }
 
-void sq_addref(rabbit::VirtualMachine* v,HSQOBJECT *po)
+void sq_addref(rabbit::VirtualMachine* v,rabbit::Object *po)
 {
 	if(!ISREFCOUNTED(sq_type(*po))) return;
 	__addRef(po->_type,po->_unVal);
 }
 
-uint64_t sq_getrefcount(rabbit::VirtualMachine* v,HSQOBJECT *po)
+uint64_t sq_getrefcount(rabbit::VirtualMachine* v,rabbit::Object *po)
 {
 	if(!ISREFCOUNTED(sq_type(*po))) return 0;
    return po->_unVal.pRefCounted->refCountget();
 }
 
-SQBool sq_release(rabbit::VirtualMachine* v,HSQOBJECT *po)
+rabbit::Bool sq_release(rabbit::VirtualMachine* v,rabbit::Object *po)
 {
 	if(!ISREFCOUNTED(sq_type(*po))) return SQTrue;
 	bool ret = (po->_unVal.pRefCounted->refCountget() <= 1) ? SQTrue : SQFalse;
@@ -175,21 +175,21 @@ SQBool sq_release(rabbit::VirtualMachine* v,HSQOBJECT *po)
 	return ret; //the ret val doesn't work(and cannot be fixed)
 }
 
-uint64_t sq_getvmrefcount(rabbit::VirtualMachine* SQ_UNUSED_ARG(v), const HSQOBJECT *po)
+uint64_t sq_getvmrefcount(rabbit::VirtualMachine* SQ_UNUSED_ARG(v), const rabbit::Object *po)
 {
 	if (!ISREFCOUNTED(sq_type(*po))) return 0;
 	return po->_unVal.pRefCounted->refCountget();
 }
 
-const SQChar *sq_objtostring(const HSQOBJECT *o)
+const rabbit::Char *sq_objtostring(const rabbit::Object *o)
 {
-	if(sq_type(*o) == OT_STRING) {
+	if(sq_type(*o) == rabbit::OT_STRING) {
 		return _stringval(*o);
 	}
 	return NULL;
 }
 
-int64_t sq_objtointeger(const HSQOBJECT *o)
+int64_t sq_objtointeger(const rabbit::Object *o)
 {
 	if(sq_isnumeric(*o)) {
 		return tointeger(*o);
@@ -197,7 +197,7 @@ int64_t sq_objtointeger(const HSQOBJECT *o)
 	return 0;
 }
 
-float_t sq_objtofloat(const HSQOBJECT *o)
+float_t sq_objtofloat(const rabbit::Object *o)
 {
 	if(sq_isnumeric(*o)) {
 		return tofloat(*o);
@@ -205,7 +205,7 @@ float_t sq_objtofloat(const HSQOBJECT *o)
 	return 0;
 }
 
-SQBool sq_objtobool(const HSQOBJECT *o)
+rabbit::Bool sq_objtobool(const rabbit::Object *o)
 {
 	if(sq_isbool(*o)) {
 		return _integer(*o);
@@ -213,7 +213,7 @@ SQBool sq_objtobool(const HSQOBJECT *o)
 	return SQFalse;
 }
 
-SQUserPointer sq_objtouserpointer(const HSQOBJECT *o)
+rabbit::UserPointer sq_objtouserpointer(const rabbit::Object *o)
 {
 	if(sq_isuserpointer(*o)) {
 		return _userpointer(*o);
@@ -226,10 +226,10 @@ void sq_pushnull(rabbit::VirtualMachine* v)
 	v->pushNull();
 }
 
-void sq_pushstring(rabbit::VirtualMachine* v,const SQChar *s,int64_t len)
+void sq_pushstring(rabbit::VirtualMachine* v,const rabbit::Char *s,int64_t len)
 {
 	if(s)
-		v->push(SQObjectPtr(SQString::create(_ss(v), s, len)));
+		v->push(rabbit::ObjectPtr(SQString::create(_get_shared_state(v), s, len)));
 	else v->pushNull();
 }
 
@@ -238,7 +238,7 @@ void sq_pushinteger(rabbit::VirtualMachine* v,int64_t n)
 	v->push(n);
 }
 
-void sq_pushbool(rabbit::VirtualMachine* v,SQBool b)
+void sq_pushbool(rabbit::VirtualMachine* v,rabbit::Bool b)
 {
 	v->push(b?true:false);
 }
@@ -248,7 +248,7 @@ void sq_pushfloat(rabbit::VirtualMachine* v,float_t n)
 	v->push(n);
 }
 
-void sq_pushuserpointer(rabbit::VirtualMachine* v,SQUserPointer p)
+void sq_pushuserpointer(rabbit::VirtualMachine* v,rabbit::UserPointer p)
 {
 	v->push(p);
 }
@@ -258,67 +258,67 @@ void sq_pushthread(rabbit::VirtualMachine* v, rabbit::VirtualMachine* thread)
 	v->push(thread);
 }
 
-SQUserPointer sq_newuserdata(rabbit::VirtualMachine* v,uint64_t size)
+rabbit::UserPointer sq_newuserdata(rabbit::VirtualMachine* v,uint64_t size)
 {
-	rabbit::UserData *ud = rabbit::UserData::create(_ss(v), size + SQ_ALIGNMENT);
+	rabbit::UserData *ud = rabbit::UserData::create(_get_shared_state(v), size + SQ_ALIGNMENT);
 	v->push(ud);
-	return (SQUserPointer)sq_aligning(ud + 1);
+	return (rabbit::UserPointer)sq_aligning(ud + 1);
 }
 
 void sq_newtable(rabbit::VirtualMachine* v)
 {
-	v->push(SQTable::create(_ss(v), 0));
+	v->push(SQTable::create(_get_shared_state(v), 0));
 }
 
 void sq_newtableex(rabbit::VirtualMachine* v,int64_t initialcapacity)
 {
-	v->push(SQTable::create(_ss(v), initialcapacity));
+	v->push(SQTable::create(_get_shared_state(v), initialcapacity));
 }
 
 void sq_newarray(rabbit::VirtualMachine* v,int64_t size)
 {
-	v->push(rabbit::Array::create(_ss(v), size));
+	v->push(rabbit::Array::create(_get_shared_state(v), size));
 }
 
-SQRESULT sq_newclass(rabbit::VirtualMachine* v,SQBool hasbase)
+rabbit::Result sq_newclass(rabbit::VirtualMachine* v,rabbit::Bool hasbase)
 {
 	SQClass *baseclass = NULL;
 	if(hasbase) {
-		SQObjectPtr &base = stack_get(v,-1);
-		if(sq_type(base) != OT_CLASS)
+		rabbit::ObjectPtr &base = stack_get(v,-1);
+		if(sq_type(base) != rabbit::OT_CLASS)
 			return sq_throwerror(v,_SC("invalid base type"));
 		baseclass = _class(base);
 	}
-	SQClass *newclass = SQClass::create(_ss(v), baseclass);
+	SQClass *newclass = SQClass::create(_get_shared_state(v), baseclass);
 	if(baseclass) v->pop();
 	v->push(newclass);
 	return SQ_OK;
 }
 
-SQBool sq_instanceof(rabbit::VirtualMachine* v)
+rabbit::Bool sq_instanceof(rabbit::VirtualMachine* v)
 {
-	SQObjectPtr &inst = stack_get(v,-1);
-	SQObjectPtr &cl = stack_get(v,-2);
-	if(sq_type(inst) != OT_INSTANCE || sq_type(cl) != OT_CLASS)
+	rabbit::ObjectPtr &inst = stack_get(v,-1);
+	rabbit::ObjectPtr &cl = stack_get(v,-2);
+	if(sq_type(inst) != rabbit::OT_INSTANCE || sq_type(cl) != OT_CLASS)
 		return sq_throwerror(v,_SC("invalid param type"));
 	return _instance(inst)->instanceOf(_class(cl))?SQTrue:SQFalse;
 }
 
-SQRESULT sq_arrayappend(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::Result sq_arrayappend(rabbit::VirtualMachine* v,int64_t idx)
 {
 	sq_aux_paramscheck(v,2);
-	SQObjectPtr *arr;
-	_GETSAFE_OBJ(v, idx, OT_ARRAY,arr);
+	rabbit::ObjectPtr *arr;
+	_GETSAFE_OBJ(v, idx, rabbit::OT_ARRAY,arr);
 	_array(*arr)->append(v->getUp(-1));
 	v->pop();
 	return SQ_OK;
 }
 
-SQRESULT sq_arraypop(rabbit::VirtualMachine* v,int64_t idx,SQBool pushval)
+rabbit::Result sq_arraypop(rabbit::VirtualMachine* v,int64_t idx,rabbit::Bool pushval)
 {
 	sq_aux_paramscheck(v, 1);
-	SQObjectPtr *arr;
-	_GETSAFE_OBJ(v, idx, OT_ARRAY,arr);
+	rabbit::ObjectPtr *arr;
+	_GETSAFE_OBJ(v, idx, rabbit::OT_ARRAY,arr);
 	if(_array(*arr)->size() > 0) {
 		if(pushval != 0){
 			v->push(_array(*arr)->top());
@@ -329,11 +329,11 @@ SQRESULT sq_arraypop(rabbit::VirtualMachine* v,int64_t idx,SQBool pushval)
 	return sq_throwerror(v, _SC("empty array"));
 }
 
-SQRESULT sq_arrayresize(rabbit::VirtualMachine* v,int64_t idx,int64_t newsize)
+rabbit::Result sq_arrayresize(rabbit::VirtualMachine* v,int64_t idx,int64_t newsize)
 {
 	sq_aux_paramscheck(v,1);
-	SQObjectPtr *arr;
-	_GETSAFE_OBJ(v, idx, OT_ARRAY,arr);
+	rabbit::ObjectPtr *arr;
+	_GETSAFE_OBJ(v, idx, rabbit::OT_ARRAY,arr);
 	if(newsize >= 0) {
 		_array(*arr)->resize(newsize);
 		return SQ_OK;
@@ -342,14 +342,14 @@ SQRESULT sq_arrayresize(rabbit::VirtualMachine* v,int64_t idx,int64_t newsize)
 }
 
 
-SQRESULT sq_arrayreverse(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::Result sq_arrayreverse(rabbit::VirtualMachine* v,int64_t idx)
 {
 	sq_aux_paramscheck(v, 1);
-	SQObjectPtr *o;
-	_GETSAFE_OBJ(v, idx, OT_ARRAY,o);
+	rabbit::ObjectPtr *o;
+	_GETSAFE_OBJ(v, idx, rabbit::OT_ARRAY,o);
 	rabbit::Array *arr = _array(*o);
 	if(arr->size() > 0) {
-		SQObjectPtr t;
+		rabbit::ObjectPtr t;
 		int64_t size = arr->size();
 		int64_t n = size >> 1; size -= 1;
 		for(int64_t i = 0; i < n; i++) {
@@ -363,46 +363,46 @@ SQRESULT sq_arrayreverse(rabbit::VirtualMachine* v,int64_t idx)
 	return SQ_OK;
 }
 
-SQRESULT sq_arrayremove(rabbit::VirtualMachine* v,int64_t idx,int64_t itemidx)
+rabbit::Result sq_arrayremove(rabbit::VirtualMachine* v,int64_t idx,int64_t itemidx)
 {
 	sq_aux_paramscheck(v, 1);
-	SQObjectPtr *arr;
-	_GETSAFE_OBJ(v, idx, OT_ARRAY,arr);
+	rabbit::ObjectPtr *arr;
+	_GETSAFE_OBJ(v, idx, rabbit::OT_ARRAY,arr);
 	return _array(*arr)->remove(itemidx) ? SQ_OK : sq_throwerror(v,_SC("index out of range"));
 }
 
-SQRESULT sq_arrayinsert(rabbit::VirtualMachine* v,int64_t idx,int64_t destpos)
+rabbit::Result sq_arrayinsert(rabbit::VirtualMachine* v,int64_t idx,int64_t destpos)
 {
 	sq_aux_paramscheck(v, 1);
-	SQObjectPtr *arr;
-	_GETSAFE_OBJ(v, idx, OT_ARRAY,arr);
-	SQRESULT ret = _array(*arr)->insert(destpos, v->getUp(-1)) ? SQ_OK : sq_throwerror(v,_SC("index out of range"));
+	rabbit::ObjectPtr *arr;
+	_GETSAFE_OBJ(v, idx, rabbit::OT_ARRAY,arr);
+	rabbit::Result ret = _array(*arr)->insert(destpos, v->getUp(-1)) ? SQ_OK : sq_throwerror(v,_SC("index out of range"));
 	v->pop();
 	return ret;
 }
 
 void sq_newclosure(rabbit::VirtualMachine* v,SQFUNCTION func,uint64_t nfreevars)
 {
-	SQNativeClosure *nc = SQNativeClosure::create(_ss(v), func,nfreevars);
+	SQNativeClosure *nc = SQNativeClosure::create(_get_shared_state(v), func,nfreevars);
 	nc->_nparamscheck = 0;
 	for(uint64_t i = 0; i < nfreevars; i++) {
 		nc->_outervalues[i] = v->top();
 		v->pop();
 	}
-	v->push(SQObjectPtr(nc));
+	v->push(rabbit::ObjectPtr(nc));
 }
 
-SQRESULT sq_getclosureinfo(rabbit::VirtualMachine* v,int64_t idx,uint64_t *nparams,uint64_t *nfreevars)
+rabbit::Result sq_getclosureinfo(rabbit::VirtualMachine* v,int64_t idx,uint64_t *nparams,uint64_t *nfreevars)
 {
-	SQObject o = stack_get(v, idx);
-	if(sq_type(o) == OT_CLOSURE) {
+	rabbit::Object o = stack_get(v, idx);
+	if(sq_type(o) == rabbit::OT_CLOSURE) {
 		SQClosure *c = _closure(o);
 		SQFunctionProto *proto = c->_function;
 		*nparams = (uint64_t)proto->_nparameters;
 		*nfreevars = (uint64_t)proto->_noutervalues;
 		return SQ_OK;
 	}
-	else if(sq_type(o) == OT_NATIVECLOSURE)
+	else if(sq_type(o) == rabbit::OT_NATIVECLOSURE)
 	{
 		SQNativeClosure *c = _nativeclosure(o);
 		*nparams = (uint64_t)c->_nparamscheck;
@@ -412,26 +412,26 @@ SQRESULT sq_getclosureinfo(rabbit::VirtualMachine* v,int64_t idx,uint64_t *npara
 	return sq_throwerror(v,_SC("the object is not a closure"));
 }
 
-SQRESULT sq_setnativeclosurename(rabbit::VirtualMachine* v,int64_t idx,const SQChar *name)
+rabbit::Result sq_setnativeclosurename(rabbit::VirtualMachine* v,int64_t idx,const rabbit::Char *name)
 {
-	SQObject o = stack_get(v, idx);
+	rabbit::Object o = stack_get(v, idx);
 	if(sq_isnativeclosure(o)) {
 		SQNativeClosure *nc = _nativeclosure(o);
-		nc->_name = SQString::create(_ss(v),name);
+		nc->_name = SQString::create(_get_shared_state(v),name);
 		return SQ_OK;
 	}
 	return sq_throwerror(v,_SC("the object is not a nativeclosure"));
 }
 
-SQRESULT sq_setparamscheck(rabbit::VirtualMachine* v,int64_t nparamscheck,const SQChar *typemask)
+rabbit::Result sq_setparamscheck(rabbit::VirtualMachine* v,int64_t nparamscheck,const rabbit::Char *typemask)
 {
-	SQObject o = stack_get(v, -1);
+	rabbit::Object o = stack_get(v, -1);
 	if(!sq_isnativeclosure(o))
 		return sq_throwerror(v, _SC("native closure expected"));
 	SQNativeClosure *nc = _nativeclosure(o);
 	nc->_nparamscheck = nparamscheck;
 	if(typemask) {
-		SQIntVec res;
+		etk::Vector<int64_t> res;
 		if(!compileTypemask(res, typemask))
 			return sq_throwerror(v, _SC("invalid typemask"));
 		nc->_typecheck = res;
@@ -445,20 +445,20 @@ SQRESULT sq_setparamscheck(rabbit::VirtualMachine* v,int64_t nparamscheck,const 
 	return SQ_OK;
 }
 
-SQRESULT sq_bindenv(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::Result sq_bindenv(rabbit::VirtualMachine* v,int64_t idx)
 {
-	SQObjectPtr &o = stack_get(v,idx);
+	rabbit::ObjectPtr &o = stack_get(v,idx);
 	if(!sq_isnativeclosure(o) &&
 		!sq_isclosure(o))
 		return sq_throwerror(v,_SC("the target is not a closure"));
-	SQObjectPtr &env = stack_get(v,-1);
+	rabbit::ObjectPtr &env = stack_get(v,-1);
 	if(!sq_istable(env) &&
 		!sq_isarray(env) &&
 		!sq_isclass(env) &&
 		!sq_isinstance(env))
 		return sq_throwerror(v,_SC("invalid environment"));
 	rabbit::WeakRef *w = _refcounted(env)->getWeakRef(sq_type(env));
-	SQObjectPtr ret;
+	rabbit::ObjectPtr ret;
 	if(sq_isclosure(o)) {
 		SQClosure *c = _closure(o)->clone();
 		__Objrelease(c->_env);
@@ -482,9 +482,9 @@ SQRESULT sq_bindenv(rabbit::VirtualMachine* v,int64_t idx)
 	return SQ_OK;
 }
 
-SQRESULT sq_getclosurename(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::Result sq_getclosurename(rabbit::VirtualMachine* v,int64_t idx)
 {
-	SQObjectPtr &o = stack_get(v,idx);
+	rabbit::ObjectPtr &o = stack_get(v,idx);
 	if(!sq_isnativeclosure(o) &&
 		!sq_isclosure(o))
 		return sq_throwerror(v,_SC("the target is not a closure"));
@@ -498,33 +498,33 @@ SQRESULT sq_getclosurename(rabbit::VirtualMachine* v,int64_t idx)
 	return SQ_OK;
 }
 
-SQRESULT sq_setclosureroot(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::Result sq_setclosureroot(rabbit::VirtualMachine* v,int64_t idx)
 {
-	SQObjectPtr &c = stack_get(v,idx);
-	SQObject o = stack_get(v, -1);
+	rabbit::ObjectPtr &c = stack_get(v,idx);
+	rabbit::Object o = stack_get(v, -1);
 	if(!sq_isclosure(c)) return sq_throwerror(v, _SC("closure expected"));
 	if(sq_istable(o)) {
-		_closure(c)->setRoot(_table(o)->getWeakRef(OT_TABLE));
+		_closure(c)->setRoot(_table(o)->getWeakRef(rabbit::OT_TABLE));
 		v->pop();
 		return SQ_OK;
 	}
 	return sq_throwerror(v, _SC("invalid type"));
 }
 
-SQRESULT sq_getclosureroot(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::Result sq_getclosureroot(rabbit::VirtualMachine* v,int64_t idx)
 {
-	SQObjectPtr &c = stack_get(v,idx);
+	rabbit::ObjectPtr &c = stack_get(v,idx);
 	if(!sq_isclosure(c)) return sq_throwerror(v, _SC("closure expected"));
 	v->push(_closure(c)->_root->_obj);
 	return SQ_OK;
 }
 
-SQRESULT sq_clear(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::Result sq_clear(rabbit::VirtualMachine* v,int64_t idx)
 {
-	SQObject &o=stack_get(v,idx);
+	rabbit::Object &o=stack_get(v,idx);
 	switch(sq_type(o)) {
-		case OT_TABLE: _table(o)->clear();  break;
-		case OT_ARRAY: _array(o)->resize(0); break;
+		case rabbit::OT_TABLE: _table(o)->clear();  break;
+		case rabbit::OT_ARRAY: _array(o)->resize(0); break;
 		default:
 			return sq_throwerror(v, _SC("clear only works on table and array"));
 		break;
@@ -540,17 +540,17 @@ void sq_pushroottable(rabbit::VirtualMachine* v)
 
 void sq_pushregistrytable(rabbit::VirtualMachine* v)
 {
-	v->push(_ss(v)->_registry);
+	v->push(_get_shared_state(v)->_registry);
 }
 
 void sq_pushconsttable(rabbit::VirtualMachine* v)
 {
-	v->push(_ss(v)->_consts);
+	v->push(_get_shared_state(v)->_consts);
 }
 
-SQRESULT sq_setroottable(rabbit::VirtualMachine* v)
+rabbit::Result sq_setroottable(rabbit::VirtualMachine* v)
 {
-	SQObject o = stack_get(v, -1);
+	rabbit::Object o = stack_get(v, -1);
 	if(sq_istable(o) || sq_isnull(o)) {
 		v->_roottable = o;
 		v->pop();
@@ -559,35 +559,35 @@ SQRESULT sq_setroottable(rabbit::VirtualMachine* v)
 	return sq_throwerror(v, _SC("invalid type"));
 }
 
-SQRESULT sq_setconsttable(rabbit::VirtualMachine* v)
+rabbit::Result sq_setconsttable(rabbit::VirtualMachine* v)
 {
-	SQObject o = stack_get(v, -1);
+	rabbit::Object o = stack_get(v, -1);
 	if(sq_istable(o)) {
-		_ss(v)->_consts = o;
+		_get_shared_state(v)->_consts = o;
 		v->pop();
 		return SQ_OK;
 	}
 	return sq_throwerror(v, _SC("invalid type, expected table"));
 }
 
-void sq_setforeignptr(rabbit::VirtualMachine* v,SQUserPointer p)
+void sq_setforeignptr(rabbit::VirtualMachine* v,rabbit::UserPointer p)
 {
 	v->_foreignptr = p;
 }
 
-SQUserPointer sq_getforeignptr(rabbit::VirtualMachine* v)
+rabbit::UserPointer sq_getforeignptr(rabbit::VirtualMachine* v)
 {
 	return v->_foreignptr;
 }
 
-void sq_setsharedforeignptr(rabbit::VirtualMachine* v,SQUserPointer p)
+void sq_setsharedforeignptr(rabbit::VirtualMachine* v,rabbit::UserPointer p)
 {
-	_ss(v)->_foreignptr = p;
+	_get_shared_state(v)->_foreignptr = p;
 }
 
-SQUserPointer sq_getsharedforeignptr(rabbit::VirtualMachine* v)
+rabbit::UserPointer sq_getsharedforeignptr(rabbit::VirtualMachine* v)
 {
-	return _ss(v)->_foreignptr;
+	return _get_shared_state(v)->_foreignptr;
 }
 
 void sq_setvmreleasehook(rabbit::VirtualMachine* v,SQRELEASEHOOK hook)
@@ -602,12 +602,12 @@ SQRELEASEHOOK sq_getvmreleasehook(rabbit::VirtualMachine* v)
 
 void sq_setsharedreleasehook(rabbit::VirtualMachine* v,SQRELEASEHOOK hook)
 {
-	_ss(v)->_releasehook = hook;
+	_get_shared_state(v)->_releasehook = hook;
 }
 
 SQRELEASEHOOK sq_getsharedreleasehook(rabbit::VirtualMachine* v)
 {
-	return _ss(v)->_releasehook;
+	return _get_shared_state(v)->_releasehook;
 }
 
 void sq_push(rabbit::VirtualMachine* v,int64_t idx)
@@ -615,15 +615,15 @@ void sq_push(rabbit::VirtualMachine* v,int64_t idx)
 	v->push(stack_get(v, idx));
 }
 
-SQObjectType sq_gettype(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::ObjectType sq_gettype(rabbit::VirtualMachine* v,int64_t idx)
 {
 	return sq_type(stack_get(v, idx));
 }
 
-SQRESULT sq_typeof(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::Result sq_typeof(rabbit::VirtualMachine* v,int64_t idx)
 {
-	SQObjectPtr &o = stack_get(v, idx);
-	SQObjectPtr res;
+	rabbit::ObjectPtr &o = stack_get(v, idx);
+	rabbit::ObjectPtr res;
 	if(!v->typeOf(o,res)) {
 		return SQ_ERROR;
 	}
@@ -631,10 +631,10 @@ SQRESULT sq_typeof(rabbit::VirtualMachine* v,int64_t idx)
 	return SQ_OK;
 }
 
-SQRESULT sq_tostring(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::Result sq_tostring(rabbit::VirtualMachine* v,int64_t idx)
 {
-	SQObjectPtr &o = stack_get(v, idx);
-	SQObjectPtr res;
+	rabbit::ObjectPtr &o = stack_get(v, idx);
+	rabbit::ObjectPtr res;
 	if(!v->toString(o,res)) {
 		return SQ_ERROR;
 	}
@@ -642,15 +642,15 @@ SQRESULT sq_tostring(rabbit::VirtualMachine* v,int64_t idx)
 	return SQ_OK;
 }
 
-void sq_tobool(rabbit::VirtualMachine* v, int64_t idx, SQBool *b)
+void sq_tobool(rabbit::VirtualMachine* v, int64_t idx, rabbit::Bool *b)
 {
-	SQObjectPtr &o = stack_get(v, idx);
+	rabbit::ObjectPtr &o = stack_get(v, idx);
 	*b = rabbit::VirtualMachine::IsFalse(o)?SQFalse:SQTrue;
 }
 
-SQRESULT sq_getinteger(rabbit::VirtualMachine* v,int64_t idx,int64_t *i)
+rabbit::Result sq_getinteger(rabbit::VirtualMachine* v,int64_t idx,int64_t *i)
 {
-	SQObjectPtr &o = stack_get(v, idx);
+	rabbit::ObjectPtr &o = stack_get(v, idx);
 	if(sq_isnumeric(o)) {
 		*i = tointeger(o);
 		return SQ_OK;
@@ -662,9 +662,9 @@ SQRESULT sq_getinteger(rabbit::VirtualMachine* v,int64_t idx,int64_t *i)
 	return SQ_ERROR;
 }
 
-SQRESULT sq_getfloat(rabbit::VirtualMachine* v,int64_t idx,float_t *f)
+rabbit::Result sq_getfloat(rabbit::VirtualMachine* v,int64_t idx,float_t *f)
 {
-	SQObjectPtr &o = stack_get(v, idx);
+	rabbit::ObjectPtr &o = stack_get(v, idx);
 	if(sq_isnumeric(o)) {
 		*f = tofloat(o);
 		return SQ_OK;
@@ -672,9 +672,9 @@ SQRESULT sq_getfloat(rabbit::VirtualMachine* v,int64_t idx,float_t *f)
 	return SQ_ERROR;
 }
 
-SQRESULT sq_getbool(rabbit::VirtualMachine* v,int64_t idx,SQBool *b)
+rabbit::Result sq_getbool(rabbit::VirtualMachine* v,int64_t idx,rabbit::Bool *b)
 {
-	SQObjectPtr &o = stack_get(v, idx);
+	rabbit::ObjectPtr &o = stack_get(v, idx);
 	if(sq_isbool(o)) {
 		*b = _integer(o);
 		return SQ_OK;
@@ -682,34 +682,34 @@ SQRESULT sq_getbool(rabbit::VirtualMachine* v,int64_t idx,SQBool *b)
 	return SQ_ERROR;
 }
 
-SQRESULT sq_getstringandsize(rabbit::VirtualMachine* v,int64_t idx,const SQChar **c,int64_t *size)
+rabbit::Result sq_getstringandsize(rabbit::VirtualMachine* v,int64_t idx,const rabbit::Char **c,int64_t *size)
 {
-	SQObjectPtr *o = NULL;
-	_GETSAFE_OBJ(v, idx, OT_STRING,o);
+	rabbit::ObjectPtr *o = NULL;
+	_GETSAFE_OBJ(v, idx, rabbit::OT_STRING,o);
 	*c = _stringval(*o);
 	*size = _string(*o)->_len;
 	return SQ_OK;
 }
 
-SQRESULT sq_getstring(rabbit::VirtualMachine* v,int64_t idx,const SQChar **c)
+rabbit::Result sq_getstring(rabbit::VirtualMachine* v,int64_t idx,const rabbit::Char **c)
 {
-	SQObjectPtr *o = NULL;
-	_GETSAFE_OBJ(v, idx, OT_STRING,o);
+	rabbit::ObjectPtr *o = NULL;
+	_GETSAFE_OBJ(v, idx, rabbit::OT_STRING,o);
 	*c = _stringval(*o);
 	return SQ_OK;
 }
 
-SQRESULT sq_getthread(rabbit::VirtualMachine* v,int64_t idx,rabbit::VirtualMachine* *thread)
+rabbit::Result sq_getthread(rabbit::VirtualMachine* v,int64_t idx,rabbit::VirtualMachine* *thread)
 {
-	SQObjectPtr *o = NULL;
-	_GETSAFE_OBJ(v, idx, OT_THREAD,o);
+	rabbit::ObjectPtr *o = NULL;
+	_GETSAFE_OBJ(v, idx, rabbit::OT_THREAD,o);
 	*thread = _thread(*o);
 	return SQ_OK;
 }
 
-SQRESULT sq_clone(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::Result sq_clone(rabbit::VirtualMachine* v,int64_t idx)
 {
-	SQObjectPtr &o = stack_get(v,idx);
+	rabbit::ObjectPtr &o = stack_get(v,idx);
 	v->pushNull();
 	if(!v->clone(o, stack_get(v, -1))){
 		v->pop();
@@ -720,15 +720,15 @@ SQRESULT sq_clone(rabbit::VirtualMachine* v,int64_t idx)
 
 int64_t sq_getsize(rabbit::VirtualMachine* v, int64_t idx)
 {
-	SQObjectPtr &o = stack_get(v, idx);
-	SQObjectType type = sq_type(o);
+	rabbit::ObjectPtr &o = stack_get(v, idx);
+	rabbit::ObjectType type = sq_type(o);
 	switch(type) {
-	case OT_STRING:	 return _string(o)->_len;
-	case OT_TABLE:	  return _table(o)->countUsed();
-	case OT_ARRAY:	  return _array(o)->size();
-	case OT_USERDATA:   return _userdata(o)->getsize();
-	case OT_INSTANCE:   return _instance(o)->_class->_udsize;
-	case OT_CLASS:	  return _class(o)->_udsize;
+	case rabbit::OT_STRING:	 return _string(o)->_len;
+	case rabbit::OT_TABLE:	  return _table(o)->countUsed();
+	case rabbit::OT_ARRAY:	  return _array(o)->size();
+	case rabbit::OT_USERDATA:   return _userdata(o)->getsize();
+	case rabbit::OT_INSTANCE:   return _instance(o)->_class->_udsize;
+	case rabbit::OT_CLASS:	  return _class(o)->_udsize;
 	default:
 		return sq_aux_invalidtype(v, type);
 	}
@@ -736,14 +736,14 @@ int64_t sq_getsize(rabbit::VirtualMachine* v, int64_t idx)
 
 SQHash sq_gethash(rabbit::VirtualMachine* v, int64_t idx)
 {
-	SQObjectPtr &o = stack_get(v, idx);
+	rabbit::ObjectPtr &o = stack_get(v, idx);
 	return HashObj(o);
 }
 
-SQRESULT sq_getuserdata(rabbit::VirtualMachine* v,int64_t idx,SQUserPointer *p,SQUserPointer *typetag)
+rabbit::Result sq_getuserdata(rabbit::VirtualMachine* v,int64_t idx,rabbit::UserPointer *p,rabbit::UserPointer *typetag)
 {
-	SQObjectPtr *o = NULL;
-	_GETSAFE_OBJ(v, idx, OT_USERDATA,o);
+	rabbit::ObjectPtr *o = NULL;
+	_GETSAFE_OBJ(v, idx, rabbit::OT_USERDATA,o);
 	(*p) = _userdataval(*o);
 	if(typetag) {
 		*typetag = _userdata(*o)->getTypeTag();
@@ -751,14 +751,14 @@ SQRESULT sq_getuserdata(rabbit::VirtualMachine* v,int64_t idx,SQUserPointer *p,S
 	return SQ_OK;
 }
 
-SQRESULT sq_settypetag(rabbit::VirtualMachine* v,int64_t idx,SQUserPointer typetag)
+rabbit::Result sq_settypetag(rabbit::VirtualMachine* v,int64_t idx,rabbit::UserPointer typetag)
 {
-	SQObjectPtr &o = stack_get(v,idx);
+	rabbit::ObjectPtr &o = stack_get(v,idx);
 	switch(sq_type(o)) {
-		case OT_USERDATA:
+		case rabbit::OT_USERDATA:
 			_userdata(o)->setTypeTag(typetag);
 			break;
-		case OT_CLASS:
+		case rabbit::OT_CLASS:
 			_class(o)->_typetag = typetag;
 			break;
 		default:
@@ -767,55 +767,55 @@ SQRESULT sq_settypetag(rabbit::VirtualMachine* v,int64_t idx,SQUserPointer typet
 	return SQ_OK;
 }
 
-SQRESULT sq_getobjtypetag(const HSQOBJECT *o,SQUserPointer * typetag)
+rabbit::Result sq_getobjtypetag(const rabbit::Object *o,rabbit::UserPointer * typetag)
 {
   switch(sq_type(*o)) {
-	case OT_INSTANCE: *typetag = _instance(*o)->_class->_typetag; break;
-	case OT_USERDATA: *typetag = _userdata(*o)->getTypeTag(); break;
-	case OT_CLASS:	*typetag = _class(*o)->_typetag; break;
+	case rabbit::OT_INSTANCE: *typetag = _instance(*o)->_class->_typetag; break;
+	case rabbit::OT_USERDATA: *typetag = _userdata(*o)->getTypeTag(); break;
+	case rabbit::OT_CLASS:	*typetag = _class(*o)->_typetag; break;
 	default: return SQ_ERROR;
   }
   return SQ_OK;
 }
 
-SQRESULT sq_gettypetag(rabbit::VirtualMachine* v,int64_t idx,SQUserPointer *typetag)
+rabbit::Result sq_gettypetag(rabbit::VirtualMachine* v,int64_t idx,rabbit::UserPointer *typetag)
 {
-	SQObjectPtr &o = stack_get(v,idx);
+	rabbit::ObjectPtr &o = stack_get(v,idx);
 	if (SQ_FAILED(sq_getobjtypetag(&o, typetag)))
 		return SQ_ERROR;// this is not an error it should be a bool but would break backward compatibility
 	return SQ_OK;
 }
 
-SQRESULT sq_getuserpointer(rabbit::VirtualMachine* v, int64_t idx, SQUserPointer *p)
+rabbit::Result sq_getuserpointer(rabbit::VirtualMachine* v, int64_t idx, rabbit::UserPointer *p)
 {
-	SQObjectPtr *o = NULL;
-	_GETSAFE_OBJ(v, idx, OT_USERPOINTER,o);
+	rabbit::ObjectPtr *o = NULL;
+	_GETSAFE_OBJ(v, idx, rabbit::OT_USERPOINTER,o);
 	(*p) = _userpointer(*o);
 	return SQ_OK;
 }
 
-SQRESULT sq_setinstanceup(rabbit::VirtualMachine* v, int64_t idx, SQUserPointer p)
+rabbit::Result sq_setinstanceup(rabbit::VirtualMachine* v, int64_t idx, rabbit::UserPointer p)
 {
-	SQObjectPtr &o = stack_get(v,idx);
-	if(sq_type(o) != OT_INSTANCE) return sq_throwerror(v,_SC("the object is not a class instance"));
+	rabbit::ObjectPtr &o = stack_get(v,idx);
+	if(sq_type(o) != rabbit::OT_INSTANCE) return sq_throwerror(v,_SC("the object is not a class instance"));
 	_instance(o)->_userpointer = p;
 	return SQ_OK;
 }
 
-SQRESULT sq_setclassudsize(rabbit::VirtualMachine* v, int64_t idx, int64_t udsize)
+rabbit::Result sq_setclassudsize(rabbit::VirtualMachine* v, int64_t idx, int64_t udsize)
 {
-	SQObjectPtr &o = stack_get(v,idx);
-	if(sq_type(o) != OT_CLASS) return sq_throwerror(v,_SC("the object is not a class"));
+	rabbit::ObjectPtr &o = stack_get(v,idx);
+	if(sq_type(o) != rabbit::OT_CLASS) return sq_throwerror(v,_SC("the object is not a class"));
 	if(_class(o)->_locked) return sq_throwerror(v,_SC("the class is locked"));
 	_class(o)->_udsize = udsize;
 	return SQ_OK;
 }
 
 
-SQRESULT sq_getinstanceup(rabbit::VirtualMachine* v, int64_t idx, SQUserPointer *p,SQUserPointer typetag)
+rabbit::Result sq_getinstanceup(rabbit::VirtualMachine* v, int64_t idx, rabbit::UserPointer *p,rabbit::UserPointer typetag)
 {
-	SQObjectPtr &o = stack_get(v,idx);
-	if(sq_type(o) != OT_INSTANCE) return sq_throwerror(v,_SC("the object is not a class instance"));
+	rabbit::ObjectPtr &o = stack_get(v,idx);
+	if(sq_type(o) != rabbit::OT_INSTANCE) return sq_throwerror(v,_SC("the object is not a class instance"));
 	(*p) = _instance(o)->_userpointer;
 	if(typetag != 0) {
 		SQClass *cl = _instance(o)->_class;
@@ -868,27 +868,27 @@ int64_t sq_cmp(rabbit::VirtualMachine* v)
 	return res;
 }
 
-SQRESULT sq_newslot(rabbit::VirtualMachine* v, int64_t idx, SQBool bstatic)
+rabbit::Result sq_newslot(rabbit::VirtualMachine* v, int64_t idx, rabbit::Bool bstatic)
 {
 	sq_aux_paramscheck(v, 3);
-	SQObjectPtr &self = stack_get(v, idx);
-	if(sq_type(self) == OT_TABLE || sq_type(self) == OT_CLASS) {
-		SQObjectPtr &key = v->getUp(-2);
-		if(sq_type(key) == OT_NULL) return sq_throwerror(v, _SC("null is not a valid key"));
+	rabbit::ObjectPtr &self = stack_get(v, idx);
+	if(sq_type(self) == rabbit::OT_TABLE || sq_type(self) == OT_CLASS) {
+		rabbit::ObjectPtr &key = v->getUp(-2);
+		if(sq_type(key) == rabbit::OT_NULL) return sq_throwerror(v, _SC("null is not a valid key"));
 		v->newSlot(self, key, v->getUp(-1),bstatic?true:false);
 		v->pop(2);
 	}
 	return SQ_OK;
 }
 
-SQRESULT sq_deleteslot(rabbit::VirtualMachine* v,int64_t idx,SQBool pushval)
+rabbit::Result sq_deleteslot(rabbit::VirtualMachine* v,int64_t idx,rabbit::Bool pushval)
 {
 	sq_aux_paramscheck(v, 2);
-	SQObjectPtr *self;
-	_GETSAFE_OBJ(v, idx, OT_TABLE,self);
-	SQObjectPtr &key = v->getUp(-1);
-	if(sq_type(key) == OT_NULL) return sq_throwerror(v, _SC("null is not a valid key"));
-	SQObjectPtr res;
+	rabbit::ObjectPtr *self;
+	_GETSAFE_OBJ(v, idx, rabbit::OT_TABLE,self);
+	rabbit::ObjectPtr &key = v->getUp(-1);
+	if(sq_type(key) == rabbit::OT_NULL) return sq_throwerror(v, _SC("null is not a valid key"));
+	rabbit::ObjectPtr res;
 	if(!v->deleteSlot(*self, key, res)){
 		v->pop();
 		return SQ_ERROR;
@@ -898,9 +898,9 @@ SQRESULT sq_deleteslot(rabbit::VirtualMachine* v,int64_t idx,SQBool pushval)
 	return SQ_OK;
 }
 
-SQRESULT sq_set(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::Result sq_set(rabbit::VirtualMachine* v,int64_t idx)
 {
-	SQObjectPtr &self = stack_get(v, idx);
+	rabbit::ObjectPtr &self = stack_get(v, idx);
 	if(v->set(self, v->getUp(-2), v->getUp(-1),DONT_FALL_BACK)) {
 		v->pop(2);
 		return SQ_OK;
@@ -908,32 +908,32 @@ SQRESULT sq_set(rabbit::VirtualMachine* v,int64_t idx)
 	return SQ_ERROR;
 }
 
-SQRESULT sq_rawset(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::Result sq_rawset(rabbit::VirtualMachine* v,int64_t idx)
 {
-	SQObjectPtr &self = stack_get(v, idx);
-	SQObjectPtr &key = v->getUp(-2);
-	if(sq_type(key) == OT_NULL) {
+	rabbit::ObjectPtr &self = stack_get(v, idx);
+	rabbit::ObjectPtr &key = v->getUp(-2);
+	if(sq_type(key) == rabbit::OT_NULL) {
 		v->pop(2);
 		return sq_throwerror(v, _SC("null key"));
 	}
 	switch(sq_type(self)) {
-	case OT_TABLE:
+	case rabbit::OT_TABLE:
 		_table(self)->newSlot(key, v->getUp(-1));
 		v->pop(2);
 		return SQ_OK;
 	break;
-	case OT_CLASS:
-		_class(self)->newSlot(_ss(v), key, v->getUp(-1),false);
+	case rabbit::OT_CLASS:
+		_class(self)->newSlot(_get_shared_state(v), key, v->getUp(-1),false);
 		v->pop(2);
 		return SQ_OK;
 	break;
-	case OT_INSTANCE:
+	case rabbit::OT_INSTANCE:
 		if(_instance(self)->set(key, v->getUp(-1))) {
 			v->pop(2);
 			return SQ_OK;
 		}
 	break;
-	case OT_ARRAY:
+	case rabbit::OT_ARRAY:
 		if(v->set(self, key, v->getUp(-1),false)) {
 			v->pop(2);
 			return SQ_OK;
@@ -946,12 +946,12 @@ SQRESULT sq_rawset(rabbit::VirtualMachine* v,int64_t idx)
 	v->raise_Idxerror(v->getUp(-2));return SQ_ERROR;
 }
 
-SQRESULT sq_newmember(rabbit::VirtualMachine* v,int64_t idx,SQBool bstatic)
+rabbit::Result sq_newmember(rabbit::VirtualMachine* v,int64_t idx,rabbit::Bool bstatic)
 {
-	SQObjectPtr &self = stack_get(v, idx);
-	if(sq_type(self) != OT_CLASS) return sq_throwerror(v, _SC("new member only works with classes"));
-	SQObjectPtr &key = v->getUp(-3);
-	if(sq_type(key) == OT_NULL) return sq_throwerror(v, _SC("null key"));
+	rabbit::ObjectPtr &self = stack_get(v, idx);
+	if(sq_type(self) != rabbit::OT_CLASS) return sq_throwerror(v, _SC("new member only works with classes"));
+	rabbit::ObjectPtr &key = v->getUp(-3);
+	if(sq_type(key) == rabbit::OT_NULL) return sq_throwerror(v, _SC("null key"));
 	if(!v->newSlotA(self,key,v->getUp(-2),v->getUp(-1),bstatic?true:false,false)) {
 		v->pop(3);
 		return SQ_ERROR;
@@ -960,12 +960,12 @@ SQRESULT sq_newmember(rabbit::VirtualMachine* v,int64_t idx,SQBool bstatic)
 	return SQ_OK;
 }
 
-SQRESULT sq_rawnewmember(rabbit::VirtualMachine* v,int64_t idx,SQBool bstatic)
+rabbit::Result sq_rawnewmember(rabbit::VirtualMachine* v,int64_t idx,rabbit::Bool bstatic)
 {
-	SQObjectPtr &self = stack_get(v, idx);
-	if(sq_type(self) != OT_CLASS) return sq_throwerror(v, _SC("new member only works with classes"));
-	SQObjectPtr &key = v->getUp(-3);
-	if(sq_type(key) == OT_NULL) return sq_throwerror(v, _SC("null key"));
+	rabbit::ObjectPtr &self = stack_get(v, idx);
+	if(sq_type(self) != rabbit::OT_CLASS) return sq_throwerror(v, _SC("new member only works with classes"));
+	rabbit::ObjectPtr &key = v->getUp(-3);
+	if(sq_type(key) == rabbit::OT_NULL) return sq_throwerror(v, _SC("null key"));
 	if(!v->newSlotA(self,key,v->getUp(-2),v->getUp(-1),bstatic?true:false,true)) {
 		v->pop(3);
 		return SQ_ERROR;
@@ -974,27 +974,27 @@ SQRESULT sq_rawnewmember(rabbit::VirtualMachine* v,int64_t idx,SQBool bstatic)
 	return SQ_OK;
 }
 
-SQRESULT sq_setdelegate(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::Result sq_setdelegate(rabbit::VirtualMachine* v,int64_t idx)
 {
-	SQObjectPtr &self = stack_get(v, idx);
-	SQObjectPtr &mt = v->getUp(-1);
-	SQObjectType type = sq_type(self);
+	rabbit::ObjectPtr &self = stack_get(v, idx);
+	rabbit::ObjectPtr &mt = v->getUp(-1);
+	rabbit::ObjectType type = sq_type(self);
 	switch(type) {
-	case OT_TABLE:
-		if(sq_type(mt) == OT_TABLE) {
+	case rabbit::OT_TABLE:
+		if(sq_type(mt) == rabbit::OT_TABLE) {
 			if(!_table(self)->setDelegate(_table(mt))) {
 				return sq_throwerror(v, _SC("delagate cycle"));
 			}
 			v->pop();
 		}
-		else if(sq_type(mt)==OT_NULL) {
+		else if(sq_type(mt)==rabbit::OT_NULL) {
 			_table(self)->setDelegate(NULL); v->pop(); }
 		else return sq_aux_invalidtype(v,type);
 		break;
-	case OT_USERDATA:
-		if(sq_type(mt)==OT_TABLE) {
+	case rabbit::OT_USERDATA:
+		if(sq_type(mt)==rabbit::OT_TABLE) {
 			_userdata(self)->setDelegate(_table(mt)); v->pop(); }
-		else if(sq_type(mt)==OT_NULL) {
+		else if(sq_type(mt)==rabbit::OT_NULL) {
 			_userdata(self)->setDelegate(NULL); v->pop(); }
 		else return sq_aux_invalidtype(v, type);
 		break;
@@ -1005,13 +1005,13 @@ SQRESULT sq_setdelegate(rabbit::VirtualMachine* v,int64_t idx)
 	return SQ_OK;
 }
 
-SQRESULT sq_rawdeleteslot(rabbit::VirtualMachine* v,int64_t idx,SQBool pushval)
+rabbit::Result sq_rawdeleteslot(rabbit::VirtualMachine* v,int64_t idx,rabbit::Bool pushval)
 {
 	sq_aux_paramscheck(v, 2);
-	SQObjectPtr *self;
-	_GETSAFE_OBJ(v, idx, OT_TABLE,self);
-	SQObjectPtr &key = v->getUp(-1);
-	SQObjectPtr t;
+	rabbit::ObjectPtr *self;
+	_GETSAFE_OBJ(v, idx, rabbit::OT_TABLE,self);
+	rabbit::ObjectPtr &key = v->getUp(-1);
+	rabbit::ObjectPtr t;
 	if(_table(*self)->get(key,t)) {
 		_table(*self)->remove(key);
 	}
@@ -1022,17 +1022,17 @@ SQRESULT sq_rawdeleteslot(rabbit::VirtualMachine* v,int64_t idx,SQBool pushval)
 	return SQ_OK;
 }
 
-SQRESULT sq_getdelegate(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::Result sq_getdelegate(rabbit::VirtualMachine* v,int64_t idx)
 {
-	SQObjectPtr &self=stack_get(v,idx);
+	rabbit::ObjectPtr &self=stack_get(v,idx);
 	switch(sq_type(self)){
-	case OT_TABLE:
-	case OT_USERDATA:
+	case rabbit::OT_TABLE:
+	case rabbit::OT_USERDATA:
 		if(!_delegable(self)->_delegate){
 			v->pushNull();
 			break;
 		}
-		v->push(SQObjectPtr(_delegable(self)->_delegate));
+		v->push(rabbit::ObjectPtr(_delegable(self)->_delegate));
 		break;
 	default: return sq_throwerror(v,_SC("wrong type")); break;
 	}
@@ -1040,34 +1040,34 @@ SQRESULT sq_getdelegate(rabbit::VirtualMachine* v,int64_t idx)
 
 }
 
-SQRESULT sq_get(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::Result sq_get(rabbit::VirtualMachine* v,int64_t idx)
 {
-	SQObjectPtr &self=stack_get(v,idx);
-	SQObjectPtr &obj = v->getUp(-1);
+	rabbit::ObjectPtr &self=stack_get(v,idx);
+	rabbit::ObjectPtr &obj = v->getUp(-1);
 	if(v->get(self,obj,obj,false,DONT_FALL_BACK))
 		return SQ_OK;
 	v->pop();
 	return SQ_ERROR;
 }
 
-SQRESULT sq_rawget(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::Result sq_rawget(rabbit::VirtualMachine* v,int64_t idx)
 {
-	SQObjectPtr &self=stack_get(v,idx);
-	SQObjectPtr &obj = v->getUp(-1);
+	rabbit::ObjectPtr &self=stack_get(v,idx);
+	rabbit::ObjectPtr &obj = v->getUp(-1);
 	switch(sq_type(self)) {
-	case OT_TABLE:
+	case rabbit::OT_TABLE:
 		if(_table(self)->get(obj,obj))
 			return SQ_OK;
 		break;
-	case OT_CLASS:
+	case rabbit::OT_CLASS:
 		if(_class(self)->get(obj,obj))
 			return SQ_OK;
 		break;
-	case OT_INSTANCE:
+	case rabbit::OT_INSTANCE:
 		if(_instance(self)->get(obj,obj))
 			return SQ_OK;
 		break;
-	case OT_ARRAY:{
+	case rabbit::OT_ARRAY:{
 		if(sq_isnumeric(obj)){
 			if(_array(self)->get(tointeger(obj),obj)) {
 				return SQ_OK;
@@ -1087,13 +1087,13 @@ SQRESULT sq_rawget(rabbit::VirtualMachine* v,int64_t idx)
 	return sq_throwerror(v,_SC("the index doesn't exist"));
 }
 
-SQRESULT sq_getstackobj(rabbit::VirtualMachine* v,int64_t idx,HSQOBJECT *po)
+rabbit::Result sq_getstackobj(rabbit::VirtualMachine* v,int64_t idx,rabbit::Object *po)
 {
 	*po=stack_get(v,idx);
 	return SQ_OK;
 }
 
-const SQChar *sq_getlocal(rabbit::VirtualMachine* v,uint64_t level,uint64_t idx)
+const rabbit::Char *sq_getlocal(rabbit::VirtualMachine* v,uint64_t level,uint64_t idx)
 {
 	uint64_t cstksize=v->_callsstacksize;
 	uint64_t lvl=(cstksize-level)-1;
@@ -1104,7 +1104,7 @@ const SQChar *sq_getlocal(rabbit::VirtualMachine* v,uint64_t level,uint64_t idx)
 			stackbase-=ci._prevstkbase;
 		}
 		rabbit::VirtualMachine::callInfo &ci=v->_callsstack[lvl];
-		if(sq_type(ci._closure)!=OT_CLOSURE)
+		if(sq_type(ci._closure)!=rabbit::OT_CLOSURE)
 			return NULL;
 		SQClosure *c=_closure(ci._closure);
 		SQFunctionProto *func=c->_function;
@@ -1118,23 +1118,23 @@ const SQChar *sq_getlocal(rabbit::VirtualMachine* v,uint64_t level,uint64_t idx)
 	return NULL;
 }
 
-void sq_pushobject(rabbit::VirtualMachine* v,HSQOBJECT obj)
+void sq_pushobject(rabbit::VirtualMachine* v,rabbit::Object obj)
 {
-	v->push(SQObjectPtr(obj));
+	v->push(rabbit::ObjectPtr(obj));
 }
 
-void sq_resetobject(HSQOBJECT *po)
+void sq_resetobject(rabbit::Object *po)
 {
-	po->_unVal.pUserPointer=NULL;po->_type=OT_NULL;
+	po->_unVal.pUserPointer=NULL;po->_type=rabbit::OT_NULL;
 }
 
-SQRESULT sq_throwerror(rabbit::VirtualMachine* v,const SQChar *err)
+rabbit::Result sq_throwerror(rabbit::VirtualMachine* v,const rabbit::Char *err)
 {
-	v->_lasterror=SQString::create(_ss(v),err);
+	v->_lasterror=SQString::create(_get_shared_state(v),err);
 	return SQ_ERROR;
 }
 
-SQRESULT sq_throwobject(rabbit::VirtualMachine* v)
+rabbit::Result sq_throwobject(rabbit::VirtualMachine* v)
 {
 	v->_lasterror = v->getUp(-1);
 	v->pop();
@@ -1152,7 +1152,7 @@ void sq_getlasterror(rabbit::VirtualMachine* v)
 	v->push(v->_lasterror);
 }
 
-SQRESULT sq_reservestack(rabbit::VirtualMachine* v,int64_t nsize)
+rabbit::Result sq_reservestack(rabbit::VirtualMachine* v,int64_t nsize)
 {
 	if (((uint64_t)v->_top + nsize) > v->_stack.size()) {
 		if(v->_nmetamethodscall) {
@@ -1163,9 +1163,9 @@ SQRESULT sq_reservestack(rabbit::VirtualMachine* v,int64_t nsize)
 	return SQ_OK;
 }
 
-SQRESULT sq_resume(rabbit::VirtualMachine* v,SQBool retval,SQBool raiseerror)
+rabbit::Result sq_resume(rabbit::VirtualMachine* v,rabbit::Bool retval,rabbit::Bool raiseerror)
 {
-	if (sq_type(v->getUp(-1)) == OT_GENERATOR)
+	if (sq_type(v->getUp(-1)) == rabbit::OT_GENERATOR)
 	{
 		v->pushNull(); //retval
 		if (!v->execute(v->getUp(-2), 0, v->_top, v->getUp(-1), raiseerror, rabbit::VirtualMachine::ET_RESUME_GENERATOR))
@@ -1177,9 +1177,9 @@ SQRESULT sq_resume(rabbit::VirtualMachine* v,SQBool retval,SQBool raiseerror)
 	return sq_throwerror(v,_SC("only generators can be resumed"));
 }
 
-SQRESULT sq_call(rabbit::VirtualMachine* v,int64_t params,SQBool retval,SQBool raiseerror)
+rabbit::Result sq_call(rabbit::VirtualMachine* v,int64_t params,rabbit::Bool retval,rabbit::Bool raiseerror)
 {
-	SQObjectPtr res;
+	rabbit::ObjectPtr res;
 	if(v->call(v->getUp(-(params+1)),params,v->_top-params,res,raiseerror?true:false)){
 
 		if(!v->_suspended) {
@@ -1199,10 +1199,10 @@ SQRESULT sq_call(rabbit::VirtualMachine* v,int64_t params,SQBool retval,SQBool r
 	return sq_throwerror(v,_SC("call failed"));
 }
 
-SQRESULT sq_tailcall(rabbit::VirtualMachine* v, int64_t nparams)
+rabbit::Result sq_tailcall(rabbit::VirtualMachine* v, int64_t nparams)
 {
-	SQObjectPtr &res = v->getUp(-(nparams + 1));
-	if (sq_type(res) != OT_CLOSURE) {
+	rabbit::ObjectPtr &res = v->getUp(-(nparams + 1));
+	if (sq_type(res) != rabbit::OT_CLOSURE) {
 		return sq_throwerror(v, _SC("only closure can be tail called"));
 	}
 	SQClosure *clo = _closure(res);
@@ -1218,14 +1218,14 @@ SQRESULT sq_tailcall(rabbit::VirtualMachine* v, int64_t nparams)
 	return SQ_TAILCALL_FLAG;
 }
 
-SQRESULT sq_suspendvm(rabbit::VirtualMachine* v)
+rabbit::Result sq_suspendvm(rabbit::VirtualMachine* v)
 {
 	return v->Suspend();
 }
 
-SQRESULT sq_wakeupvm(rabbit::VirtualMachine* v,SQBool wakeupret,SQBool retval,SQBool raiseerror,SQBool throwerror)
+rabbit::Result sq_wakeupvm(rabbit::VirtualMachine* v,rabbit::Bool wakeupret,rabbit::Bool retval,rabbit::Bool raiseerror,rabbit::Bool throwerror)
 {
-	SQObjectPtr ret;
+	rabbit::ObjectPtr ret;
 	if(!v->_suspended)
 		return sq_throwerror(v,_SC("cannot resume a vm that is not running any code"));
 	int64_t target = v->_suspended_target;
@@ -1235,7 +1235,7 @@ SQRESULT sq_wakeupvm(rabbit::VirtualMachine* v,SQBool wakeupret,SQBool retval,SQ
 		}
 		v->pop();
 	} else if(target != -1) { v->getAt(v->_stackbase+v->_suspended_target).Null(); }
-	SQObjectPtr dummy;
+	rabbit::ObjectPtr dummy;
 	if(!v->execute(dummy,-1,-1,ret,raiseerror,throwerror?rabbit::VirtualMachine::ET_RESUME_THROW_VM : rabbit::VirtualMachine::ET_RESUME_VM)) {
 		return SQ_ERROR;
 	}
@@ -1247,15 +1247,15 @@ SQRESULT sq_wakeupvm(rabbit::VirtualMachine* v,SQBool wakeupret,SQBool retval,SQ
 
 void sq_setreleasehook(rabbit::VirtualMachine* v,int64_t idx,SQRELEASEHOOK hook)
 {
-	SQObjectPtr &ud=stack_get(v,idx);
+	rabbit::ObjectPtr &ud=stack_get(v,idx);
 	switch(sq_type(ud) ) {
-		case OT_USERDATA:
+		case rabbit::OT_USERDATA:
 			_userdata(ud)->setHook(hook);
 			break;
-		case OT_INSTANCE:
+		case rabbit::OT_INSTANCE:
 			_instance(ud)->_hook = hook;
 			break;
-		case OT_CLASS:
+		case rabbit::OT_CLASS:
 			_class(ud)->_hook = hook;
 			break;
 		default:
@@ -1265,15 +1265,15 @@ void sq_setreleasehook(rabbit::VirtualMachine* v,int64_t idx,SQRELEASEHOOK hook)
 
 SQRELEASEHOOK sq_getreleasehook(rabbit::VirtualMachine* v,int64_t idx)
 {
-	SQObjectPtr &ud=stack_get(v,idx);
+	rabbit::ObjectPtr &ud=stack_get(v,idx);
 	switch(sq_type(ud) ) {
-		case OT_USERDATA:
+		case rabbit::OT_USERDATA:
 			return _userdata(ud)->getHook();
 			break;
-		case OT_INSTANCE:
+		case rabbit::OT_INSTANCE:
 			return _instance(ud)->_hook;
 			break;
-		case OT_CLASS:
+		case rabbit::OT_CLASS:
 			return _class(ud)->_hook;
 			break;
 		default:
@@ -1283,13 +1283,13 @@ SQRELEASEHOOK sq_getreleasehook(rabbit::VirtualMachine* v,int64_t idx)
 
 void sq_setcompilererrorhandler(rabbit::VirtualMachine* v,SQCOMPILERERROR f)
 {
-	_ss(v)->_compilererrorhandler = f;
+	_get_shared_state(v)->_compilererrorhandler = f;
 }
 
-SQRESULT sq_writeclosure(rabbit::VirtualMachine* v,SQWRITEFUNC w,SQUserPointer up)
+rabbit::Result sq_writeclosure(rabbit::VirtualMachine* v,SQWRITEFUNC w,rabbit::UserPointer up)
 {
-	SQObjectPtr *o = NULL;
-	_GETSAFE_OBJ(v, -1, OT_CLOSURE,o);
+	rabbit::ObjectPtr *o = NULL;
+	_GETSAFE_OBJ(v, -1, rabbit::OT_CLOSURE,o);
 	unsigned short tag = SQ_BYTECODE_STREAM_TAG;
 	if(_closure(*o)->_function->_noutervalues)
 		return sq_throwerror(v,_SC("a closure with free variables bound cannot be serialized"));
@@ -1300,9 +1300,9 @@ SQRESULT sq_writeclosure(rabbit::VirtualMachine* v,SQWRITEFUNC w,SQUserPointer u
 	return SQ_OK;
 }
 
-SQRESULT sq_readclosure(rabbit::VirtualMachine* v,SQREADFUNC r,SQUserPointer up)
+rabbit::Result sq_readclosure(rabbit::VirtualMachine* v,SQREADFUNC r,rabbit::UserPointer up)
 {
-	SQObjectPtr closure;
+	rabbit::ObjectPtr closure;
 
 	unsigned short tag;
 	if(r(up,&tag,2) != 2)
@@ -1315,12 +1315,12 @@ SQRESULT sq_readclosure(rabbit::VirtualMachine* v,SQREADFUNC r,SQUserPointer up)
 	return SQ_OK;
 }
 
-SQChar *sq_getscratchpad(rabbit::VirtualMachine* v,int64_t minsize)
+rabbit::Char *sq_getscratchpad(rabbit::VirtualMachine* v,int64_t minsize)
 {
-	return _ss(v)->getScratchPad(minsize);
+	return _get_shared_state(v)->getScratchPad(minsize);
 }
 
-SQRESULT sq_resurrectunreachable(rabbit::VirtualMachine* v)
+rabbit::Result sq_resurrectunreachable(rabbit::VirtualMachine* v)
 {
 	return sq_throwerror(v,_SC("sq_resurrectunreachable requires a garbage collector build"));
 }
@@ -1331,7 +1331,7 @@ int64_t sq_collectgarbage(rabbit::VirtualMachine* v)
 	return -1;
 }
 
-SQRESULT sq_getcallee(rabbit::VirtualMachine* v)
+rabbit::Result sq_getcallee(rabbit::VirtualMachine* v)
 {
 	if(v->_callsstacksize > 1)
 	{
@@ -1341,13 +1341,13 @@ SQRESULT sq_getcallee(rabbit::VirtualMachine* v)
 	return sq_throwerror(v,_SC("no closure in the calls stack"));
 }
 
-const SQChar *sq_getfreevariable(rabbit::VirtualMachine* v,int64_t idx,uint64_t nval)
+const rabbit::Char *sq_getfreevariable(rabbit::VirtualMachine* v,int64_t idx,uint64_t nval)
 {
-	SQObjectPtr &self=stack_get(v,idx);
-	const SQChar *name = NULL;
+	rabbit::ObjectPtr &self=stack_get(v,idx);
+	const rabbit::Char *name = NULL;
 	switch(sq_type(self))
 	{
-	case OT_CLOSURE:{
+	case rabbit::OT_CLOSURE:{
 		SQClosure *clo = _closure(self);
 		SQFunctionProto *fp = clo->_function;
 		if(((uint64_t)fp->_noutervalues) > nval) {
@@ -1357,7 +1357,7 @@ const SQChar *sq_getfreevariable(rabbit::VirtualMachine* v,int64_t idx,uint64_t 
 		}
 					}
 		break;
-	case OT_NATIVECLOSURE:{
+	case rabbit::OT_NATIVECLOSURE:{
 		SQNativeClosure *clo = _nativeclosure(self);
 		if(clo->_noutervalues > nval) {
 			v->push(clo->_outervalues[nval]);
@@ -1370,12 +1370,12 @@ const SQChar *sq_getfreevariable(rabbit::VirtualMachine* v,int64_t idx,uint64_t 
 	return name;
 }
 
-SQRESULT sq_setfreevariable(rabbit::VirtualMachine* v,int64_t idx,uint64_t nval)
+rabbit::Result sq_setfreevariable(rabbit::VirtualMachine* v,int64_t idx,uint64_t nval)
 {
-	SQObjectPtr &self=stack_get(v,idx);
+	rabbit::ObjectPtr &self=stack_get(v,idx);
 	switch(sq_type(self))
 	{
-	case OT_CLOSURE:{
+	case rabbit::OT_CLOSURE:{
 		SQFunctionProto *fp = _closure(self)->_function;
 		if(((uint64_t)fp->_noutervalues) > nval){
 			*(_outer(_closure(self)->_outervalues[nval])->_valptr) = stack_get(v,-1);
@@ -1383,7 +1383,7 @@ SQRESULT sq_setfreevariable(rabbit::VirtualMachine* v,int64_t idx,uint64_t nval)
 		else return sq_throwerror(v,_SC("invalid free var index"));
 					}
 		break;
-	case OT_NATIVECLOSURE:
+	case rabbit::OT_NATIVECLOSURE:
 		if(_nativeclosure(self)->_noutervalues > nval){
 			_nativeclosure(self)->_outervalues[nval] = stack_get(v,-1);
 		}
@@ -1396,14 +1396,14 @@ SQRESULT sq_setfreevariable(rabbit::VirtualMachine* v,int64_t idx,uint64_t nval)
 	return SQ_OK;
 }
 
-SQRESULT sq_setattributes(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::Result sq_setattributes(rabbit::VirtualMachine* v,int64_t idx)
 {
-	SQObjectPtr *o = NULL;
-	_GETSAFE_OBJ(v, idx, OT_CLASS,o);
-	SQObjectPtr &key = stack_get(v,-2);
-	SQObjectPtr &val = stack_get(v,-1);
-	SQObjectPtr attrs;
-	if(sq_type(key) == OT_NULL) {
+	rabbit::ObjectPtr *o = NULL;
+	_GETSAFE_OBJ(v, idx, rabbit::OT_CLASS,o);
+	rabbit::ObjectPtr &key = stack_get(v,-2);
+	rabbit::ObjectPtr &val = stack_get(v,-1);
+	rabbit::ObjectPtr attrs;
+	if(sq_type(key) == rabbit::OT_NULL) {
 		attrs = _class(*o)->_attributes;
 		_class(*o)->_attributes = val;
 		v->pop(2);
@@ -1418,13 +1418,13 @@ SQRESULT sq_setattributes(rabbit::VirtualMachine* v,int64_t idx)
 	return sq_throwerror(v,_SC("wrong index"));
 }
 
-SQRESULT sq_getattributes(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::Result sq_getattributes(rabbit::VirtualMachine* v,int64_t idx)
 {
-	SQObjectPtr *o = NULL;
-	_GETSAFE_OBJ(v, idx, OT_CLASS,o);
-	SQObjectPtr &key = stack_get(v,-1);
-	SQObjectPtr attrs;
-	if(sq_type(key) == OT_NULL) {
+	rabbit::ObjectPtr *o = NULL;
+	_GETSAFE_OBJ(v, idx, rabbit::OT_CLASS,o);
+	rabbit::ObjectPtr &key = stack_get(v,-1);
+	rabbit::ObjectPtr attrs;
+	if(sq_type(key) == rabbit::OT_NULL) {
 		attrs = _class(*o)->_attributes;
 		v->pop();
 		v->push(attrs);
@@ -1438,13 +1438,13 @@ SQRESULT sq_getattributes(rabbit::VirtualMachine* v,int64_t idx)
 	return sq_throwerror(v,_SC("wrong index"));
 }
 
-SQRESULT sq_getmemberhandle(rabbit::VirtualMachine* v,int64_t idx,HSQMEMBERHANDLE *handle)
+rabbit::Result sq_getmemberhandle(rabbit::VirtualMachine* v,int64_t idx,rabbit::MemberHandle *handle)
 {
-	SQObjectPtr *o = NULL;
-	_GETSAFE_OBJ(v, idx, OT_CLASS,o);
-	SQObjectPtr &key = stack_get(v,-1);
+	rabbit::ObjectPtr *o = NULL;
+	_GETSAFE_OBJ(v, idx, rabbit::OT_CLASS,o);
+	rabbit::ObjectPtr &key = stack_get(v,-1);
 	SQTable *m = _class(*o)->_members;
-	SQObjectPtr val;
+	rabbit::ObjectPtr val;
 	if(m->get(key,val)) {
 		handle->_static = _isfield(val) ? SQFalse : SQTrue;
 		handle->_index = _member_idx(val);
@@ -1454,10 +1454,10 @@ SQRESULT sq_getmemberhandle(rabbit::VirtualMachine* v,int64_t idx,HSQMEMBERHANDL
 	return sq_throwerror(v,_SC("wrong index"));
 }
 
-SQRESULT _getmemberbyhandle(rabbit::VirtualMachine* v,SQObjectPtr &self,const HSQMEMBERHANDLE *handle,SQObjectPtr *&val)
+rabbit::Result _getmemberbyhandle(rabbit::VirtualMachine* v,rabbit::ObjectPtr &self,const rabbit::MemberHandle *handle,rabbit::ObjectPtr *&val)
 {
 	switch(sq_type(self)) {
-		case OT_INSTANCE: {
+		case rabbit::OT_INSTANCE: {
 				SQInstance *i = _instance(self);
 				if(handle->_static) {
 					SQClass *c = i->_class;
@@ -1469,7 +1469,7 @@ SQRESULT _getmemberbyhandle(rabbit::VirtualMachine* v,SQObjectPtr &self,const HS
 				}
 			}
 			break;
-		case OT_CLASS: {
+		case rabbit::OT_CLASS: {
 				SQClass *c = _class(self);
 				if(handle->_static) {
 					val = &c->_methods[handle->_index].val;
@@ -1485,10 +1485,10 @@ SQRESULT _getmemberbyhandle(rabbit::VirtualMachine* v,SQObjectPtr &self,const HS
 	return SQ_OK;
 }
 
-SQRESULT sq_getbyhandle(rabbit::VirtualMachine* v,int64_t idx,const HSQMEMBERHANDLE *handle)
+rabbit::Result sq_getbyhandle(rabbit::VirtualMachine* v,int64_t idx,const rabbit::MemberHandle *handle)
 {
-	SQObjectPtr &self = stack_get(v,idx);
-	SQObjectPtr *val = NULL;
+	rabbit::ObjectPtr &self = stack_get(v,idx);
+	rabbit::ObjectPtr *val = NULL;
 	if(SQ_FAILED(_getmemberbyhandle(v,self,handle,val))) {
 		return SQ_ERROR;
 	}
@@ -1496,11 +1496,11 @@ SQRESULT sq_getbyhandle(rabbit::VirtualMachine* v,int64_t idx,const HSQMEMBERHAN
 	return SQ_OK;
 }
 
-SQRESULT sq_setbyhandle(rabbit::VirtualMachine* v,int64_t idx,const HSQMEMBERHANDLE *handle)
+rabbit::Result sq_setbyhandle(rabbit::VirtualMachine* v,int64_t idx,const rabbit::MemberHandle *handle)
 {
-	SQObjectPtr &self = stack_get(v,idx);
-	SQObjectPtr &newval = stack_get(v,-1);
-	SQObjectPtr *val = NULL;
+	rabbit::ObjectPtr &self = stack_get(v,idx);
+	rabbit::ObjectPtr &newval = stack_get(v,-1);
+	rabbit::ObjectPtr *val = NULL;
 	if(SQ_FAILED(_getmemberbyhandle(v,self,handle,val))) {
 		return SQ_ERROR;
 	}
@@ -1509,36 +1509,36 @@ SQRESULT sq_setbyhandle(rabbit::VirtualMachine* v,int64_t idx,const HSQMEMBERHAN
 	return SQ_OK;
 }
 
-SQRESULT sq_getbase(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::Result sq_getbase(rabbit::VirtualMachine* v,int64_t idx)
 {
-	SQObjectPtr *o = NULL;
-	_GETSAFE_OBJ(v, idx, OT_CLASS,o);
+	rabbit::ObjectPtr *o = NULL;
+	_GETSAFE_OBJ(v, idx, rabbit::OT_CLASS,o);
 	if(_class(*o)->_base)
-		v->push(SQObjectPtr(_class(*o)->_base));
+		v->push(rabbit::ObjectPtr(_class(*o)->_base));
 	else
 		v->pushNull();
 	return SQ_OK;
 }
 
-SQRESULT sq_getclass(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::Result sq_getclass(rabbit::VirtualMachine* v,int64_t idx)
 {
-	SQObjectPtr *o = NULL;
-	_GETSAFE_OBJ(v, idx, OT_INSTANCE,o);
-	v->push(SQObjectPtr(_instance(*o)->_class));
+	rabbit::ObjectPtr *o = NULL;
+	_GETSAFE_OBJ(v, idx, rabbit::OT_INSTANCE,o);
+	v->push(rabbit::ObjectPtr(_instance(*o)->_class));
 	return SQ_OK;
 }
 
-SQRESULT sq_createinstance(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::Result sq_createinstance(rabbit::VirtualMachine* v,int64_t idx)
 {
-	SQObjectPtr *o = NULL;
-	_GETSAFE_OBJ(v, idx, OT_CLASS,o);
+	rabbit::ObjectPtr *o = NULL;
+	_GETSAFE_OBJ(v, idx, rabbit::OT_CLASS,o);
 	v->push(_class(*o)->createInstance());
 	return SQ_OK;
 }
 
 void sq_weakref(rabbit::VirtualMachine* v,int64_t idx)
 {
-	SQObject &o=stack_get(v,idx);
+	rabbit::Object &o=stack_get(v,idx);
 	if(ISREFCOUNTED(sq_type(o))) {
 		v->push(_refcounted(o)->getWeakRef(sq_type(o)));
 		return;
@@ -1546,39 +1546,39 @@ void sq_weakref(rabbit::VirtualMachine* v,int64_t idx)
 	v->push(o);
 }
 
-SQRESULT sq_getweakrefval(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::Result sq_getweakrefval(rabbit::VirtualMachine* v,int64_t idx)
 {
-	SQObjectPtr &o = stack_get(v,idx);
-	if(sq_type(o) != OT_WEAKREF) {
+	rabbit::ObjectPtr &o = stack_get(v,idx);
+	if(sq_type(o) != rabbit::OT_WEAKREF) {
 		return sq_throwerror(v,_SC("the object must be a weakref"));
 	}
 	v->push(_weakref(o)->_obj);
 	return SQ_OK;
 }
 
-SQRESULT sq_getdefaultdelegate(rabbit::VirtualMachine* v,SQObjectType t)
+rabbit::Result sq_getdefaultdelegate(rabbit::VirtualMachine* v,rabbit::ObjectType t)
 {
-	SQSharedState *ss = _ss(v);
+	SQSharedState *ss = _get_shared_state(v);
 	switch(t) {
-	case OT_TABLE: v->push(ss->_table_default_delegate); break;
-	case OT_ARRAY: v->push(ss->_array_default_delegate); break;
-	case OT_STRING: v->push(ss->_string_default_delegate); break;
-	case OT_INTEGER: case OT_FLOAT: v->push(ss->_number_default_delegate); break;
-	case OT_GENERATOR: v->push(ss->_generator_default_delegate); break;
-	case OT_CLOSURE: case OT_NATIVECLOSURE: v->push(ss->_closure_default_delegate); break;
-	case OT_THREAD: v->push(ss->_thread_default_delegate); break;
-	case OT_CLASS: v->push(ss->_class_default_delegate); break;
-	case OT_INSTANCE: v->push(ss->_instance_default_delegate); break;
-	case OT_WEAKREF: v->push(ss->_weakref_default_delegate); break;
+	case rabbit::OT_TABLE: v->push(ss->_table_default_delegate); break;
+	case rabbit::OT_ARRAY: v->push(ss->_array_default_delegate); break;
+	case rabbit::OT_STRING: v->push(ss->_string_default_delegate); break;
+	case rabbit::OT_INTEGER: case OT_FLOAT: v->push(ss->_number_default_delegate); break;
+	case rabbit::OT_GENERATOR: v->push(ss->_generator_default_delegate); break;
+	case rabbit::OT_CLOSURE: case OT_NATIVECLOSURE: v->push(ss->_closure_default_delegate); break;
+	case rabbit::OT_THREAD: v->push(ss->_thread_default_delegate); break;
+	case rabbit::OT_CLASS: v->push(ss->_class_default_delegate); break;
+	case rabbit::OT_INSTANCE: v->push(ss->_instance_default_delegate); break;
+	case rabbit::OT_WEAKREF: v->push(ss->_weakref_default_delegate); break;
 	default: return sq_throwerror(v,_SC("the type doesn't have a default delegate"));
 	}
 	return SQ_OK;
 }
 
-SQRESULT sq_next(rabbit::VirtualMachine* v,int64_t idx)
+rabbit::Result sq_next(rabbit::VirtualMachine* v,int64_t idx)
 {
-	SQObjectPtr o=stack_get(v,idx),&refpos = stack_get(v,-1),realkey,val;
-	if(sq_type(o) == OT_GENERATOR) {
+	rabbit::ObjectPtr o=stack_get(v,idx),&refpos = stack_get(v,-1),realkey,val;
+	if(sq_type(o) == rabbit::OT_GENERATOR) {
 		return sq_throwerror(v,_SC("cannot iterate a generator"));
 	}
 	int faketojump;
@@ -1593,12 +1593,12 @@ SQRESULT sq_next(rabbit::VirtualMachine* v,int64_t idx)
 }
 
 struct BufState{
-	const SQChar *buf;
+	const rabbit::Char *buf;
 	int64_t ptr;
 	int64_t size;
 };
 
-int64_t buf_lexfeed(SQUserPointer file)
+int64_t buf_lexfeed(rabbit::UserPointer file)
 {
 	BufState *buf=(BufState*)file;
 	if(buf->size<(buf->ptr+1))
@@ -1606,7 +1606,7 @@ int64_t buf_lexfeed(SQUserPointer file)
 	return buf->buf[buf->ptr++];
 }
 
-SQRESULT sq_compilebuffer(rabbit::VirtualMachine* v,const SQChar *s,int64_t size,const SQChar *sourcename,SQBool raiseerror) {
+rabbit::Result sq_compilebuffer(rabbit::VirtualMachine* v,const rabbit::Char *s,int64_t size,const rabbit::Char *sourcename,rabbit::Bool raiseerror) {
 	BufState buf;
 	buf.buf = s;
 	buf.size = size;
@@ -1621,18 +1621,18 @@ void sq_move(rabbit::VirtualMachine* dest,rabbit::VirtualMachine* src,int64_t id
 
 void sq_setprintfunc(rabbit::VirtualMachine* v, SQPRINTFUNCTION printfunc,SQPRINTFUNCTION errfunc)
 {
-	_ss(v)->_printfunc = printfunc;
-	_ss(v)->_errorfunc = errfunc;
+	_get_shared_state(v)->_printfunc = printfunc;
+	_get_shared_state(v)->_errorfunc = errfunc;
 }
 
 SQPRINTFUNCTION sq_getprintfunc(rabbit::VirtualMachine* v)
 {
-	return _ss(v)->_printfunc;
+	return _get_shared_state(v)->_printfunc;
 }
 
 SQPRINTFUNCTION sq_geterrorfunc(rabbit::VirtualMachine* v)
 {
-	return _ss(v)->_errorfunc;
+	return _get_shared_state(v)->_errorfunc;
 }
 
 void *sq_malloc(uint64_t size)

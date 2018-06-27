@@ -7,7 +7,7 @@
  */
 #pragma once
 
-inline SQHash _hashstr (const SQChar *s, size_t l)
+inline SQHash _hashstr (const rabbit::Char *s, size_t l)
 {
 		SQHash h = (SQHash)l;  /* seed */
 		size_t step = (l>>5)|1;  /* if string is too long, don't hash all its chars */
@@ -21,14 +21,14 @@ struct SQString : public rabbit::RefCounted
 	SQString(){}
 	~SQString(){}
 public:
-	static SQString *create(SQSharedState *ss, const SQChar *, int64_t len = -1 );
-	int64_t next(const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval);
+	static SQString *create(SQSharedState *ss, const rabbit::Char *, int64_t len = -1 );
+	int64_t next(const rabbit::ObjectPtr &refpos, rabbit::ObjectPtr &outkey, rabbit::ObjectPtr &outval);
 	void release();
 	SQSharedState *_sharedstate;
 	SQString *_next; //chain for the string table
 	int64_t _len;
 	SQHash _hash;
-	SQChar _val[1];
+	rabbit::Char _val[1];
 };
 
 

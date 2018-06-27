@@ -21,7 +21,7 @@ SQTable::SQTable(SQSharedState *ss,int64_t ninitialsize)
 	_delegate = NULL;
 }
 
-void SQTable::remove(const SQObjectPtr &key)
+void SQTable::remove(const rabbit::ObjectPtr &key)
 {
 
 	_HashNode *n = _get(key, HashObj(key) & (_numofnodes - 1));
@@ -65,7 +65,7 @@ void SQTable::Rehash(bool force)
 	_usednodes = 0;
 	for (int64_t i=0; i<oldsize; i++) {
 		_HashNode *old = nold+i;
-		if (sq_type(old->key) != OT_NULL)
+		if (sq_type(old->key) != rabbit::OT_NULL)
 			newSlot(old->key,old->val);
 	}
 	for(int64_t k=0;k<oldsize;k++)
@@ -99,7 +99,7 @@ SQTable *SQTable::clone()
 	nt->_usednodes = _usednodes;
 #else
 	int64_t ridx=0;
-	SQObjectPtr key,val;
+	rabbit::ObjectPtr key,val;
 	while((ridx=next(true,ridx,key,val))!=-1){
 		nt->newSlot(key,val);
 	}
@@ -108,9 +108,9 @@ SQTable *SQTable::clone()
 	return nt;
 }
 
-bool SQTable::get(const SQObjectPtr &key,SQObjectPtr &val)
+bool SQTable::get(const rabbit::ObjectPtr &key,rabbit::ObjectPtr &val)
 {
-	if(sq_type(key) == OT_NULL)
+	if(sq_type(key) == rabbit::OT_NULL)
 		return false;
 	_HashNode *n = _get(key, HashObj(key) & (_numofnodes - 1));
 	if (n) {
@@ -119,9 +119,9 @@ bool SQTable::get(const SQObjectPtr &key,SQObjectPtr &val)
 	}
 	return false;
 }
-bool SQTable::newSlot(const SQObjectPtr &key,const SQObjectPtr &val)
+bool SQTable::newSlot(const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val)
 {
-	assert(sq_type(key) != OT_NULL);
+	assert(sq_type(key) != rabbit::OT_NULL);
 	SQHash h = HashObj(key) & (_numofnodes - 1);
 	_HashNode *n = _get(key, h);
 	if (n) {
@@ -135,7 +135,7 @@ bool SQTable::newSlot(const SQObjectPtr &key,const SQObjectPtr &val)
 	//key not found I'll insert it
 	//main pos is not free
 
-	if(sq_type(mp->key) != OT_NULL) {
+	if(sq_type(mp->key) != rabbit::OT_NULL) {
 		n = _firstfree;  /* get a free place */
 		SQHash mph = HashObj(mp->key) & (_numofnodes - 1);
 		_HashNode *othern;  /* main position of colliding node */
@@ -164,7 +164,7 @@ bool SQTable::newSlot(const SQObjectPtr &key,const SQObjectPtr &val)
 	mp->key = key;
 
 	for (;;) {  /* correct `firstfree' */
-		if (sq_type(_firstfree->key) == OT_NULL && _firstfree->next == NULL) {
+		if (sq_type(_firstfree->key) == rabbit::OT_NULL && _firstfree->next == NULL) {
 			mp->val = val;
 			_usednodes++;
 			return true;  /* OK; table still has a free place */
@@ -176,15 +176,15 @@ bool SQTable::newSlot(const SQObjectPtr &key,const SQObjectPtr &val)
 	return newSlot(key, val);
 }
 
-int64_t SQTable::next(bool getweakrefs,const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval)
+int64_t SQTable::next(bool getweakrefs,const rabbit::ObjectPtr &refpos, rabbit::ObjectPtr &outkey, rabbit::ObjectPtr &outval)
 {
 	int64_t idx = (int64_t)translateIndex(refpos);
 	while (idx < _numofnodes) {
-		if(sq_type(_nodes[idx].key) != OT_NULL) {
+		if(sq_type(_nodes[idx].key) != rabbit::OT_NULL) {
 			//first found
 			_HashNode &n = _nodes[idx];
 			outkey = n.key;
-			outval = getweakrefs?(SQObject)n.val:_realval(n.val);
+			outval = getweakrefs?(rabbit::Object)n.val:_realval(n.val);
 			//return idx for the next iteration
 			return ++idx;
 		}
@@ -195,7 +195,7 @@ int64_t SQTable::next(bool getweakrefs,const SQObjectPtr &refpos, SQObjectPtr &o
 }
 
 
-bool SQTable::set(const SQObjectPtr &key, const SQObjectPtr &val)
+bool SQTable::set(const rabbit::ObjectPtr &key, const rabbit::ObjectPtr &val)
 {
 	_HashNode *n = _get(key, HashObj(key) & (_numofnodes - 1));
 	if (n) {

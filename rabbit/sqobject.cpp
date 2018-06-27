@@ -15,42 +15,7 @@
 #include <rabbit/sqclass.hpp>
 #include <rabbit/sqclosure.hpp>
 
-
-const SQChar *IdType2Name(SQObjectType type)
-{
-	switch(_RAW_TYPE(type))
-	{
-	case _RT_NULL:return _SC("null");
-	case _RT_INTEGER:return _SC("integer");
-	case _RT_FLOAT:return _SC("float");
-	case _RT_BOOL:return _SC("bool");
-	case _RT_STRING:return _SC("string");
-	case _RT_TABLE:return _SC("table");
-	case _RT_ARRAY:return _SC("array");
-	case _RT_GENERATOR:return _SC("generator");
-	case _RT_CLOSURE:
-	case _RT_NATIVECLOSURE:
-		return _SC("function");
-	case _RT_USERDATA:
-	case _RT_USERPOINTER:
-		return _SC("userdata");
-	case _RT_THREAD: return _SC("thread");
-	case _RT_FUNCPROTO: return _SC("function");
-	case _RT_CLASS: return _SC("class");
-	case _RT_INSTANCE: return _SC("instance");
-	case _RT_WEAKREF: return _SC("weakref");
-	case _RT_OUTER: return _SC("outer");
-	default:
-		return NULL;
-	}
-}
-
-const SQChar *getTypeName(const SQObjectPtr &obj1)
-{
-	return IdType2Name(sq_type(obj1));
-}
-
-SQString *SQString::create(SQSharedState *ss,const SQChar *s,int64_t len)
+SQString *SQString::create(SQSharedState *ss,const rabbit::Char *s,int64_t len)
 {
 	SQString *str=ADD_STRING(ss,s,len);
 	return str;
@@ -61,7 +26,7 @@ void SQString::release()
 	REMOVE_STRING(_sharedstate,this);
 }
 
-int64_t SQString::next(const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval)
+int64_t SQString::next(const rabbit::ObjectPtr &refpos, rabbit::ObjectPtr &outkey, rabbit::ObjectPtr &outval)
 {
 	int64_t idx = (int64_t)translateIndex(refpos);
 	while(idx < _len){
@@ -74,40 +39,6 @@ int64_t SQString::next(const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectP
 	return -1;
 }
 
-uint64_t translateIndex(const SQObjectPtr &idx)
-{
-	switch(sq_type(idx)){
-		case OT_NULL:
-			return 0;
-		case OT_INTEGER:
-			return (uint64_t)_integer(idx);
-		default: assert(0); break;
-	}
-	return 0;
-}
-
-
-
-bool SQDelegable::getMetaMethod(rabbit::VirtualMachine *v,SQMetaMethod mm,SQObjectPtr &res) {
-	if(_delegate) {
-		return _delegate->get((*_ss(v)->_metamethods)[mm],res);
-	}
-	return false;
-}
-
-bool SQDelegable::setDelegate(SQTable *mt)
-{
-	SQTable *temp = mt;
-	if(temp == this) return false;
-	while (temp) {
-		if (temp->_delegate == this) return false; //cycle detected
-		temp = temp->_delegate;
-	}
-	if (mt) __ObjaddRef(mt);
-	__Objrelease(_delegate);
-	_delegate = mt;
-	return true;
-}
 
 bool SQGenerator::yield(rabbit::VirtualMachine *v,int64_t target)
 {
@@ -116,8 +47,8 @@ bool SQGenerator::yield(rabbit::VirtualMachine *v,int64_t target)
 	int64_t size = v->_top-v->_stackbase;
 
 	_stack.resize(size);
-	SQObject _this = v->_stack[v->_stackbase];
-	_stack[0] = ISREFCOUNTED(sq_type(_this)) ? SQObjectPtr(_refcounted(_this)->getWeakRef(sq_type(_this))) : _this;
+	rabbit::Object _this = v->_stack[v->_stackbase];
+	_stack[0] = ISREFCOUNTED(sq_type(_this)) ? rabbit::ObjectPtr(_refcounted(_this)->getWeakRef(sq_type(_this))) : _this;
 	for(int64_t n =1; n<target; n++) {
 		_stack[n] = v->_stack[v->_stackbase+n];
 	}
@@ -132,7 +63,7 @@ bool SQGenerator::yield(rabbit::VirtualMachine *v,int64_t target)
 		_etraps.pushBack(v->_etraps.back());
 		v->_etraps.popBack();
 		// store relative stack base and size in case of resume to other _top
-		SQExceptionTrap &et = _etraps.back();
+		rabbit::ExceptionTrap &et = _etraps.back();
 		et._stackbase -= v->_stackbase;
 		et._stacksize -= v->_stackbase;
 	}
@@ -140,7 +71,7 @@ bool SQGenerator::yield(rabbit::VirtualMachine *v,int64_t target)
 	return true;
 }
 
-bool SQGenerator::resume(rabbit::VirtualMachine *v,SQObjectPtr &dest)
+bool SQGenerator::resume(rabbit::VirtualMachine *v,rabbit::ObjectPtr &dest)
 {
 	if(_state==eDead){ v->raise_error(_SC("resuming dead generator")); return false; }
 	if(_state==eRunning){ v->raise_error(_SC("resuming active generator")); return false; }
@@ -163,13 +94,13 @@ bool SQGenerator::resume(rabbit::VirtualMachine *v,SQObjectPtr &dest)
 	for(int64_t i=0;i<_ci._etraps;i++) {
 		v->_etraps.pushBack(_etraps.back());
 		_etraps.popBack();
-		SQExceptionTrap &et = v->_etraps.back();
+		rabbit::ExceptionTrap &et = v->_etraps.back();
 		// restore absolute stack base and size
 		et._stackbase += newbase;
 		et._stacksize += newbase;
 	}
-	SQObject _this = _stack[0];
-	v->_stack[v->_stackbase] = sq_type(_this) == OT_WEAKREF ? _weakref(_this)->_obj : _this;
+	rabbit::Object _this = _stack[0];
+	v->_stack[v->_stackbase] = sq_type(_this) == rabbit::OT_WEAKREF ? _weakref(_this)->_obj : _this;
 
 	for(int64_t n = 1; n<size; n++) {
 		v->_stack[v->_stackbase+n] = _stack[n];
@@ -190,10 +121,10 @@ void rabbit::Array::extend(const rabbit::Array *a){
 			append((*a)[i]);
 }
 
-const SQChar* SQFunctionProto::getLocal(rabbit::VirtualMachine *vm,uint64_t stackbase,uint64_t nseq,uint64_t nop)
+const rabbit::Char* SQFunctionProto::getLocal(rabbit::VirtualMachine *vm,uint64_t stackbase,uint64_t nseq,uint64_t nop)
 {
 	uint64_t nvars=_nlocalvarinfos;
-	const SQChar *res=NULL;
+	const rabbit::Char *res=NULL;
 	if(nvars>=nseq){
 		for(uint64_t i=0;i<nvars;i++){
 			if(_localvarinfos[i]._start_op<=nop && _localvarinfos[i]._end_op>=nop)
@@ -253,7 +184,7 @@ SQClosure::~SQClosure()
 }
 
 #define _CHECK_IO(exp)  { if(!exp)return false; }
-bool SafeWrite(rabbit::VirtualMachine* v,SQWRITEFUNC write,SQUserPointer up,SQUserPointer dest,int64_t size)
+bool SafeWrite(rabbit::VirtualMachine* v,SQWRITEFUNC write,rabbit::UserPointer up,rabbit::UserPointer dest,int64_t size)
 {
 	if(write(up,dest,size) != size) {
 		v->raise_error(_SC("io error (write function failure)"));
@@ -262,7 +193,7 @@ bool SafeWrite(rabbit::VirtualMachine* v,SQWRITEFUNC write,SQUserPointer up,SQUs
 	return true;
 }
 
-bool SafeRead(rabbit::VirtualMachine* v,SQWRITEFUNC read,SQUserPointer up,SQUserPointer dest,int64_t size)
+bool SafeRead(rabbit::VirtualMachine* v,SQWRITEFUNC read,rabbit::UserPointer up,rabbit::UserPointer dest,int64_t size)
 {
 	if(size && read(up,dest,size) != size) {
 		v->raise_error(_SC("io error, read function failure, the origin stream could be corrupted/trucated"));
@@ -271,12 +202,12 @@ bool SafeRead(rabbit::VirtualMachine* v,SQWRITEFUNC read,SQUserPointer up,SQUser
 	return true;
 }
 
-bool WriteTag(rabbit::VirtualMachine* v,SQWRITEFUNC write,SQUserPointer up,uint32_t tag)
+bool WriteTag(rabbit::VirtualMachine* v,SQWRITEFUNC write,rabbit::UserPointer up,uint32_t tag)
 {
 	return SafeWrite(v,write,up,&tag,sizeof(tag));
 }
 
-bool CheckTag(rabbit::VirtualMachine* v,SQWRITEFUNC read,SQUserPointer up,uint32_t tag)
+bool CheckTag(rabbit::VirtualMachine* v,SQWRITEFUNC read,rabbit::UserPointer up,uint32_t tag)
 {
 	uint32_t t;
 	_CHECK_IO(SafeRead(v,read,up,&t,sizeof(t)));
@@ -287,21 +218,21 @@ bool CheckTag(rabbit::VirtualMachine* v,SQWRITEFUNC read,SQUserPointer up,uint32
 	return true;
 }
 
-bool WriteObject(rabbit::VirtualMachine* v,SQUserPointer up,SQWRITEFUNC write,SQObjectPtr &o)
+bool WriteObject(rabbit::VirtualMachine* v,rabbit::UserPointer up,SQWRITEFUNC write,rabbit::ObjectPtr &o)
 {
 	uint32_t _type = (uint32_t)sq_type(o);
 	_CHECK_IO(SafeWrite(v,write,up,&_type,sizeof(_type)));
 	switch(sq_type(o)){
-	case OT_STRING:
+	case rabbit::OT_STRING:
 		_CHECK_IO(SafeWrite(v,write,up,&_string(o)->_len,sizeof(int64_t)));
 		_CHECK_IO(SafeWrite(v,write,up,_stringval(o),sq_rsl(_string(o)->_len)));
 		break;
-	case OT_BOOL:
-	case OT_INTEGER:
+	case rabbit::OT_BOOL:
+	case rabbit::OT_INTEGER:
 		_CHECK_IO(SafeWrite(v,write,up,&_integer(o),sizeof(int64_t)));break;
-	case OT_FLOAT:
+	case rabbit::OT_FLOAT:
 		_CHECK_IO(SafeWrite(v,write,up,&_float(o),sizeof(float_t)));break;
-	case OT_NULL:
+	case rabbit::OT_NULL:
 		break;
 	default:
 		v->raise_error(_SC("cannot serialize a %s"),getTypeName(o));
@@ -310,32 +241,32 @@ bool WriteObject(rabbit::VirtualMachine* v,SQUserPointer up,SQWRITEFUNC write,SQ
 	return true;
 }
 
-bool ReadObject(rabbit::VirtualMachine* v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &o)
+bool ReadObject(rabbit::VirtualMachine* v,rabbit::UserPointer up,SQREADFUNC read,rabbit::ObjectPtr &o)
 {
 	uint32_t _type;
 	_CHECK_IO(SafeRead(v,read,up,&_type,sizeof(_type)));
-	SQObjectType t = (SQObjectType)_type;
+	rabbit::ObjectType t = (rabbit::ObjectType)_type;
 	switch(t){
-	case OT_STRING:{
+	case rabbit::OT_STRING:{
 		int64_t len;
 		_CHECK_IO(SafeRead(v,read,up,&len,sizeof(int64_t)));
-		_CHECK_IO(SafeRead(v,read,up,_ss(v)->getScratchPad(sq_rsl(len)),sq_rsl(len)));
-		o=SQString::create(_ss(v),_ss(v)->getScratchPad(-1),len);
+		_CHECK_IO(SafeRead(v,read,up,_get_shared_state(v)->getScratchPad(sq_rsl(len)),sq_rsl(len)));
+		o=SQString::create(_get_shared_state(v),_ss(v)->getScratchPad(-1),len);
 				   }
 		break;
-	case OT_INTEGER:{
+	case rabbit::OT_INTEGER:{
 		int64_t i;
 		_CHECK_IO(SafeRead(v,read,up,&i,sizeof(int64_t))); o = i; break;
 					}
-	case OT_BOOL:{
+	case rabbit::OT_BOOL:{
 		int64_t i;
-		_CHECK_IO(SafeRead(v,read,up,&i,sizeof(int64_t))); o._type = OT_BOOL; o._unVal.nInteger = i; break;
+		_CHECK_IO(SafeRead(v,read,up,&i,sizeof(int64_t))); o._type = rabbit::OT_BOOL; o._unVal.nInteger = i; break;
 					}
-	case OT_FLOAT:{
+	case rabbit::OT_FLOAT:{
 		float_t f;
 		_CHECK_IO(SafeRead(v,read,up,&f,sizeof(float_t))); o = f; break;
 				  }
-	case OT_NULL:
+	case rabbit::OT_NULL:
 		o.Null();
 		break;
 	default:
@@ -345,10 +276,10 @@ bool ReadObject(rabbit::VirtualMachine* v,SQUserPointer up,SQREADFUNC read,SQObj
 	return true;
 }
 
-bool SQClosure::save(rabbit::VirtualMachine *v,SQUserPointer up,SQWRITEFUNC write)
+bool SQClosure::save(rabbit::VirtualMachine *v,rabbit::UserPointer up,SQWRITEFUNC write)
 {
 	_CHECK_IO(WriteTag(v,write,up,SQ_CLOSURESTREAM_HEAD));
-	_CHECK_IO(WriteTag(v,write,up,sizeof(SQChar)));
+	_CHECK_IO(WriteTag(v,write,up,sizeof(rabbit::Char)));
 	_CHECK_IO(WriteTag(v,write,up,sizeof(int64_t)));
 	_CHECK_IO(WriteTag(v,write,up,sizeof(float_t)));
 	_CHECK_IO(_function->save(v,up,write));
@@ -356,16 +287,16 @@ bool SQClosure::save(rabbit::VirtualMachine *v,SQUserPointer up,SQWRITEFUNC writ
 	return true;
 }
 
-bool SQClosure::load(rabbit::VirtualMachine *v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &ret)
+bool SQClosure::load(rabbit::VirtualMachine *v,rabbit::UserPointer up,SQREADFUNC read,rabbit::ObjectPtr &ret)
 {
 	_CHECK_IO(CheckTag(v,read,up,SQ_CLOSURESTREAM_HEAD));
-	_CHECK_IO(CheckTag(v,read,up,sizeof(SQChar)));
+	_CHECK_IO(CheckTag(v,read,up,sizeof(rabbit::Char)));
 	_CHECK_IO(CheckTag(v,read,up,sizeof(int64_t)));
 	_CHECK_IO(CheckTag(v,read,up,sizeof(float_t)));
-	SQObjectPtr func;
+	rabbit::ObjectPtr func;
 	_CHECK_IO(SQFunctionProto::load(v,up,read,func));
 	_CHECK_IO(CheckTag(v,read,up,SQ_CLOSURESTREAM_TAIL));
-	ret = SQClosure::create(_ss(v),_funcproto(func),_table(v->_roottable)->getWeakRef(OT_TABLE));
+	ret = SQClosure::create(_get_shared_state(v),_funcproto(func),_table(v->_roottable)->getWeakRef(rabbit::OT_TABLE));
 	//FIXME: load an root for this closure
 	return true;
 }
@@ -380,7 +311,7 @@ SQFunctionProto::~SQFunctionProto()
 {
 }
 
-bool SQFunctionProto::save(rabbit::VirtualMachine *v,SQUserPointer up,SQWRITEFUNC write)
+bool SQFunctionProto::save(rabbit::VirtualMachine *v,rabbit::UserPointer up,SQWRITEFUNC write)
 {
 	int64_t i,nliterals = _nliterals,nparameters = _nparameters;
 	int64_t noutervalues = _noutervalues,nlocalvarinfos = _nlocalvarinfos;
@@ -443,13 +374,13 @@ bool SQFunctionProto::save(rabbit::VirtualMachine *v,SQUserPointer up,SQWRITEFUN
 	return true;
 }
 
-bool SQFunctionProto::load(rabbit::VirtualMachine *v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &ret)
+bool SQFunctionProto::load(rabbit::VirtualMachine *v,rabbit::UserPointer up,SQREADFUNC read,rabbit::ObjectPtr &ret)
 {
 	int64_t i, nliterals,nparameters;
 	int64_t noutervalues ,nlocalvarinfos ;
 	int64_t nlineinfos,ninstructions ,nfunctions,ndefaultparams ;
-	SQObjectPtr sourcename, name;
-	SQObjectPtr o;
+	rabbit::ObjectPtr sourcename, name;
+	rabbit::ObjectPtr o;
 	_CHECK_IO(CheckTag(v,read,up,SQ_CLOSURESTREAM_PART));
 	_CHECK_IO(ReadObject(v, up, read, sourcename));
 	_CHECK_IO(ReadObject(v, up, read, name));
@@ -467,7 +398,7 @@ bool SQFunctionProto::load(rabbit::VirtualMachine *v,SQUserPointer up,SQREADFUNC
 
 	SQFunctionProto *f = SQFunctionProto::create(NULL,ninstructions,nliterals,nparameters,
 			nfunctions,noutervalues,nlineinfos,nlocalvarinfos,ndefaultparams);
-	SQObjectPtr proto = f; //gets a ref in case of failure
+	rabbit::ObjectPtr proto = f; //gets a ref in case of failure
 	f->_sourcename = sourcename;
 	f->_name = name;
 
@@ -487,7 +418,7 @@ bool SQFunctionProto::load(rabbit::VirtualMachine *v,SQUserPointer up,SQREADFUNC
 
 	for(i = 0; i < noutervalues; i++){
 		uint64_t type;
-		SQObjectPtr name;
+		rabbit::ObjectPtr name;
 		_CHECK_IO(SafeRead(v,read,up, &type, sizeof(uint64_t)));
 		_CHECK_IO(ReadObject(v, up, read, o));
 		_CHECK_IO(ReadObject(v, up, read, name));

@@ -11,19 +11,19 @@ typedef unsigned int SQRexBool;
 typedef struct SQRex SQRex;
 
 typedef struct {
-	const SQChar *begin;
+	const rabbit::Char *begin;
 	int64_t len;
 } SQRexMatch;
 
-RABBIT_API SQRex *sqstd_rex_compile(const SQChar *pattern,const SQChar **error);
+RABBIT_API SQRex *sqstd_rex_compile(const rabbit::Char *pattern,const rabbit::Char **error);
 RABBIT_API void sqstd_rex_free(SQRex *exp);
-RABBIT_API SQBool sqstd_rex_match(SQRex* exp,const SQChar* text);
-RABBIT_API SQBool sqstd_rex_search(SQRex* exp,const SQChar* text, const SQChar** out_begin, const SQChar** out_end);
-RABBIT_API SQBool sqstd_rex_searchrange(SQRex* exp,const SQChar* text_begin,const SQChar* text_end,const SQChar** out_begin, const SQChar** out_end);
+RABBIT_API rabbit::Bool sqstd_rex_match(SQRex* exp,const rabbit::Char* text);
+RABBIT_API rabbit::Bool sqstd_rex_search(SQRex* exp,const rabbit::Char* text, const rabbit::Char** out_begin, const rabbit::Char** out_end);
+RABBIT_API rabbit::Bool sqstd_rex_searchrange(SQRex* exp,const rabbit::Char* text_begin,const rabbit::Char* text_end,const rabbit::Char** out_begin, const rabbit::Char** out_end);
 RABBIT_API int64_t sqstd_rex_getsubexpcount(SQRex* exp);
-RABBIT_API SQBool sqstd_rex_getsubexp(SQRex* exp, int64_t n, SQRexMatch *subexp);
+RABBIT_API rabbit::Bool sqstd_rex_getsubexp(SQRex* exp, int64_t n, SQRexMatch *subexp);
 
-RABBIT_API SQRESULT sqstd_format(rabbit::VirtualMachine* v,int64_t nformatstringidx,int64_t *outlen,SQChar **output);
+RABBIT_API rabbit::Result sqstd_format(rabbit::VirtualMachine* v,int64_t nformatstringidx,int64_t *outlen,rabbit::Char **output);
 
-RABBIT_API SQRESULT sqstd_register_stringlib(rabbit::VirtualMachine* v);
+RABBIT_API rabbit::Result sqstd_register_stringlib(rabbit::VirtualMachine* v);
 

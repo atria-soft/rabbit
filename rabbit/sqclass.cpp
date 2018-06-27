@@ -50,10 +50,10 @@ SQClass::~SQClass()
 	finalize();
 }
 
-bool SQClass::newSlot(SQSharedState *ss,const SQObjectPtr &key,const SQObjectPtr &val,bool bstatic)
+bool SQClass::newSlot(SQSharedState *ss,const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val,bool bstatic)
 {
-	SQObjectPtr temp;
-	bool belongs_to_static_table = sq_type(val) == OT_CLOSURE || sq_type(val) == OT_NATIVECLOSURE || bstatic;
+	rabbit::ObjectPtr temp;
+	bool belongs_to_static_table = sq_type(val) == rabbit::OT_CLOSURE || sq_type(val) == OT_NATIVECLOSURE || bstatic;
 	if(_locked && !belongs_to_static_table)
 		return false; //the class already has an instance so cannot be modified
 	if(_members->get(key,temp) && _isfield(temp)) //overrides the default value
@@ -63,18 +63,18 @@ bool SQClass::newSlot(SQSharedState *ss,const SQObjectPtr &key,const SQObjectPtr
 	}
 	if(belongs_to_static_table) {
 		int64_t mmidx;
-		if((sq_type(val) == OT_CLOSURE || sq_type(val) == OT_NATIVECLOSURE) &&
+		if((sq_type(val) == rabbit::OT_CLOSURE || sq_type(val) == OT_NATIVECLOSURE) &&
 			(mmidx = ss->getMetaMethodIdxByName(key)) != -1) {
 			_metamethods[mmidx] = val;
 		}
 		else {
-			SQObjectPtr theval = val;
-			if(_base && sq_type(val) == OT_CLOSURE) {
+			rabbit::ObjectPtr theval = val;
+			if(_base && sq_type(val) == rabbit::OT_CLOSURE) {
 				theval = _closure(val)->clone();
 				_closure(theval)->_base = _base;
 				__ObjaddRef(_base); //ref for the closure
 			}
-			if(sq_type(temp) == OT_NULL) {
+			if(sq_type(temp) == rabbit::OT_NULL) {
 				bool isconstructor;
 				rabbit::VirtualMachine::isEqual(ss->_constructoridx, key, isconstructor);
 				if(isconstructor) {
@@ -82,7 +82,7 @@ bool SQClass::newSlot(SQSharedState *ss,const SQObjectPtr &key,const SQObjectPtr
 				}
 				SQClassMember m;
 				m.val = theval;
-				_members->newSlot(key,SQObjectPtr(_make_method_idx(_methods.size())));
+				_members->newSlot(key,rabbit::ObjectPtr(_make_method_idx(_methods.size())));
 				_methods.pushBack(m);
 			}
 			else {
@@ -93,7 +93,7 @@ bool SQClass::newSlot(SQSharedState *ss,const SQObjectPtr &key,const SQObjectPtr
 	}
 	SQClassMember m;
 	m.val = val;
-	_members->newSlot(key,SQObjectPtr(_make_field_idx(_defaultvalues.size())));
+	_members->newSlot(key,rabbit::ObjectPtr(_make_field_idx(_defaultvalues.size())));
 	_defaultvalues.pushBack(m);
 	return true;
 }
@@ -104,25 +104,25 @@ SQInstance *SQClass::createInstance()
 	return SQInstance::create(NULL,this);
 }
 
-int64_t SQClass::next(const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval)
+int64_t SQClass::next(const rabbit::ObjectPtr &refpos, rabbit::ObjectPtr &outkey, rabbit::ObjectPtr &outval)
 {
-	SQObjectPtr oval;
+	rabbit::ObjectPtr oval;
 	int64_t idx = _members->next(false,refpos,outkey,oval);
 	if(idx != -1) {
 		if(_ismethod(oval)) {
 			outval = _methods[_member_idx(oval)].val;
 		}
 		else {
-			SQObjectPtr &o = _defaultvalues[_member_idx(oval)].val;
+			rabbit::ObjectPtr &o = _defaultvalues[_member_idx(oval)].val;
 			outval = _realval(o);
 		}
 	}
 	return idx;
 }
 
-bool SQClass::setAttributes(const SQObjectPtr &key,const SQObjectPtr &val)
+bool SQClass::setAttributes(const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val)
 {
-	SQObjectPtr idx;
+	rabbit::ObjectPtr idx;
 	if(_members->get(key,idx)) {
 		if(_isfield(idx))
 			_defaultvalues[_member_idx(idx)].attrs = val;
@@ -133,9 +133,9 @@ bool SQClass::setAttributes(const SQObjectPtr &key,const SQObjectPtr &val)
 	return false;
 }
 
-bool SQClass::getAttributes(const SQObjectPtr &key,SQObjectPtr &outval)
+bool SQClass::getAttributes(const rabbit::ObjectPtr &key,rabbit::ObjectPtr &outval)
 {
-	SQObjectPtr idx;
+	rabbit::ObjectPtr idx;
 	if(_members->get(key,idx)) {
 		outval = (_isfield(idx)?_defaultvalues[_member_idx(idx)].attrs:_methods[_member_idx(idx)].attrs);
 		return true;
@@ -158,7 +158,7 @@ SQInstance::SQInstance(SQSharedState *ss, SQClass *c, int64_t memsize)
 	_class = c;
 	uint64_t nvalues = _class->_defaultvalues.size();
 	for(uint64_t n = 0; n < nvalues; n++) {
-		new (&_values[n]) SQObjectPtr(_class->_defaultvalues[n].val);
+		new (&_values[n]) rabbit::ObjectPtr(_class->_defaultvalues[n].val);
 	}
 	init(ss);
 }
@@ -169,7 +169,7 @@ SQInstance::SQInstance(SQSharedState *ss, SQInstance *i, int64_t memsize)
 	_class = i->_class;
 	uint64_t nvalues = _class->_defaultvalues.size();
 	for(uint64_t n = 0; n < nvalues; n++) {
-		new (&_values[n]) SQObjectPtr(i->_values[n]);
+		new (&_values[n]) rabbit::ObjectPtr(i->_values[n]);
 	}
 	init(ss);
 }
@@ -186,9 +186,9 @@ SQInstance::~SQInstance()
 	if(_class){ finalize(); } //if _class is null it was already finalized by the GC
 }
 
-bool SQInstance::getMetaMethod(rabbit::VirtualMachine* SQ_UNUSED_ARG(v),SQMetaMethod mm,SQObjectPtr &res)
+bool SQInstance::getMetaMethod(rabbit::VirtualMachine* SQ_UNUSED_ARG(v),rabbit::MetaMethod mm,rabbit::ObjectPtr &res)
 {
-	if(sq_type(_class->_metamethods[mm]) != OT_NULL) {
+	if(sq_type(_class->_metamethods[mm]) != rabbit::OT_NULL) {
 		res = _class->_metamethods[mm];
 		return true;
 	}

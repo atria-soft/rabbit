@@ -30,30 +30,30 @@ namespace rabbit {
 				m_data.resize(0);
 			}
 			bool get(const int64_t _nidx,
-			         SQObjectPtr& _val) {
+			         rabbit::ObjectPtr& _val) {
 				if(    _nidx >= 0
 				    && _nidx < (int64_t)m_data.size()){
-					SQObjectPtr &o = m_data[_nidx];
+					rabbit::ObjectPtr &o = m_data[_nidx];
 					_val = _realval(o);
 					return true;
 				}
 				return false;
 			}
-			bool set(const int64_t _nidx,const SQObjectPtr& _val) {
+			bool set(const int64_t _nidx,const rabbit::ObjectPtr& _val) {
 				if(_nidx>=0 && _nidx<(int64_t)m_data.size()){
 					m_data[_nidx] = _val;
 					return true;
 				}
 				return false;
 			}
-			int64_t next(const SQObjectPtr& _refpos,
-			             SQObjectPtr& _outkey,
-			             SQObjectPtr& _outval) {
+			int64_t next(const rabbit::ObjectPtr& _refpos,
+			             rabbit::ObjectPtr& _outkey,
+			             rabbit::ObjectPtr& _outval) {
 				uint64_t idx=translateIndex(_refpos);
 				while(idx<m_data.size()){
 					//first found
 					_outkey=(int64_t)idx;
-					SQObjectPtr& o = m_data[idx];
+					rabbit::ObjectPtr& o = m_data[idx];
 					_outval = _realval(o);
 					//return idx for the next iteration
 					return ++idx;
@@ -70,29 +70,29 @@ namespace rabbit {
 				return m_data.size();
 			}
 			void resize(int64_t _size) {
-				SQObjectPtr empty;
+				rabbit::ObjectPtr empty;
 				resize(_size, empty);
 			}
 			void resize(int64_t _size,
-			            SQObjectPtr& _fill) {
+			            rabbit::ObjectPtr& _fill) {
 				m_data.resize(_size, _fill);
 				shrinkIfNeeded();
 			}
 			void reserve(int64_t _size) {
 				m_data.reserve(_size);
 			}
-			void append(const SQObject& _o) {
+			void append(const rabbit::Object& _o) {
 				m_data.pushBack(_o);
 			}
 			void extend(const Array* _a);
-			SQObjectPtr &top(){
+			rabbit::ObjectPtr &top(){
 				return m_data.back();
 			}
 			void pop() {
 				m_data.popBack();
 				shrinkIfNeeded();
 			}
-			bool insert(int64_t _idx,const SQObject& _val) {
+			bool insert(int64_t _idx,const rabbit::Object& _val) {
 				if(    _idx < 0
 				    || _idx > (int64_t)m_data.size()) {
 					return false;
@@ -121,14 +121,14 @@ namespace rabbit {
 			void release() {
 				sq_delete(this, Array);
 			}
-			SQObjectPtr& operator[] (const size_t _pos) {
+			rabbit::ObjectPtr& operator[] (const size_t _pos) {
 				return m_data[_pos];
 			}
-			const SQObjectPtr& operator[] (const size_t _pos) const {
+			const rabbit::ObjectPtr& operator[] (const size_t _pos) const {
 				return m_data[_pos];
 			}
 		private:
-			SQObjectPtrVec m_data;
+			etk::Vector<rabbit::ObjectPtr> m_data;
 	};
 }
 

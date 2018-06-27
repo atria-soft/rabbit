@@ -8,7 +8,7 @@
 #pragma once
 
 #ifdef SQUNICODE
-typedef SQChar LexChar;
+typedef rabbit::Char LexChar;
 #else
 typedef unsigned char LexChar;
 #endif
@@ -17,12 +17,12 @@ struct SQLexer
 {
 	SQLexer();
 	~SQLexer();
-	void init(SQSharedState *ss,SQLEXREADFUNC rg,SQUserPointer up,compilererrorFunc efunc,void *ed);
-	void error(const SQChar *err);
+	void init(SQSharedState *ss,SQLEXREADFUNC rg,rabbit::UserPointer up,compilererrorFunc efunc,void *ed);
+	void error(const rabbit::Char *err);
 	int64_t Lex();
-	const SQChar *tok2Str(int64_t tok);
+	const rabbit::Char *tok2Str(int64_t tok);
 private:
-	int64_t getIDType(const SQChar *s,int64_t len);
+	int64_t getIDType(const rabbit::Char *s,int64_t len);
 	int64_t readString(int64_t ndelim,bool verbatim);
 	int64_t readNumber();
 	void lexBlockComment();
@@ -36,23 +36,23 @@ private:
 #else
 	int64_t addUTF8(uint64_t ch);
 #endif
-	int64_t processStringHexEscape(SQChar *dest, int64_t maxdigits);
+	int64_t processStringHexEscape(rabbit::Char *dest, int64_t maxdigits);
 	int64_t _curtoken;
 	SQTable *_keywords;
-	SQBool _reached_eof;
+	rabbit::Bool _reached_eof;
 public:
 	int64_t _prevtoken;
 	int64_t _currentline;
 	int64_t _lasttokenline;
 	int64_t _currentcolumn;
-	const SQChar *_svalue;
+	const rabbit::Char *_svalue;
 	int64_t _nvalue;
 	float_t _fvalue;
 	SQLEXREADFUNC _readf;
-	SQUserPointer _up;
+	rabbit::UserPointer _up;
 	LexChar _currdata;
 	SQSharedState *_sharedstate;
-	etk::Vector<SQChar> _longstr;
+	etk::Vector<rabbit::Char> _longstr;
 	compilererrorFunc _errfunc;
 	void *_errtarget;
 };

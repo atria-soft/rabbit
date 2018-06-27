@@ -7,7 +7,7 @@
  */
 #pragma once
 
-#define _CALC_CLOSURE_SIZE(func) (sizeof(SQClosure) + (func->_noutervalues*sizeof(SQObjectPtr)) + (func->_ndefaultparams*sizeof(SQObjectPtr)))
+#define _CALC_CLOSURE_SIZE(func) (sizeof(SQClosure) + (func->_noutervalues*sizeof(rabbit::ObjectPtr)) + (func->_ndefaultparams*sizeof(rabbit::ObjectPtr)))
 
 struct SQFunctionProto;
 struct SQClass;
@@ -25,19 +25,19 @@ public:
 		int64_t size = _CALC_CLOSURE_SIZE(func);
 		SQClosure *nc=(SQClosure*)SQ_MALLOC(size);
 		new (nc) SQClosure(ss,func);
-		nc->_outervalues = (SQObjectPtr *)(nc + 1);
+		nc->_outervalues = (rabbit::ObjectPtr *)(nc + 1);
 		nc->_defaultparams = &nc->_outervalues[func->_noutervalues];
 		nc->_root = root;
 		 __ObjaddRef(nc->_root);
-		_CONSTRUCT_VECTOR(SQObjectPtr,func->_noutervalues,nc->_outervalues);
-		_CONSTRUCT_VECTOR(SQObjectPtr,func->_ndefaultparams,nc->_defaultparams);
+		_CONSTRUCT_VECTOR(rabbit::ObjectPtr,func->_noutervalues,nc->_outervalues);
+		_CONSTRUCT_VECTOR(rabbit::ObjectPtr,func->_ndefaultparams,nc->_defaultparams);
 		return nc;
 	}
 	void release(){
 		SQFunctionProto *f = _function;
 		int64_t size = _CALC_CLOSURE_SIZE(f);
-		_DESTRUCT_VECTOR(SQObjectPtr,f->_noutervalues,_outervalues);
-		_DESTRUCT_VECTOR(SQObjectPtr,f->_ndefaultparams,_defaultparams);
+		_DESTRUCT_VECTOR(rabbit::ObjectPtr,f->_noutervalues,_outervalues);
+		_DESTRUCT_VECTOR(rabbit::ObjectPtr,f->_ndefaultparams,_defaultparams);
 		__Objrelease(_function);
 		this->~SQClosure();
 		sq_vm_free(this,size);
@@ -60,14 +60,14 @@ public:
 	}
 	~SQClosure();
 
-	bool save(rabbit::VirtualMachine *v,SQUserPointer up,SQWRITEFUNC write);
-	static bool load(rabbit::VirtualMachine *v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &ret);
+	bool save(rabbit::VirtualMachine *v,rabbit::UserPointer up,SQWRITEFUNC write);
+	static bool load(rabbit::VirtualMachine *v,rabbit::UserPointer up,SQREADFUNC read,rabbit::ObjectPtr &ret);
 	rabbit::WeakRef *_env;
 	rabbit::WeakRef *_root;
 	SQClass *_base;
 	SQFunctionProto *_function;
-	SQObjectPtr *_outervalues;
-	SQObjectPtr *_defaultparams;
+	rabbit::ObjectPtr *_outervalues;
+	rabbit::ObjectPtr *_defaultparams;
 };
 
 //////////////////////////////////////////////
@@ -75,13 +75,13 @@ struct SQOuter : public rabbit::RefCounted
 {
 
 private:
-	SQOuter(SQSharedState *ss, SQObjectPtr *outer){
+	SQOuter(SQSharedState *ss, rabbit::ObjectPtr *outer){
 		_valptr = outer;
 		_next = NULL;
 	}
 
 public:
-	static SQOuter *create(SQSharedState *ss, SQObjectPtr *outer)
+	static SQOuter *create(SQSharedState *ss, rabbit::ObjectPtr *outer)
 	{
 		SQOuter *nc  = (SQOuter*)SQ_MALLOC(sizeof(SQOuter));
 		new (nc) SQOuter(ss, outer);
@@ -97,9 +97,9 @@ public:
 		sq_vm_free(this,sizeof(SQOuter));
 	}
 
-	SQObjectPtr *_valptr;  /* pointer to value on stack, or _value below */
+	rabbit::ObjectPtr *_valptr;  /* pointer to value on stack, or _value below */
 	int64_t	_idx;	 /* idx in stack array, for relocation */
-	SQObjectPtr  _value;   /* value of outer after stack frame is closed */
+	rabbit::ObjectPtr  _value;   /* value of outer after stack frame is closed */
 	SQOuter	 *_next;	/* pointer to next outer when frame is open   */
 };
 
@@ -132,15 +132,15 @@ public:
 	}
 
 	bool yield(rabbit::VirtualMachine *v,int64_t target);
-	bool resume(rabbit::VirtualMachine *v,SQObjectPtr &dest);
-	SQObjectPtr _closure;
-	SQObjectPtrVec _stack;
+	bool resume(rabbit::VirtualMachine *v,rabbit::ObjectPtr &dest);
+	rabbit::ObjectPtr _closure;
+	etk::Vector<rabbit::ObjectPtr> _stack;
 	rabbit::VirtualMachine::callInfo _ci;
-	etk::Vector<SQExceptionTrap> _etraps;
+	etk::Vector<rabbit::ExceptionTrap> _etraps;
 	SQGeneratorState _state;
 };
 
-#define _CALC_NATVIVECLOSURE_SIZE(noutervalues) (sizeof(SQNativeClosure) + (noutervalues*sizeof(SQObjectPtr)))
+#define _CALC_NATVIVECLOSURE_SIZE(noutervalues) (sizeof(SQNativeClosure) + (noutervalues*sizeof(rabbit::ObjectPtr)))
 
 struct SQNativeClosure : public rabbit::RefCounted
 {
@@ -155,9 +155,9 @@ public:
 		int64_t size = _CALC_NATVIVECLOSURE_SIZE(nouters);
 		SQNativeClosure *nc=(SQNativeClosure*)SQ_MALLOC(size);
 		new (nc) SQNativeClosure(ss,func);
-		nc->_outervalues = (SQObjectPtr *)(nc + 1);
+		nc->_outervalues = (rabbit::ObjectPtr *)(nc + 1);
 		nc->_noutervalues = nouters;
-		_CONSTRUCT_VECTOR(SQObjectPtr,nc->_noutervalues,nc->_outervalues);
+		_CONSTRUCT_VECTOR(rabbit::ObjectPtr,nc->_noutervalues,nc->_outervalues);
 		return nc;
 	}
 	SQNativeClosure *clone()
@@ -177,18 +177,18 @@ public:
 	}
 	void release(){
 		int64_t size = _CALC_NATVIVECLOSURE_SIZE(_noutervalues);
-		_DESTRUCT_VECTOR(SQObjectPtr,_noutervalues,_outervalues);
+		_DESTRUCT_VECTOR(rabbit::ObjectPtr,_noutervalues,_outervalues);
 		this->~SQNativeClosure();
 		sq_free(this,size);
 	}
 
 	int64_t _nparamscheck;
-	SQIntVec _typecheck;
-	SQObjectPtr *_outervalues;
+	etk::Vector<int64_t> _typecheck;
+	rabbit::ObjectPtr *_outervalues;
 	uint64_t _noutervalues;
 	rabbit::WeakRef *_env;
 	SQFUNCTION _function;
-	SQObjectPtr _name;
+	rabbit::ObjectPtr _name;
 };
 
 

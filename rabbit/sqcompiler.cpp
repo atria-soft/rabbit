@@ -76,21 +76,21 @@ struct SQScope {
 class SQcompiler
 {
 public:
-	SQcompiler(rabbit::VirtualMachine *v, SQLEXREADFUNC rg, SQUserPointer up, const SQChar* sourcename, bool raiseerror, bool lineinfo)
+	SQcompiler(rabbit::VirtualMachine *v, SQLEXREADFUNC rg, rabbit::UserPointer up, const rabbit::Char* sourcename, bool raiseerror, bool lineinfo)
 	{
 		_vm=v;
-		_lex.init(_ss(v), rg, up,Throwerror,this);
-		_sourcename = SQString::create(_ss(v), sourcename);
+		_lex.init(_get_shared_state(v), rg, up,Throwerror,this);
+		_sourcename = SQString::create(_get_shared_state(v), sourcename);
 		_lineinfo = lineinfo;_raiseerror = raiseerror;
 		_scope.outers = 0;
 		_scope.stacksize = 0;
 		_compilererror[0] = _SC('\0');
 	}
-	static void Throwerror(void *ud, const SQChar *s) {
+	static void Throwerror(void *ud, const rabbit::Char *s) {
 		SQcompiler *c = (SQcompiler *)ud;
 		c->error(s);
 	}
-	void error(const SQChar *s, ...)
+	void error(const rabbit::Char *s, ...)
 	{
 		va_list vl;
 		va_start(vl, s);
@@ -99,7 +99,7 @@ public:
 		longjmp(_errorjmp,1);
 	}
 	void Lex(){ _token = _lex.Lex();}
-	SQObject Expect(int64_t tok)
+	rabbit::Object Expect(int64_t tok)
 	{
 
 		if(_token != tok) {
@@ -107,7 +107,7 @@ public:
 				//do nothing
 			}
 			else {
-				const SQChar *etypename;
+				const rabbit::Char *etypename;
 				if(tok > 255) {
 					switch(tok)
 					{
@@ -131,7 +131,7 @@ public:
 				error(_SC("expected '%c'"), tok);
 			}
 		}
-		SQObjectPtr ret;
+		rabbit::ObjectPtr ret;
 		switch(tok)
 		{
 		case TK_IDENTIFIER:
@@ -141,10 +141,10 @@ public:
 			ret = _fs->createString(_lex._svalue,_lex._longstr.size()-1);
 			break;
 		case TK_INTEGER:
-			ret = SQObjectPtr(_lex._nvalue);
+			ret = rabbit::ObjectPtr(_lex._nvalue);
 			break;
 		case TK_FLOAT:
-			ret = SQObjectPtr(_lex._fvalue);
+			ret = rabbit::ObjectPtr(_lex._fvalue);
 			break;
 		}
 		Lex();
@@ -165,13 +165,13 @@ public:
 			_fs->addInstruction(_OP_MOVE, _fs->pushTarget(), trg);
 		}
 	}
-	bool compile(SQObjectPtr &o)
+	bool compile(rabbit::ObjectPtr &o)
 	{
 		_debugline = 1;
 		_debugop = 0;
 
-		SQFuncState funcstate(_ss(_vm), NULL,Throwerror,this);
-		funcstate._name = SQString::create(_ss(_vm), _SC("main"));
+		SQFuncState funcstate(_get_shared_state(_vm), NULL,Throwerror,this);
+		funcstate._name = SQString::create(_get_shared_state(_vm), _SC("main"));
 		_fs = &funcstate;
 		_fs->addParameter(_fs->createString(_SC("this")));
 		_fs->addParameter(_fs->createString(_SC("vargv")));
@@ -194,11 +194,11 @@ public:
 #endif
 		}
 		else {
-			if(_raiseerror && _ss(_vm)->_compilererrorhandler) {
-				_ss(_vm)->_compilererrorhandler(_vm, _compilererror, sq_type(_sourcename) == OT_STRING?_stringval(_sourcename):_SC("unknown"),
+			if(_raiseerror && _get_shared_state(_vm)->_compilererrorhandler) {
+				_get_shared_state(_vm)->_compilererrorhandler(_vm, _compilererror, sq_type(_sourcename) == rabbit::OT_STRING?_stringval(_sourcename):_SC("unknown"),
 					_lex._currentline, _lex._currentcolumn);
 			}
-			_vm->_lasterror = SQString::create(_ss(_vm), _compilererror, -1);
+			_vm->_lasterror = SQString::create(_get_shared_state(_vm), _compilererror, -1);
 			return false;
 		}
 		return true;
@@ -301,13 +301,13 @@ public:
 		case TK_CONST:
 			{
 			Lex();
-			SQObject id = Expect(TK_IDENTIFIER);
+			rabbit::Object id = Expect(TK_IDENTIFIER);
 			Expect('=');
-			SQObject val = ExpectScalar();
+			rabbit::Object val = ExpectScalar();
 			OptionalSemicolon();
-			SQTable *enums = _table(_ss(_vm)->_consts);
-			SQObjectPtr strongid = id;
-			enums->newSlot(strongid,SQObjectPtr(val));
+			SQTable *enums = _table(_get_shared_state(_vm)->_consts);
+			rabbit::ObjectPtr strongid = id;
+			enums->newSlot(strongid,rabbit::ObjectPtr(val));
 			strongid.Null();
 			}
 			break;
@@ -734,8 +734,8 @@ public:
 		case TK_IDENTIFIER:
 		case TK_CONSTRUCTOR:
 		case TK_THIS:{
-				SQObject id;
-				SQObject constant;
+				rabbit::Object id;
+				rabbit::Object constant;
 
 				switch(_token) {
 					case TK_IDENTIFIER:  id = _fs->createString(_lex._svalue);	   break;
@@ -767,9 +767,9 @@ public:
 
 				else if(_fs->isConstant(id, constant)) {
 					/* Handle named constant */
-					SQObjectPtr constval;
-					SQObject	constid;
-					if(sq_type(constant) == OT_TABLE) {
+					rabbit::ObjectPtr constval;
+					rabbit::Object	constid;
+					if(sq_type(constant) == rabbit::OT_TABLE) {
 						Expect('.');
 						constid = Expect(TK_IDENTIFIER);
 						if(!_table(constant)->get(constid, constval)) {
@@ -783,11 +783,11 @@ public:
 					_es.epos = _fs->pushTarget();
 
 					/* generate direct or literal function depending on size */
-					SQObjectType ctype = sq_type(constval);
+					rabbit::ObjectType ctype = sq_type(constval);
 					switch(ctype) {
-						case OT_INTEGER: EmitloadConstInt(_integer(constval),_es.epos); break;
-						case OT_FLOAT: EmitloadConstFloat(_float(constval),_es.epos); break;
-						case OT_BOOL: _fs->addInstruction(_OP_LOADBOOL, _es.epos, _integer(constval)); break;
+						case rabbit::OT_INTEGER: EmitloadConstInt(_integer(constval),_es.epos); break;
+						case rabbit::OT_FLOAT: EmitloadConstFloat(_float(constval),_es.epos); break;
+						case rabbit::OT_BOOL: _fs->addInstruction(_OP_LOADBOOL, _es.epos, _integer(constval)); break;
 						default: _fs->addInstruction(_OP_LOAD,_es.epos,_fs->getConstant(constval)); break;
 					}
 					_es.etype = EXPR;
@@ -968,7 +968,7 @@ public:
 			case TK_CONSTRUCTOR:{
 				int64_t tk = _token;
 				Lex();
-				SQObject id = tk == TK_FUNCTION ? Expect(TK_IDENTIFIER) : _fs->createString(_SC("constructor"));
+				rabbit::Object id = tk == TK_FUNCTION ? Expect(TK_IDENTIFIER) : _fs->createString(_SC("constructor"));
 				Expect(_SC('('));
 				_fs->addInstruction(_OP_LOAD, _fs->pushTarget(), _fs->getConstant(id));
 				createFunction(id);
@@ -1011,7 +1011,7 @@ public:
 	}
 	void LocalDeclStatement()
 	{
-		SQObject varname;
+		rabbit::Object varname;
 		Lex();
 		if( _token == TK_FUNCTION) {
 			Lex();
@@ -1182,7 +1182,7 @@ public:
 	}
 	void ForEachStatement()
 	{
-		SQObject idxname, valname;
+		rabbit::Object idxname, valname;
 		Lex(); Expect(_SC('(')); valname = Expect(TK_IDENTIFIER);
 		if(_token == _SC(',')) {
 			idxname = valname;
@@ -1278,7 +1278,7 @@ public:
 	}
 	void FunctionStatement()
 	{
-		SQObject id;
+		rabbit::Object id;
 		Lex(); id = Expect(TK_IDENTIFIER);
 		_fs->pushTarget(0);
 		_fs->addInstruction(_OP_LOAD, _fs->pushTarget(), _fs->getConstant(id));
@@ -1316,17 +1316,17 @@ public:
 		}
 		_es = es;
 	}
-	SQObject ExpectScalar()
+	rabbit::Object ExpectScalar()
 	{
-		SQObject val;
-		val._type = OT_NULL; val._unVal.nInteger = 0; //shut up GCC 4.x
+		rabbit::Object val;
+		val._type = rabbit::OT_NULL; val._unVal.nInteger = 0; //shut up GCC 4.x
 		switch(_token) {
 			case TK_INTEGER:
-				val._type = OT_INTEGER;
+				val._type = rabbit::OT_INTEGER;
 				val._unVal.nInteger = _lex._nvalue;
 				break;
 			case TK_FLOAT:
-				val._type = OT_FLOAT;
+				val._type = rabbit::OT_FLOAT;
 				val._unVal.fFloat = _lex._fvalue;
 				break;
 			case TK_STRING_LITERAL:
@@ -1334,7 +1334,7 @@ public:
 				break;
 			case TK_TRUE:
 			case TK_FALSE:
-				val._type = OT_BOOL;
+				val._type = rabbit::OT_BOOL;
 				val._unVal.nInteger = _token == TK_TRUE ? 1 : 0;
 				break;
 			case '-':
@@ -1342,11 +1342,11 @@ public:
 				switch(_token)
 				{
 				case TK_INTEGER:
-					val._type = OT_INTEGER;
+					val._type = rabbit::OT_INTEGER;
 					val._unVal.nInteger = -_lex._nvalue;
 				break;
 				case TK_FLOAT:
-					val._type = OT_FLOAT;
+					val._type = rabbit::OT_FLOAT;
 					val._unVal.fFloat = -_lex._fvalue;
 				break;
 				default:
@@ -1362,34 +1362,34 @@ public:
 	void EnumStatement()
 	{
 		Lex();
-		SQObject id = Expect(TK_IDENTIFIER);
+		rabbit::Object id = Expect(TK_IDENTIFIER);
 		Expect(_SC('{'));
 
-		SQObject table = _fs->createTable();
+		rabbit::Object table = _fs->createTable();
 		int64_t nval = 0;
 		while(_token != _SC('}')) {
-			SQObject key = Expect(TK_IDENTIFIER);
-			SQObject val;
+			rabbit::Object key = Expect(TK_IDENTIFIER);
+			rabbit::Object val;
 			if(_token == _SC('=')) {
 				Lex();
 				val = ExpectScalar();
 			}
 			else {
-				val._type = OT_INTEGER;
+				val._type = rabbit::OT_INTEGER;
 				val._unVal.nInteger = nval++;
 			}
-			_table(table)->newSlot(SQObjectPtr(key),SQObjectPtr(val));
+			_table(table)->newSlot(rabbit::ObjectPtr(key),rabbit::ObjectPtr(val));
 			if(_token == ',') Lex();
 		}
-		SQTable *enums = _table(_ss(_vm)->_consts);
-		SQObjectPtr strongid = id;
-		enums->newSlot(SQObjectPtr(strongid),SQObjectPtr(table));
+		SQTable *enums = _table(_get_shared_state(_vm)->_consts);
+		rabbit::ObjectPtr strongid = id;
+		enums->newSlot(rabbit::ObjectPtr(strongid),rabbit::ObjectPtr(table));
 		strongid.Null();
 		Lex();
 	}
 	void TryCatchStatement()
 	{
-		SQObject exid;
+		rabbit::Object exid;
 		Lex();
 		_fs->addInstruction(_OP_PUSHTRAP,0,0);
 		_fs->_traps++;
@@ -1421,7 +1421,7 @@ public:
 	void FunctionExp(int64_t ftype,bool lambda = false)
 	{
 		Lex(); Expect(_SC('('));
-		SQObjectPtr dummy;
+		rabbit::ObjectPtr dummy;
 		createFunction(dummy,lambda);
 		_fs->addInstruction(_OP_CLOSURE, _fs->pushTarget(), _fs->_functions.size() - 1, ftype == TK_FUNCTION?0:1);
 	}
@@ -1488,11 +1488,11 @@ public:
 		}
 		_es = es;
 	}
-	void createFunction(SQObject &name,bool lambda = false)
+	void createFunction(rabbit::Object &name,bool lambda = false)
 	{
-		SQFuncState *funcstate = _fs->pushChildState(_ss(_vm));
+		SQFuncState *funcstate = _fs->pushChildState(_get_shared_state(_vm));
 		funcstate->_name = name;
-		SQObject paramname;
+		rabbit::Object paramname;
 		funcstate->addParameter(_fs->createString(_SC("this")));
 		funcstate->_sourcename = _sourcename;
 		int64_t defparams = 0;
@@ -1569,7 +1569,7 @@ public:
 private:
 	int64_t _token;
 	SQFuncState *_fs;
-	SQObjectPtr _sourcename;
+	rabbit::ObjectPtr _sourcename;
 	SQLexer _lex;
 	bool _lineinfo;
 	bool _raiseerror;
@@ -1577,12 +1577,12 @@ private:
 	int64_t _debugop;
 	SQExpState   _es;
 	SQScope _scope;
-	SQChar _compilererror[MAX_COMPILER_ERROR_LEN];
+	rabbit::Char _compilererror[MAX_COMPILER_ERROR_LEN];
 	jmp_buf _errorjmp;
 	rabbit::VirtualMachine *_vm;
 };
 
-bool compile(rabbit::VirtualMachine *vm,SQLEXREADFUNC rg, SQUserPointer up, const SQChar *sourcename, SQObjectPtr &out, bool raiseerror, bool lineinfo)
+bool compile(rabbit::VirtualMachine *vm,SQLEXREADFUNC rg, rabbit::UserPointer up, const rabbit::Char *sourcename, rabbit::ObjectPtr &out, bool raiseerror, bool lineinfo)
 {
 	SQcompiler p(vm, rg, up, sourcename, raiseerror, lineinfo);
 	return p.compile(out);

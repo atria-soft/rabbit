@@ -101,7 +101,7 @@ struct SQBlob : public SQStream
 	int64_t Flush() { return 0; }
 	int64_t Tell() { return _ptr; }
 	int64_t Len() { return _size; }
-	SQUserPointer getBuf(){ return _buf; }
+	rabbit::UserPointer getBuf(){ return _buf; }
 private:
 	int64_t _size;
 	int64_t _allocated;

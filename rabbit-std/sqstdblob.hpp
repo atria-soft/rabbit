@@ -7,9 +7,9 @@
  */
 #pragma once
 
-RABBIT_API SQUserPointer sqstd_createblob(rabbit::VirtualMachine* v, int64_t size);
-RABBIT_API SQRESULT sqstd_getblob(rabbit::VirtualMachine* v,int64_t idx,SQUserPointer *ptr);
+RABBIT_API rabbit::UserPointer sqstd_createblob(rabbit::VirtualMachine* v, int64_t size);
+RABBIT_API rabbit::Result sqstd_getblob(rabbit::VirtualMachine* v,int64_t idx,rabbit::UserPointer *ptr);
 RABBIT_API int64_t sqstd_getblobsize(rabbit::VirtualMachine* v,int64_t idx);
 
-RABBIT_API SQRESULT sqstd_register_bloblib(rabbit::VirtualMachine* v);
+RABBIT_API rabbit::Result sqstd_register_bloblib(rabbit::VirtualMachine* v);
 

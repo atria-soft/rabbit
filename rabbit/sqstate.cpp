@@ -36,7 +36,7 @@ SQSharedState::SQSharedState()
 	_table(_metamethodsmap)->newSlot(_metamethods->back(),(int64_t)(_metamethods->size()-1)); \
 	}
 
-bool compileTypemask(SQIntVec &res,const SQChar *typemask)
+bool compileTypemask(etk::Vector<int64_t> &res,const rabbit::Char *typemask)
 {
 	int64_t i = 0;
 	int64_t mask = 0;
@@ -77,7 +77,7 @@ bool compileTypemask(SQIntVec &res,const SQChar *typemask)
 	return true;
 }
 
-SQTable *createDefaultDelegate(SQSharedState *ss,const SQRegFunction *funcz)
+SQTable *createDefaultDelegate(SQSharedState *ss,const rabbit::RegFunction *funcz)
 {
 	int64_t i=0;
 	SQTable *t=SQTable::create(ss,0);
@@ -99,9 +99,9 @@ void SQSharedState::init()
 	_scratchpadsize=0;
 	_stringtable = (SQStringTable*)SQ_MALLOC(sizeof(SQStringTable));
 	new (_stringtable) SQStringTable(this);
-	sq_new(_metamethods,SQObjectPtrVec);
-	sq_new(_systemstrings,SQObjectPtrVec);
-	sq_new(_types,SQObjectPtrVec);
+	sq_new(_metamethods,etk::Vector<rabbit::ObjectPtr>);
+	sq_new(_systemstrings,etk::Vector<rabbit::ObjectPtr>);
+	sq_new(_types,etk::Vector<rabbit::ObjectPtr>);
 	_metamethodsmap = SQTable::create(this,MT_LAST-1);
 	//adding type strings to avoid memory trashing
 	//types names
@@ -183,19 +183,19 @@ SQSharedState::~SQSharedState()
 	_weakref_default_delegate.Null();
 	_refs_table.finalize();
 
-	sq_delete(_types,SQObjectPtrVec);
-	sq_delete(_systemstrings,SQObjectPtrVec);
-	sq_delete(_metamethods,SQObjectPtrVec);
+	sq_delete(_types,etk::Vector<rabbit::ObjectPtr>);
+	sq_delete(_systemstrings,etk::Vector<rabbit::ObjectPtr>);
+	sq_delete(_metamethods,etk::Vector<rabbit::ObjectPtr>);
 	sq_delete(_stringtable,SQStringTable);
 	if(_scratchpad)SQ_FREE(_scratchpad,_scratchpadsize);
 }
 
 
-int64_t SQSharedState::getMetaMethodIdxByName(const SQObjectPtr &name)
+int64_t SQSharedState::getMetaMethodIdxByName(const rabbit::ObjectPtr &name)
 {
-	if(sq_type(name) != OT_STRING)
+	if(sq_type(name) != rabbit::OT_STRING)
 		return -1;
-	SQObjectPtr ret;
+	rabbit::ObjectPtr ret;
 	if(_table(_metamethodsmap)->get(name,ret)) {
 		return _integer(ret);
 	}
@@ -203,18 +203,18 @@ int64_t SQSharedState::getMetaMethodIdxByName(const SQObjectPtr &name)
 }
 
 
-SQChar* SQSharedState::getScratchPad(int64_t size)
+rabbit::Char* SQSharedState::getScratchPad(int64_t size)
 {
 	int64_t newsize;
 	if(size>0) {
 		if(_scratchpadsize < size) {
 			newsize = size + (size>>1);
-			_scratchpad = (SQChar *)SQ_REALLOC(_scratchpad,_scratchpadsize,newsize);
+			_scratchpad = (rabbit::Char *)SQ_REALLOC(_scratchpad,_scratchpadsize,newsize);
 			_scratchpadsize = newsize;
 
 		}else if(_scratchpadsize >= (size<<5)) {
 			newsize = _scratchpadsize >> 1;
-			_scratchpad = (SQChar *)SQ_REALLOC(_scratchpad,_scratchpadsize,newsize);
+			_scratchpad = (rabbit::Char *)SQ_REALLOC(_scratchpad,_scratchpadsize,newsize);
 			_scratchpadsize = newsize;
 		}
 	}
@@ -241,7 +241,7 @@ RefTable::~RefTable()
 }
 
 
-void RefTable::addRef(SQObject &obj)
+void RefTable::addRef(rabbit::Object &obj)
 {
 	SQHash mainpos;
 	RefNode *prev;
@@ -249,7 +249,7 @@ void RefTable::addRef(SQObject &obj)
 	ref->refs++;
 }
 
-uint64_t RefTable::getRefCount(SQObject &obj)
+uint64_t RefTable::getRefCount(rabbit::Object &obj)
 {
 	 SQHash mainpos;
 	 RefNode *prev;
@@ -258,14 +258,14 @@ uint64_t RefTable::getRefCount(SQObject &obj)
 }
 
 
-SQBool RefTable::release(SQObject &obj)
+rabbit::Bool RefTable::release(rabbit::Object &obj)
 {
 	SQHash mainpos;
 	RefNode *prev;
 	RefNode *ref = get(obj,mainpos,&prev,false);
 	if(ref) {
 		if(--ref->refs == 0) {
-			SQObjectPtr o = ref->obj;
+			rabbit::ObjectPtr o = ref->obj;
 			if(prev) {
 				prev->next = ref->next;
 			}
@@ -295,7 +295,7 @@ void RefTable::resize(uint64_t size)
 	//rehash
 	uint64_t nfound = 0;
 	for(uint64_t n = 0; n < oldnumofslots; n++) {
-		if(sq_type(t->obj) != OT_NULL) {
+		if(sq_type(t->obj) != rabbit::OT_NULL) {
 			//add back;
 			assert(t->refs != 0);
 			RefNode *nn = add(::HashObj(t->obj)&(_numofslots-1),t->obj);
@@ -309,7 +309,7 @@ void RefTable::resize(uint64_t size)
 	SQ_FREE(oldbucks,(oldnumofslots * sizeof(RefNode *)) + (oldnumofslots * sizeof(RefNode)));
 }
 
-RefTable::RefNode *RefTable::add(SQHash mainpos,SQObject &obj)
+RefTable::RefNode *RefTable::add(SQHash mainpos,rabbit::Object &obj)
 {
 	RefNode *t = _buckets[mainpos];
 	RefNode *newnode = _freelist;
@@ -322,7 +322,7 @@ RefTable::RefNode *RefTable::add(SQHash mainpos,SQObject &obj)
 	return newnode;
 }
 
-RefTable::RefNode *RefTable::get(SQObject &obj,SQHash &mainpos,RefNode **prev,bool addIfNeeded)
+RefTable::RefNode *RefTable::get(rabbit::Object &obj,SQHash &mainpos,RefNode **prev,bool addIfNeeded)
 {
 	RefNode *ref;
 	mainpos = ::HashObj(obj)&(_numofslots-1);
@@ -355,13 +355,13 @@ void RefTable::allocNodes(uint64_t size)
 	for(n = 0; n < size - 1; n++) {
 		bucks[n] = NULL;
 		temp->refs = 0;
-		new (&temp->obj) SQObjectPtr;
+		new (&temp->obj) rabbit::ObjectPtr;
 		temp->next = temp+1;
 		temp++;
 	}
 	bucks[n] = NULL;
 	temp->refs = 0;
-	new (&temp->obj) SQObjectPtr;
+	new (&temp->obj) rabbit::ObjectPtr;
 	temp->next = NULL;
 	_freelist = nodes;
 	_nodes = nodes;
@@ -397,7 +397,7 @@ void SQStringTable::allocNodes(int64_t size)
 	memset(_strings,0,sizeof(SQString*)*_numofslots);
 }
 
-SQString *SQStringTable::add(const SQChar *news,int64_t len)
+SQString *SQStringTable::add(const rabbit::Char *news,int64_t len)
 {
 	if(len<0)
 		len = (int64_t)scstrlen(news);

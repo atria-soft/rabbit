@@ -18,7 +18,7 @@ struct SQOuterVar
 {
 
 	SQOuterVar(){}
-	SQOuterVar(const SQObjectPtr &name,const SQObjectPtr &src,SQOuterType t)
+	SQOuterVar(const rabbit::ObjectPtr &name,const rabbit::ObjectPtr &src,SQOuterType t)
 	{
 		_name = name;
 		_src=src;
@@ -31,8 +31,8 @@ struct SQOuterVar
 		_name=ov._name;
 	}
 	SQOuterType _type;
-	SQObjectPtr _name;
-	SQObjectPtr _src;
+	rabbit::ObjectPtr _name;
+	rabbit::ObjectPtr _src;
 };
 
 struct SQLocalVarInfo
@@ -45,7 +45,7 @@ struct SQLocalVarInfo
 		_end_op=lvi._end_op;
 		_pos=lvi._pos;
 	}
-	SQObjectPtr _name;
+	rabbit::ObjectPtr _name;
 	uint64_t _start_op;
 	uint64_t _end_op;
 	uint64_t _pos;
@@ -58,8 +58,8 @@ typedef etk::Vector<SQLocalVarInfo> SQLocalVarInfoVec;
 typedef etk::Vector<SQLineInfo> SQLineInfoVec;
 
 #define _FUNC_SIZE(ni,nl,nparams,nfuncs,nouters,nlineinf,localinf,defparams) (sizeof(SQFunctionProto) \
-		+((ni-1)*sizeof(SQInstruction))+(nl*sizeof(SQObjectPtr)) \
-		+(nparams*sizeof(SQObjectPtr))+(nfuncs*sizeof(SQObjectPtr)) \
+		+((ni-1)*sizeof(SQInstruction))+(nl*sizeof(rabbit::ObjectPtr)) \
+		+(nparams*sizeof(rabbit::ObjectPtr))+(nfuncs*sizeof(rabbit::ObjectPtr)) \
 		+(nouters*sizeof(SQOuterVar))+(nlineinf*sizeof(SQLineInfo)) \
 		+(localinf*sizeof(SQLocalVarInfo))+(defparams*sizeof(int64_t)))
 
@@ -81,11 +81,11 @@ public:
 		f = (SQFunctionProto *)sq_vm_malloc(_FUNC_SIZE(ninstructions,nliterals,nparameters,nfunctions,noutervalues,nlineinfos,nlocalvarinfos,ndefaultparams));
 		new (f) SQFunctionProto(ss);
 		f->_ninstructions = ninstructions;
-		f->_literals = (SQObjectPtr*)&f->_instructions[ninstructions];
+		f->_literals = (rabbit::ObjectPtr*)&f->_instructions[ninstructions];
 		f->_nliterals = nliterals;
-		f->_parameters = (SQObjectPtr*)&f->_literals[nliterals];
+		f->_parameters = (rabbit::ObjectPtr*)&f->_literals[nliterals];
 		f->_nparameters = nparameters;
-		f->_functions = (SQObjectPtr*)&f->_parameters[nparameters];
+		f->_functions = (rabbit::ObjectPtr*)&f->_parameters[nparameters];
 		f->_nfunctions = nfunctions;
 		f->_outervalues = (SQOuterVar*)&f->_functions[nfunctions];
 		f->_noutervalues = noutervalues;
@@ -96,18 +96,18 @@ public:
 		f->_defaultparams = (int64_t *)&f->_localvarinfos[nlocalvarinfos];
 		f->_ndefaultparams = ndefaultparams;
 
-		_CONSTRUCT_VECTOR(SQObjectPtr,f->_nliterals,f->_literals);
-		_CONSTRUCT_VECTOR(SQObjectPtr,f->_nparameters,f->_parameters);
-		_CONSTRUCT_VECTOR(SQObjectPtr,f->_nfunctions,f->_functions);
+		_CONSTRUCT_VECTOR(rabbit::ObjectPtr,f->_nliterals,f->_literals);
+		_CONSTRUCT_VECTOR(rabbit::ObjectPtr,f->_nparameters,f->_parameters);
+		_CONSTRUCT_VECTOR(rabbit::ObjectPtr,f->_nfunctions,f->_functions);
 		_CONSTRUCT_VECTOR(SQOuterVar,f->_noutervalues,f->_outervalues);
 		//_CONSTRUCT_VECTOR(SQLineInfo,f->_nlineinfos,f->_lineinfos); //not required are 2 integers
 		_CONSTRUCT_VECTOR(SQLocalVarInfo,f->_nlocalvarinfos,f->_localvarinfos);
 		return f;
 	}
 	void release(){
-		_DESTRUCT_VECTOR(SQObjectPtr,_nliterals,_literals);
-		_DESTRUCT_VECTOR(SQObjectPtr,_nparameters,_parameters);
-		_DESTRUCT_VECTOR(SQObjectPtr,_nfunctions,_functions);
+		_DESTRUCT_VECTOR(rabbit::ObjectPtr,_nliterals,_literals);
+		_DESTRUCT_VECTOR(rabbit::ObjectPtr,_nparameters,_parameters);
+		_DESTRUCT_VECTOR(rabbit::ObjectPtr,_nfunctions,_functions);
 		_DESTRUCT_VECTOR(SQOuterVar,_noutervalues,_outervalues);
 		//_DESTRUCT_VECTOR(SQLineInfo,_nlineinfos,_lineinfos); //not required are 2 integers
 		_DESTRUCT_VECTOR(SQLocalVarInfo,_nlocalvarinfos,_localvarinfos);
@@ -116,12 +116,12 @@ public:
 		sq_vm_free(this,size);
 	}
 
-	const SQChar* getLocal(rabbit::VirtualMachine *v,uint64_t stackbase,uint64_t nseq,uint64_t nop);
+	const rabbit::Char* getLocal(rabbit::VirtualMachine *v,uint64_t stackbase,uint64_t nseq,uint64_t nop);
 	int64_t getLine(SQInstruction *curr);
-	bool save(rabbit::VirtualMachine *v,SQUserPointer up,SQWRITEFUNC write);
-	static bool load(rabbit::VirtualMachine *v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &ret);
-	SQObjectPtr _sourcename;
-	SQObjectPtr _name;
+	bool save(rabbit::VirtualMachine *v,rabbit::UserPointer up,SQWRITEFUNC write);
+	static bool load(rabbit::VirtualMachine *v,rabbit::UserPointer up,SQREADFUNC read,rabbit::ObjectPtr &ret);
+	rabbit::ObjectPtr _sourcename;
+	rabbit::ObjectPtr _name;
 	int64_t _stacksize;
 	bool _bgenerator;
 	int64_t _varparams;
@@ -133,13 +133,13 @@ public:
 	SQLineInfo *_lineinfos;
 
 	int64_t _nliterals;
-	SQObjectPtr *_literals;
+	rabbit::ObjectPtr *_literals;
 
 	int64_t _nparameters;
-	SQObjectPtr *_parameters;
+	rabbit::ObjectPtr *_parameters;
 
 	int64_t _nfunctions;
-	SQObjectPtr *_functions;
+	rabbit::ObjectPtr *_functions;
 
 	int64_t _noutervalues;
 	SQOuterVar *_outervalues;

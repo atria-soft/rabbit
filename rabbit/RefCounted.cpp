@@ -12,7 +12,7 @@
 #include <rabbit/squtils.hpp>
 #include <etk/Allocator.hpp>
 
-rabbit::WeakRef * rabbit::RefCounted::getWeakRef(SQObjectType type) {
+rabbit::WeakRef * rabbit::RefCounted::getWeakRef(rabbit::ObjectType type) {
 	if(!_weakref) {
 		sq_new(_weakref, WeakRef);
 #if defined(SQUSEDOUBLE) && !defined(_SQ64)
@@ -26,7 +26,7 @@ rabbit::WeakRef * rabbit::RefCounted::getWeakRef(SQObjectType type) {
 
 rabbit::RefCounted::~RefCounted() {
 	if(_weakref) {
-		_weakref->_obj._type = OT_NULL;
+		_weakref->_obj._type = rabbit::OT_NULL;
 		_weakref->_obj._unVal.pRefCounted = NULL;
 	}
 }

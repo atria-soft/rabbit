@@ -14,18 +14,18 @@ void sqstd_printcallstack(rabbit::VirtualMachine* v)
 {
 	SQPRINTFUNCTION pf = sq_geterrorfunc(v);
 	if(pf) {
-		SQStackInfos si;
+		rabbit::StackInfos si;
 		int64_t i;
 		float_t f;
-		const SQChar *s;
+		const rabbit::Char *s;
 		int64_t level=1; //1 is to skip this function that is level 0
-		const SQChar *name=0;
+		const rabbit::Char *name=0;
 		int64_t seq=0;
 		pf(v,_SC("\nCALLSTACK\n"));
 		while(SQ_SUCCEEDED(sq_stackinfos(v,level,&si)))
 		{
-			const SQChar *fn=_SC("unknown");
-			const SQChar *src=_SC("unknown");
+			const rabbit::Char *fn=_SC("unknown");
+			const rabbit::Char *src=_SC("unknown");
 			if(si.funcname)fn=si.funcname;
 			if(si.source)src=si.source;
 			pf(v,_SC("*FUNCTION [%s()] %s line [%d]\n"),fn,src,si.line);
@@ -41,56 +41,56 @@ void sqstd_printcallstack(rabbit::VirtualMachine* v)
 				seq++;
 				switch(sq_gettype(v,-1))
 				{
-				case OT_NULL:
+				case rabbit::OT_NULL:
 					pf(v,_SC("[%s] NULL\n"),name);
 					break;
-				case OT_INTEGER:
+				case rabbit::OT_INTEGER:
 					sq_getinteger(v,-1,&i);
 					pf(v,_SC("[%s] %d\n"),name,i);
 					break;
-				case OT_FLOAT:
+				case rabbit::OT_FLOAT:
 					sq_getfloat(v,-1,&f);
 					pf(v,_SC("[%s] %.14g\n"),name,f);
 					break;
-				case OT_USERPOINTER:
+				case rabbit::OT_USERPOINTER:
 					pf(v,_SC("[%s] USERPOINTER\n"),name);
 					break;
-				case OT_STRING:
+				case rabbit::OT_STRING:
 					sq_getstring(v,-1,&s);
 					pf(v,_SC("[%s] \"%s\"\n"),name,s);
 					break;
-				case OT_TABLE:
+				case rabbit::OT_TABLE:
 					pf(v,_SC("[%s] TABLE\n"),name);
 					break;
-				case OT_ARRAY:
+				case rabbit::OT_ARRAY:
 					pf(v,_SC("[%s] ARRAY\n"),name);
 					break;
-				case OT_CLOSURE:
+				case rabbit::OT_CLOSURE:
 					pf(v,_SC("[%s] CLOSURE\n"),name);
 					break;
-				case OT_NATIVECLOSURE:
+				case rabbit::OT_NATIVECLOSURE:
 					pf(v,_SC("[%s] NATIVECLOSURE\n"),name);
 					break;
-				case OT_GENERATOR:
+				case rabbit::OT_GENERATOR:
 					pf(v,_SC("[%s] GENERATOR\n"),name);
 					break;
-				case OT_USERDATA:
+				case rabbit::OT_USERDATA:
 					pf(v,_SC("[%s] USERDATA\n"),name);
 					break;
-				case OT_THREAD:
+				case rabbit::OT_THREAD:
 					pf(v,_SC("[%s] THREAD\n"),name);
 					break;
-				case OT_CLASS:
+				case rabbit::OT_CLASS:
 					pf(v,_SC("[%s] CLASS\n"),name);
 					break;
-				case OT_INSTANCE:
+				case rabbit::OT_INSTANCE:
 					pf(v,_SC("[%s] INSTANCE\n"),name);
 					break;
-				case OT_WEAKREF:
+				case rabbit::OT_WEAKREF:
 					pf(v,_SC("[%s] WEAKREF\n"),name);
 					break;
-				case OT_BOOL:{
-					SQBool bval;
+				case rabbit::OT_BOOL:{
+					rabbit::Bool bval;
 					sq_getbool(v,-1,&bval);
 					pf(v,_SC("[%s] %s\n"),name,bval == SQTrue ? _SC("true"):_SC("false"));
 							 }
@@ -107,7 +107,7 @@ static int64_t _sqstd_aux_printerror(rabbit::VirtualMachine* v)
 {
 	SQPRINTFUNCTION pf = sq_geterrorfunc(v);
 	if(pf) {
-		const SQChar *sErr = 0;
+		const rabbit::Char *sErr = 0;
 		if(sq_gettop(v)>=1) {
 			if(SQ_SUCCEEDED(sq_getstring(v,2,&sErr)))   {
 				pf(v,_SC("\nAN ERROR HAS OCCURRED [%s]\n"),sErr);
@@ -121,7 +121,7 @@ static int64_t _sqstd_aux_printerror(rabbit::VirtualMachine* v)
 	return 0;
 }
 
-void _sqstd_compiler_error(rabbit::VirtualMachine* v,const SQChar *sErr,const SQChar *sSource,int64_t line,int64_t column)
+void _sqstd_compiler_error(rabbit::VirtualMachine* v,const rabbit::Char *sErr,const rabbit::Char *sSource,int64_t line,int64_t column)
 {
 	SQPRINTFUNCTION pf = sq_geterrorfunc(v);
 	if(pf) {

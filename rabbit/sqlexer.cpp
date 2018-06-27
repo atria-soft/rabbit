@@ -29,7 +29,7 @@ SQLexer::~SQLexer()
 	_keywords->release();
 }
 
-void SQLexer::init(SQSharedState *ss, SQLEXREADFUNC rg, SQUserPointer up,compilererrorFunc efunc,void *ed)
+void SQLexer::init(SQSharedState *ss, SQLEXREADFUNC rg, rabbit::UserPointer up,compilererrorFunc efunc,void *ed)
 {
 	_errfunc = efunc;
 	_errtarget = ed;
@@ -84,7 +84,7 @@ void SQLexer::init(SQSharedState *ss, SQLEXREADFUNC rg, SQUserPointer up,compile
 	next();
 }
 
-void SQLexer::error(const SQChar *err)
+void SQLexer::error(const rabbit::Char *err)
 {
 	_errfunc(_errtarget,err);
 }
@@ -101,9 +101,9 @@ void SQLexer::next()
 	_reached_eof = SQTrue;
 }
 
-const SQChar *SQLexer::tok2Str(int64_t tok)
+const rabbit::Char *SQLexer::tok2Str(int64_t tok)
 {
-	SQObjectPtr itr, key, val;
+	rabbit::ObjectPtr itr, key, val;
 	int64_t nitr;
 	while((nitr = _keywords->next(false,itr, key, val)) != -1) {
 		itr = (int64_t)nitr;
@@ -285,9 +285,9 @@ int64_t SQLexer::Lex()
 	return 0;
 }
 
-int64_t SQLexer::getIDType(const SQChar *s,int64_t len)
+int64_t SQLexer::getIDType(const rabbit::Char *s,int64_t len)
 {
-	SQObjectPtr t;
+	rabbit::ObjectPtr t;
 	if(_keywords->getStr(s,len, t)) {
 		return int64_t(_integer(t));
 	}
@@ -301,12 +301,12 @@ int64_t SQLexer::addUTF16(uint64_t ch)
 	if (ch >= 0x10000)
 	{
 		uint64_t code = (ch - 0x10000);
-		APPEND_CHAR((SQChar)(0xD800 | (code >> 10)));
-		APPEND_CHAR((SQChar)(0xDC00 | (code & 0x3FF)));
+		APPEND_CHAR((rabbit::Char)(0xD800 | (code >> 10)));
+		APPEND_CHAR((rabbit::Char)(0xDC00 | (code & 0x3FF)));
 		return 2;
 	}
 	else {
-		APPEND_CHAR((SQChar)ch);
+		APPEND_CHAR((rabbit::Char)ch);
 		return 1;
 	}
 }
@@ -319,28 +319,28 @@ int64_t SQLexer::addUTF8(uint64_t ch)
 		return 1;
 	}
 	if (ch < 0x800) {
-		APPEND_CHAR((SQChar)((ch >> 6) | 0xC0));
-		APPEND_CHAR((SQChar)((ch & 0x3F) | 0x80));
+		APPEND_CHAR((rabbit::Char)((ch >> 6) | 0xC0));
+		APPEND_CHAR((rabbit::Char)((ch & 0x3F) | 0x80));
 		return 2;
 	}
 	if (ch < 0x10000) {
-		APPEND_CHAR((SQChar)((ch >> 12) | 0xE0));
-		APPEND_CHAR((SQChar)(((ch >> 6) & 0x3F) | 0x80));
-		APPEND_CHAR((SQChar)((ch & 0x3F) | 0x80));
+		APPEND_CHAR((rabbit::Char)((ch >> 12) | 0xE0));
+		APPEND_CHAR((rabbit::Char)(((ch >> 6) & 0x3F) | 0x80));
+		APPEND_CHAR((rabbit::Char)((ch & 0x3F) | 0x80));
 		return 3;
 	}
 	if (ch < 0x110000) {
-		APPEND_CHAR((SQChar)((ch >> 18) | 0xF0));
-		APPEND_CHAR((SQChar)(((ch >> 12) & 0x3F) | 0x80));
-		APPEND_CHAR((SQChar)(((ch >> 6) & 0x3F) | 0x80));
-		APPEND_CHAR((SQChar)((ch & 0x3F) | 0x80));
+		APPEND_CHAR((rabbit::Char)((ch >> 18) | 0xF0));
+		APPEND_CHAR((rabbit::Char)(((ch >> 12) & 0x3F) | 0x80));
+		APPEND_CHAR((rabbit::Char)(((ch >> 6) & 0x3F) | 0x80));
+		APPEND_CHAR((rabbit::Char)((ch & 0x3F) | 0x80));
 		return 4;
 	}
 	return 0;
 }
 #endif
 
-int64_t SQLexer::processStringHexEscape(SQChar *dest, int64_t maxdigits)
+int64_t SQLexer::processStringHexEscape(rabbit::Char *dest, int64_t maxdigits)
 {
 	NEXT();
 	if (!isxdigit(CUR_CHAR)) error(_SC("hexadecimal number expected"));
@@ -379,24 +379,24 @@ int64_t SQLexer::readString(int64_t ndelim,bool verbatim)
 					NEXT();
 					switch(CUR_CHAR) {
 					case _SC('x'):  {
-						const int64_t maxdigits = sizeof(SQChar) * 2;
-						SQChar temp[maxdigits + 1];
+						const int64_t maxdigits = sizeof(rabbit::Char) * 2;
+						rabbit::Char temp[maxdigits + 1];
 						processStringHexEscape(temp, maxdigits);
-						SQChar *stemp;
-						APPEND_CHAR((SQChar)scstrtoul(temp, &stemp, 16));
+						rabbit::Char *stemp;
+						APPEND_CHAR((rabbit::Char)scstrtoul(temp, &stemp, 16));
 					}
 					break;
 					case _SC('U'):
 					case _SC('u'):  {
 						const int64_t maxdigits = CUR_CHAR == 'u' ? 4 : 8;
-						SQChar temp[8 + 1];
+						rabbit::Char temp[8 + 1];
 						processStringHexEscape(temp, maxdigits);
-						SQChar *stemp;
+						rabbit::Char *stemp;
 #ifdef SQUNICODE
 #if WCHAR_SIZE == 2
 						addUTF16(scstrtoul(temp, &stemp, 16));
 #else
-						APPEND_CHAR((SQChar)scstrtoul(temp, &stemp, 16));
+						APPEND_CHAR((rabbit::Char)scstrtoul(temp, &stemp, 16));
 #endif
 #else
 						addUTF8(scstrtoul(temp, &stemp, 16));
@@ -446,7 +446,7 @@ int64_t SQLexer::readString(int64_t ndelim,bool verbatim)
 	return TK_STRING_LITERAL;
 }
 
-void LexHexadecimal(const SQChar *s,uint64_t *res)
+void LexHexadecimal(const rabbit::Char *s,uint64_t *res)
 {
 	*res = 0;
 	while(*s != 0)
@@ -457,7 +457,7 @@ void LexHexadecimal(const SQChar *s,uint64_t *res)
 	}
 }
 
-void LexInteger(const SQChar *s,uint64_t *res)
+void LexInteger(const rabbit::Char *s,uint64_t *res)
 {
 	*res = 0;
 	while(*s != 0)
@@ -468,7 +468,7 @@ void LexInteger(const SQChar *s,uint64_t *res)
 
 int64_t scisodigit(int64_t c) { return c >= _SC('0') && c <= _SC('7'); }
 
-void LexOctal(const SQChar *s,uint64_t *res)
+void LexOctal(const rabbit::Char *s,uint64_t *res)
 {
 	*res = 0;
 	while(*s != 0)
@@ -490,7 +490,7 @@ int64_t SQLexer::readNumber()
 #define TSCIENTIFIC 4
 #define TOCTAL 5
 	int64_t type = TINT, firstchar = CUR_CHAR;
-	SQChar *sTemp;
+	rabbit::Char *sTemp;
 	INIT_TEMP_STRING();
 	NEXT();
 	if(firstchar == _SC('0') && (toupper(CUR_CHAR) == _SC('X') || scisodigit(CUR_CHAR)) ) {
