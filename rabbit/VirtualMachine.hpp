@@ -9,6 +9,7 @@
 
 #include <rabbit/sqopcodes.hpp>
 #include <rabbit/sqobject.hpp>
+#include <rabbit/AutoDec.hpp>
 
 #define MAX_NATIVE_CALLS 100
 #define MIN_STACK_OVERHEAD 15
@@ -20,10 +21,11 @@
 
 #define GET_FLAG_RAW				0x00000001
 #define GET_FLAG_DO_NOT_RAISE_ERROR 0x00000002
+
 //base lib
 void sq_base_register(rabbit::VirtualMachine* v);
 
-struct SQExceptionTrap{
+struct SQExceptionTrap {
 	SQExceptionTrap() {}
 	SQExceptionTrap(int64_t ss, int64_t stackbase,SQInstruction *ip, int64_t ex_target){ _stacksize = ss; _stackbase = stackbase; _ip = ip; _extarget = ex_target;}
 	SQExceptionTrap(const SQExceptionTrap &et) { (*this) = et;  }
@@ -40,7 +42,6 @@ namespace rabbit {
 	{
 		public:
 			struct callInfo{
-				//callInfo() { _generator = NULL;}
 				SQInstruction *_ip;
 				SQObjectPtr *_literals;
 				SQObjectPtr _closure;
@@ -187,15 +188,6 @@ namespace rabbit {
 			int64_t _suspended_traps;
 	};
 	
-	struct AutoDec{
-		AutoDec(int64_t *n) {
-			_n = n;
-		}
-		~AutoDec() {
-			(*_n)--;
-		}
-		int64_t *_n;
-	};
 	
 	inline SQObjectPtr &stack_get(rabbit::VirtualMachine* _vm,int64_t _idx) {
 		if (_idx>=0) {
@@ -204,6 +196,7 @@ namespace rabbit {
 		return _vm->getUp(_idx);
 	}
 }
+
 #define _ss(_vm_) (_vm_)->_sharedstate
 
 #define PUSH_CALLINFO(v,nci){ \
