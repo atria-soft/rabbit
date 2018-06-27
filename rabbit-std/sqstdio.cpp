@@ -116,7 +116,7 @@ private:
 	bool _owns;
 };
 
-static int64_t _file__typeof(HRABBITVM v)
+static int64_t _file__typeof(rabbit::VirtualMachine* v)
 {
 	sq_pushstring(v,_SC("file"),-1);
 	return 1;
@@ -130,7 +130,7 @@ static int64_t _file_releasehook(SQUserPointer p, int64_t SQ_UNUSED_ARG(size))
 	return 1;
 }
 
-static int64_t _file_constructor(HRABBITVM v)
+static int64_t _file_constructor(rabbit::VirtualMachine* v)
 {
 	const SQChar *filename,*mode;
 	bool owns = true;
@@ -158,7 +158,7 @@ static int64_t _file_constructor(HRABBITVM v)
 	return 0;
 }
 
-static int64_t _file_close(HRABBITVM v)
+static int64_t _file_close(rabbit::VirtualMachine* v)
 {
 	SQFile *self = NULL;
 	if(SQ_SUCCEEDED(sq_getinstanceup(v,1,(SQUserPointer*)&self,(SQUserPointer)SQSTD_FILE_TYPE_TAG))
@@ -180,7 +180,7 @@ static const SQRegFunction _file_methods[] = {
 
 
 
-SQRESULT sqstd_createfile(HRABBITVM v, SQFILE file,SQBool own)
+SQRESULT sqstd_createfile(rabbit::VirtualMachine* v, SQFILE file,SQBool own)
 {
 	int64_t top = sq_gettop(v);
 	sq_pushregistrytable(v);
@@ -204,7 +204,7 @@ SQRESULT sqstd_createfile(HRABBITVM v, SQFILE file,SQBool own)
 	return SQ_ERROR;
 }
 
-SQRESULT sqstd_getfile(HRABBITVM v, int64_t idx, SQFILE *file)
+SQRESULT sqstd_getfile(rabbit::VirtualMachine* v, int64_t idx, SQFILE *file)
 {
 	SQFile *fileobj = NULL;
 	if(SQ_SUCCEEDED(sq_getinstanceup(v,idx,(SQUserPointer*)&fileobj,(SQUserPointer)SQSTD_FILE_TYPE_TAG))) {
@@ -344,7 +344,7 @@ int64_t file_write(SQUserPointer file,SQUserPointer p,int64_t size)
 	return sqstd_fwrite(p,1,size,(SQFILE)file);
 }
 
-SQRESULT sqstd_loadfile(HRABBITVM v,const SQChar *filename,SQBool printerror)
+SQRESULT sqstd_loadfile(rabbit::VirtualMachine* v,const SQChar *filename,SQBool printerror)
 {
 	SQFILE file = sqstd_fopen(filename,_SC("rb"));
 
@@ -404,7 +404,7 @@ SQRESULT sqstd_loadfile(HRABBITVM v,const SQChar *filename,SQBool printerror)
 	return sq_throwerror(v,_SC("cannot open the file"));
 }
 
-SQRESULT sqstd_dofile(HRABBITVM v,const SQChar *filename,SQBool retval,SQBool printerror)
+SQRESULT sqstd_dofile(rabbit::VirtualMachine* v,const SQChar *filename,SQBool retval,SQBool printerror)
 {
 	//at least one entry must exist in order for us to push it as the environment
 	if(sq_gettop(v) == 0)
@@ -421,7 +421,7 @@ SQRESULT sqstd_dofile(HRABBITVM v,const SQChar *filename,SQBool retval,SQBool pr
 	return SQ_ERROR;
 }
 
-SQRESULT sqstd_writeclosuretofile(HRABBITVM v,const SQChar *filename)
+SQRESULT sqstd_writeclosuretofile(rabbit::VirtualMachine* v,const SQChar *filename)
 {
 	SQFILE file = sqstd_fopen(filename,_SC("wb+"));
 	if(!file) return sq_throwerror(v,_SC("cannot open the file"));
@@ -433,7 +433,7 @@ SQRESULT sqstd_writeclosuretofile(HRABBITVM v,const SQChar *filename)
 	return SQ_ERROR; //forward the error
 }
 
-int64_t _g_io_loadfile(HRABBITVM v)
+int64_t _g_io_loadfile(rabbit::VirtualMachine* v)
 {
 	const SQChar *filename;
 	SQBool printerror = SQFalse;
@@ -446,7 +446,7 @@ int64_t _g_io_loadfile(HRABBITVM v)
 	return SQ_ERROR; //propagates the error
 }
 
-int64_t _g_io_writeclosuretofile(HRABBITVM v)
+int64_t _g_io_writeclosuretofile(rabbit::VirtualMachine* v)
 {
 	const SQChar *filename;
 	sq_getstring(v,2,&filename);
@@ -455,7 +455,7 @@ int64_t _g_io_writeclosuretofile(HRABBITVM v)
 	return SQ_ERROR; //propagates the error
 }
 
-int64_t _g_io_dofile(HRABBITVM v)
+int64_t _g_io_dofile(rabbit::VirtualMachine* v)
 {
 	const SQChar *filename;
 	SQBool printerror = SQFalse;
@@ -477,7 +477,7 @@ static const SQRegFunction iolib_funcs[]={
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 
-SQRESULT sqstd_register_iolib(HRABBITVM v)
+SQRESULT sqstd_register_iolib(rabbit::VirtualMachine* v)
 {
 	int64_t top = sq_gettop(v);
 	//create delegate

@@ -25,7 +25,6 @@
 #define SQTrue  (1)
 #define SQFalse (0)
 
-struct SQVM;
 struct SQTable;
 struct SQString;
 struct SQClosure;
@@ -41,6 +40,7 @@ namespace rabbit {
 	class Array;
 	class RefCounted;
 	class WeakRef;
+	class VirtualMachine;
 	
 }
 #ifdef _UNICODE
@@ -91,24 +91,24 @@ namespace rabbit {
 #define _RT_OUTER		   0x00020000
 
 typedef enum tagSQObjectType{
-	OT_NULL =		   (_RT_NULL|SQOBJECT_CANBEFALSE),
-	OT_INTEGER =		(_RT_INTEGER|SQOBJECT_NUMERIC|SQOBJECT_CANBEFALSE),
-	OT_FLOAT =		  (_RT_FLOAT|SQOBJECT_NUMERIC|SQOBJECT_CANBEFALSE),
-	OT_BOOL =		   (_RT_BOOL|SQOBJECT_CANBEFALSE),
-	OT_STRING =		 (_RT_STRING|SQOBJECT_REF_COUNTED),
-	OT_TABLE =		  (_RT_TABLE|SQOBJECT_REF_COUNTED|SQOBJECT_DELEGABLE),
-	OT_ARRAY =		  (_RT_ARRAY|SQOBJECT_REF_COUNTED),
-	OT_USERDATA =	   (_RT_USERDATA|SQOBJECT_REF_COUNTED|SQOBJECT_DELEGABLE),
-	OT_CLOSURE =		(_RT_CLOSURE|SQOBJECT_REF_COUNTED),
+	OT_NULL =           (_RT_NULL|SQOBJECT_CANBEFALSE),
+	OT_INTEGER =        (_RT_INTEGER|SQOBJECT_NUMERIC|SQOBJECT_CANBEFALSE),
+	OT_FLOAT =          (_RT_FLOAT|SQOBJECT_NUMERIC|SQOBJECT_CANBEFALSE),
+	OT_BOOL =           (_RT_BOOL|SQOBJECT_CANBEFALSE),
+	OT_STRING =         (_RT_STRING|SQOBJECT_REF_COUNTED),
+	OT_TABLE =          (_RT_TABLE|SQOBJECT_REF_COUNTED|SQOBJECT_DELEGABLE),
+	OT_ARRAY =          (_RT_ARRAY|SQOBJECT_REF_COUNTED),
+	OT_USERDATA =       (_RT_USERDATA|SQOBJECT_REF_COUNTED|SQOBJECT_DELEGABLE),
+	OT_CLOSURE =        (_RT_CLOSURE|SQOBJECT_REF_COUNTED),
 	OT_NATIVECLOSURE =  (_RT_NATIVECLOSURE|SQOBJECT_REF_COUNTED),
-	OT_GENERATOR =	  (_RT_GENERATOR|SQOBJECT_REF_COUNTED),
-	OT_USERPOINTER =	_RT_USERPOINTER,
-	OT_THREAD =		 (_RT_THREAD|SQOBJECT_REF_COUNTED) ,
-	OT_FUNCPROTO =	  (_RT_FUNCPROTO|SQOBJECT_REF_COUNTED), //internal usage only
-	OT_CLASS =		  (_RT_CLASS|SQOBJECT_REF_COUNTED),
-	OT_INSTANCE =	   (_RT_INSTANCE|SQOBJECT_REF_COUNTED|SQOBJECT_DELEGABLE),
-	OT_WEAKREF =		(_RT_WEAKREF|SQOBJECT_REF_COUNTED),
-	OT_OUTER =		  (_RT_OUTER|SQOBJECT_REF_COUNTED) //internal usage only
+	OT_GENERATOR =      (_RT_GENERATOR|SQOBJECT_REF_COUNTED),
+	OT_USERPOINTER =    _RT_USERPOINTER,
+	OT_THREAD =         (_RT_THREAD|SQOBJECT_REF_COUNTED) ,
+	OT_FUNCPROTO =      (_RT_FUNCPROTO|SQOBJECT_REF_COUNTED), //internal usage only
+	OT_CLASS =          (_RT_CLASS|SQOBJECT_REF_COUNTED),
+	OT_INSTANCE =       (_RT_INSTANCE|SQOBJECT_REF_COUNTED|SQOBJECT_DELEGABLE),
+	OT_WEAKREF =        (_RT_WEAKREF|SQOBJECT_REF_COUNTED),
+	OT_OUTER =          (_RT_OUTER|SQOBJECT_REF_COUNTED) //internal usage only
 }SQObjectType;
 
 #define ISREFCOUNTED(t) (t&SQOBJECT_REF_COUNTED)
@@ -117,23 +117,25 @@ typedef enum tagSQObjectType{
 typedef union tagSQObjectValue
 {
 	struct SQTable *pTable;
-	struct rabbit::Array *pArray;
 	struct SQClosure *pClosure;
 	struct SQOuter *pOuter;
 	struct SQGenerator *pGenerator;
 	struct SQNativeClosure *pNativeClosure;
 	struct SQString *pString;
-	struct rabbit::UserData *pUserData;
 	int64_t nInteger;
 	float_t fFloat;
 	SQUserPointer pUserPointer;
 	struct SQFunctionProto *pFunctionProto;
-	struct rabbit::RefCounted *pRefCounted;
 	struct SQDelegable *pDelegable;
-	struct SQVM *pThread;
 	struct SQClass *pClass;
 	struct SQInstance *pInstance;
+	
 	struct rabbit::WeakRef *pWeakRef;
+	struct rabbit::VirtualMachine* pThread;
+	struct rabbit::RefCounted *pRefCounted;
+	struct rabbit::Array *pArray;
+	struct rabbit::UserData *pUserData;
+	
 	SQRawObjectVal raw;
 }SQObjectValue;
 
@@ -144,7 +146,7 @@ typedef struct tagSQObject
 	SQObjectValue _unVal;
 }SQObject;
 
-typedef struct  tagSQMemberHandle{
+typedef struct tagSQMemberHandle{
 	SQBool _static;
 	int64_t _index;
 }SQMemberHandle;
@@ -155,14 +157,13 @@ typedef struct tagSQStackInfos{
 	int64_t line;
 }SQStackInfos;
 
-typedef struct SQVM* HRABBITVM;
 typedef SQObject HSQOBJECT;
 typedef SQMemberHandle HSQMEMBERHANDLE;
-typedef int64_t (*SQFUNCTION)(HRABBITVM);
+typedef int64_t (*SQFUNCTION)(rabbit::VirtualMachine*);
 typedef int64_t (*SQRELEASEHOOK)(SQUserPointer,int64_t size);
-typedef void (*SQCOMPILERERROR)(HRABBITVM,const SQChar * /*desc*/,const SQChar * /*source*/,int64_t /*line*/,int64_t /*column*/);
-typedef void (*SQPRINTFUNCTION)(HRABBITVM,const SQChar * ,...);
-typedef void (*SQDEBUGHOOK)(HRABBITVM /*v*/, int64_t /*type*/, const SQChar * /*sourcename*/, int64_t /*line*/, const SQChar * /*funcname*/);
+typedef void (*SQCOMPILERERROR)(rabbit::VirtualMachine*,const SQChar * /*desc*/,const SQChar * /*source*/,int64_t /*line*/,int64_t /*column*/);
+typedef void (*SQPRINTFUNCTION)(rabbit::VirtualMachine*,const SQChar * ,...);
+typedef void (*SQDEBUGHOOK)(rabbit::VirtualMachine* /*v*/, int64_t /*type*/, const SQChar * /*sourcename*/, int64_t /*line*/, const SQChar * /*funcname*/);
 typedef int64_t (*SQWRITEFUNC)(SQUserPointer,SQUserPointer,int64_t);
 typedef int64_t (*SQREADFUNC)(SQUserPointer,SQUserPointer,int64_t);
 
@@ -183,147 +184,147 @@ typedef struct tagSQFunctionInfo {
 }SQFunctionInfo;
 
 /*vm*/
-RABBIT_API HRABBITVM sq_open(int64_t initialstacksize);
-RABBIT_API HRABBITVM sq_newthread(HRABBITVM friendvm, int64_t initialstacksize);
-RABBIT_API void sq_seterrorhandler(HRABBITVM v);
-RABBIT_API void sq_close(HRABBITVM v);
-RABBIT_API void sq_setforeignptr(HRABBITVM v,SQUserPointer p);
-RABBIT_API SQUserPointer sq_getforeignptr(HRABBITVM v);
-RABBIT_API void sq_setsharedforeignptr(HRABBITVM v,SQUserPointer p);
-RABBIT_API SQUserPointer sq_getsharedforeignptr(HRABBITVM v);
-RABBIT_API void sq_setvmreleasehook(HRABBITVM v,SQRELEASEHOOK hook);
-RABBIT_API SQRELEASEHOOK sq_getvmreleasehook(HRABBITVM v);
-RABBIT_API void sq_setsharedreleasehook(HRABBITVM v,SQRELEASEHOOK hook);
-RABBIT_API SQRELEASEHOOK sq_getsharedreleasehook(HRABBITVM v);
-RABBIT_API void sq_setprintfunc(HRABBITVM v, SQPRINTFUNCTION printfunc,SQPRINTFUNCTION errfunc);
-RABBIT_API SQPRINTFUNCTION sq_getprintfunc(HRABBITVM v);
-RABBIT_API SQPRINTFUNCTION sq_geterrorfunc(HRABBITVM v);
-RABBIT_API SQRESULT sq_suspendvm(HRABBITVM v);
-RABBIT_API SQRESULT sq_wakeupvm(HRABBITVM v,SQBool resumedret,SQBool retval,SQBool raiseerror,SQBool throwerror);
-RABBIT_API int64_t sq_getvmstate(HRABBITVM v);
+RABBIT_API rabbit::VirtualMachine* sq_open(int64_t initialstacksize);
+RABBIT_API rabbit::VirtualMachine* sq_newthread(rabbit::VirtualMachine* friendvm, int64_t initialstacksize);
+RABBIT_API void sq_seterrorhandler(rabbit::VirtualMachine* v);
+RABBIT_API void sq_close(rabbit::VirtualMachine* v);
+RABBIT_API void sq_setforeignptr(rabbit::VirtualMachine* v,SQUserPointer p);
+RABBIT_API SQUserPointer sq_getforeignptr(rabbit::VirtualMachine* v);
+RABBIT_API void sq_setsharedforeignptr(rabbit::VirtualMachine* v,SQUserPointer p);
+RABBIT_API SQUserPointer sq_getsharedforeignptr(rabbit::VirtualMachine* v);
+RABBIT_API void sq_setvmreleasehook(rabbit::VirtualMachine* v,SQRELEASEHOOK hook);
+RABBIT_API SQRELEASEHOOK sq_getvmreleasehook(rabbit::VirtualMachine* v);
+RABBIT_API void sq_setsharedreleasehook(rabbit::VirtualMachine* v,SQRELEASEHOOK hook);
+RABBIT_API SQRELEASEHOOK sq_getsharedreleasehook(rabbit::VirtualMachine* v);
+RABBIT_API void sq_setprintfunc(rabbit::VirtualMachine* v, SQPRINTFUNCTION printfunc,SQPRINTFUNCTION errfunc);
+RABBIT_API SQPRINTFUNCTION sq_getprintfunc(rabbit::VirtualMachine* v);
+RABBIT_API SQPRINTFUNCTION sq_geterrorfunc(rabbit::VirtualMachine* v);
+RABBIT_API SQRESULT sq_suspendvm(rabbit::VirtualMachine* v);
+RABBIT_API SQRESULT sq_wakeupvm(rabbit::VirtualMachine* v,SQBool resumedret,SQBool retval,SQBool raiseerror,SQBool throwerror);
+RABBIT_API int64_t sq_getvmstate(rabbit::VirtualMachine* v);
 RABBIT_API int64_t sq_getversion();
 
 /*compiler*/
-RABBIT_API SQRESULT sq_compile(HRABBITVM v,SQLEXREADFUNC read,SQUserPointer p,const SQChar *sourcename,SQBool raiseerror);
-RABBIT_API SQRESULT sq_compilebuffer(HRABBITVM v,const SQChar *s,int64_t size,const SQChar *sourcename,SQBool raiseerror);
-RABBIT_API void sq_enabledebuginfo(HRABBITVM v, SQBool enable);
-RABBIT_API void sq_notifyallexceptions(HRABBITVM v, SQBool enable);
-RABBIT_API void sq_setcompilererrorhandler(HRABBITVM v,SQCOMPILERERROR f);
+RABBIT_API SQRESULT sq_compile(rabbit::VirtualMachine* v,SQLEXREADFUNC read,SQUserPointer p,const SQChar *sourcename,SQBool raiseerror);
+RABBIT_API SQRESULT sq_compilebuffer(rabbit::VirtualMachine* v,const SQChar *s,int64_t size,const SQChar *sourcename,SQBool raiseerror);
+RABBIT_API void sq_enabledebuginfo(rabbit::VirtualMachine* v, SQBool enable);
+RABBIT_API void sq_notifyallexceptions(rabbit::VirtualMachine* v, SQBool enable);
+RABBIT_API void sq_setcompilererrorhandler(rabbit::VirtualMachine* v,SQCOMPILERERROR f);
 
 /*stack operations*/
-RABBIT_API void sq_push(HRABBITVM v,int64_t idx);
-RABBIT_API void sq_pop(HRABBITVM v,int64_t nelemstopop);
-RABBIT_API void sq_poptop(HRABBITVM v);
-RABBIT_API void sq_remove(HRABBITVM v,int64_t idx);
-RABBIT_API int64_t sq_gettop(HRABBITVM v);
-RABBIT_API void sq_settop(HRABBITVM v,int64_t newtop);
-RABBIT_API SQRESULT sq_reservestack(HRABBITVM v,int64_t nsize);
-RABBIT_API int64_t sq_cmp(HRABBITVM v);
-RABBIT_API void sq_move(HRABBITVM dest,HRABBITVM src,int64_t idx);
+RABBIT_API void sq_push(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API void sq_pop(rabbit::VirtualMachine* v,int64_t nelemstopop);
+RABBIT_API void sq_poptop(rabbit::VirtualMachine* v);
+RABBIT_API void sq_remove(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API int64_t sq_gettop(rabbit::VirtualMachine* v);
+RABBIT_API void sq_settop(rabbit::VirtualMachine* v,int64_t newtop);
+RABBIT_API SQRESULT sq_reservestack(rabbit::VirtualMachine* v,int64_t nsize);
+RABBIT_API int64_t sq_cmp(rabbit::VirtualMachine* v);
+RABBIT_API void sq_move(rabbit::VirtualMachine* dest,rabbit::VirtualMachine* src,int64_t idx);
 
 /*object creation handling*/
-RABBIT_API SQUserPointer sq_newuserdata(HRABBITVM v,uint64_t size);
-RABBIT_API void sq_newtable(HRABBITVM v);
-RABBIT_API void sq_newtableex(HRABBITVM v,int64_t initialcapacity);
-RABBIT_API void sq_newarray(HRABBITVM v,int64_t size);
-RABBIT_API void sq_newclosure(HRABBITVM v,SQFUNCTION func,uint64_t nfreevars);
-RABBIT_API SQRESULT sq_setparamscheck(HRABBITVM v,int64_t nparamscheck,const SQChar *typemask);
-RABBIT_API SQRESULT sq_bindenv(HRABBITVM v,int64_t idx);
-RABBIT_API SQRESULT sq_setclosureroot(HRABBITVM v,int64_t idx);
-RABBIT_API SQRESULT sq_getclosureroot(HRABBITVM v,int64_t idx);
-RABBIT_API void sq_pushstring(HRABBITVM v,const SQChar *s,int64_t len);
-RABBIT_API void sq_pushfloat(HRABBITVM v,float_t f);
-RABBIT_API void sq_pushinteger(HRABBITVM v,int64_t n);
-RABBIT_API void sq_pushbool(HRABBITVM v,SQBool b);
-RABBIT_API void sq_pushuserpointer(HRABBITVM v,SQUserPointer p);
-RABBIT_API void sq_pushnull(HRABBITVM v);
-RABBIT_API void sq_pushthread(HRABBITVM v, HRABBITVM thread);
-RABBIT_API SQObjectType sq_gettype(HRABBITVM v,int64_t idx);
-RABBIT_API SQRESULT sq_typeof(HRABBITVM v,int64_t idx);
-RABBIT_API int64_t sq_getsize(HRABBITVM v,int64_t idx);
-RABBIT_API SQHash sq_gethash(HRABBITVM v, int64_t idx);
-RABBIT_API SQRESULT sq_getbase(HRABBITVM v,int64_t idx);
-RABBIT_API SQBool sq_instanceof(HRABBITVM v);
-RABBIT_API SQRESULT sq_tostring(HRABBITVM v,int64_t idx);
-RABBIT_API void sq_tobool(HRABBITVM v, int64_t idx, SQBool *b);
-RABBIT_API SQRESULT sq_getstringandsize(HRABBITVM v,int64_t idx,const SQChar **c,int64_t *size);
-RABBIT_API SQRESULT sq_getstring(HRABBITVM v,int64_t idx,const SQChar **c);
-RABBIT_API SQRESULT sq_getinteger(HRABBITVM v,int64_t idx,int64_t *i);
-RABBIT_API SQRESULT sq_getfloat(HRABBITVM v,int64_t idx,float_t *f);
-RABBIT_API SQRESULT sq_getbool(HRABBITVM v,int64_t idx,SQBool *b);
-RABBIT_API SQRESULT sq_getthread(HRABBITVM v,int64_t idx,HRABBITVM *thread);
-RABBIT_API SQRESULT sq_getuserpointer(HRABBITVM v,int64_t idx,SQUserPointer *p);
-RABBIT_API SQRESULT sq_getuserdata(HRABBITVM v,int64_t idx,SQUserPointer *p,SQUserPointer *typetag);
-RABBIT_API SQRESULT sq_settypetag(HRABBITVM v,int64_t idx,SQUserPointer typetag);
-RABBIT_API SQRESULT sq_gettypetag(HRABBITVM v,int64_t idx,SQUserPointer *typetag);
-RABBIT_API void sq_setreleasehook(HRABBITVM v,int64_t idx,SQRELEASEHOOK hook);
-RABBIT_API SQRELEASEHOOK sq_getreleasehook(HRABBITVM v,int64_t idx);
-RABBIT_API SQChar *sq_getscratchpad(HRABBITVM v,int64_t minsize);
-RABBIT_API SQRESULT sq_getfunctioninfo(HRABBITVM v,int64_t level,SQFunctionInfo *fi);
-RABBIT_API SQRESULT sq_getclosureinfo(HRABBITVM v,int64_t idx,uint64_t *nparams,uint64_t *nfreevars);
-RABBIT_API SQRESULT sq_getclosurename(HRABBITVM v,int64_t idx);
-RABBIT_API SQRESULT sq_setnativeclosurename(HRABBITVM v,int64_t idx,const SQChar *name);
-RABBIT_API SQRESULT sq_setinstanceup(HRABBITVM v, int64_t idx, SQUserPointer p);
-RABBIT_API SQRESULT sq_getinstanceup(HRABBITVM v, int64_t idx, SQUserPointer *p,SQUserPointer typetag);
-RABBIT_API SQRESULT sq_setclassudsize(HRABBITVM v, int64_t idx, int64_t udsize);
-RABBIT_API SQRESULT sq_newclass(HRABBITVM v,SQBool hasbase);
-RABBIT_API SQRESULT sq_createinstance(HRABBITVM v,int64_t idx);
-RABBIT_API SQRESULT sq_setattributes(HRABBITVM v,int64_t idx);
-RABBIT_API SQRESULT sq_getattributes(HRABBITVM v,int64_t idx);
-RABBIT_API SQRESULT sq_getclass(HRABBITVM v,int64_t idx);
-RABBIT_API void sq_weakref(HRABBITVM v,int64_t idx);
-RABBIT_API SQRESULT sq_getdefaultdelegate(HRABBITVM v,SQObjectType t);
-RABBIT_API SQRESULT sq_getmemberhandle(HRABBITVM v,int64_t idx,HSQMEMBERHANDLE *handle);
-RABBIT_API SQRESULT sq_getbyhandle(HRABBITVM v,int64_t idx,const HSQMEMBERHANDLE *handle);
-RABBIT_API SQRESULT sq_setbyhandle(HRABBITVM v,int64_t idx,const HSQMEMBERHANDLE *handle);
+RABBIT_API SQUserPointer sq_newuserdata(rabbit::VirtualMachine* v,uint64_t size);
+RABBIT_API void sq_newtable(rabbit::VirtualMachine* v);
+RABBIT_API void sq_newtableex(rabbit::VirtualMachine* v,int64_t initialcapacity);
+RABBIT_API void sq_newarray(rabbit::VirtualMachine* v,int64_t size);
+RABBIT_API void sq_newclosure(rabbit::VirtualMachine* v,SQFUNCTION func,uint64_t nfreevars);
+RABBIT_API SQRESULT sq_setparamscheck(rabbit::VirtualMachine* v,int64_t nparamscheck,const SQChar *typemask);
+RABBIT_API SQRESULT sq_bindenv(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API SQRESULT sq_setclosureroot(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API SQRESULT sq_getclosureroot(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API void sq_pushstring(rabbit::VirtualMachine* v,const SQChar *s,int64_t len);
+RABBIT_API void sq_pushfloat(rabbit::VirtualMachine* v,float_t f);
+RABBIT_API void sq_pushinteger(rabbit::VirtualMachine* v,int64_t n);
+RABBIT_API void sq_pushbool(rabbit::VirtualMachine* v,SQBool b);
+RABBIT_API void sq_pushuserpointer(rabbit::VirtualMachine* v,SQUserPointer p);
+RABBIT_API void sq_pushnull(rabbit::VirtualMachine* v);
+RABBIT_API void sq_pushthread(rabbit::VirtualMachine* v, rabbit::VirtualMachine* thread);
+RABBIT_API SQObjectType sq_gettype(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API SQRESULT sq_typeof(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API int64_t sq_getsize(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API SQHash sq_gethash(rabbit::VirtualMachine* v, int64_t idx);
+RABBIT_API SQRESULT sq_getbase(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API SQBool sq_instanceof(rabbit::VirtualMachine* v);
+RABBIT_API SQRESULT sq_tostring(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API void sq_tobool(rabbit::VirtualMachine* v, int64_t idx, SQBool *b);
+RABBIT_API SQRESULT sq_getstringandsize(rabbit::VirtualMachine* v,int64_t idx,const SQChar **c,int64_t *size);
+RABBIT_API SQRESULT sq_getstring(rabbit::VirtualMachine* v,int64_t idx,const SQChar **c);
+RABBIT_API SQRESULT sq_getinteger(rabbit::VirtualMachine* v,int64_t idx,int64_t *i);
+RABBIT_API SQRESULT sq_getfloat(rabbit::VirtualMachine* v,int64_t idx,float_t *f);
+RABBIT_API SQRESULT sq_getbool(rabbit::VirtualMachine* v,int64_t idx,SQBool *b);
+RABBIT_API SQRESULT sq_getthread(rabbit::VirtualMachine* v,int64_t idx,rabbit::VirtualMachine* *thread);
+RABBIT_API SQRESULT sq_getuserpointer(rabbit::VirtualMachine* v,int64_t idx,SQUserPointer *p);
+RABBIT_API SQRESULT sq_getuserdata(rabbit::VirtualMachine* v,int64_t idx,SQUserPointer *p,SQUserPointer *typetag);
+RABBIT_API SQRESULT sq_settypetag(rabbit::VirtualMachine* v,int64_t idx,SQUserPointer typetag);
+RABBIT_API SQRESULT sq_gettypetag(rabbit::VirtualMachine* v,int64_t idx,SQUserPointer *typetag);
+RABBIT_API void sq_setreleasehook(rabbit::VirtualMachine* v,int64_t idx,SQRELEASEHOOK hook);
+RABBIT_API SQRELEASEHOOK sq_getreleasehook(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API SQChar *sq_getscratchpad(rabbit::VirtualMachine* v,int64_t minsize);
+RABBIT_API SQRESULT sq_getfunctioninfo(rabbit::VirtualMachine* v,int64_t level,SQFunctionInfo *fi);
+RABBIT_API SQRESULT sq_getclosureinfo(rabbit::VirtualMachine* v,int64_t idx,uint64_t *nparams,uint64_t *nfreevars);
+RABBIT_API SQRESULT sq_getclosurename(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API SQRESULT sq_setnativeclosurename(rabbit::VirtualMachine* v,int64_t idx,const SQChar *name);
+RABBIT_API SQRESULT sq_setinstanceup(rabbit::VirtualMachine* v, int64_t idx, SQUserPointer p);
+RABBIT_API SQRESULT sq_getinstanceup(rabbit::VirtualMachine* v, int64_t idx, SQUserPointer *p,SQUserPointer typetag);
+RABBIT_API SQRESULT sq_setclassudsize(rabbit::VirtualMachine* v, int64_t idx, int64_t udsize);
+RABBIT_API SQRESULT sq_newclass(rabbit::VirtualMachine* v,SQBool hasbase);
+RABBIT_API SQRESULT sq_createinstance(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API SQRESULT sq_setattributes(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API SQRESULT sq_getattributes(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API SQRESULT sq_getclass(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API void sq_weakref(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API SQRESULT sq_getdefaultdelegate(rabbit::VirtualMachine* v,SQObjectType t);
+RABBIT_API SQRESULT sq_getmemberhandle(rabbit::VirtualMachine* v,int64_t idx,HSQMEMBERHANDLE *handle);
+RABBIT_API SQRESULT sq_getbyhandle(rabbit::VirtualMachine* v,int64_t idx,const HSQMEMBERHANDLE *handle);
+RABBIT_API SQRESULT sq_setbyhandle(rabbit::VirtualMachine* v,int64_t idx,const HSQMEMBERHANDLE *handle);
 
 /*object manipulation*/
-RABBIT_API void sq_pushroottable(HRABBITVM v);
-RABBIT_API void sq_pushregistrytable(HRABBITVM v);
-RABBIT_API void sq_pushconsttable(HRABBITVM v);
-RABBIT_API SQRESULT sq_setroottable(HRABBITVM v);
-RABBIT_API SQRESULT sq_setconsttable(HRABBITVM v);
-RABBIT_API SQRESULT sq_newslot(HRABBITVM v, int64_t idx, SQBool bstatic);
-RABBIT_API SQRESULT sq_deleteslot(HRABBITVM v,int64_t idx,SQBool pushval);
-RABBIT_API SQRESULT sq_set(HRABBITVM v,int64_t idx);
-RABBIT_API SQRESULT sq_get(HRABBITVM v,int64_t idx);
-RABBIT_API SQRESULT sq_rawget(HRABBITVM v,int64_t idx);
-RABBIT_API SQRESULT sq_rawset(HRABBITVM v,int64_t idx);
-RABBIT_API SQRESULT sq_rawdeleteslot(HRABBITVM v,int64_t idx,SQBool pushval);
-RABBIT_API SQRESULT sq_newmember(HRABBITVM v,int64_t idx,SQBool bstatic);
-RABBIT_API SQRESULT sq_rawnewmember(HRABBITVM v,int64_t idx,SQBool bstatic);
-RABBIT_API SQRESULT sq_arrayappend(HRABBITVM v,int64_t idx);
-RABBIT_API SQRESULT sq_arraypop(HRABBITVM v,int64_t idx,SQBool pushval);
-RABBIT_API SQRESULT sq_arrayresize(HRABBITVM v,int64_t idx,int64_t newsize);
-RABBIT_API SQRESULT sq_arrayreverse(HRABBITVM v,int64_t idx);
-RABBIT_API SQRESULT sq_arrayremove(HRABBITVM v,int64_t idx,int64_t itemidx);
-RABBIT_API SQRESULT sq_arrayinsert(HRABBITVM v,int64_t idx,int64_t destpos);
-RABBIT_API SQRESULT sq_setdelegate(HRABBITVM v,int64_t idx);
-RABBIT_API SQRESULT sq_getdelegate(HRABBITVM v,int64_t idx);
-RABBIT_API SQRESULT sq_clone(HRABBITVM v,int64_t idx);
-RABBIT_API SQRESULT sq_setfreevariable(HRABBITVM v,int64_t idx,uint64_t nval);
-RABBIT_API SQRESULT sq_next(HRABBITVM v,int64_t idx);
-RABBIT_API SQRESULT sq_getweakrefval(HRABBITVM v,int64_t idx);
-RABBIT_API SQRESULT sq_clear(HRABBITVM v,int64_t idx);
+RABBIT_API void sq_pushroottable(rabbit::VirtualMachine* v);
+RABBIT_API void sq_pushregistrytable(rabbit::VirtualMachine* v);
+RABBIT_API void sq_pushconsttable(rabbit::VirtualMachine* v);
+RABBIT_API SQRESULT sq_setroottable(rabbit::VirtualMachine* v);
+RABBIT_API SQRESULT sq_setconsttable(rabbit::VirtualMachine* v);
+RABBIT_API SQRESULT sq_newslot(rabbit::VirtualMachine* v, int64_t idx, SQBool bstatic);
+RABBIT_API SQRESULT sq_deleteslot(rabbit::VirtualMachine* v,int64_t idx,SQBool pushval);
+RABBIT_API SQRESULT sq_set(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API SQRESULT sq_get(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API SQRESULT sq_rawget(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API SQRESULT sq_rawset(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API SQRESULT sq_rawdeleteslot(rabbit::VirtualMachine* v,int64_t idx,SQBool pushval);
+RABBIT_API SQRESULT sq_newmember(rabbit::VirtualMachine* v,int64_t idx,SQBool bstatic);
+RABBIT_API SQRESULT sq_rawnewmember(rabbit::VirtualMachine* v,int64_t idx,SQBool bstatic);
+RABBIT_API SQRESULT sq_arrayappend(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API SQRESULT sq_arraypop(rabbit::VirtualMachine* v,int64_t idx,SQBool pushval);
+RABBIT_API SQRESULT sq_arrayresize(rabbit::VirtualMachine* v,int64_t idx,int64_t newsize);
+RABBIT_API SQRESULT sq_arrayreverse(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API SQRESULT sq_arrayremove(rabbit::VirtualMachine* v,int64_t idx,int64_t itemidx);
+RABBIT_API SQRESULT sq_arrayinsert(rabbit::VirtualMachine* v,int64_t idx,int64_t destpos);
+RABBIT_API SQRESULT sq_setdelegate(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API SQRESULT sq_getdelegate(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API SQRESULT sq_clone(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API SQRESULT sq_setfreevariable(rabbit::VirtualMachine* v,int64_t idx,uint64_t nval);
+RABBIT_API SQRESULT sq_next(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API SQRESULT sq_getweakrefval(rabbit::VirtualMachine* v,int64_t idx);
+RABBIT_API SQRESULT sq_clear(rabbit::VirtualMachine* v,int64_t idx);
 
 /*calls*/
-RABBIT_API SQRESULT sq_call(HRABBITVM v,int64_t params,SQBool retval,SQBool raiseerror);
-RABBIT_API SQRESULT sq_resume(HRABBITVM v,SQBool retval,SQBool raiseerror);
-RABBIT_API const SQChar *sq_getlocal(HRABBITVM v,uint64_t level,uint64_t idx);
-RABBIT_API SQRESULT sq_getcallee(HRABBITVM v);
-RABBIT_API const SQChar *sq_getfreevariable(HRABBITVM v,int64_t idx,uint64_t nval);
-RABBIT_API SQRESULT sq_throwerror(HRABBITVM v,const SQChar *err);
-RABBIT_API SQRESULT sq_throwobject(HRABBITVM v);
-RABBIT_API void sq_reseterror(HRABBITVM v);
-RABBIT_API void sq_getlasterror(HRABBITVM v);
-RABBIT_API SQRESULT sq_tailcall(HRABBITVM v, int64_t nparams);
+RABBIT_API SQRESULT sq_call(rabbit::VirtualMachine* v,int64_t params,SQBool retval,SQBool raiseerror);
+RABBIT_API SQRESULT sq_resume(rabbit::VirtualMachine* v,SQBool retval,SQBool raiseerror);
+RABBIT_API const SQChar *sq_getlocal(rabbit::VirtualMachine* v,uint64_t level,uint64_t idx);
+RABBIT_API SQRESULT sq_getcallee(rabbit::VirtualMachine* v);
+RABBIT_API const SQChar *sq_getfreevariable(rabbit::VirtualMachine* v,int64_t idx,uint64_t nval);
+RABBIT_API SQRESULT sq_throwerror(rabbit::VirtualMachine* v,const SQChar *err);
+RABBIT_API SQRESULT sq_throwobject(rabbit::VirtualMachine* v);
+RABBIT_API void sq_reseterror(rabbit::VirtualMachine* v);
+RABBIT_API void sq_getlasterror(rabbit::VirtualMachine* v);
+RABBIT_API SQRESULT sq_tailcall(rabbit::VirtualMachine* v, int64_t nparams);
 
 /*raw object handling*/
-RABBIT_API SQRESULT sq_getstackobj(HRABBITVM v,int64_t idx,HSQOBJECT *po);
-RABBIT_API void sq_pushobject(HRABBITVM v,HSQOBJECT obj);
-RABBIT_API void sq_addref(HRABBITVM v,HSQOBJECT *po);
-RABBIT_API SQBool sq_release(HRABBITVM v,HSQOBJECT *po);
-RABBIT_API uint64_t sq_getrefcount(HRABBITVM v,HSQOBJECT *po);
+RABBIT_API SQRESULT sq_getstackobj(rabbit::VirtualMachine* v,int64_t idx,HSQOBJECT *po);
+RABBIT_API void sq_pushobject(rabbit::VirtualMachine* v,HSQOBJECT obj);
+RABBIT_API void sq_addref(rabbit::VirtualMachine* v,HSQOBJECT *po);
+RABBIT_API SQBool sq_release(rabbit::VirtualMachine* v,HSQOBJECT *po);
+RABBIT_API uint64_t sq_getrefcount(rabbit::VirtualMachine* v,HSQOBJECT *po);
 RABBIT_API void sq_resetobject(HSQOBJECT *po);
 RABBIT_API const SQChar *sq_objtostring(const HSQOBJECT *o);
 RABBIT_API SQBool sq_objtobool(const HSQOBJECT *o);
@@ -331,16 +332,16 @@ RABBIT_API int64_t sq_objtointeger(const HSQOBJECT *o);
 RABBIT_API float_t sq_objtofloat(const HSQOBJECT *o);
 RABBIT_API SQUserPointer sq_objtouserpointer(const HSQOBJECT *o);
 RABBIT_API SQRESULT sq_getobjtypetag(const HSQOBJECT *o,SQUserPointer * typetag);
-RABBIT_API uint64_t sq_getvmrefcount(HRABBITVM v, const HSQOBJECT *po);
+RABBIT_API uint64_t sq_getvmrefcount(rabbit::VirtualMachine* v, const HSQOBJECT *po);
 
 
 /*GC*/
-RABBIT_API int64_t sq_collectgarbage(HRABBITVM v);
-RABBIT_API SQRESULT sq_resurrectunreachable(HRABBITVM v);
+RABBIT_API int64_t sq_collectgarbage(rabbit::VirtualMachine* v);
+RABBIT_API SQRESULT sq_resurrectunreachable(rabbit::VirtualMachine* v);
 
 /*serialization*/
-RABBIT_API SQRESULT sq_writeclosure(HRABBITVM vm,SQWRITEFUNC writef,SQUserPointer up);
-RABBIT_API SQRESULT sq_readclosure(HRABBITVM vm,SQREADFUNC readf,SQUserPointer up);
+RABBIT_API SQRESULT sq_writeclosure(rabbit::VirtualMachine* vm,SQWRITEFUNC writef,SQUserPointer up);
+RABBIT_API SQRESULT sq_readclosure(rabbit::VirtualMachine* vm,SQREADFUNC readf,SQUserPointer up);
 
 /*mem allocation*/
 RABBIT_API void *sq_malloc(uint64_t size);
@@ -348,9 +349,9 @@ RABBIT_API void *sq_realloc(void* p,uint64_t oldsize,uint64_t newsize);
 RABBIT_API void sq_free(void *p,uint64_t size);
 
 /*debug*/
-RABBIT_API SQRESULT sq_stackinfos(HRABBITVM v,int64_t level,SQStackInfos *si);
-RABBIT_API void sq_setdebughook(HRABBITVM v);
-RABBIT_API void sq_setnativedebughook(HRABBITVM v,SQDEBUGHOOK hook);
+RABBIT_API SQRESULT sq_stackinfos(rabbit::VirtualMachine* v,int64_t level,SQStackInfos *si);
+RABBIT_API void sq_setdebughook(rabbit::VirtualMachine* v);
+RABBIT_API void sq_setnativedebughook(rabbit::VirtualMachine* v,SQDEBUGHOOK hook);
 
 /*UTILITY MACRO*/
 #define sq_isnumeric(o) ((o)._type&SQOBJECT_NUMERIC)

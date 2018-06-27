@@ -11,14 +11,14 @@
 #include <stdlib.h>
 #include <rabbit-std/sqstdmath.hpp>
 
-#define SINGLE_ARG_FUNC(_funcname) static int64_t math_##_funcname(HRABBITVM v){ \
+#define SINGLE_ARG_FUNC(_funcname) static int64_t math_##_funcname(rabbit::VirtualMachine* v){ \
 	float_t f; \
 	sq_getfloat(v,2,&f); \
 	sq_pushfloat(v,(float_t)_funcname(f)); \
 	return 1; \
 }
 
-#define TWO_ARGS_FUNC(_funcname) static int64_t math_##_funcname(HRABBITVM v){ \
+#define TWO_ARGS_FUNC(_funcname) static int64_t math_##_funcname(rabbit::VirtualMachine* v){ \
 	float_t p1,p2; \
 	sq_getfloat(v,2,&p1); \
 	sq_getfloat(v,3,&p2); \
@@ -26,7 +26,7 @@
 	return 1; \
 }
 
-static int64_t math_srand(HRABBITVM v)
+static int64_t math_srand(rabbit::VirtualMachine* v)
 {
 	int64_t i;
 	if(SQ_FAILED(sq_getinteger(v,2,&i)))
@@ -35,13 +35,13 @@ static int64_t math_srand(HRABBITVM v)
 	return 0;
 }
 
-static int64_t math_rand(HRABBITVM v)
+static int64_t math_rand(rabbit::VirtualMachine* v)
 {
 	sq_pushinteger(v,rand());
 	return 1;
 }
 
-static int64_t math_abs(HRABBITVM v)
+static int64_t math_abs(rabbit::VirtualMachine* v)
 {
 	int64_t n;
 	sq_getinteger(v,2,&n);
@@ -93,7 +93,7 @@ static const SQRegFunction mathlib_funcs[] = {
 #define M_PI (3.14159265358979323846)
 #endif
 
-SQRESULT sqstd_register_mathlib(HRABBITVM v)
+SQRESULT sqstd_register_mathlib(rabbit::VirtualMachine* v)
 {
 	int64_t i=0;
 	while(mathlib_funcs[i].name!=0) {

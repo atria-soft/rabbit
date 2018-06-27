@@ -9,7 +9,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <rabbit/sqopcodes.hpp>
-#include <rabbit/sqvm.hpp>
+#include <rabbit/VirtualMachine.hpp>
 #include <rabbit/sqfuncproto.hpp>
 #include <rabbit/sqclosure.hpp>
 #include <rabbit/sqstring.hpp>
@@ -22,7 +22,7 @@
 #define TARGET _stack[_stackbase+arg0]
 #define STK(a) _stack[_stackbase+(a)]
 
-bool SQVM::BW_OP(uint64_t op,SQObjectPtr &trg,const SQObjectPtr &o1,const SQObjectPtr &o2)
+bool rabbit::VirtualMachine::BW_OP(uint64_t op,SQObjectPtr &trg,const SQObjectPtr &o1,const SQObjectPtr &o2)
 {
 	int64_t res;
 	if((sq_type(o1)| sq_type(o2)) == OT_INTEGER)
@@ -65,7 +65,7 @@ bool SQVM::BW_OP(uint64_t op,SQObjectPtr &trg,const SQObjectPtr &o1,const SQObje
 	} \
 }
 
-bool SQVM::ARITH_OP(uint64_t op,SQObjectPtr &trg,const SQObjectPtr &o1,const SQObjectPtr &o2)
+bool rabbit::VirtualMachine::ARITH_OP(uint64_t op,SQObjectPtr &trg,const SQObjectPtr &o1,const SQObjectPtr &o2)
 {
 	int64_t tmask = sq_type(o1)| sq_type(o2);
 	switch(tmask) {
@@ -111,7 +111,7 @@ bool SQVM::ARITH_OP(uint64_t op,SQObjectPtr &trg,const SQObjectPtr &o1,const SQO
 	return true;
 }
 
-SQVM::SQVM(SQSharedState *ss)
+rabbit::VirtualMachine::VirtualMachine(SQSharedState *ss)
 {
 	_sharedstate=ss;
 	_suspended = SQFalse;
@@ -131,7 +131,7 @@ SQVM::SQVM(SQSharedState *ss)
 	_releasehook = NULL;
 }
 
-void SQVM::finalize()
+void rabbit::VirtualMachine::finalize()
 {
 	if(_releasehook) { _releasehook(_foreignptr,0); _releasehook = NULL; }
 	if(_openouters) closeOuters(&_stack[0]);
@@ -148,12 +148,12 @@ void SQVM::finalize()
 		_stack[i].Null();
 }
 
-SQVM::~SQVM()
+rabbit::VirtualMachine::~VirtualMachine()
 {
 	finalize();
 }
 
-bool SQVM::arithMetaMethod(int64_t op,const SQObjectPtr &o1,const SQObjectPtr &o2,SQObjectPtr &dest)
+bool rabbit::VirtualMachine::arithMetaMethod(int64_t op,const SQObjectPtr &o1,const SQObjectPtr &o2,SQObjectPtr &dest)
 {
 	SQMetaMethod mm;
 	switch(op){
@@ -177,7 +177,7 @@ bool SQVM::arithMetaMethod(int64_t op,const SQObjectPtr &o1,const SQObjectPtr &o
 	return false;
 }
 
-bool SQVM::NEG_OP(SQObjectPtr &trg,const SQObjectPtr &o)
+bool rabbit::VirtualMachine::NEG_OP(SQObjectPtr &trg,const SQObjectPtr &o)
 {
 
 	switch(sq_type(o)) {
@@ -207,7 +207,7 @@ bool SQVM::NEG_OP(SQObjectPtr &trg,const SQObjectPtr &o)
 }
 
 #define _RET_SUCCEED(exp) { result = (exp); return true; }
-bool SQVM::objCmp(const SQObjectPtr &o1,const SQObjectPtr &o2,int64_t &result)
+bool rabbit::VirtualMachine::objCmp(const SQObjectPtr &o1,const SQObjectPtr &o2,int64_t &result)
 {
 	SQObjectType t1 = sq_type(o1), t2 = sq_type(o2);
 	if(t1 == t2) {
@@ -268,7 +268,7 @@ bool SQVM::objCmp(const SQObjectPtr &o1,const SQObjectPtr &o2,int64_t &result)
 	_RET_SUCCEED(0); //cannot happen
 }
 
-bool SQVM::CMP_OP(CmpOP op, const SQObjectPtr &o1,const SQObjectPtr &o2,SQObjectPtr &res)
+bool rabbit::VirtualMachine::CMP_OP(CmpOP op, const SQObjectPtr &o1,const SQObjectPtr &o2,SQObjectPtr &res)
 {
 	int64_t r;
 	if(objCmp(o1,o2,r)) {
@@ -284,7 +284,7 @@ bool SQVM::CMP_OP(CmpOP op, const SQObjectPtr &o1,const SQObjectPtr &o2,SQObject
 	return false;
 }
 
-bool SQVM::toString(const SQObjectPtr &o,SQObjectPtr &res)
+bool rabbit::VirtualMachine::toString(const SQObjectPtr &o,SQObjectPtr &res)
 {
 	switch(sq_type(o)) {
 	case OT_STRING:
@@ -323,7 +323,7 @@ bool SQVM::toString(const SQObjectPtr &o,SQObjectPtr &res)
 }
 
 
-bool SQVM::stringCat(const SQObjectPtr &str,const SQObjectPtr &obj,SQObjectPtr &dest)
+bool rabbit::VirtualMachine::stringCat(const SQObjectPtr &str,const SQObjectPtr &obj,SQObjectPtr &dest)
 {
 	SQObjectPtr a, b;
 	if(!toString(str, a)) return false;
@@ -336,7 +336,7 @@ bool SQVM::stringCat(const SQObjectPtr &str,const SQObjectPtr &obj,SQObjectPtr &
 	return true;
 }
 
-bool SQVM::typeOf(const SQObjectPtr &obj1,SQObjectPtr &dest)
+bool rabbit::VirtualMachine::typeOf(const SQObjectPtr &obj1,SQObjectPtr &dest)
 {
 	if(is_delegable(obj1) && _delegable(obj1)->_delegate) {
 		SQObjectPtr closure;
@@ -349,7 +349,7 @@ bool SQVM::typeOf(const SQObjectPtr &obj1,SQObjectPtr &dest)
 	return true;
 }
 
-bool SQVM::init(SQVM *friendvm, int64_t stacksize)
+bool rabbit::VirtualMachine::init(rabbit::VirtualMachine *friendvm, int64_t stacksize)
 {
 	_stack.resize(stacksize);
 	_alloccallsstacksize = 4;
@@ -375,7 +375,7 @@ bool SQVM::init(SQVM *friendvm, int64_t stacksize)
 }
 
 
-bool SQVM::startcall(SQClosure *closure,int64_t target,int64_t args,int64_t stackbase,bool tailcall)
+bool rabbit::VirtualMachine::startcall(SQClosure *closure,int64_t target,int64_t args,int64_t stackbase,bool tailcall)
 {
 	SQFunctionProto *func = closure->_function;
 
@@ -446,7 +446,7 @@ bool SQVM::startcall(SQClosure *closure,int64_t target,int64_t args,int64_t stac
 	return true;
 }
 
-bool SQVM::Return(int64_t _arg0, int64_t _arg1, SQObjectPtr &retval)
+bool rabbit::VirtualMachine::Return(int64_t _arg0, int64_t _arg1, SQObjectPtr &retval)
 {
 	SQBool	_isroot	  = ci->_root;
 	int64_t callerbase   = _stackbase - ci->_prevstkbase;
@@ -480,7 +480,7 @@ bool SQVM::Return(int64_t _arg0, int64_t _arg1, SQObjectPtr &retval)
 
 #define _RET_ON_FAIL(exp) { if(!exp) return false; }
 
-bool SQVM::PLOCAL_INC(int64_t op,SQObjectPtr &target, SQObjectPtr &a, SQObjectPtr &incr)
+bool rabbit::VirtualMachine::PLOCAL_INC(int64_t op,SQObjectPtr &target, SQObjectPtr &a, SQObjectPtr &incr)
 {
 	SQObjectPtr trg;
 	_RET_ON_FAIL(ARITH_OP( op , trg, a, incr));
@@ -489,7 +489,7 @@ bool SQVM::PLOCAL_INC(int64_t op,SQObjectPtr &target, SQObjectPtr &a, SQObjectPt
 	return true;
 }
 
-bool SQVM::derefInc(int64_t op,SQObjectPtr &target, SQObjectPtr &self, SQObjectPtr &key, SQObjectPtr &incr, bool postfix,int64_t selfidx)
+bool rabbit::VirtualMachine::derefInc(int64_t op,SQObjectPtr &target, SQObjectPtr &self, SQObjectPtr &key, SQObjectPtr &incr, bool postfix,int64_t selfidx)
 {
 	SQObjectPtr tmp, tself = self, tkey = key;
 	if (!get(tself, tkey, tmp, 0, selfidx)) { return false; }
@@ -507,7 +507,7 @@ bool SQVM::derefInc(int64_t op,SQObjectPtr &target, SQObjectPtr &self, SQObjectP
 #define arg3 (_i_._arg3)
 #define sarg3 ((int64_t)*((const signed char *)&_i_._arg3))
 
-SQRESULT SQVM::Suspend()
+SQRESULT rabbit::VirtualMachine::Suspend()
 {
 	if (_suspended)
 		return sq_throwerror(this, _SC("cannot suspend an already suspended vm"));
@@ -518,7 +518,7 @@ SQRESULT SQVM::Suspend()
 
 
 #define _FINISH(howmuchtojump) {jump = howmuchtojump; return true; }
-bool SQVM::FOREACH_OP(SQObjectPtr &o1,SQObjectPtr &o2,SQObjectPtr
+bool rabbit::VirtualMachine::FOREACH_OP(SQObjectPtr &o1,SQObjectPtr &o2,SQObjectPtr
 &o3,SQObjectPtr &o4,int64_t SQ_UNUSED_ARG(arg_2),int exitpos,int &jump)
 {
 	int64_t nrefidx;
@@ -584,7 +584,7 @@ bool SQVM::FOREACH_OP(SQObjectPtr &o1,SQObjectPtr &o2,SQObjectPtr
 
 #define _GUARD(exp) { if(!exp) { SQ_THROW();} }
 
-bool SQVM::CLOSURE_OP(SQObjectPtr &target, SQFunctionProto *func)
+bool rabbit::VirtualMachine::CLOSURE_OP(SQObjectPtr &target, SQFunctionProto *func)
 {
 	int64_t nouters;
 	SQClosure *closure = SQClosure::create(_ss(this), func,_table(_roottable)->getWeakRef(OT_TABLE));
@@ -614,7 +614,7 @@ bool SQVM::CLOSURE_OP(SQObjectPtr &target, SQFunctionProto *func)
 }
 
 
-bool SQVM::CLASS_OP(SQObjectPtr &target,int64_t baseclass,int64_t attributes)
+bool rabbit::VirtualMachine::CLASS_OP(SQObjectPtr &target,int64_t baseclass,int64_t attributes)
 {
 	SQClass *base = NULL;
 	SQObjectPtr attrs;
@@ -640,7 +640,7 @@ bool SQVM::CLASS_OP(SQObjectPtr &target,int64_t baseclass,int64_t attributes)
 	return true;
 }
 
-bool SQVM::isEqual(const SQObjectPtr &o1,const SQObjectPtr &o2,bool &res)
+bool rabbit::VirtualMachine::isEqual(const SQObjectPtr &o1,const SQObjectPtr &o2,bool &res)
 {
 	if(sq_type(o1) == sq_type(o2)) {
 		res = (_rawval(o1) == _rawval(o2));
@@ -656,7 +656,7 @@ bool SQVM::isEqual(const SQObjectPtr &o1,const SQObjectPtr &o2,bool &res)
 	return true;
 }
 
-bool SQVM::IsFalse(SQObjectPtr &o)
+bool rabbit::VirtualMachine::IsFalse(SQObjectPtr &o)
 {
 	if(((sq_type(o) & SQOBJECT_CANBEFALSE)
 		&& ( ((sq_type(o) == OT_FLOAT) && (_float(o) == float_t(0.0))) ))
@@ -671,7 +671,7 @@ bool SQVM::IsFalse(SQObjectPtr &o)
 	return false;
 }
 extern SQInstructionDesc g_InstrDesc[];
-bool SQVM::execute(SQObjectPtr &closure, int64_t nargs, int64_t stackbase,SQObjectPtr &outres, SQBool raiseerror,ExecutionType et)
+bool rabbit::VirtualMachine::execute(SQObjectPtr &closure, int64_t nargs, int64_t stackbase,SQObjectPtr &outres, SQBool raiseerror,ExecutionType et)
 {
 	if ((_nnativecalls + 1) > MAX_NATIVE_CALLS) { raise_error(_SC("Native stack overflow")); return false; }
 	_nnativecalls++;
@@ -1103,7 +1103,7 @@ exception_trap:
 	assert(0);
 }
 
-bool SQVM::createClassInstance(SQClass *theclass, SQObjectPtr &inst, SQObjectPtr &constructor)
+bool rabbit::VirtualMachine::createClassInstance(SQClass *theclass, SQObjectPtr &inst, SQObjectPtr &constructor)
 {
 	inst = theclass->createInstance();
 	if(!theclass->getConstructor(constructor)) {
@@ -1112,7 +1112,7 @@ bool SQVM::createClassInstance(SQClass *theclass, SQObjectPtr &inst, SQObjectPtr
 	return true;
 }
 
-void SQVM::callerrorHandler(SQObjectPtr &error)
+void rabbit::VirtualMachine::callerrorHandler(SQObjectPtr &error)
 {
 	if(sq_type(_errorhandler) != OT_NULL) {
 		SQObjectPtr out;
@@ -1123,7 +1123,7 @@ void SQVM::callerrorHandler(SQObjectPtr &error)
 }
 
 
-void SQVM::callDebugHook(int64_t type,int64_t forcedline)
+void rabbit::VirtualMachine::callDebugHook(int64_t type,int64_t forcedline)
 {
 	_debughook = false;
 	SQFunctionProto *func=_closure(ci->_closure)->_function;
@@ -1147,7 +1147,7 @@ void SQVM::callDebugHook(int64_t type,int64_t forcedline)
 	_debughook = true;
 }
 
-bool SQVM::callNative(SQNativeClosure *nclosure, int64_t nargs, int64_t newbase, SQObjectPtr &retval, int32_t target,bool &suspend, bool &tailcall)
+bool rabbit::VirtualMachine::callNative(SQNativeClosure *nclosure, int64_t nargs, int64_t newbase, SQObjectPtr &retval, int32_t target,bool &suspend, bool &tailcall)
 {
 	int64_t nparamscheck = nclosure->_nparamscheck;
 	int64_t newtop = newbase + nargs + nclosure->_noutervalues;
@@ -1216,7 +1216,7 @@ bool SQVM::callNative(SQNativeClosure *nclosure, int64_t nargs, int64_t newbase,
 	return true;
 }
 
-bool SQVM::tailcall(SQClosure *closure, int64_t parambase,int64_t nparams)
+bool rabbit::VirtualMachine::tailcall(SQClosure *closure, int64_t parambase,int64_t nparams)
 {
 	int64_t last_top = _top;
 	SQObjectPtr clo = closure;
@@ -1237,7 +1237,7 @@ bool SQVM::tailcall(SQClosure *closure, int64_t parambase,int64_t nparams)
 #define FALLBACK_NO_MATCH   1
 #define FALLBACK_ERROR	  2
 
-bool SQVM::get(const SQObjectPtr &self, const SQObjectPtr &key, SQObjectPtr &dest, uint64_t getflags, int64_t selfidx)
+bool rabbit::VirtualMachine::get(const SQObjectPtr &self, const SQObjectPtr &key, SQObjectPtr &dest, uint64_t getflags, int64_t selfidx)
 {
 	switch(sq_type(self)){
 	case OT_TABLE:
@@ -1291,7 +1291,7 @@ bool SQVM::get(const SQObjectPtr &self, const SQObjectPtr &key, SQObjectPtr &des
 	return false;
 }
 
-bool SQVM::invokeDefaultDelegate(const SQObjectPtr &self,const SQObjectPtr &key,SQObjectPtr &dest)
+bool rabbit::VirtualMachine::invokeDefaultDelegate(const SQObjectPtr &self,const SQObjectPtr &key,SQObjectPtr &dest)
 {
 	SQTable *ddel = NULL;
 	switch(sq_type(self)) {
@@ -1311,7 +1311,7 @@ bool SQVM::invokeDefaultDelegate(const SQObjectPtr &self,const SQObjectPtr &key,
 }
 
 
-int64_t SQVM::fallBackGet(const SQObjectPtr &self,const SQObjectPtr &key,SQObjectPtr &dest)
+int64_t rabbit::VirtualMachine::fallBackGet(const SQObjectPtr &self,const SQObjectPtr &key,SQObjectPtr &dest)
 {
 	switch(sq_type(self)){
 	case OT_TABLE:
@@ -1349,7 +1349,7 @@ int64_t SQVM::fallBackGet(const SQObjectPtr &self,const SQObjectPtr &key,SQObjec
 	return FALLBACK_NO_MATCH;
 }
 
-bool SQVM::set(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjectPtr &val,int64_t selfidx)
+bool rabbit::VirtualMachine::set(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjectPtr &val,int64_t selfidx)
 {
 	switch(sq_type(self)){
 	case OT_TABLE:
@@ -1384,7 +1384,7 @@ bool SQVM::set(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjectPtr 
 	return false;
 }
 
-int64_t SQVM::fallBackSet(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjectPtr &val)
+int64_t rabbit::VirtualMachine::fallBackSet(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjectPtr &val)
 {
 	switch(sq_type(self)) {
 	case OT_TABLE:
@@ -1419,7 +1419,7 @@ int64_t SQVM::fallBackSet(const SQObjectPtr &self,const SQObjectPtr &key,const S
 	return FALLBACK_NO_MATCH;
 }
 
-bool SQVM::clone(const SQObjectPtr &self,SQObjectPtr &target)
+bool rabbit::VirtualMachine::clone(const SQObjectPtr &self,SQObjectPtr &target)
 {
 	SQObjectPtr temp_reg;
 	SQObjectPtr newobj;
@@ -1449,7 +1449,7 @@ cloned_mt:
 	}
 }
 
-bool SQVM::newSlotA(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjectPtr &val,const SQObjectPtr &attrs,bool bstatic,bool raw)
+bool rabbit::VirtualMachine::newSlotA(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjectPtr &val,const SQObjectPtr &attrs,bool bstatic,bool raw)
 {
 	if(sq_type(self) != OT_CLASS) {
 		raise_error(_SC("object must be a class"));
@@ -1473,7 +1473,7 @@ bool SQVM::newSlotA(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjec
 	return true;
 }
 
-bool SQVM::newSlot(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjectPtr &val,bool bstatic)
+bool rabbit::VirtualMachine::newSlot(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjectPtr &val,bool bstatic)
 {
 	if(sq_type(key) == OT_NULL) { raise_error(_SC("null cannot be used as index")); return false; }
 	switch(sq_type(self)) {
@@ -1534,7 +1534,7 @@ bool SQVM::newSlot(const SQObjectPtr &self,const SQObjectPtr &key,const SQObject
 
 
 
-bool SQVM::deleteSlot(const SQObjectPtr &self,const SQObjectPtr &key,SQObjectPtr &res)
+bool rabbit::VirtualMachine::deleteSlot(const SQObjectPtr &self,const SQObjectPtr &key,SQObjectPtr &res)
 {
 	switch(sq_type(self)) {
 	case OT_TABLE:
@@ -1572,7 +1572,7 @@ bool SQVM::deleteSlot(const SQObjectPtr &self,const SQObjectPtr &key,SQObjectPtr
 	return true;
 }
 
-bool SQVM::call(SQObjectPtr &closure,int64_t nparams,int64_t stackbase,SQObjectPtr &outres,SQBool raiseerror)
+bool rabbit::VirtualMachine::call(SQObjectPtr &closure,int64_t nparams,int64_t stackbase,SQObjectPtr &outres,SQBool raiseerror)
 {
 #ifdef _DEBUG
 int64_t prevstackbase = _stackbase;
@@ -1610,7 +1610,7 @@ int64_t prevstackbase = _stackbase;
 	return true;
 }
 
-bool SQVM::callMetaMethod(SQObjectPtr &closure,SQMetaMethod SQ_UNUSED_ARG(mm),int64_t nparams,SQObjectPtr &outres)
+bool rabbit::VirtualMachine::callMetaMethod(SQObjectPtr &closure,SQMetaMethod SQ_UNUSED_ARG(mm),int64_t nparams,SQObjectPtr &outres)
 {
 	//SQObjectPtr closure;
 
@@ -1626,7 +1626,7 @@ bool SQVM::callMetaMethod(SQObjectPtr &closure,SQMetaMethod SQ_UNUSED_ARG(mm),in
 	return false;
 }
 
-void SQVM::findOuter(SQObjectPtr &target, SQObjectPtr *stackindex)
+void rabbit::VirtualMachine::findOuter(SQObjectPtr &target, SQObjectPtr *stackindex)
 {
 	SQOuter **pp = &_openouters;
 	SQOuter *p;
@@ -1648,7 +1648,7 @@ void SQVM::findOuter(SQObjectPtr &target, SQObjectPtr *stackindex)
 	target = SQObjectPtr(otr);
 }
 
-bool SQVM::enterFrame(int64_t newbase, int64_t newtop, bool tailcall)
+bool rabbit::VirtualMachine::enterFrame(int64_t newbase, int64_t newtop, bool tailcall)
 {
 	if( !tailcall ) {
 		if( _callsstacksize == _alloccallsstacksize ) {
@@ -1679,7 +1679,7 @@ bool SQVM::enterFrame(int64_t newbase, int64_t newtop, bool tailcall)
 	return true;
 }
 
-void SQVM::leaveFrame() {
+void rabbit::VirtualMachine::leaveFrame() {
 	int64_t last_top = _top;
 	int64_t last_stackbase = _stackbase;
 	int64_t css = --_callsstacksize;
@@ -1696,7 +1696,7 @@ void SQVM::leaveFrame() {
 	}
 }
 
-void SQVM::relocateOuters()
+void rabbit::VirtualMachine::relocateOuters()
 {
 	SQOuter *p = _openouters;
 	while (p) {
@@ -1705,7 +1705,7 @@ void SQVM::relocateOuters()
 	}
 }
 
-void SQVM::closeOuters(SQObjectPtr *stackindex) {
+void rabbit::VirtualMachine::closeOuters(SQObjectPtr *stackindex) {
   SQOuter *p;
   while ((p = _openouters) != NULL && p->_valptr >= stackindex) {
 	p->_value = *(p->_valptr);
@@ -1715,7 +1715,7 @@ void SQVM::closeOuters(SQObjectPtr *stackindex) {
   }
 }
 
-void SQVM::remove(int64_t n) {
+void rabbit::VirtualMachine::remove(int64_t n) {
 	n = (n >= 0)?n + _stackbase - 1:_top + n;
 	for(int64_t i = n; i < _top; i++){
 		_stack[i] = _stack[i+1];
@@ -1724,25 +1724,25 @@ void SQVM::remove(int64_t n) {
 	_top--;
 }
 
-void SQVM::pop() {
+void rabbit::VirtualMachine::pop() {
 	_stack[--_top].Null();
 }
 
-void SQVM::pop(int64_t n) {
+void rabbit::VirtualMachine::pop(int64_t n) {
 	for(int64_t i = 0; i < n; i++){
 		_stack[--_top].Null();
 	}
 }
 
-void SQVM::pushNull() { _stack[_top++].Null(); }
-void SQVM::push(const SQObjectPtr &o) { _stack[_top++] = o; }
-SQObjectPtr &SQVM::top() { return _stack[_top-1]; }
-SQObjectPtr &SQVM::popGet() { return _stack[--_top]; }
-SQObjectPtr &SQVM::getUp(int64_t n) { return _stack[_top+n]; }
-SQObjectPtr &SQVM::getAt(int64_t n) { return _stack[n]; }
+void rabbit::VirtualMachine::pushNull() { _stack[_top++].Null(); }
+void rabbit::VirtualMachine::push(const SQObjectPtr &o) { _stack[_top++] = o; }
+SQObjectPtr &rabbit::VirtualMachine::top() { return _stack[_top-1]; }
+SQObjectPtr &rabbit::VirtualMachine::popGet() { return _stack[--_top]; }
+SQObjectPtr &rabbit::VirtualMachine::getUp(int64_t n) { return _stack[_top+n]; }
+SQObjectPtr &rabbit::VirtualMachine::getAt(int64_t n) { return _stack[n]; }
 
 #ifdef _DEBUG_DUMP
-void SQVM::dumpstack(int64_t stackbase,bool dumpall)
+void rabbit::VirtualMachine::dumpstack(int64_t stackbase,bool dumpall)
 {
 	int64_t size=dumpall?_stack.size():_top;
 	int64_t n=0;

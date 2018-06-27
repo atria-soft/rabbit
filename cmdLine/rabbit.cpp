@@ -48,7 +48,7 @@ int MemAllocHook(int allocType,
 #endif
 
 
-int64_t quit(HRABBITVM v)
+int64_t quit(rabbit::VirtualMachine* v)
 {
 	int *done;
 	sq_getuserpointer(v,-1,(SQUserPointer*)&done);
@@ -56,7 +56,7 @@ int64_t quit(HRABBITVM v)
 	return 0;
 }
 
-void printfunc(HRABBITVM SQ_UNUSED_ARG(v),const SQChar *s,...)
+void printfunc(rabbit::VirtualMachine* SQ_UNUSED_ARG(v),const SQChar *s,...)
 {
 	va_list vl;
 	va_start(vl, s);
@@ -64,7 +64,7 @@ void printfunc(HRABBITVM SQ_UNUSED_ARG(v),const SQChar *s,...)
 	va_end(vl);
 }
 
-void errorfunc(HRABBITVM SQ_UNUSED_ARG(v),const SQChar *s,...)
+void errorfunc(rabbit::VirtualMachine* SQ_UNUSED_ARG(v),const SQChar *s,...)
 {
 	va_list vl;
 	va_start(vl, s);
@@ -93,7 +93,7 @@ void PrintUsage()
 #define _DONE 2
 #define _ERROR 3
 //<<FIXME>> this func is a mess
-int getargs(HRABBITVM v,int argc, char* argv[],int64_t *retval)
+int getargs(rabbit::VirtualMachine* v,int argc, char* argv[],int64_t *retval)
 {
 	int i;
 	int compiles_only = 0;
@@ -231,7 +231,7 @@ int getargs(HRABBITVM v,int argc, char* argv[],int64_t *retval)
 	return _INTERACTIVE;
 }
 
-void Interactive(HRABBITVM v)
+void Interactive(rabbit::VirtualMachine* v)
 {
 
 #define MAXINPUT 1024
@@ -315,7 +315,7 @@ void Interactive(HRABBITVM v)
 
 int main(int argc, char* argv[])
 {
-	HRABBITVM v;
+	rabbit::VirtualMachine* v;
 	int64_t retval = 0;
 #if defined(_MSC_VER) && defined(_DEBUG)
 	_CrtsetAllocHook(MemAllocHook);

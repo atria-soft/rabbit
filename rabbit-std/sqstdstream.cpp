@@ -23,7 +23,7 @@
 	if(!self || !self->IsValid())  \
 		return sq_throwerror(v,_SC("the stream is invalid"));
 
-int64_t _stream_readblob(HRABBITVM v)
+int64_t _stream_readblob(rabbit::VirtualMachine* v)
 {
 	SETUP_STREAM(v);
 	SQUserPointer data,blobp;
@@ -44,7 +44,7 @@ int64_t _stream_readblob(HRABBITVM v)
 #define SAFE_READN(ptr,len) { \
 	if(self->Read(ptr,len) != len) return sq_throwerror(v,_SC("io error")); \
 	}
-int64_t _stream_readn(HRABBITVM v)
+int64_t _stream_readn(rabbit::VirtualMachine* v)
 {
 	SETUP_STREAM(v);
 	int64_t format;
@@ -104,7 +104,7 @@ int64_t _stream_readn(HRABBITVM v)
 	return 1;
 }
 
-int64_t _stream_writeblob(HRABBITVM v)
+int64_t _stream_writeblob(rabbit::VirtualMachine* v)
 {
 	SQUserPointer data;
 	int64_t size;
@@ -118,7 +118,7 @@ int64_t _stream_writeblob(HRABBITVM v)
 	return 1;
 }
 
-int64_t _stream_writen(HRABBITVM v)
+int64_t _stream_writen(rabbit::VirtualMachine* v)
 {
 	SETUP_STREAM(v);
 	int64_t format, ti;
@@ -187,7 +187,7 @@ int64_t _stream_writen(HRABBITVM v)
 	return 0;
 }
 
-int64_t _stream_seek(HRABBITVM v)
+int64_t _stream_seek(rabbit::VirtualMachine* v)
 {
 	SETUP_STREAM(v);
 	int64_t offset, origin = SQ_SEEK_SET;
@@ -206,21 +206,21 @@ int64_t _stream_seek(HRABBITVM v)
 	return 1;
 }
 
-int64_t _stream_tell(HRABBITVM v)
+int64_t _stream_tell(rabbit::VirtualMachine* v)
 {
 	SETUP_STREAM(v);
 	sq_pushinteger(v, self->Tell());
 	return 1;
 }
 
-int64_t _stream_len(HRABBITVM v)
+int64_t _stream_len(rabbit::VirtualMachine* v)
 {
 	SETUP_STREAM(v);
 	sq_pushinteger(v, self->Len());
 	return 1;
 }
 
-int64_t _stream_flush(HRABBITVM v)
+int64_t _stream_flush(rabbit::VirtualMachine* v)
 {
 	SETUP_STREAM(v);
 	if(!self->Flush())
@@ -230,7 +230,7 @@ int64_t _stream_flush(HRABBITVM v)
 	return 1;
 }
 
-int64_t _stream_eos(HRABBITVM v)
+int64_t _stream_eos(rabbit::VirtualMachine* v)
 {
 	SETUP_STREAM(v);
 	if(self->EOS())
@@ -240,7 +240,7 @@ int64_t _stream_eos(HRABBITVM v)
 	return 1;
 }
 
- int64_t _stream__cloned(HRABBITVM v)
+ int64_t _stream__cloned(rabbit::VirtualMachine* v)
  {
 	 return sq_throwerror(v,_SC("this object cannot be cloned"));
  }
@@ -259,7 +259,7 @@ static const SQRegFunction _stream_methods[] = {
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 
-void init_streamclass(HRABBITVM v)
+void init_streamclass(rabbit::VirtualMachine* v)
 {
 	sq_pushregistrytable(v);
 	sq_pushstring(v,_SC("std_stream"),-1);
@@ -290,7 +290,7 @@ void init_streamclass(HRABBITVM v)
 	sq_pop(v,1);
 }
 
-SQRESULT declare_stream(HRABBITVM v,const SQChar* name,SQUserPointer typetag,const SQChar* reg_name,const SQRegFunction *methods,const SQRegFunction *globals)
+SQRESULT declare_stream(rabbit::VirtualMachine* v,const SQChar* name,SQUserPointer typetag,const SQChar* reg_name,const SQRegFunction *methods,const SQRegFunction *globals)
 {
 	if(sq_gettype(v,-1) != OT_TABLE)
 		return sq_throwerror(v,_SC("table expected"));

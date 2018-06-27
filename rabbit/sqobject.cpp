@@ -6,7 +6,7 @@
  * @license MPL-2 (see license file)
  */
 #include <rabbit/sqpcheader.hpp>
-#include <rabbit/sqvm.hpp>
+#include <rabbit/VirtualMachine.hpp>
 #include <rabbit/sqstring.hpp>
 #include <rabbit/Array.hpp>
 #include <rabbit/sqtable.hpp>
@@ -88,7 +88,7 @@ uint64_t translateIndex(const SQObjectPtr &idx)
 
 
 
-bool SQDelegable::getMetaMethod(SQVM *v,SQMetaMethod mm,SQObjectPtr &res) {
+bool SQDelegable::getMetaMethod(rabbit::VirtualMachine *v,SQMetaMethod mm,SQObjectPtr &res) {
 	if(_delegate) {
 		return _delegate->get((*_ss(v)->_metamethods)[mm],res);
 	}
@@ -109,7 +109,7 @@ bool SQDelegable::setDelegate(SQTable *mt)
 	return true;
 }
 
-bool SQGenerator::yield(SQVM *v,int64_t target)
+bool SQGenerator::yield(rabbit::VirtualMachine *v,int64_t target)
 {
 	if(_state==eSuspended) { v->raise_error(_SC("internal vm error, yielding dead generator"));  return false;}
 	if(_state==eDead) { v->raise_error(_SC("internal vm error, yielding a dead generator")); return false; }
@@ -140,7 +140,7 @@ bool SQGenerator::yield(SQVM *v,int64_t target)
 	return true;
 }
 
-bool SQGenerator::resume(SQVM *v,SQObjectPtr &dest)
+bool SQGenerator::resume(rabbit::VirtualMachine *v,SQObjectPtr &dest)
 {
 	if(_state==eDead){ v->raise_error(_SC("resuming dead generator")); return false; }
 	if(_state==eRunning){ v->raise_error(_SC("resuming active generator")); return false; }
@@ -190,7 +190,7 @@ void rabbit::Array::extend(const rabbit::Array *a){
 			append((*a)[i]);
 }
 
-const SQChar* SQFunctionProto::getLocal(SQVM *vm,uint64_t stackbase,uint64_t nseq,uint64_t nop)
+const SQChar* SQFunctionProto::getLocal(rabbit::VirtualMachine *vm,uint64_t stackbase,uint64_t nseq,uint64_t nop)
 {
 	uint64_t nvars=_nlocalvarinfos;
 	const SQChar *res=NULL;
@@ -253,7 +253,7 @@ SQClosure::~SQClosure()
 }
 
 #define _CHECK_IO(exp)  { if(!exp)return false; }
-bool SafeWrite(HRABBITVM v,SQWRITEFUNC write,SQUserPointer up,SQUserPointer dest,int64_t size)
+bool SafeWrite(rabbit::VirtualMachine* v,SQWRITEFUNC write,SQUserPointer up,SQUserPointer dest,int64_t size)
 {
 	if(write(up,dest,size) != size) {
 		v->raise_error(_SC("io error (write function failure)"));
@@ -262,7 +262,7 @@ bool SafeWrite(HRABBITVM v,SQWRITEFUNC write,SQUserPointer up,SQUserPointer dest
 	return true;
 }
 
-bool SafeRead(HRABBITVM v,SQWRITEFUNC read,SQUserPointer up,SQUserPointer dest,int64_t size)
+bool SafeRead(rabbit::VirtualMachine* v,SQWRITEFUNC read,SQUserPointer up,SQUserPointer dest,int64_t size)
 {
 	if(size && read(up,dest,size) != size) {
 		v->raise_error(_SC("io error, read function failure, the origin stream could be corrupted/trucated"));
@@ -271,12 +271,12 @@ bool SafeRead(HRABBITVM v,SQWRITEFUNC read,SQUserPointer up,SQUserPointer dest,i
 	return true;
 }
 
-bool WriteTag(HRABBITVM v,SQWRITEFUNC write,SQUserPointer up,uint32_t tag)
+bool WriteTag(rabbit::VirtualMachine* v,SQWRITEFUNC write,SQUserPointer up,uint32_t tag)
 {
 	return SafeWrite(v,write,up,&tag,sizeof(tag));
 }
 
-bool CheckTag(HRABBITVM v,SQWRITEFUNC read,SQUserPointer up,uint32_t tag)
+bool CheckTag(rabbit::VirtualMachine* v,SQWRITEFUNC read,SQUserPointer up,uint32_t tag)
 {
 	uint32_t t;
 	_CHECK_IO(SafeRead(v,read,up,&t,sizeof(t)));
@@ -287,7 +287,7 @@ bool CheckTag(HRABBITVM v,SQWRITEFUNC read,SQUserPointer up,uint32_t tag)
 	return true;
 }
 
-bool WriteObject(HRABBITVM v,SQUserPointer up,SQWRITEFUNC write,SQObjectPtr &o)
+bool WriteObject(rabbit::VirtualMachine* v,SQUserPointer up,SQWRITEFUNC write,SQObjectPtr &o)
 {
 	uint32_t _type = (uint32_t)sq_type(o);
 	_CHECK_IO(SafeWrite(v,write,up,&_type,sizeof(_type)));
@@ -310,7 +310,7 @@ bool WriteObject(HRABBITVM v,SQUserPointer up,SQWRITEFUNC write,SQObjectPtr &o)
 	return true;
 }
 
-bool ReadObject(HRABBITVM v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &o)
+bool ReadObject(rabbit::VirtualMachine* v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &o)
 {
 	uint32_t _type;
 	_CHECK_IO(SafeRead(v,read,up,&_type,sizeof(_type)));
@@ -345,7 +345,7 @@ bool ReadObject(HRABBITVM v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &o)
 	return true;
 }
 
-bool SQClosure::save(SQVM *v,SQUserPointer up,SQWRITEFUNC write)
+bool SQClosure::save(rabbit::VirtualMachine *v,SQUserPointer up,SQWRITEFUNC write)
 {
 	_CHECK_IO(WriteTag(v,write,up,SQ_CLOSURESTREAM_HEAD));
 	_CHECK_IO(WriteTag(v,write,up,sizeof(SQChar)));
@@ -356,7 +356,7 @@ bool SQClosure::save(SQVM *v,SQUserPointer up,SQWRITEFUNC write)
 	return true;
 }
 
-bool SQClosure::load(SQVM *v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &ret)
+bool SQClosure::load(rabbit::VirtualMachine *v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &ret)
 {
 	_CHECK_IO(CheckTag(v,read,up,SQ_CLOSURESTREAM_HEAD));
 	_CHECK_IO(CheckTag(v,read,up,sizeof(SQChar)));
@@ -380,7 +380,7 @@ SQFunctionProto::~SQFunctionProto()
 {
 }
 
-bool SQFunctionProto::save(SQVM *v,SQUserPointer up,SQWRITEFUNC write)
+bool SQFunctionProto::save(rabbit::VirtualMachine *v,SQUserPointer up,SQWRITEFUNC write)
 {
 	int64_t i,nliterals = _nliterals,nparameters = _nparameters;
 	int64_t noutervalues = _noutervalues,nlocalvarinfos = _nlocalvarinfos;
@@ -443,7 +443,7 @@ bool SQFunctionProto::save(SQVM *v,SQUserPointer up,SQWRITEFUNC write)
 	return true;
 }
 
-bool SQFunctionProto::load(SQVM *v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &ret)
+bool SQFunctionProto::load(rabbit::VirtualMachine *v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &ret)
 {
 	int64_t i, nliterals,nparameters;
 	int64_t noutervalues ,nlocalvarinfos ;

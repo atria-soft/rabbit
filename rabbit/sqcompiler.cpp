@@ -15,7 +15,7 @@
 #include <rabbit/sqcompiler.hpp>
 #include <rabbit/sqfuncstate.hpp>
 #include <rabbit/sqlexer.hpp>
-#include <rabbit/sqvm.hpp>
+#include <rabbit/VirtualMachine.hpp>
 #include <rabbit/sqtable.hpp>
 
 #define EXPR   1
@@ -76,7 +76,7 @@ struct SQScope {
 class SQcompiler
 {
 public:
-	SQcompiler(SQVM *v, SQLEXREADFUNC rg, SQUserPointer up, const SQChar* sourcename, bool raiseerror, bool lineinfo)
+	SQcompiler(rabbit::VirtualMachine *v, SQLEXREADFUNC rg, SQUserPointer up, const SQChar* sourcename, bool raiseerror, bool lineinfo)
 	{
 		_vm=v;
 		_lex.init(_ss(v), rg, up,Throwerror,this);
@@ -1579,10 +1579,10 @@ private:
 	SQScope _scope;
 	SQChar _compilererror[MAX_COMPILER_ERROR_LEN];
 	jmp_buf _errorjmp;
-	SQVM *_vm;
+	rabbit::VirtualMachine *_vm;
 };
 
-bool compile(SQVM *vm,SQLEXREADFUNC rg, SQUserPointer up, const SQChar *sourcename, SQObjectPtr &out, bool raiseerror, bool lineinfo)
+bool compile(rabbit::VirtualMachine *vm,SQLEXREADFUNC rg, SQUserPointer up, const SQChar *sourcename, SQObjectPtr &out, bool raiseerror, bool lineinfo)
 {
 	SQcompiler p(vm, rg, up, sourcename, raiseerror, lineinfo);
 	return p.compile(out);

@@ -23,7 +23,7 @@ RABBIT_API SQBool sqstd_rex_searchrange(SQRex* exp,const SQChar* text_begin,cons
 RABBIT_API int64_t sqstd_rex_getsubexpcount(SQRex* exp);
 RABBIT_API SQBool sqstd_rex_getsubexp(SQRex* exp, int64_t n, SQRexMatch *subexp);
 
-RABBIT_API SQRESULT sqstd_format(HRABBITVM v,int64_t nformatstringidx,int64_t *outlen,SQChar **output);
+RABBIT_API SQRESULT sqstd_format(rabbit::VirtualMachine* v,int64_t nformatstringidx,int64_t *outlen,SQChar **output);
 
-RABBIT_API SQRESULT sqstd_register_stringlib(HRABBITVM v);
+RABBIT_API SQRESULT sqstd_register_stringlib(rabbit::VirtualMachine* v);
 

@@ -36,13 +36,13 @@ RABBIT_API int64_t sqstd_fflush(SQFILE);
 RABBIT_API int64_t sqstd_fclose(SQFILE);
 RABBIT_API int64_t sqstd_feof(SQFILE);
 
-RABBIT_API SQRESULT sqstd_createfile(HRABBITVM v, SQFILE file,SQBool own);
-RABBIT_API SQRESULT sqstd_getfile(HRABBITVM v, int64_t idx, SQFILE *file);
+RABBIT_API SQRESULT sqstd_createfile(rabbit::VirtualMachine* v, SQFILE file,SQBool own);
+RABBIT_API SQRESULT sqstd_getfile(rabbit::VirtualMachine* v, int64_t idx, SQFILE *file);
 
 //compiler helpers
-RABBIT_API SQRESULT sqstd_loadfile(HRABBITVM v,const SQChar *filename,SQBool printerror);
-RABBIT_API SQRESULT sqstd_dofile(HRABBITVM v,const SQChar *filename,SQBool retval,SQBool printerror);
-RABBIT_API SQRESULT sqstd_writeclosuretofile(HRABBITVM v,const SQChar *filename);
+RABBIT_API SQRESULT sqstd_loadfile(rabbit::VirtualMachine* v,const SQChar *filename,SQBool printerror);
+RABBIT_API SQRESULT sqstd_dofile(rabbit::VirtualMachine* v,const SQChar *filename,SQBool retval,SQBool printerror);
+RABBIT_API SQRESULT sqstd_writeclosuretofile(rabbit::VirtualMachine* v,const SQChar *filename);
 
-RABBIT_API SQRESULT sqstd_register_iolib(HRABBITVM v);
+RABBIT_API SQRESULT sqstd_register_iolib(rabbit::VirtualMachine* v);
 

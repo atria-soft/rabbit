@@ -20,7 +20,7 @@
 		return sq_throwerror(v,_SC("the blob is invalid"));
 
 
-static int64_t _blob_resize(HRABBITVM v)
+static int64_t _blob_resize(rabbit::VirtualMachine* v)
 {
 	SETUP_BLOB(v);
 	int64_t size;
@@ -43,7 +43,7 @@ static void __swap_word(unsigned short *n)
 	*n=(unsigned short)((*n>>8)&0x00FF)| ((*n<<8)&0xFF00);
 }
 
-static int64_t _blob_swap4(HRABBITVM v)
+static int64_t _blob_swap4(rabbit::VirtualMachine* v)
 {
 	SETUP_BLOB(v);
 	int64_t num=(self->Len()-(self->Len()%4))>>2;
@@ -54,7 +54,7 @@ static int64_t _blob_swap4(HRABBITVM v)
 	return 0;
 }
 
-static int64_t _blob_swap2(HRABBITVM v)
+static int64_t _blob_swap2(rabbit::VirtualMachine* v)
 {
 	SETUP_BLOB(v);
 	int64_t num=(self->Len()-(self->Len()%2))>>1;
@@ -65,7 +65,7 @@ static int64_t _blob_swap2(HRABBITVM v)
 	return 0;
 }
 
-static int64_t _blob__set(HRABBITVM v)
+static int64_t _blob__set(rabbit::VirtualMachine* v)
 {
 	SETUP_BLOB(v);
 	int64_t idx,val;
@@ -78,7 +78,7 @@ static int64_t _blob__set(HRABBITVM v)
 	return 1;
 }
 
-static int64_t _blob__get(HRABBITVM v)
+static int64_t _blob__get(rabbit::VirtualMachine* v)
 {
 	SETUP_BLOB(v);
 	int64_t idx;
@@ -95,7 +95,7 @@ static int64_t _blob__get(HRABBITVM v)
 	return 1;
 }
 
-static int64_t _blob__nexti(HRABBITVM v)
+static int64_t _blob__nexti(rabbit::VirtualMachine* v)
 {
 	SETUP_BLOB(v);
 	if(sq_gettype(v,2) == OT_NULL) {
@@ -114,7 +114,7 @@ static int64_t _blob__nexti(HRABBITVM v)
 	return sq_throwerror(v,_SC("internal error (_nexti) wrong argument type"));
 }
 
-static int64_t _blob__typeof(HRABBITVM v)
+static int64_t _blob__typeof(rabbit::VirtualMachine* v)
 {
 	sq_pushstring(v,_SC("blob"),-1);
 	return 1;
@@ -128,7 +128,7 @@ static int64_t _blob_releasehook(SQUserPointer p, int64_t SQ_UNUSED_ARG(size))
 	return 1;
 }
 
-static int64_t _blob_constructor(HRABBITVM v)
+static int64_t _blob_constructor(rabbit::VirtualMachine* v)
 {
 	int64_t nparam = sq_gettop(v);
 	int64_t size = 0;
@@ -148,7 +148,7 @@ static int64_t _blob_constructor(HRABBITVM v)
 	return 0;
 }
 
-static int64_t _blob__cloned(HRABBITVM v)
+static int64_t _blob__cloned(rabbit::VirtualMachine* v)
 {
 	SQBlob *other = NULL;
 	{
@@ -185,7 +185,7 @@ static const SQRegFunction _blob_methods[] = {
 
 //GLOBAL FUNCTIONS
 
-static int64_t _g_blob_casti2f(HRABBITVM v)
+static int64_t _g_blob_casti2f(rabbit::VirtualMachine* v)
 {
 	int64_t i;
 	sq_getinteger(v,2,&i);
@@ -193,7 +193,7 @@ static int64_t _g_blob_casti2f(HRABBITVM v)
 	return 1;
 }
 
-static int64_t _g_blob_castf2i(HRABBITVM v)
+static int64_t _g_blob_castf2i(rabbit::VirtualMachine* v)
 {
 	float_t f;
 	sq_getfloat(v,2,&f);
@@ -201,7 +201,7 @@ static int64_t _g_blob_castf2i(HRABBITVM v)
 	return 1;
 }
 
-static int64_t _g_blob_swap2(HRABBITVM v)
+static int64_t _g_blob_swap2(rabbit::VirtualMachine* v)
 {
 	int64_t i;
 	sq_getinteger(v,2,&i);
@@ -210,7 +210,7 @@ static int64_t _g_blob_swap2(HRABBITVM v)
 	return 1;
 }
 
-static int64_t _g_blob_swap4(HRABBITVM v)
+static int64_t _g_blob_swap4(rabbit::VirtualMachine* v)
 {
 	int64_t i;
 	sq_getinteger(v,2,&i);
@@ -220,7 +220,7 @@ static int64_t _g_blob_swap4(HRABBITVM v)
 	return 1;
 }
 
-static int64_t _g_blob_swapfloat(HRABBITVM v)
+static int64_t _g_blob_swapfloat(rabbit::VirtualMachine* v)
 {
 	float_t f;
 	sq_getfloat(v,2,&f);
@@ -239,7 +239,7 @@ static const SQRegFunction bloblib_funcs[]={
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 
-SQRESULT sqstd_getblob(HRABBITVM v,int64_t idx,SQUserPointer *ptr)
+SQRESULT sqstd_getblob(rabbit::VirtualMachine* v,int64_t idx,SQUserPointer *ptr)
 {
 	SQBlob *blob;
 	if(SQ_FAILED(sq_getinstanceup(v,idx,(SQUserPointer *)&blob,(SQUserPointer)SQSTD_BLOB_TYPE_TAG)))
@@ -248,7 +248,7 @@ SQRESULT sqstd_getblob(HRABBITVM v,int64_t idx,SQUserPointer *ptr)
 	return SQ_OK;
 }
 
-int64_t sqstd_getblobsize(HRABBITVM v,int64_t idx)
+int64_t sqstd_getblobsize(rabbit::VirtualMachine* v,int64_t idx)
 {
 	SQBlob *blob;
 	if(SQ_FAILED(sq_getinstanceup(v,idx,(SQUserPointer *)&blob,(SQUserPointer)SQSTD_BLOB_TYPE_TAG)))
@@ -256,7 +256,7 @@ int64_t sqstd_getblobsize(HRABBITVM v,int64_t idx)
 	return blob->Len();
 }
 
-SQUserPointer sqstd_createblob(HRABBITVM v, int64_t size)
+SQUserPointer sqstd_createblob(rabbit::VirtualMachine* v, int64_t size)
 {
 	int64_t top = sq_gettop(v);
 	sq_pushregistrytable(v);
@@ -276,7 +276,7 @@ SQUserPointer sqstd_createblob(HRABBITVM v, int64_t size)
 	return NULL;
 }
 
-SQRESULT sqstd_register_bloblib(HRABBITVM v)
+SQRESULT sqstd_register_bloblib(rabbit::VirtualMachine* v)
 {
 	return declare_stream(v,_SC("blob"),(SQUserPointer)SQSTD_BLOB_TYPE_TAG,_SC("std_blob"),_blob_methods,bloblib_funcs);
 }

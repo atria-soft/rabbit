@@ -225,7 +225,7 @@ struct SQObjectPtr : public SQObject
 	_REF_TYPE_DECL(OT_STRING,SQString,pString)
 	_REF_TYPE_DECL(OT_USERDATA,rabbit::UserData,pUserData)
 	_REF_TYPE_DECL(OT_WEAKREF,rabbit::WeakRef,pWeakRef)
-	_REF_TYPE_DECL(OT_THREAD,SQVM,pThread)
+	_REF_TYPE_DECL(OT_THREAD,rabbit::VirtualMachine,pThread)
 	_REF_TYPE_DECL(OT_FUNCPROTO,SQFunctionProto,pFunctionProto)
 
 	_SCALAR_TYPE_DECL(OT_INTEGER,int64_t,nInteger)
@@ -302,7 +302,7 @@ inline void _Swap(SQObject &a,SQObject &b)
 
 struct SQDelegable : public rabbit::RefCounted {
 	bool setDelegate(SQTable *m);
-	virtual bool getMetaMethod(SQVM *v,SQMetaMethod mm,SQObjectPtr &res);
+	virtual bool getMetaMethod(rabbit::VirtualMachine *v,SQMetaMethod mm,SQObjectPtr &res);
 	SQTable *_delegate;
 };
 

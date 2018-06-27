@@ -7,5 +7,5 @@
  */
 #pragma once
 
-RABBIT_API void sqstd_seterrorhandlers(HRABBITVM v);
-RABBIT_API void sqstd_printcallstack(HRABBITVM v);
+RABBIT_API void sqstd_seterrorhandlers(rabbit::VirtualMachine* v);
+RABBIT_API void sqstd_printcallstack(rabbit::VirtualMachine* v);

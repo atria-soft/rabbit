@@ -10,7 +10,7 @@
 #include <rabbit-std/sqstdaux.hpp>
 #include <assert.h>
 
-void sqstd_printcallstack(HRABBITVM v)
+void sqstd_printcallstack(rabbit::VirtualMachine* v)
 {
 	SQPRINTFUNCTION pf = sq_geterrorfunc(v);
 	if(pf) {
@@ -103,7 +103,7 @@ void sqstd_printcallstack(HRABBITVM v)
 	}
 }
 
-static int64_t _sqstd_aux_printerror(HRABBITVM v)
+static int64_t _sqstd_aux_printerror(rabbit::VirtualMachine* v)
 {
 	SQPRINTFUNCTION pf = sq_geterrorfunc(v);
 	if(pf) {
@@ -121,7 +121,7 @@ static int64_t _sqstd_aux_printerror(HRABBITVM v)
 	return 0;
 }
 
-void _sqstd_compiler_error(HRABBITVM v,const SQChar *sErr,const SQChar *sSource,int64_t line,int64_t column)
+void _sqstd_compiler_error(rabbit::VirtualMachine* v,const SQChar *sErr,const SQChar *sSource,int64_t line,int64_t column)
 {
 	SQPRINTFUNCTION pf = sq_geterrorfunc(v);
 	if(pf) {
@@ -129,7 +129,7 @@ void _sqstd_compiler_error(HRABBITVM v,const SQChar *sErr,const SQChar *sSource,
 	}
 }
 
-void sqstd_seterrorhandlers(HRABBITVM v)
+void sqstd_seterrorhandlers(rabbit::VirtualMachine* v)
 {
 	sq_setcompilererrorhandler(v,_sqstd_compiler_error);
 	sq_newclosure(v,_sqstd_aux_printerror,0);

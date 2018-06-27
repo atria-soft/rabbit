@@ -26,7 +26,7 @@ static SQBool isfmtchr(SQChar ch)
 	return SQFalse;
 }
 
-static int64_t validate_format(HRABBITVM v, SQChar *fmt, const SQChar *src, int64_t n,int64_t &width)
+static int64_t validate_format(rabbit::VirtualMachine* v, SQChar *fmt, const SQChar *src, int64_t n,int64_t &width)
 {
 	SQChar *dummy;
 	SQChar swidth[MAX_WFORMAT_LEN];
@@ -71,7 +71,7 @@ static int64_t validate_format(HRABBITVM v, SQChar *fmt, const SQChar *src, int6
 	return n;
 }
 
-SQRESULT sqstd_format(HRABBITVM v,int64_t nformatstringidx,int64_t *outlen,SQChar **output)
+SQRESULT sqstd_format(rabbit::VirtualMachine* v,int64_t nformatstringidx,int64_t *outlen,SQChar **output)
 {
 	const SQChar *format;
 	SQChar *dest;
@@ -160,7 +160,7 @@ SQRESULT sqstd_format(HRABBITVM v,int64_t nformatstringidx,int64_t *outlen,SQCha
 	return SQ_OK;
 }
 
-static int64_t _string_printf(HRABBITVM v)
+static int64_t _string_printf(rabbit::VirtualMachine* v)
 {
 	SQChar *dest = NULL;
 	int64_t length = 0;
@@ -173,7 +173,7 @@ static int64_t _string_printf(HRABBITVM v)
 	return 0;
 }
 
-static int64_t _string_format(HRABBITVM v)
+static int64_t _string_format(rabbit::VirtualMachine* v)
 {
 	SQChar *dest = NULL;
 	int64_t length = 0;
@@ -201,7 +201,7 @@ static void __strip_r(const SQChar *str,int64_t len,const SQChar **end)
 	*end = t + 1;
 }
 
-static int64_t _string_strip(HRABBITVM v)
+static int64_t _string_strip(rabbit::VirtualMachine* v)
 {
 	const SQChar *str,*start,*end;
 	sq_getstring(v,2,&str);
@@ -212,7 +212,7 @@ static int64_t _string_strip(HRABBITVM v)
 	return 1;
 }
 
-static int64_t _string_lstrip(HRABBITVM v)
+static int64_t _string_lstrip(rabbit::VirtualMachine* v)
 {
 	const SQChar *str,*start;
 	sq_getstring(v,2,&str);
@@ -221,7 +221,7 @@ static int64_t _string_lstrip(HRABBITVM v)
 	return 1;
 }
 
-static int64_t _string_rstrip(HRABBITVM v)
+static int64_t _string_rstrip(rabbit::VirtualMachine* v)
 {
 	const SQChar *str,*end;
 	sq_getstring(v,2,&str);
@@ -231,7 +231,7 @@ static int64_t _string_rstrip(HRABBITVM v)
 	return 1;
 }
 
-static int64_t _string_split(HRABBITVM v)
+static int64_t _string_split(rabbit::VirtualMachine* v)
 {
 	const SQChar *str,*seps;
 	SQChar *stemp;
@@ -269,7 +269,7 @@ static int64_t _string_split(HRABBITVM v)
 	return 1;
 }
 
-static int64_t _string_escape(HRABBITVM v)
+static int64_t _string_escape(rabbit::VirtualMachine* v)
 {
 	const SQChar *str;
 	SQChar *dest,*resstr;
@@ -339,7 +339,7 @@ static int64_t _string_escape(HRABBITVM v)
 	return 1;
 }
 
-static int64_t _string_startswith(HRABBITVM v)
+static int64_t _string_startswith(rabbit::VirtualMachine* v)
 {
 	const SQChar *str,*cmp;
 	sq_getstring(v,2,&str);
@@ -354,7 +354,7 @@ static int64_t _string_startswith(HRABBITVM v)
 	return 1;
 }
 
-static int64_t _string_endswith(HRABBITVM v)
+static int64_t _string_endswith(rabbit::VirtualMachine* v)
 {
 	const SQChar *str,*cmp;
 	sq_getstring(v,2,&str);
@@ -380,7 +380,7 @@ static int64_t _rexobj_releasehook(SQUserPointer p, int64_t SQ_UNUSED_ARG(size))
 	return 1;
 }
 
-static int64_t _regexp_match(HRABBITVM v)
+static int64_t _regexp_match(rabbit::VirtualMachine* v)
 {
 	SETUP_REX(v);
 	const SQChar *str;
@@ -394,7 +394,7 @@ static int64_t _regexp_match(HRABBITVM v)
 	return 1;
 }
 
-static void _addrexmatch(HRABBITVM v,const SQChar *str,const SQChar *begin,const SQChar *end)
+static void _addrexmatch(rabbit::VirtualMachine* v,const SQChar *str,const SQChar *begin,const SQChar *end)
 {
 	sq_newtable(v);
 	sq_pushstring(v,_SC("begin"),-1);
@@ -405,7 +405,7 @@ static void _addrexmatch(HRABBITVM v,const SQChar *str,const SQChar *begin,const
 	sq_rawset(v,-3);
 }
 
-static int64_t _regexp_search(HRABBITVM v)
+static int64_t _regexp_search(rabbit::VirtualMachine* v)
 {
 	SETUP_REX(v);
 	const SQChar *str,*begin,*end;
@@ -419,7 +419,7 @@ static int64_t _regexp_search(HRABBITVM v)
 	return 0;
 }
 
-static int64_t _regexp_capture(HRABBITVM v)
+static int64_t _regexp_capture(rabbit::VirtualMachine* v)
 {
 	SETUP_REX(v);
 	const SQChar *str,*begin,*end;
@@ -443,14 +443,14 @@ static int64_t _regexp_capture(HRABBITVM v)
 	return 0;
 }
 
-static int64_t _regexp_subexpcount(HRABBITVM v)
+static int64_t _regexp_subexpcount(rabbit::VirtualMachine* v)
 {
 	SETUP_REX(v);
 	sq_pushinteger(v,sqstd_rex_getsubexpcount(self));
 	return 1;
 }
 
-static int64_t _regexp_constructor(HRABBITVM v)
+static int64_t _regexp_constructor(rabbit::VirtualMachine* v)
 {
 	const SQChar *error,*pattern;
 	sq_getstring(v,2,&pattern);
@@ -461,7 +461,7 @@ static int64_t _regexp_constructor(HRABBITVM v)
 	return 0;
 }
 
-static int64_t _regexp__typeof(HRABBITVM v)
+static int64_t _regexp__typeof(rabbit::VirtualMachine* v)
 {
 	sq_pushstring(v,_SC("regexp"),-1);
 	return 1;
@@ -495,7 +495,7 @@ static const SQRegFunction stringlib_funcs[]={
 #undef _DECL_FUNC
 
 
-int64_t sqstd_register_stringlib(HRABBITVM v)
+int64_t sqstd_register_stringlib(rabbit::VirtualMachine* v)
 {
 	sq_pushstring(v,_SC("regexp"),-1);
 	sq_newclass(v,SQFalse);

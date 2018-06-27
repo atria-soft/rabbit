@@ -60,8 +60,8 @@ public:
 	}
 	~SQClosure();
 
-	bool save(SQVM *v,SQUserPointer up,SQWRITEFUNC write);
-	static bool load(SQVM *v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &ret);
+	bool save(rabbit::VirtualMachine *v,SQUserPointer up,SQWRITEFUNC write);
+	static bool load(rabbit::VirtualMachine *v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &ret);
 	rabbit::WeakRef *_env;
 	rabbit::WeakRef *_root;
 	SQClass *_base;
@@ -131,12 +131,12 @@ public:
 		sq_delete(this,SQGenerator);
 	}
 
-	bool yield(SQVM *v,int64_t target);
-	bool resume(SQVM *v,SQObjectPtr &dest);
+	bool yield(rabbit::VirtualMachine *v,int64_t target);
+	bool resume(rabbit::VirtualMachine *v,SQObjectPtr &dest);
 	SQObjectPtr _closure;
 	SQObjectPtrVec _stack;
-	SQVM::callInfo _ci;
-	ExceptionsTraps _etraps;
+	rabbit::VirtualMachine::callInfo _ci;
+	etk::Vector<SQExceptionTrap> _etraps;
 	SQGeneratorState _state;
 };
 

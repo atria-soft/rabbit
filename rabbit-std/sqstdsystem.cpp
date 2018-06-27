@@ -27,7 +27,7 @@
 #define screname rename
 #endif
 
-static int64_t _system_getenv(HRABBITVM v)
+static int64_t _system_getenv(rabbit::VirtualMachine* v)
 {
 	const SQChar *s;
 	if(SQ_SUCCEEDED(sq_getstring(v,2,&s))){
@@ -38,7 +38,7 @@ static int64_t _system_getenv(HRABBITVM v)
 }
 
 
-static int64_t _system_system(HRABBITVM v)
+static int64_t _system_system(rabbit::VirtualMachine* v)
 {
 	const SQChar *s;
 	if(SQ_SUCCEEDED(sq_getstring(v,2,&s))){
@@ -49,20 +49,20 @@ static int64_t _system_system(HRABBITVM v)
 }
 
 
-static int64_t _system_clock(HRABBITVM v)
+static int64_t _system_clock(rabbit::VirtualMachine* v)
 {
 	sq_pushfloat(v,((float_t)clock())/(float_t)CLOCKS_PER_SEC);
 	return 1;
 }
 
-static int64_t _system_time(HRABBITVM v)
+static int64_t _system_time(rabbit::VirtualMachine* v)
 {
 	int64_t t = (int64_t)time(NULL);
 	sq_pushinteger(v,t);
 	return 1;
 }
 
-static int64_t _system_remove(HRABBITVM v)
+static int64_t _system_remove(rabbit::VirtualMachine* v)
 {
 	const SQChar *s;
 	sq_getstring(v,2,&s);
@@ -71,7 +71,7 @@ static int64_t _system_remove(HRABBITVM v)
 	return 0;
 }
 
-static int64_t _system_rename(HRABBITVM v)
+static int64_t _system_rename(rabbit::VirtualMachine* v)
 {
 	const SQChar *oldn,*newn;
 	sq_getstring(v,2,&oldn);
@@ -81,14 +81,14 @@ static int64_t _system_rename(HRABBITVM v)
 	return 0;
 }
 
-static void _set_integer_slot(HRABBITVM v,const SQChar *name,int64_t val)
+static void _set_integer_slot(rabbit::VirtualMachine* v,const SQChar *name,int64_t val)
 {
 	sq_pushstring(v,name,-1);
 	sq_pushinteger(v,val);
 	sq_rawset(v,-3);
 }
 
-static int64_t _system_date(HRABBITVM v)
+static int64_t _system_date(rabbit::VirtualMachine* v)
 {
 	time_t t;
 	int64_t it;
@@ -137,7 +137,7 @@ static const SQRegFunction systemlib_funcs[]={
 };
 #undef _DECL_FUNC
 
-int64_t sqstd_register_systemlib(HRABBITVM v)
+int64_t sqstd_register_systemlib(rabbit::VirtualMachine* v)
 {
 	int64_t i=0;
 	while(systemlib_funcs[i].name!=0)

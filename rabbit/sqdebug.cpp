@@ -8,16 +8,16 @@
 
 #include <rabbit/sqpcheader.hpp>
 #include <stdarg.h>
-#include <rabbit/sqvm.hpp>
+#include <rabbit/VirtualMachine.hpp>
 #include <rabbit/sqfuncproto.hpp>
 #include <rabbit/sqclosure.hpp>
 #include <rabbit/sqstring.hpp>
 
-SQRESULT sq_getfunctioninfo(HRABBITVM v,int64_t level,SQFunctionInfo *fi)
+SQRESULT sq_getfunctioninfo(rabbit::VirtualMachine* v,int64_t level,SQFunctionInfo *fi)
 {
 	int64_t cssize = v->_callsstacksize;
 	if (cssize > level) {
-		SQVM::callInfo &ci = v->_callsstack[cssize-level-1];
+		rabbit::VirtualMachine::callInfo &ci = v->_callsstack[cssize-level-1];
 		if(sq_isclosure(ci._closure)) {
 			SQClosure *c = _closure(ci._closure);
 			SQFunctionProto *proto = c->_function;
@@ -31,12 +31,12 @@ SQRESULT sq_getfunctioninfo(HRABBITVM v,int64_t level,SQFunctionInfo *fi)
 	return sq_throwerror(v,_SC("the object is not a closure"));
 }
 
-SQRESULT sq_stackinfos(HRABBITVM v, int64_t level, SQStackInfos *si)
+SQRESULT sq_stackinfos(rabbit::VirtualMachine* v, int64_t level, SQStackInfos *si)
 {
 	int64_t cssize = v->_callsstacksize;
 	if (cssize > level) {
 		memset(si, 0, sizeof(SQStackInfos));
-		SQVM::callInfo &ci = v->_callsstack[cssize-level-1];
+		rabbit::VirtualMachine::callInfo &ci = v->_callsstack[cssize-level-1];
 		switch (sq_type(ci._closure)) {
 		case OT_CLOSURE:{
 			SQFunctionProto *func = _closure(ci._closure)->_function;
@@ -61,7 +61,7 @@ SQRESULT sq_stackinfos(HRABBITVM v, int64_t level, SQStackInfos *si)
 	return SQ_ERROR;
 }
 
-void SQVM::raise_error(const SQChar *s, ...)
+void rabbit::VirtualMachine::raise_error(const SQChar *s, ...)
 {
 	va_list vl;
 	va_start(vl, s);
@@ -71,12 +71,12 @@ void SQVM::raise_error(const SQChar *s, ...)
 	_lasterror = SQString::create(_ss(this),_spval,-1);
 }
 
-void SQVM::raise_error(const SQObjectPtr &desc)
+void rabbit::VirtualMachine::raise_error(const SQObjectPtr &desc)
 {
 	_lasterror = desc;
 }
 
-SQString *SQVM::printObjVal(const SQObjectPtr &o)
+SQString *rabbit::VirtualMachine::printObjVal(const SQObjectPtr &o)
 {
 	switch(sq_type(o)) {
 	case OT_STRING: return _string(o);
@@ -93,20 +93,20 @@ SQString *SQVM::printObjVal(const SQObjectPtr &o)
 	}
 }
 
-void SQVM::raise_Idxerror(const SQObjectPtr &o)
+void rabbit::VirtualMachine::raise_Idxerror(const SQObjectPtr &o)
 {
 	SQObjectPtr oval = printObjVal(o);
 	raise_error(_SC("the index '%.50s' does not exist"), _stringval(oval));
 }
 
-void SQVM::raise_Compareerror(const SQObject &o1, const SQObject &o2)
+void rabbit::VirtualMachine::raise_Compareerror(const SQObject &o1, const SQObject &o2)
 {
 	SQObjectPtr oval1 = printObjVal(o1), oval2 = printObjVal(o2);
 	raise_error(_SC("comparison between '%.50s' and '%.50s'"), _stringval(oval1), _stringval(oval2));
 }
 
 
-void SQVM::raise_ParamTypeerror(int64_t nparam,int64_t typemask,int64_t type)
+void rabbit::VirtualMachine::raise_ParamTypeerror(int64_t nparam,int64_t typemask,int64_t type)
 {
 	SQObjectPtr exptypes = SQString::create(_ss(this), _SC(""), -1);
 	int64_t found = 0;

@@ -6,7 +6,7 @@
  * @license MPL-2 (see license file)
  */
 #include <rabbit/sqpcheader.hpp>
-#include <rabbit/sqvm.hpp>
+#include <rabbit/VirtualMachine.hpp>
 #include <rabbit/sqtable.hpp>
 #include <rabbit/sqclass.hpp>
 #include <rabbit/sqfuncproto.hpp>
@@ -76,7 +76,7 @@ bool SQClass::newSlot(SQSharedState *ss,const SQObjectPtr &key,const SQObjectPtr
 			}
 			if(sq_type(temp) == OT_NULL) {
 				bool isconstructor;
-				SQVM::isEqual(ss->_constructoridx, key, isconstructor);
+				rabbit::VirtualMachine::isEqual(ss->_constructoridx, key, isconstructor);
 				if(isconstructor) {
 					_constructoridx = (int64_t)_methods.size();
 				}
@@ -186,7 +186,7 @@ SQInstance::~SQInstance()
 	if(_class){ finalize(); } //if _class is null it was already finalized by the GC
 }
 
-bool SQInstance::getMetaMethod(SQVM* SQ_UNUSED_ARG(v),SQMetaMethod mm,SQObjectPtr &res)
+bool SQInstance::getMetaMethod(rabbit::VirtualMachine* SQ_UNUSED_ARG(v),SQMetaMethod mm,SQObjectPtr &res)
 {
 	if(sq_type(_class->_metamethods[mm]) != OT_NULL) {
 		res = _class->_metamethods[mm];

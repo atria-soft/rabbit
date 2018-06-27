@@ -147,7 +147,7 @@ public:
 	}
 	void finalize();
 	bool instanceOf(SQClass *trg);
-	bool getMetaMethod(SQVM *v,SQMetaMethod mm,SQObjectPtr &res);
+	bool getMetaMethod(rabbit::VirtualMachine *v,SQMetaMethod mm,SQObjectPtr &res);
 
 	SQClass *_class;
 	SQUserPointer _userpointer;

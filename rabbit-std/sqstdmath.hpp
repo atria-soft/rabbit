@@ -9,5 +9,5 @@
 
 #include <rabbit/rabbit.hpp>
 
-RABBIT_API SQRESULT sqstd_register_mathlib(HRABBITVM v);
+RABBIT_API SQRESULT sqstd_register_mathlib(rabbit::VirtualMachine* v);
 

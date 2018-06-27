@@ -7,7 +7,7 @@
  */
 #include <rabbit/sqpcheader.hpp>
 #include <rabbit/sqopcodes.hpp>
-#include <rabbit/sqvm.hpp>
+#include <rabbit/VirtualMachine.hpp>
 #include <rabbit/sqfuncproto.hpp>
 #include <rabbit/sqclosure.hpp>
 #include <rabbit/sqstring.hpp>

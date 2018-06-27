@@ -6,8 +6,9 @@
  * @license MPL-2 (see license file)
  */
 #pragma once
-
-struct SQVM;
+namespace rabbit {
+	class VirtualMachine;
+}
 
 #define TK_IDENTIFIER   258
 #define TK_STRING_LITERAL   259
@@ -80,4 +81,4 @@ struct SQVM;
 
 
 typedef void(*compilererrorFunc)(void *ud, const SQChar *s);
-bool compile(SQVM *vm, SQLEXREADFUNC rg, SQUserPointer up, const SQChar *sourcename, SQObjectPtr &out, bool raiseerror, bool lineinfo);
+bool compile(rabbit::VirtualMachine *vm, SQLEXREADFUNC rg, SQUserPointer up, const SQChar *sourcename, SQObjectPtr &out, bool raiseerror, bool lineinfo);

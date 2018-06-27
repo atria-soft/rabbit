@@ -7,16 +7,16 @@
  */
 #pragma once
 
-int64_t _stream_readblob(HRABBITVM v);
-int64_t _stream_readline(HRABBITVM v);
-int64_t _stream_readn(HRABBITVM v);
-int64_t _stream_writeblob(HRABBITVM v);
-int64_t _stream_writen(HRABBITVM v);
-int64_t _stream_seek(HRABBITVM v);
-int64_t _stream_tell(HRABBITVM v);
-int64_t _stream_len(HRABBITVM v);
-int64_t _stream_eos(HRABBITVM v);
-int64_t _stream_flush(HRABBITVM v);
+int64_t _stream_readblob(rabbit::VirtualMachine* v);
+int64_t _stream_readline(rabbit::VirtualMachine* v);
+int64_t _stream_readn(rabbit::VirtualMachine* v);
+int64_t _stream_writeblob(rabbit::VirtualMachine* v);
+int64_t _stream_writen(rabbit::VirtualMachine* v);
+int64_t _stream_seek(rabbit::VirtualMachine* v);
+int64_t _stream_tell(rabbit::VirtualMachine* v);
+int64_t _stream_len(rabbit::VirtualMachine* v);
+int64_t _stream_eos(rabbit::VirtualMachine* v);
+int64_t _stream_flush(rabbit::VirtualMachine* v);
 
 #define _DECL_STREAM_FUNC(name,nparams,typecheck) {_SC(#name),_stream_##name,nparams,typecheck}
-SQRESULT declare_stream(HRABBITVM v,const SQChar* name,SQUserPointer typetag,const SQChar* reg_name,const SQRegFunction *methods,const SQRegFunction *globals);
+SQRESULT declare_stream(rabbit::VirtualMachine* v,const SQChar* name,SQUserPointer typetag,const SQChar* reg_name,const SQRegFunction *methods,const SQRegFunction *globals);

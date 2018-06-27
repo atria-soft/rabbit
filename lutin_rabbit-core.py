@@ -32,7 +32,7 @@ def configure(target, my_module):
 		'rabbit/sqapi.cpp',
 		'rabbit/sqlexer.cpp',
 		'rabbit/sqclass.cpp',
-		'rabbit/sqvm.cpp',
+		'rabbit/VirtualMachine.cpp',
 		'rabbit/sqtable.cpp',
 		'rabbit/sqstate.cpp',
 		'rabbit/sqobject.cpp',
@@ -51,7 +51,7 @@ def configure(target, my_module):
 		])
 	my_module.add_header_file([
 		'rabbit/sqclass.hpp',
-		'rabbit/sqvm.hpp',
+		'rabbit/VirtualMachine.hpp',
 		'rabbit/sqstate.hpp',
 		'rabbit/rabbit.hpp',
 		'rabbit/sqobject.hpp',
