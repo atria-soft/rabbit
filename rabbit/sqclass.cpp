@@ -25,8 +25,8 @@ SQClass::SQClass(SQSharedState *ss,SQClass *base)
 	if(_base) {
 		_constructoridx = _base->_constructoridx;
 		_udsize = _base->_udsize;
-		_defaultvalues.copy(base->_defaultvalues);
-		_methods.copy(base->_methods);
+		_defaultvalues = base->_defaultvalues;
+		_methods = base->_methods;
 		_COPY_VECTOR(_metamethods,base->_metamethods,MT_LAST);
 		__ObjaddRef(_base);
 	}
@@ -83,7 +83,7 @@ bool SQClass::newSlot(SQSharedState *ss,const SQObjectPtr &key,const SQObjectPtr
 				SQClassMember m;
 				m.val = theval;
 				_members->newSlot(key,SQObjectPtr(_make_method_idx(_methods.size())));
-				_methods.push_back(m);
+				_methods.pushBack(m);
 			}
 			else {
 				_methods[_member_idx(temp)].val = theval;
@@ -94,7 +94,7 @@ bool SQClass::newSlot(SQSharedState *ss,const SQObjectPtr &key,const SQObjectPtr
 	SQClassMember m;
 	m.val = val;
 	_members->newSlot(key,SQObjectPtr(_make_field_idx(_defaultvalues.size())));
-	_defaultvalues.push_back(m);
+	_defaultvalues.pushBack(m);
 	return true;
 }
 

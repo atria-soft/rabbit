@@ -24,11 +24,11 @@ struct SQFuncState
 	void setIntructionParams(int64_t pos,int64_t arg0,int64_t arg1,int64_t arg2=0,int64_t arg3=0);
 	void setIntructionParam(int64_t pos,int64_t arg,int64_t val);
 	SQInstruction &getInstruction(int64_t pos){return _instructions[pos];}
-	void popInstructions(int64_t size){for(int64_t i=0;i<size;i++)_instructions.pop_back();}
+	void popInstructions(int64_t size){for(int64_t i=0;i<size;i++)_instructions.popBack();}
 	void setStacksize(int64_t n);
 	int64_t CountOuters(int64_t stacksize);
 	void snoozeOpt(){_optimization=false;}
-	void addDefaultParam(int64_t trg) { _defaultparams.push_back(trg); }
+	void addDefaultParam(int64_t trg) { _defaultparams.pushBack(trg); }
 	int64_t getDefaultParamCount() { return _defaultparams.size(); }
 	int64_t getCurrentPos(){return _instructions.size()-1;}
 	int64_t getNumericConstant(const int64_t cons);
@@ -83,7 +83,7 @@ struct SQFuncState
 	int64_t _outers;
 	bool _optimization;
 	SQSharedState *_sharedstate;
-	sqvector<SQFuncState*> _childstates;
+	etk::Vector<SQFuncState*> _childstates;
 	int64_t getConstant(const SQObject &cons);
 private:
 	compilererrorFunc _errfunc;

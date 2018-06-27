@@ -117,9 +117,9 @@ bool SQGenerator::yield(SQVM *v,int64_t target)
 
 	_stack.resize(size);
 	SQObject _this = v->_stack[v->_stackbase];
-	_stack._vals[0] = ISREFCOUNTED(sq_type(_this)) ? SQObjectPtr(_refcounted(_this)->getWeakRef(sq_type(_this))) : _this;
+	_stack[0] = ISREFCOUNTED(sq_type(_this)) ? SQObjectPtr(_refcounted(_this)->getWeakRef(sq_type(_this))) : _this;
 	for(int64_t n =1; n<target; n++) {
-		_stack._vals[n] = v->_stack[v->_stackbase+n];
+		_stack[n] = v->_stack[v->_stackbase+n];
 	}
 	for(int64_t j =0; j < size; j++)
 	{
@@ -129,8 +129,8 @@ bool SQGenerator::yield(SQVM *v,int64_t target)
 	_ci = *v->ci;
 	_ci._generator=NULL;
 	for(int64_t i=0;i<_ci._etraps;i++) {
-		_etraps.push_back(v->_etraps.top());
-		v->_etraps.pop_back();
+		_etraps.pushBack(v->_etraps.back());
+		v->_etraps.popBack();
 		// store relative stack base and size in case of resume to other _top
 		SQExceptionTrap &et = _etraps.back();
 		et._stackbase -= v->_stackbase;
@@ -145,7 +145,7 @@ bool SQGenerator::resume(SQVM *v,SQObjectPtr &dest)
 	if(_state==eDead){ v->raise_error(_SC("resuming dead generator")); return false; }
 	if(_state==eRunning){ v->raise_error(_SC("resuming active generator")); return false; }
 	int64_t size = _stack.size();
-	int64_t target = &dest - &(v->_stack._vals[v->_stackbase]);
+	int64_t target = &dest - &(v->_stack[v->_stackbase]);
 	assert(target>=0 && target<=255);
 	int64_t newbase = v->_top;
 	if(!v->enterFrame(v->_top, v->_top + size, false))
@@ -161,19 +161,19 @@ bool SQGenerator::resume(SQVM *v,SQObjectPtr &dest)
 
 
 	for(int64_t i=0;i<_ci._etraps;i++) {
-		v->_etraps.push_back(_etraps.top());
-		_etraps.pop_back();
+		v->_etraps.pushBack(_etraps.back());
+		_etraps.popBack();
 		SQExceptionTrap &et = v->_etraps.back();
 		// restore absolute stack base and size
 		et._stackbase += newbase;
 		et._stacksize += newbase;
 	}
-	SQObject _this = _stack._vals[0];
+	SQObject _this = _stack[0];
 	v->_stack[v->_stackbase] = sq_type(_this) == OT_WEAKREF ? _weakref(_this)->_obj : _this;
 
 	for(int64_t n = 1; n<size; n++) {
-		v->_stack[v->_stackbase+n] = _stack._vals[n];
-		_stack._vals[n].Null();
+		v->_stack[v->_stackbase+n] = _stack[n];
+		_stack[n].Null();
 	}
 
 	_state=eRunning;

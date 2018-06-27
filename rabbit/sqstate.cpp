@@ -28,11 +28,11 @@ SQSharedState::SQSharedState()
 }
 
 #define newsysstring(s) {   \
-	_systemstrings->push_back(SQString::create(this,s));	\
+	_systemstrings->pushBack(SQString::create(this,s));	\
 	}
 
 #define newmetamethod(s) {  \
-	_metamethods->push_back(SQString::create(this,s));  \
+	_metamethods->pushBack(SQString::create(this,s));  \
 	_table(_metamethodsmap)->newSlot(_metamethods->back(),(int64_t)(_metamethods->size()-1)); \
 	}
 
@@ -58,7 +58,7 @@ bool compileTypemask(SQIntVec &res,const SQChar *typemask)
 			case 'x': mask |= _RT_INSTANCE; break;
 			case 'y': mask |= _RT_CLASS; break;
 			case 'r': mask |= _RT_WEAKREF; break;
-			case '.': mask = -1; res.push_back(mask); i++; mask = 0; continue;
+			case '.': mask = -1; res.pushBack(mask); i++; mask = 0; continue;
 			case ' ': i++; continue; //ignores spaces
 			default:
 				return false;
@@ -70,7 +70,7 @@ bool compileTypemask(SQIntVec &res,const SQChar *typemask)
 				return false;
 			continue;
 		}
-		res.push_back(mask);
+		res.pushBack(mask);
 		mask = 0;
 
 	}
@@ -167,7 +167,7 @@ SQSharedState::~SQSharedState()
 	_metamethodsmap.Null();
 	while(!_systemstrings->empty()) {
 		_systemstrings->back().Null();
-		_systemstrings->pop_back();
+		_systemstrings->popBack();
 	}
 	_thread(_root_vm)->finalize();
 	_root_vm.Null();

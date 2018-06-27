@@ -65,13 +65,13 @@ struct SQScope {
 
 #define BEGIN_BREAKBLE_BLOCK()  int64_t __nbreaks__=_fs->_unresolvedbreaks.size(); \
 							int64_t __ncontinues__=_fs->_unresolvedcontinues.size(); \
-							_fs->_breaktargets.push_back(0);_fs->_continuetargets.push_back(0);
+							_fs->_breaktargets.pushBack(0);_fs->_continuetargets.pushBack(0);
 
 #define END_BREAKBLE_BLOCK(continue_target) {__nbreaks__=_fs->_unresolvedbreaks.size()-__nbreaks__; \
 					__ncontinues__=_fs->_unresolvedcontinues.size()-__ncontinues__; \
 					if(__ncontinues__>0)ResolveContinues(_fs,__ncontinues__,continue_target); \
 					if(__nbreaks__>0)ResolveBreaks(_fs,__nbreaks__); \
-					_fs->_breaktargets.pop_back();_fs->_continuetargets.pop_back();}
+					_fs->_breaktargets.popBack();_fs->_continuetargets.popBack();}
 
 class SQcompiler
 {
@@ -250,22 +250,22 @@ public:
 			break;}
 		case TK_BREAK:
 			if(_fs->_breaktargets.size() <= 0)error(_SC("'break' has to be in a loop block"));
-			if(_fs->_breaktargets.top() > 0){
-				_fs->addInstruction(_OP_POPTRAP, _fs->_breaktargets.top(), 0);
+			if(_fs->_breaktargets.back() > 0){
+				_fs->addInstruction(_OP_POPTRAP, _fs->_breaktargets.back(), 0);
 			}
 			RESOLVE_OUTERS();
 			_fs->addInstruction(_OP_JMP, 0, -1234);
-			_fs->_unresolvedbreaks.push_back(_fs->getCurrentPos());
+			_fs->_unresolvedbreaks.pushBack(_fs->getCurrentPos());
 			Lex();
 			break;
 		case TK_CONTINUE:
 			if(_fs->_continuetargets.size() <= 0)error(_SC("'continue' has to be in a loop block"));
-			if(_fs->_continuetargets.top() > 0) {
-				_fs->addInstruction(_OP_POPTRAP, _fs->_continuetargets.top(), 0);
+			if(_fs->_continuetargets.back() > 0) {
+				_fs->addInstruction(_OP_POPTRAP, _fs->_continuetargets.back(), 0);
 			}
 			RESOLVE_OUTERS();
 			_fs->addInstruction(_OP_JMP, 0, -1234);
-			_fs->_unresolvedcontinues.push_back(_fs->getCurrentPos());
+			_fs->_unresolvedcontinues.pushBack(_fs->getCurrentPos());
 			Lex();
 			break;
 		case TK_FUNCTION:
@@ -1163,7 +1163,7 @@ public:
 		SQInstructionVec exp;
 		if(expsize > 0) {
 			for(int64_t i = 0; i < expsize; i++)
-				exp.push_back(_fs->getInstruction(expstart + i));
+				exp.pushBack(_fs->getInstruction(expstart + i));
 			_fs->popInstructions(expsize);
 		}
 		BEGIN_BREAKBLE_BLOCK()
@@ -1231,7 +1231,7 @@ public:
 		int64_t tonextcondjmp = -1;
 		int64_t skipcondjmp = -1;
 		int64_t __nbreaks__ = _fs->_unresolvedbreaks.size();
-		_fs->_breaktargets.push_back(0);
+		_fs->_breaktargets.pushBack(0);
 		while(_token == TK_CASE) {
 			if(!bfirst) {
 				_fs->addInstruction(_OP_JMP, 0, 0);
@@ -1274,7 +1274,7 @@ public:
 		_fs->popTarget();
 		__nbreaks__ = _fs->_unresolvedbreaks.size() - __nbreaks__;
 		if(__nbreaks__ > 0)ResolveBreaks(_fs, __nbreaks__);
-		_fs->_breaktargets.pop_back();
+		_fs->_breaktargets.popBack();
 	}
 	void FunctionStatement()
 	{
@@ -1393,8 +1393,8 @@ public:
 		Lex();
 		_fs->addInstruction(_OP_PUSHTRAP,0,0);
 		_fs->_traps++;
-		if(_fs->_breaktargets.size()) _fs->_breaktargets.top()++;
-		if(_fs->_continuetargets.size()) _fs->_continuetargets.top()++;
+		if(_fs->_breaktargets.size()) _fs->_breaktargets.back()++;
+		if(_fs->_continuetargets.size()) _fs->_continuetargets.back()++;
 		int64_t trappos = _fs->getCurrentPos();
 		{
 			BEGIN_SCOPE();
@@ -1403,8 +1403,8 @@ public:
 		}
 		_fs->_traps--;
 		_fs->addInstruction(_OP_POPTRAP, 1, 0);
-		if(_fs->_breaktargets.size()) _fs->_breaktargets.top()--;
-		if(_fs->_continuetargets.size()) _fs->_continuetargets.top()--;
+		if(_fs->_breaktargets.size()) _fs->_breaktargets.back()--;
+		if(_fs->_continuetargets.size()) _fs->_continuetargets.back()--;
 		_fs->addInstruction(_OP_JMP, 0, 0);
 		int64_t jmppos = _fs->getCurrentPos();
 		_fs->setIntructionParam(trappos, 1, (_fs->getCurrentPos() - trappos));
@@ -1543,14 +1543,14 @@ public:
 		funcstate->dump(func);
 #endif
 		_fs = currchunk;
-		_fs->_functions.push_back(func);
+		_fs->_functions.pushBack(func);
 		_fs->popChildState();
 	}
 	void ResolveBreaks(SQFuncState *funcstate, int64_t ntoresolve)
 	{
 		while(ntoresolve > 0) {
 			int64_t pos = funcstate->_unresolvedbreaks.back();
-			funcstate->_unresolvedbreaks.pop_back();
+			funcstate->_unresolvedbreaks.popBack();
 			//set the jmp instruction
 			funcstate->setIntructionParams(pos, 0, funcstate->getCurrentPos() - pos, 0);
 			ntoresolve--;
@@ -1560,7 +1560,7 @@ public:
 	{
 		while(ntoresolve > 0) {
 			int64_t pos = funcstate->_unresolvedcontinues.back();
-			funcstate->_unresolvedcontinues.pop_back();
+			funcstate->_unresolvedcontinues.popBack();
 			//set the jmp instruction
 			funcstate->setIntructionParams(pos, 0, targetpos - pos, 0);
 			ntoresolve--;

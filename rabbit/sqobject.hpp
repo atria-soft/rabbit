@@ -307,8 +307,8 @@ struct SQDelegable : public rabbit::RefCounted {
 };
 
 uint64_t translateIndex(const SQObjectPtr &idx);
-typedef sqvector<SQObjectPtr> SQObjectPtrVec;
-typedef sqvector<int64_t> SQIntVec;
+typedef etk::Vector<SQObjectPtr> SQObjectPtrVec;
+typedef etk::Vector<int64_t> SQIntVec;
 const SQChar *getTypeName(const SQObjectPtr &obj1);
 const SQChar *IdType2Name(SQObjectType type);
 

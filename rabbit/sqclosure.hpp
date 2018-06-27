@@ -167,7 +167,7 @@ public:
 		if(ret->_env) __ObjaddRef(ret->_env);
 		ret->_name = _name;
 		_COPY_VECTOR(ret->_outervalues,_outervalues,_noutervalues);
-		ret->_typecheck.copy(_typecheck);
+		ret->_typecheck = _typecheck;
 		ret->_nparamscheck = _nparamscheck;
 		return ret;
 	}

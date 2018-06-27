@@ -19,8 +19,8 @@
 #define IS_EOB() (CUR_CHAR <= RABBIT_EOB)
 #define NEXT() {next();_currentcolumn++;}
 #define INIT_TEMP_STRING() { _longstr.resize(0);}
-#define APPEND_CHAR(c) { _longstr.push_back(c);}
-#define TERMINATE_BUFFER() {_longstr.push_back(_SC('\0'));}
+#define APPEND_CHAR(c) { _longstr.pushBack(c);}
+#define TERMINATE_BUFFER() {_longstr.pushBack(_SC('\0'));}
 #define ADD_KEYWORD(key,id) _keywords->newSlot( SQString::create(ss, _SC(#key)) ,int64_t(id))
 
 SQLexer::SQLexer(){}

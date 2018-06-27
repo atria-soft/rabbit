@@ -63,7 +63,7 @@ namespace rabbit {
 			}
 			Array* clone() {
 				Array *anew = create(NULL,0);
-				anew->m_data.copy(m_data);
+				anew->m_data = m_data;
 				return anew;
 			}
 			int64_t size() const {
@@ -82,14 +82,14 @@ namespace rabbit {
 				m_data.reserve(_size);
 			}
 			void append(const SQObject& _o) {
-				m_data.push_back(_o);
+				m_data.pushBack(_o);
 			}
 			void extend(const Array* _a);
 			SQObjectPtr &top(){
-				return m_data.top();
+				return m_data.back();
 			}
 			void pop() {
-				m_data.pop_back();
+				m_data.popBack();
 				shrinkIfNeeded();
 			}
 			bool insert(int64_t _idx,const SQObject& _val) {
@@ -101,10 +101,13 @@ namespace rabbit {
 				return true;
 			}
 			void shrinkIfNeeded() {
+				// TODO: Check this. No real need with etk ==> automatic ...
+				/*
 				if(m_data.size() <= m_data.capacity()>>2) {
 					//shrink the array
 					m_data.shrinktofit();
 				}
+				*/
 			}
 			bool remove(int64_t _idx) {
 				if(    _idx < 0

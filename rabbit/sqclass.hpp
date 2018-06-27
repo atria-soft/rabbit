@@ -18,7 +18,7 @@ struct SQClassMember {
 	}
 };
 
-typedef sqvector<SQClassMember> SQClassMemberVec;
+typedef etk::Vector<SQClassMember> SQClassMemberVec;
 
 #define MEMBER_TYPE_METHOD 0x01000000
 #define MEMBER_TYPE_FIELD 0x02000000

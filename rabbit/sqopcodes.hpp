@@ -129,7 +129,7 @@ struct SQInstruction
 };
 
 #include <rabbit/squtils.hpp>
-typedef sqvector<SQInstruction> SQInstructionVec;
+typedef etk::Vector<SQInstruction> SQInstructionVec;
 
 #define NEW_SLOT_ATTRIBUTES_FLAG	0x01
 #define NEW_SLOT_STATIC_FLAG		0x02

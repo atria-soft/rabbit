@@ -53,9 +53,9 @@ struct SQLocalVarInfo
 
 struct SQLineInfo { int64_t _line;int64_t _op; };
 
-typedef sqvector<SQOuterVar> SQOuterVarVec;
-typedef sqvector<SQLocalVarInfo> SQLocalVarInfoVec;
-typedef sqvector<SQLineInfo> SQLineInfoVec;
+typedef etk::Vector<SQOuterVar> SQOuterVarVec;
+typedef etk::Vector<SQLocalVarInfo> SQLocalVarInfoVec;
+typedef etk::Vector<SQLineInfo> SQLineInfoVec;
 
 #define _FUNC_SIZE(ni,nl,nparams,nfuncs,nouters,nlineinf,localinf,defparams) (sizeof(SQFunctionProto) \
 		+((ni-1)*sizeof(SQInstruction))+(nl*sizeof(SQObjectPtr)) \

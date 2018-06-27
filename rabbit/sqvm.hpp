@@ -35,7 +35,7 @@ struct SQExceptionTrap{
 
 #define _INLINE
 
-typedef sqvector<SQExceptionTrap> ExceptionsTraps;
+typedef etk::Vector<SQExceptionTrap> ExceptionsTraps;
 
 struct SQVM : public rabbit::RefCounted
 {
@@ -53,7 +53,7 @@ struct SQVM : public rabbit::RefCounted
 		SQBool _root;
 	};
 
-typedef sqvector<callInfo> callInfoVec;
+typedef etk::Vector<callInfo> callInfoVec;
 public:
 	void DebugHookProxy(int64_t type, const SQChar * sourcename, int64_t line, const SQChar * funcname);
 	static void _DebugHookProxy(HRABBITVM v, int64_t type, const SQChar * sourcename, int64_t line, const SQChar * funcname);
@@ -164,7 +164,7 @@ public:
 	callInfo* _callsstack;
 	int64_t _callsstacksize;
 	int64_t _alloccallsstacksize;
-	sqvector<callInfo>  _callstackdata;
+	etk::Vector<callInfo>  _callstackdata;
 
 	ExceptionsTraps _etraps;
 	callInfo *ci;

@@ -431,7 +431,7 @@ SQRESULT sq_setparamscheck(HRABBITVM v,int64_t nparamscheck,const SQChar *typema
 		SQIntVec res;
 		if(!compileTypemask(res, typemask))
 			return sq_throwerror(v, _SC("invalid typemask"));
-		nc->_typecheck.copy(res);
+		nc->_typecheck = res;
 	}
 	else {
 		nc->_typecheck.resize(0);

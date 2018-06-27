@@ -52,7 +52,7 @@ public:
 	SQUserPointer _up;
 	LexChar _currdata;
 	SQSharedState *_sharedstate;
-	sqvector<SQChar> _longstr;
+	etk::Vector<SQChar> _longstr;
 	compilererrorFunc _errfunc;
 	void *_errtarget;
 };
