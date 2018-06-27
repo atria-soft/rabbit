@@ -40,7 +40,7 @@ public:
 		return newclass;
 	}
 	~SQClass();
-	bool NewSlot(SQSharedState *ss, const SQObjectPtr &key,const SQObjectPtr &val,bool bstatic);
+	bool newSlot(SQSharedState *ss, const SQObjectPtr &key,const SQObjectPtr &val,bool bstatic);
 	bool get(const SQObjectPtr &key,SQObjectPtr &val) {
 		if(_members->get(key,val)) {
 			if(_isfield(val)) {
@@ -64,12 +64,12 @@ public:
 	}
 	bool setAttributes(const SQObjectPtr &key,const SQObjectPtr &val);
 	bool getAttributes(const SQObjectPtr &key,SQObjectPtr &outval);
-	void Lock() { _locked = true; if(_base) _base->Lock(); }
+	void lock() { _locked = true; if(_base) _base->lock(); }
 	void release() {
 		if (_hook) { _hook(_typetag,0);}
 		sq_delete(this, SQClass);
 	}
-	void Finalize();
+	void finalize();
 	int64_t next(const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval);
 	SQInstance *createInstance();
 	SQTable *_members;
@@ -90,7 +90,7 @@ public:
 
 struct SQInstance : public SQDelegable
 {
-	void Init(SQSharedState *ss);
+	void init(SQSharedState *ss);
 	SQInstance(SQSharedState *ss, SQClass *c, int64_t memsize);
 	SQInstance(SQSharedState *ss, SQInstance *c, int64_t memsize);
 public:
@@ -145,8 +145,8 @@ public:
 		this->~SQInstance();
 		SQ_FREE(this, size);
 	}
-	void Finalize();
-	bool InstanceOf(SQClass *trg);
+	void finalize();
+	bool instanceOf(SQClass *trg);
 	bool getMetaMethod(SQVM *v,SQMetaMethod mm,SQObjectPtr &res);
 
 	SQClass *_class;

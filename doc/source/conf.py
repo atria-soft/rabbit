@@ -26,14 +26,14 @@ import time
 # If your documentation needs a minimal Sphinx version, state it here.
 #needs_sphinx = '1.0'
 
-# Add any Sphinx extension module names here, as strings. They can be
+# add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
 	'sphinx.ext.pngmath',
 ]
 
-# Add any paths that contain templates here, relative to this directory.
+# add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
 # The suffix(es) of source filenames.
@@ -117,7 +117,7 @@ html_theme = 'sphinx_rtd_theme'
 # documentation.
 #html_theme_options = {}
 
-# Add any paths that contain custom themes here, relative to this directory.
+# add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
 
 # The name for this set of Sphinx documents.  If None, it defaults to
@@ -136,12 +136,12 @@ html_logo = 'simple_nut.png'
 # pixels large.
 html_favicon = 'nut.ico'
 
-# Add any paths that contain custom static files (such as style sheets) here,
+# add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-# Add any extra paths that contain custom files (such as robots.txt or
+# add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
 # directly to the root of the documentation.
 #html_extra_path = []
@@ -157,7 +157,7 @@ html_static_path = ['_static']
 # Custom sidebar templates, maps document names to template names.
 #html_sidebars = {}
 
-# Additional templates that should be rendered to pages, maps page names to
+# additional templates that should be rendered to pages, maps page names to
 # template names.
 #html_additional_pages = {}
 
@@ -213,7 +213,7 @@ latex_elements = {
 # The font size ('10pt', '11pt' or '12pt').
 #'pointsize': '10pt',
 
-# Additional stuff for the LaTeX preamble.
+# additional stuff for the LaTeX preamble.
 #'preamble': '',
 
 # Latex figure (float) alignment

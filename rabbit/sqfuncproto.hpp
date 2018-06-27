@@ -118,8 +118,8 @@ public:
 
 	const SQChar* getLocal(SQVM *v,uint64_t stackbase,uint64_t nseq,uint64_t nop);
 	int64_t getLine(SQInstruction *curr);
-	bool Save(SQVM *v,SQUserPointer up,SQWRITEFUNC write);
-	static bool Load(SQVM *v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &ret);
+	bool save(SQVM *v,SQUserPointer up,SQWRITEFUNC write);
+	static bool load(SQVM *v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &ret);
 	SQObjectPtr _sourcename;
 	SQObjectPtr _name;
 	int64_t _stacksize;

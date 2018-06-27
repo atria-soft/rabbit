@@ -16,7 +16,7 @@ struct SQClosure : public rabbit::RefCounted
 private:
 	SQClosure(SQSharedState *ss,SQFunctionProto *func){
 		_function = func;
-		__ObjAddRef(_function); _base = NULL;
+		__ObjaddRef(_function); _base = NULL;
 		_env = NULL;
 		_root=NULL;
 	}
@@ -28,7 +28,7 @@ public:
 		nc->_outervalues = (SQObjectPtr *)(nc + 1);
 		nc->_defaultparams = &nc->_outervalues[func->_noutervalues];
 		nc->_root = root;
-		 __ObjAddRef(nc->_root);
+		 __ObjaddRef(nc->_root);
 		_CONSTRUCT_VECTOR(SQObjectPtr,func->_noutervalues,nc->_outervalues);
 		_CONSTRUCT_VECTOR(SQObjectPtr,func->_ndefaultparams,nc->_defaultparams);
 		return nc;
@@ -46,22 +46,22 @@ public:
 	{
 		__Objrelease(_root);
 		_root = r;
-		__ObjAddRef(_root);
+		__ObjaddRef(_root);
 	}
 	SQClosure *clone()
 	{
 		SQFunctionProto *f = _function;
 		SQClosure * ret = SQClosure::create(NULL,f,_root);
 		ret->_env = _env;
-		if(ret->_env) __ObjAddRef(ret->_env);
+		if(ret->_env) __ObjaddRef(ret->_env);
 		_COPY_VECTOR(ret->_outervalues,_outervalues,f->_noutervalues);
 		_COPY_VECTOR(ret->_defaultparams,_defaultparams,f->_ndefaultparams);
 		return ret;
 	}
 	~SQClosure();
 
-	bool Save(SQVM *v,SQUserPointer up,SQWRITEFUNC write);
-	static bool Load(SQVM *v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &ret);
+	bool save(SQVM *v,SQUserPointer up,SQWRITEFUNC write);
+	static bool load(SQVM *v,SQUserPointer up,SQREADFUNC read,SQObjectPtr &ret);
 	rabbit::WeakRef *_env;
 	rabbit::WeakRef *_root;
 	SQClass *_base;
@@ -123,7 +123,7 @@ public:
 	{
 		
 	}
-	void Kill(){
+	void kill(){
 		_state=eDead;
 		_stack.resize(0);
 		_closure.Null();}
@@ -131,11 +131,11 @@ public:
 		sq_delete(this,SQGenerator);
 	}
 
-	bool Yield(SQVM *v,int64_t target);
-	bool Resume(SQVM *v,SQObjectPtr &dest);
+	bool yield(SQVM *v,int64_t target);
+	bool resume(SQVM *v,SQObjectPtr &dest);
 	SQObjectPtr _closure;
 	SQObjectPtrVec _stack;
-	SQVM::CallInfo _ci;
+	SQVM::callInfo _ci;
 	ExceptionsTraps _etraps;
 	SQGeneratorState _state;
 };
@@ -164,7 +164,7 @@ public:
 	{
 		SQNativeClosure * ret = SQNativeClosure::create(NULL,_function,_noutervalues);
 		ret->_env = _env;
-		if(ret->_env) __ObjAddRef(ret->_env);
+		if(ret->_env) __ObjaddRef(ret->_env);
 		ret->_name = _name;
 		_COPY_VECTOR(ret->_outervalues,_outervalues,_noutervalues);
 		ret->_typecheck.copy(_typecheck);

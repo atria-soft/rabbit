@@ -12,11 +12,11 @@
 #include <rabbit/sqfuncproto.hpp>
 #include <rabbit/sqclosure.hpp>
 
-SQTable::SQTable(SQSharedState *ss,int64_t nInitialsize)
+SQTable::SQTable(SQSharedState *ss,int64_t ninitialsize)
 {
 	int64_t pow2size=MINPOWER2;
-	while(nInitialsize>pow2size)pow2size=pow2size<<1;
-	AllocNodes(pow2size);
+	while(ninitialsize>pow2size)pow2size=pow2size<<1;
+	allocNodes(pow2size);
 	_usednodes = 0;
 	_delegate = NULL;
 }
@@ -33,7 +33,7 @@ void SQTable::remove(const SQObjectPtr &key)
 	}
 }
 
-void SQTable::AllocNodes(int64_t nsize)
+void SQTable::allocNodes(int64_t nsize)
 {
 	_HashNode *nodes=(_HashNode *)SQ_MALLOC(sizeof(_HashNode)*nsize);
 	for(int64_t i=0;i<nsize;i++){
@@ -52,21 +52,21 @@ void SQTable::Rehash(bool force)
 	//prevent problems with the integer division
 	if(oldsize<4)oldsize=4;
 	_HashNode *nold=_nodes;
-	int64_t nelems=CountUsed();
+	int64_t nelems=countUsed();
 	if (nelems >= oldsize-oldsize/4)  /* using more than 3/4? */
-		AllocNodes(oldsize*2);
+		allocNodes(oldsize*2);
 	else if (nelems <= oldsize/4 &&  /* less than 1/4? */
 		oldsize > MINPOWER2)
-		AllocNodes(oldsize/2);
+		allocNodes(oldsize/2);
 	else if(force)
-		AllocNodes(oldsize);
+		allocNodes(oldsize);
 	else
 		return;
 	_usednodes = 0;
 	for (int64_t i=0; i<oldsize; i++) {
 		_HashNode *old = nold+i;
 		if (sq_type(old->key) != OT_NULL)
-			NewSlot(old->key,old->val);
+			newSlot(old->key,old->val);
 	}
 	for(int64_t k=0;k<oldsize;k++)
 		nold[k].~_HashNode();
@@ -101,7 +101,7 @@ SQTable *SQTable::clone()
 	int64_t ridx=0;
 	SQObjectPtr key,val;
 	while((ridx=next(true,ridx,key,val))!=-1){
-		nt->NewSlot(key,val);
+		nt->newSlot(key,val);
 	}
 #endif
 	nt->setDelegate(_delegate);
@@ -119,7 +119,7 @@ bool SQTable::get(const SQObjectPtr &key,SQObjectPtr &val)
 	}
 	return false;
 }
-bool SQTable::NewSlot(const SQObjectPtr &key,const SQObjectPtr &val)
+bool SQTable::newSlot(const SQObjectPtr &key,const SQObjectPtr &val)
 {
 	assert(sq_type(key) != OT_NULL);
 	SQHash h = HashObj(key) & (_numofnodes - 1);
@@ -173,7 +173,7 @@ bool SQTable::NewSlot(const SQObjectPtr &key,const SQObjectPtr &val)
 		else (_firstfree)--;
 	}
 	Rehash(true);
-	return NewSlot(key, val);
+	return newSlot(key, val);
 }
 
 int64_t SQTable::next(bool getweakrefs,const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval)
@@ -205,20 +205,20 @@ bool SQTable::set(const SQObjectPtr &key, const SQObjectPtr &val)
 	return false;
 }
 
-void SQTable::_ClearNodes()
+void SQTable::_clearNodes()
 {
 	for(int64_t i = 0;i < _numofnodes; i++) { _HashNode &n = _nodes[i]; n.key.Null(); n.val.Null(); }
 }
 
-void SQTable::Finalize()
+void SQTable::finalize()
 {
-	_ClearNodes();
+	_clearNodes();
 	setDelegate(NULL);
 }
 
-void SQTable::Clear()
+void SQTable::clear()
 {
-	_ClearNodes();
+	_clearNodes();
 	_usednodes = 0;
 	Rehash(true);
 }

@@ -21,7 +21,7 @@
 #define INIT_TEMP_STRING() { _longstr.resize(0);}
 #define APPEND_CHAR(c) { _longstr.push_back(c);}
 #define TERMINATE_BUFFER() {_longstr.push_back(_SC('\0'));}
-#define ADD_KEYWORD(key,id) _keywords->NewSlot( SQString::create(ss, _SC(#key)) ,int64_t(id))
+#define ADD_KEYWORD(key,id) _keywords->newSlot( SQString::create(ss, _SC(#key)) ,int64_t(id))
 
 SQLexer::SQLexer(){}
 SQLexer::~SQLexer()
@@ -29,7 +29,7 @@ SQLexer::~SQLexer()
 	_keywords->release();
 }
 
-void SQLexer::Init(SQSharedState *ss, SQLEXREADFUNC rg, SQUserPointer up,CompilerErrorFunc efunc,void *ed)
+void SQLexer::init(SQSharedState *ss, SQLEXREADFUNC rg, SQUserPointer up,compilererrorFunc efunc,void *ed)
 {
 	_errfunc = efunc;
 	_errtarget = ed;
@@ -84,7 +84,7 @@ void SQLexer::Init(SQSharedState *ss, SQLEXREADFUNC rg, SQUserPointer up,Compile
 	next();
 }
 
-void SQLexer::Error(const SQChar *err)
+void SQLexer::error(const SQChar *err)
 {
 	_errfunc(_errtarget,err);
 }
@@ -92,7 +92,7 @@ void SQLexer::Error(const SQChar *err)
 void SQLexer::next()
 {
 	int64_t t = _readf(_up);
-	if(t > MAX_CHAR) Error(_SC("Invalid character"));
+	if(t > MAX_CHAR) error(_SC("Invalid character"));
 	if(t != 0) {
 		_currdata = (LexChar)t;
 		return;
@@ -101,7 +101,7 @@ void SQLexer::next()
 	_reached_eof = SQTrue;
 }
 
-const SQChar *SQLexer::Tok2Str(int64_t tok)
+const SQChar *SQLexer::tok2Str(int64_t tok)
 {
 	SQObjectPtr itr, key, val;
 	int64_t nitr;
@@ -113,19 +113,19 @@ const SQChar *SQLexer::Tok2Str(int64_t tok)
 	return NULL;
 }
 
-void SQLexer::LexBlockComment()
+void SQLexer::lexBlockComment()
 {
 	bool done = false;
 	while(!done) {
 		switch(CUR_CHAR) {
 			case _SC('*'): { NEXT(); if(CUR_CHAR == _SC('/')) { done = true; NEXT(); }}; continue;
 			case _SC('\n'): _currentline++; NEXT(); continue;
-			case RABBIT_EOB: Error(_SC("missing \"*/\" in comment"));
+			case RABBIT_EOB: error(_SC("missing \"*/\" in comment"));
 			default: NEXT();
 		}
 	}
 }
-void SQLexer::LexLineComment()
+void SQLexer::lexLineComment()
 {
 	do { NEXT(); } while (CUR_CHAR != _SC('\n') && (!IS_EOB()));
 }
@@ -143,16 +143,16 @@ int64_t SQLexer::Lex()
 			NEXT();
 			_currentcolumn=1;
 			continue;
-		case _SC('#'): LexLineComment(); continue;
+		case _SC('#'): lexLineComment(); continue;
 		case _SC('/'):
 			NEXT();
 			switch(CUR_CHAR){
 			case _SC('*'):
 				NEXT();
-				LexBlockComment();
+				lexBlockComment();
 				continue;
 			case _SC('/'):
-				LexLineComment();
+				lexLineComment();
 				continue;
 			case _SC('='):
 				NEXT();
@@ -207,18 +207,18 @@ int64_t SQLexer::Lex()
 			if(CUR_CHAR != _SC('"')) {
 				RETURN_TOKEN('@');
 			}
-			if((stype=ReadString('"',true))!=-1) {
+			if((stype=readString('"',true))!=-1) {
 				RETURN_TOKEN(stype);
 			}
-			Error(_SC("error parsing the string"));
+			error(_SC("error parsing the string"));
 					   }
 		case _SC('"'):
 		case _SC('\''): {
 			int64_t stype;
-			if((stype=ReadString(CUR_CHAR,false))!=-1){
+			if((stype=readString(CUR_CHAR,false))!=-1){
 				RETURN_TOKEN(stype);
 			}
-			Error(_SC("error parsing the string"));
+			error(_SC("error parsing the string"));
 			}
 		case _SC('{'): case _SC('}'): case _SC('('): case _SC(')'): case _SC('['): case _SC(']'):
 		case _SC(';'): case _SC(','): case _SC('?'): case _SC('^'): case _SC('~'):
@@ -228,7 +228,7 @@ int64_t SQLexer::Lex()
 			NEXT();
 			if (CUR_CHAR != _SC('.')){ RETURN_TOKEN('.') }
 			NEXT();
-			if (CUR_CHAR != _SC('.')){ Error(_SC("invalid token '..'")); }
+			if (CUR_CHAR != _SC('.')){ error(_SC("invalid token '..'")); }
 			NEXT();
 			RETURN_TOKEN(TK_VARPARAMS);
 		case _SC('&'):
@@ -265,16 +265,16 @@ int64_t SQLexer::Lex()
 			return 0;
 		default:{
 				if (scisdigit(CUR_CHAR)) {
-					int64_t ret = ReadNumber();
+					int64_t ret = readNumber();
 					RETURN_TOKEN(ret);
 				}
 				else if (scisalpha(CUR_CHAR) || CUR_CHAR == _SC('_')) {
-					int64_t t = ReadID();
+					int64_t t = readId();
 					RETURN_TOKEN(t);
 				}
 				else {
 					int64_t c = CUR_CHAR;
-					if (sciscntrl((int)c)) Error(_SC("unexpected character(control)"));
+					if (sciscntrl((int)c)) error(_SC("unexpected character(control)"));
 					NEXT();
 					RETURN_TOKEN(c);
 				}
@@ -296,7 +296,7 @@ int64_t SQLexer::getIDType(const SQChar *s,int64_t len)
 
 #ifdef SQUNICODE
 #if WCHAR_SIZE == 2
-int64_t SQLexer::AddUTF16(uint64_t ch)
+int64_t SQLexer::addUTF16(uint64_t ch)
 {
 	if (ch >= 0x10000)
 	{
@@ -312,7 +312,7 @@ int64_t SQLexer::AddUTF16(uint64_t ch)
 }
 #endif
 #else
-int64_t SQLexer::AddUTF8(uint64_t ch)
+int64_t SQLexer::addUTF8(uint64_t ch)
 {
 	if (ch < 0x80) {
 		APPEND_CHAR((char)ch);
@@ -340,10 +340,10 @@ int64_t SQLexer::AddUTF8(uint64_t ch)
 }
 #endif
 
-int64_t SQLexer::ProcessStringHexEscape(SQChar *dest, int64_t maxdigits)
+int64_t SQLexer::processStringHexEscape(SQChar *dest, int64_t maxdigits)
 {
 	NEXT();
-	if (!isxdigit(CUR_CHAR)) Error(_SC("hexadecimal number expected"));
+	if (!isxdigit(CUR_CHAR)) error(_SC("hexadecimal number expected"));
 	int64_t n = 0;
 	while (isxdigit(CUR_CHAR) && n < maxdigits) {
 		dest[n] = CUR_CHAR;
@@ -354,7 +354,7 @@ int64_t SQLexer::ProcessStringHexEscape(SQChar *dest, int64_t maxdigits)
 	return n;
 }
 
-int64_t SQLexer::ReadString(int64_t ndelim,bool verbatim)
+int64_t SQLexer::readString(int64_t ndelim,bool verbatim)
 {
 	INIT_TEMP_STRING();
 	NEXT();
@@ -364,10 +364,10 @@ int64_t SQLexer::ReadString(int64_t ndelim,bool verbatim)
 			int64_t x = CUR_CHAR;
 			switch (x) {
 			case RABBIT_EOB:
-				Error(_SC("unfinished string"));
+				error(_SC("unfinished string"));
 				return -1;
 			case _SC('\n'):
-				if(!verbatim) Error(_SC("newline in a constant"));
+				if(!verbatim) error(_SC("newline in a constant"));
 				APPEND_CHAR(CUR_CHAR); NEXT();
 				_currentline++;
 				break;
@@ -381,7 +381,7 @@ int64_t SQLexer::ReadString(int64_t ndelim,bool verbatim)
 					case _SC('x'):  {
 						const int64_t maxdigits = sizeof(SQChar) * 2;
 						SQChar temp[maxdigits + 1];
-						ProcessStringHexEscape(temp, maxdigits);
+						processStringHexEscape(temp, maxdigits);
 						SQChar *stemp;
 						APPEND_CHAR((SQChar)scstrtoul(temp, &stemp, 16));
 					}
@@ -390,16 +390,16 @@ int64_t SQLexer::ReadString(int64_t ndelim,bool verbatim)
 					case _SC('u'):  {
 						const int64_t maxdigits = CUR_CHAR == 'u' ? 4 : 8;
 						SQChar temp[8 + 1];
-						ProcessStringHexEscape(temp, maxdigits);
+						processStringHexEscape(temp, maxdigits);
 						SQChar *stemp;
 #ifdef SQUNICODE
 #if WCHAR_SIZE == 2
-						AddUTF16(scstrtoul(temp, &stemp, 16));
+						addUTF16(scstrtoul(temp, &stemp, 16));
 #else
 						APPEND_CHAR((SQChar)scstrtoul(temp, &stemp, 16));
 #endif
 #else
-						AddUTF8(scstrtoul(temp, &stemp, 16));
+						addUTF8(scstrtoul(temp, &stemp, 16));
 #endif
 					}
 					break;
@@ -415,7 +415,7 @@ int64_t SQLexer::ReadString(int64_t ndelim,bool verbatim)
 					case _SC('"'): APPEND_CHAR(_SC('"')); NEXT(); break;
 					case _SC('\''): APPEND_CHAR(_SC('\'')); NEXT(); break;
 					default:
-						Error(_SC("unrecognised escaper char"));
+						error(_SC("unrecognised escaper char"));
 					break;
 					}
 				}
@@ -437,8 +437,8 @@ int64_t SQLexer::ReadString(int64_t ndelim,bool verbatim)
 	TERMINATE_BUFFER();
 	int64_t len = _longstr.size()-1;
 	if(ndelim == _SC('\'')) {
-		if(len == 0) Error(_SC("empty constant"));
-		if(len > 1) Error(_SC("constant too long"));
+		if(len == 0) error(_SC("empty constant"));
+		if(len > 1) error(_SC("constant too long"));
 		_nvalue = _longstr[0];
 		return TK_INTEGER;
 	}
@@ -482,7 +482,7 @@ int64_t isexponent(int64_t c) { return c == 'e' || c=='E'; }
 
 
 #define MAX_HEX_DIGITS (sizeof(int64_t)*2)
-int64_t SQLexer::ReadNumber()
+int64_t SQLexer::readNumber()
 {
 #define TINT 1
 #define TFLOAT 2
@@ -500,7 +500,7 @@ int64_t SQLexer::ReadNumber()
 				APPEND_CHAR(CUR_CHAR);
 				NEXT();
 			}
-			if(scisdigit(CUR_CHAR)) Error(_SC("invalid octal number"));
+			if(scisdigit(CUR_CHAR)) error(_SC("invalid octal number"));
 		}
 		else {
 			NEXT();
@@ -509,7 +509,7 @@ int64_t SQLexer::ReadNumber()
 				APPEND_CHAR(CUR_CHAR);
 				NEXT();
 			}
-			if(_longstr.size() > MAX_HEX_DIGITS) Error(_SC("too many digits for an Hex number"));
+			if(_longstr.size() > MAX_HEX_DIGITS) error(_SC("too many digits for an Hex number"));
 		}
 	}
 	else {
@@ -517,7 +517,7 @@ int64_t SQLexer::ReadNumber()
 		while (CUR_CHAR == _SC('.') || scisdigit(CUR_CHAR) || isexponent(CUR_CHAR)) {
 			if(CUR_CHAR == _SC('.') || isexponent(CUR_CHAR)) type = TFLOAT;
 			if(isexponent(CUR_CHAR)) {
-				if(type != TFLOAT) Error(_SC("invalid numeric format"));
+				if(type != TFLOAT) error(_SC("invalid numeric format"));
 				type = TSCIENTIFIC;
 				APPEND_CHAR(CUR_CHAR);
 				NEXT();
@@ -525,7 +525,7 @@ int64_t SQLexer::ReadNumber()
 					APPEND_CHAR(CUR_CHAR);
 					NEXT();
 				}
-				if(!scisdigit(CUR_CHAR)) Error(_SC("exponent expected"));
+				if(!scisdigit(CUR_CHAR)) error(_SC("exponent expected"));
 			}
 
 			APPEND_CHAR(CUR_CHAR);
@@ -551,7 +551,7 @@ int64_t SQLexer::ReadNumber()
 	return 0;
 }
 
-int64_t SQLexer::ReadID()
+int64_t SQLexer::readId()
 {
 	int64_t res;
 	INIT_TEMP_STRING();

@@ -70,16 +70,16 @@ int64_t sqstd_feof(SQFILE file)
 struct SQFile : public SQStream {
 	SQFile() { _handle = NULL; _owns = false;}
 	SQFile(SQFILE file, bool owns) { _handle = file; _owns = owns;}
-	virtual ~SQFile() { Close(); }
+	virtual ~SQFile() { close(); }
 	bool Open(const SQChar *filename ,const SQChar *mode) {
-		Close();
+		close();
 		if( (_handle = sqstd_fopen(filename,mode)) ) {
 			_owns = true;
 			return true;
 		}
 		return false;
 	}
-	void Close() {
+	void close() {
 		if(_handle && _owns) {
 			sqstd_fclose(_handle);
 			_handle = NULL;
@@ -164,7 +164,7 @@ static int64_t _file_close(HRABBITVM v)
 	if(SQ_SUCCEEDED(sq_getinstanceup(v,1,(SQUserPointer*)&self,(SQUserPointer)SQSTD_FILE_TYPE_TAG))
 		&& self != NULL)
 	{
-		self->Close();
+		self->close();
 	}
 	return 0;
 }

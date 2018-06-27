@@ -44,19 +44,19 @@ private:
 	int64_t _usednodes;
 
 ///////////////////////////
-	void AllocNodes(int64_t nsize);
+	void allocNodes(int64_t nsize);
 	void Rehash(bool force);
-	SQTable(SQSharedState *ss, int64_t nInitialsize);
-	void _ClearNodes();
+	SQTable(SQSharedState *ss, int64_t ninitialsize);
+	void _clearNodes();
 public:
-	static SQTable* create(SQSharedState *ss,int64_t nInitialsize)
+	static SQTable* create(SQSharedState *ss,int64_t ninitialsize)
 	{
 		SQTable *newtable = (SQTable*)SQ_MALLOC(sizeof(SQTable));
-		new (newtable) SQTable(ss, nInitialsize);
+		new (newtable) SQTable(ss, ninitialsize);
 		newtable->_delegate = NULL;
 		return newtable;
 	}
-	void Finalize();
+	void finalize();
 	SQTable *clone();
 	~SQTable()
 	{
@@ -96,11 +96,11 @@ public:
 	void remove(const SQObjectPtr &key);
 	bool set(const SQObjectPtr &key, const SQObjectPtr &val);
 	//returns true if a new slot has been created false if it was already present
-	bool NewSlot(const SQObjectPtr &key,const SQObjectPtr &val);
+	bool newSlot(const SQObjectPtr &key,const SQObjectPtr &val);
 	int64_t next(bool getweakrefs,const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval);
 
-	int64_t CountUsed(){ return _usednodes;}
-	void Clear();
+	int64_t countUsed(){ return _usednodes;}
+	void clear();
 	void release()
 	{
 		sq_delete(this, SQTable);

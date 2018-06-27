@@ -18,11 +18,11 @@ struct SQStringTable
 {
 	SQStringTable(SQSharedState*ss);
 	~SQStringTable();
-	SQString *Add(const SQChar *,int64_t len);
+	SQString *add(const SQChar *,int64_t len);
 	void remove(SQString *);
 private:
 	void resize(int64_t size);
-	void AllocNodes(int64_t size);
+	void allocNodes(int64_t size);
 	SQString **_strings;
 	uint64_t _numofslots;
 	uint64_t _slotused;
@@ -37,15 +37,15 @@ struct RefTable {
 	};
 	RefTable();
 	~RefTable();
-	void AddRef(SQObject &obj);
+	void addRef(SQObject &obj);
 	SQBool release(SQObject &obj);
 	uint64_t getRefCount(SQObject &obj);
-	void Finalize();
+	void finalize();
 private:
 	RefNode *get(SQObject &obj,SQHash &mainpos,RefNode **prev,bool add);
-	RefNode *Add(SQHash mainpos,SQObject &obj);
+	RefNode *add(SQHash mainpos,SQObject &obj);
 	void resize(uint64_t size);
-	void AllocNodes(uint64_t size);
+	void allocNodes(uint64_t size);
 	uint64_t _numofslots;
 	uint64_t _slotused;
 	RefNode *_nodes;
@@ -53,7 +53,7 @@ private:
 	RefNode **_buckets;
 };
 
-#define ADD_STRING(ss,str,len) ss->_stringtable->Add(str,len)
+#define ADD_STRING(ss,str,len) ss->_stringtable->add(str,len)
 #define REMOVE_STRING(ss,bstr) ss->_stringtable->remove(bstr)
 
 struct SQObjectPtr;
@@ -62,7 +62,7 @@ struct SQSharedState
 {
 	SQSharedState();
 	~SQSharedState();
-	void Init();
+	void init();
 public:
 	SQChar* getScratchPad(int64_t size);
 	int64_t getMetaMethodIdxByName(const SQObjectPtr &name);
@@ -123,6 +123,6 @@ private:
 #define _instance_ddel  _table(_sharedstate->_instance_default_delegate)
 #define _weakref_ddel   _table(_sharedstate->_weakref_default_delegate)
 
-bool CompileTypemask(SQIntVec &res,const SQChar *typemask);
+bool compileTypemask(SQIntVec &res,const SQChar *typemask);
 
 

@@ -21,9 +21,9 @@ namespace rabbit {
 		public:
 			// TODO : remove this ETK_ALLOC can do it natively ...
 			static Array* create(SQSharedState* _ss,
-			                     int64_t _nInitialsize) {
+			                     int64_t _ninitialsize) {
 				Array *newarray=(Array*)SQ_MALLOC(sizeof(Array));
-				new (newarray) Array(_ss, _nInitialsize);
+				new (newarray) Array(_ss, _ninitialsize);
 				return newarray;
 			}
 			void finalize() {

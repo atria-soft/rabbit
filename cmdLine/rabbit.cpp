@@ -219,7 +219,7 @@ int getargs(HRABBITVM v,int argc, char* argv[],int64_t *retval)
 				const SQChar *err;
 				sq_getlasterror(v);
 				if(SQ_SUCCEEDED(sq_getstring(v,-1,&err))) {
-					scprintf(_SC("Error [%s]\n"),err);
+					scprintf(_SC("error [%s]\n"),err);
 					*retval = -2;
 					return _ERROR;
 				}
@@ -352,7 +352,7 @@ int main(int argc, char* argv[])
 
 #if defined(_MSC_VER) && defined(_DEBUG)
 	_getch();
-	_CrtMemDumpAllObjectsSince( NULL );
+	_CrtMemdumpAllObjectsSince( NULL );
 #endif
 	return retval;
 }

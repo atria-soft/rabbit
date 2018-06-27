@@ -39,8 +39,8 @@ typedef sqvector<SQExceptionTrap> ExceptionsTraps;
 
 struct SQVM : public rabbit::RefCounted
 {
-	struct CallInfo{
-		//CallInfo() { _generator = NULL;}
+	struct callInfo{
+		//callInfo() { _generator = NULL;}
 		SQInstruction *_ip;
 		SQObjectPtr *_literals;
 		SQObjectPtr _closure;
@@ -53,56 +53,56 @@ struct SQVM : public rabbit::RefCounted
 		SQBool _root;
 	};
 
-typedef sqvector<CallInfo> CallInfoVec;
+typedef sqvector<callInfo> callInfoVec;
 public:
 	void DebugHookProxy(int64_t type, const SQChar * sourcename, int64_t line, const SQChar * funcname);
 	static void _DebugHookProxy(HRABBITVM v, int64_t type, const SQChar * sourcename, int64_t line, const SQChar * funcname);
 	enum ExecutionType { ET_CALL, ET_RESUME_GENERATOR, ET_RESUME_VM,ET_RESUME_THROW_VM };
 	SQVM(SQSharedState *ss);
 	~SQVM();
-	bool Init(SQVM *friendvm, int64_t stacksize);
-	bool Execute(SQObjectPtr &func, int64_t nargs, int64_t stackbase, SQObjectPtr &outres, SQBool raiseerror, ExecutionType et = ET_CALL);
+	bool init(SQVM *friendvm, int64_t stacksize);
+	bool execute(SQObjectPtr &func, int64_t nargs, int64_t stackbase, SQObjectPtr &outres, SQBool raiseerror, ExecutionType et = ET_CALL);
 	//starts a native call return when the NATIVE closure returns
-	bool CallNative(SQNativeClosure *nclosure, int64_t nargs, int64_t newbase, SQObjectPtr &retval, int32_t target, bool &suspend,bool &tailcall);
-	bool TailCall(SQClosure *closure, int64_t firstparam, int64_t nparams);
+	bool callNative(SQNativeClosure *nclosure, int64_t nargs, int64_t newbase, SQObjectPtr &retval, int32_t target, bool &suspend,bool &tailcall);
+	bool tailcall(SQClosure *closure, int64_t firstparam, int64_t nparams);
 	//starts a RABBIT call in the same "Execution loop"
-	bool StartCall(SQClosure *closure, int64_t target, int64_t nargs, int64_t stackbase, bool tailcall);
+	bool startcall(SQClosure *closure, int64_t target, int64_t nargs, int64_t stackbase, bool tailcall);
 	bool createClassInstance(SQClass *theclass, SQObjectPtr &inst, SQObjectPtr &constructor);
 	//call a generic closure pure RABBIT or NATIVE
-	bool Call(SQObjectPtr &closure, int64_t nparams, int64_t stackbase, SQObjectPtr &outres,SQBool raiseerror);
+	bool call(SQObjectPtr &closure, int64_t nparams, int64_t stackbase, SQObjectPtr &outres,SQBool raiseerror);
 	SQRESULT Suspend();
 
-	void CallDebugHook(int64_t type,int64_t forcedline=0);
-	void CallErrorHandler(SQObjectPtr &e);
+	void callDebugHook(int64_t type,int64_t forcedline=0);
+	void callerrorHandler(SQObjectPtr &e);
 	bool get(const SQObjectPtr &self, const SQObjectPtr &key, SQObjectPtr &dest, uint64_t getflags, int64_t selfidx);
-	int64_t FallBackget(const SQObjectPtr &self,const SQObjectPtr &key,SQObjectPtr &dest);
-	bool InvokeDefaultDelegate(const SQObjectPtr &self,const SQObjectPtr &key,SQObjectPtr &dest);
+	int64_t fallBackGet(const SQObjectPtr &self,const SQObjectPtr &key,SQObjectPtr &dest);
+	bool invokeDefaultDelegate(const SQObjectPtr &self,const SQObjectPtr &key,SQObjectPtr &dest);
 	bool set(const SQObjectPtr &self, const SQObjectPtr &key, const SQObjectPtr &val, int64_t selfidx);
-	int64_t FallBackset(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjectPtr &val);
-	bool NewSlot(const SQObjectPtr &self, const SQObjectPtr &key, const SQObjectPtr &val,bool bstatic);
-	bool NewSlotA(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjectPtr &val,const SQObjectPtr &attrs,bool bstatic,bool raw);
-	bool DeleteSlot(const SQObjectPtr &self, const SQObjectPtr &key, SQObjectPtr &res);
+	int64_t fallBackSet(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjectPtr &val);
+	bool newSlot(const SQObjectPtr &self, const SQObjectPtr &key, const SQObjectPtr &val,bool bstatic);
+	bool newSlotA(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjectPtr &val,const SQObjectPtr &attrs,bool bstatic,bool raw);
+	bool deleteSlot(const SQObjectPtr &self, const SQObjectPtr &key, SQObjectPtr &res);
 	bool clone(const SQObjectPtr &self, SQObjectPtr &target);
-	bool ObjCmp(const SQObjectPtr &o1, const SQObjectPtr &o2,int64_t &res);
-	bool StringCat(const SQObjectPtr &str, const SQObjectPtr &obj, SQObjectPtr &dest);
-	static bool IsEqual(const SQObjectPtr &o1,const SQObjectPtr &o2,bool &res);
-	bool ToString(const SQObjectPtr &o,SQObjectPtr &res);
-	SQString *PrintObjVal(const SQObjectPtr &o);
+	bool objCmp(const SQObjectPtr &o1, const SQObjectPtr &o2,int64_t &res);
+	bool stringCat(const SQObjectPtr &str, const SQObjectPtr &obj, SQObjectPtr &dest);
+	static bool isEqual(const SQObjectPtr &o1,const SQObjectPtr &o2,bool &res);
+	bool toString(const SQObjectPtr &o,SQObjectPtr &res);
+	SQString *printObjVal(const SQObjectPtr &o);
 
 
-	void Raise_Error(const SQChar *s, ...);
-	void Raise_Error(const SQObjectPtr &desc);
-	void Raise_IdxError(const SQObjectPtr &o);
-	void Raise_CompareError(const SQObject &o1, const SQObject &o2);
-	void Raise_ParamTypeError(int64_t nparam,int64_t typemask,int64_t type);
+	void raise_error(const SQChar *s, ...);
+	void raise_error(const SQObjectPtr &desc);
+	void raise_Idxerror(const SQObjectPtr &o);
+	void raise_Compareerror(const SQObject &o1, const SQObject &o2);
+	void raise_ParamTypeerror(int64_t nparam,int64_t typemask,int64_t type);
 
-	void FindOuter(SQObjectPtr &target, SQObjectPtr *stackindex);
-	void RelocateOuters();
-	void CloseOuters(SQObjectPtr *stackindex);
+	void findOuter(SQObjectPtr &target, SQObjectPtr *stackindex);
+	void relocateOuters();
+	void closeOuters(SQObjectPtr *stackindex);
 
-	bool TypeOf(const SQObjectPtr &obj1, SQObjectPtr &dest);
-	bool CallMetaMethod(SQObjectPtr &closure, SQMetaMethod mm, int64_t nparams, SQObjectPtr &outres);
-	bool ArithMetaMethod(int64_t op, const SQObjectPtr &o1, const SQObjectPtr &o2, SQObjectPtr &dest);
+	bool typeOf(const SQObjectPtr &obj1, SQObjectPtr &dest);
+	bool callMetaMethod(SQObjectPtr &closure, SQMetaMethod mm, int64_t nparams, SQObjectPtr &outres);
+	bool arithMetaMethod(int64_t op, const SQObjectPtr &o1, const SQObjectPtr &o2, SQObjectPtr &dest);
 	bool Return(int64_t _arg0, int64_t _arg1, SQObjectPtr &retval);
 	//new stuff
 	bool ARITH_OP(uint64_t op,SQObjectPtr &trg,const SQObjectPtr &o1,const SQObjectPtr &o2);
@@ -115,20 +115,20 @@ public:
 	bool FOREACH_OP(SQObjectPtr &o1,SQObjectPtr &o2,SQObjectPtr &o3,SQObjectPtr &o4,int64_t arg_2,int exitpos,int &jump);
 	//bool LOCAL_INC(int64_t op,SQObjectPtr &target, SQObjectPtr &a, SQObjectPtr &incr);
 	bool PLOCAL_INC(int64_t op,SQObjectPtr &target, SQObjectPtr &a, SQObjectPtr &incr);
-	bool DerefInc(int64_t op,SQObjectPtr &target, SQObjectPtr &self, SQObjectPtr &key, SQObjectPtr &incr, bool postfix,int64_t arg0);
+	bool derefInc(int64_t op,SQObjectPtr &target, SQObjectPtr &self, SQObjectPtr &key, SQObjectPtr &incr, bool postfix,int64_t arg0);
 #ifdef _DEBUG_DUMP
 	void dumpstack(int64_t stackbase=-1, bool dumpall = false);
 #endif
 
-	void Finalize();
-	void GrowCallStack() {
+	void finalize();
+	void GrowcallStack() {
 		int64_t newsize = _alloccallsstacksize*2;
 		_callstackdata.resize(newsize);
 		_callsstack = &_callstackdata[0];
 		_alloccallsstacksize = newsize;
 	}
-	bool EnterFrame(int64_t newbase, int64_t newtop, bool tailcall);
-	void LeaveFrame();
+	bool enterFrame(int64_t newbase, int64_t newtop, bool tailcall);
+	void leaveFrame();
 	void release(){ sq_delete(this,SQVM); }
 ////////////////////////////////////////////////////////////////////////////
 	//stack functions for the api
@@ -136,12 +136,12 @@ public:
 
 	static bool IsFalse(SQObjectPtr &o);
 
-	void Pop();
-	void Pop(int64_t n);
-	void Push(const SQObjectPtr &o);
-	void PushNull();
+	void pop();
+	void pop(int64_t n);
+	void push(const SQObjectPtr &o);
+	void pushNull();
 	SQObjectPtr &top();
-	SQObjectPtr &Popget();
+	SQObjectPtr &popGet();
 	SQObjectPtr &getUp(int64_t n);
 	SQObjectPtr &getAt(int64_t n);
 
@@ -161,13 +161,13 @@ public:
 	SQObjectPtr temp_reg;
 
 
-	CallInfo* _callsstack;
+	callInfo* _callsstack;
 	int64_t _callsstacksize;
 	int64_t _alloccallsstacksize;
-	sqvector<CallInfo>  _callstackdata;
+	sqvector<callInfo>  _callstackdata;
 
 	ExceptionsTraps _etraps;
-	CallInfo *ci;
+	callInfo *ci;
 	SQUserPointer _foreignptr;
 	//VMs sharing the same state
 	SQSharedState *_sharedstate;
@@ -194,7 +194,7 @@ inline SQObjectPtr &stack_get(HRABBITVM v,int64_t idx){return ((idx>=0)?(v->getA
 #define PUSH_CALLINFO(v,nci){ \
 	int64_t css = v->_callsstacksize; \
 	if(css == v->_alloccallsstacksize) { \
-		v->GrowCallStack(); \
+		v->GrowcallStack(); \
 	} \
 	v->ci = &v->_callsstack[css]; \
 	*(v->ci) = nci; \

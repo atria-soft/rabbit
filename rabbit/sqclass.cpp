@@ -28,13 +28,13 @@ SQClass::SQClass(SQSharedState *ss,SQClass *base)
 		_defaultvalues.copy(base->_defaultvalues);
 		_methods.copy(base->_methods);
 		_COPY_VECTOR(_metamethods,base->_metamethods,MT_LAST);
-		__ObjAddRef(_base);
+		__ObjaddRef(_base);
 	}
 	_members = base?base->_members->clone() : SQTable::create(ss,0);
-	__ObjAddRef(_members);
+	__ObjaddRef(_members);
 }
 
-void SQClass::Finalize() {
+void SQClass::finalize() {
 	_attributes.Null();
 	_NULL_SQOBJECT_VECTOR(_defaultvalues,_defaultvalues.size());
 	_methods.resize(0);
@@ -47,10 +47,10 @@ void SQClass::Finalize() {
 
 SQClass::~SQClass()
 {
-	Finalize();
+	finalize();
 }
 
-bool SQClass::NewSlot(SQSharedState *ss,const SQObjectPtr &key,const SQObjectPtr &val,bool bstatic)
+bool SQClass::newSlot(SQSharedState *ss,const SQObjectPtr &key,const SQObjectPtr &val,bool bstatic)
 {
 	SQObjectPtr temp;
 	bool belongs_to_static_table = sq_type(val) == OT_CLOSURE || sq_type(val) == OT_NATIVECLOSURE || bstatic;
@@ -72,17 +72,17 @@ bool SQClass::NewSlot(SQSharedState *ss,const SQObjectPtr &key,const SQObjectPtr
 			if(_base && sq_type(val) == OT_CLOSURE) {
 				theval = _closure(val)->clone();
 				_closure(theval)->_base = _base;
-				__ObjAddRef(_base); //ref for the closure
+				__ObjaddRef(_base); //ref for the closure
 			}
 			if(sq_type(temp) == OT_NULL) {
 				bool isconstructor;
-				SQVM::IsEqual(ss->_constructoridx, key, isconstructor);
+				SQVM::isEqual(ss->_constructoridx, key, isconstructor);
 				if(isconstructor) {
 					_constructoridx = (int64_t)_methods.size();
 				}
 				SQClassMember m;
 				m.val = theval;
-				_members->NewSlot(key,SQObjectPtr(_make_method_idx(_methods.size())));
+				_members->newSlot(key,SQObjectPtr(_make_method_idx(_methods.size())));
 				_methods.push_back(m);
 			}
 			else {
@@ -93,14 +93,14 @@ bool SQClass::NewSlot(SQSharedState *ss,const SQObjectPtr &key,const SQObjectPtr
 	}
 	SQClassMember m;
 	m.val = val;
-	_members->NewSlot(key,SQObjectPtr(_make_field_idx(_defaultvalues.size())));
+	_members->newSlot(key,SQObjectPtr(_make_field_idx(_defaultvalues.size())));
 	_defaultvalues.push_back(m);
 	return true;
 }
 
 SQInstance *SQClass::createInstance()
 {
-	if(!_locked) Lock();
+	if(!_locked) lock();
 	return SQInstance::create(NULL,this);
 }
 
@@ -144,11 +144,11 @@ bool SQClass::getAttributes(const SQObjectPtr &key,SQObjectPtr &outval)
 }
 
 ///////////////////////////////////////////////////////////////////////
-void SQInstance::Init(SQSharedState *ss)
+void SQInstance::init(SQSharedState *ss)
 {
 	_userpointer = NULL;
 	_hook = NULL;
-	__ObjAddRef(_class);
+	__ObjaddRef(_class);
 	_delegate = _class->_members;
 }
 
@@ -160,7 +160,7 @@ SQInstance::SQInstance(SQSharedState *ss, SQClass *c, int64_t memsize)
 	for(uint64_t n = 0; n < nvalues; n++) {
 		new (&_values[n]) SQObjectPtr(_class->_defaultvalues[n].val);
 	}
-	Init(ss);
+	init(ss);
 }
 
 SQInstance::SQInstance(SQSharedState *ss, SQInstance *i, int64_t memsize)
@@ -171,10 +171,10 @@ SQInstance::SQInstance(SQSharedState *ss, SQInstance *i, int64_t memsize)
 	for(uint64_t n = 0; n < nvalues; n++) {
 		new (&_values[n]) SQObjectPtr(i->_values[n]);
 	}
-	Init(ss);
+	init(ss);
 }
 
-void SQInstance::Finalize()
+void SQInstance::finalize()
 {
 	uint64_t nvalues = _class->_defaultvalues.size();
 	__Objrelease(_class);
@@ -183,7 +183,7 @@ void SQInstance::Finalize()
 
 SQInstance::~SQInstance()
 {
-	if(_class){ Finalize(); } //if _class is null it was already finalized by the GC
+	if(_class){ finalize(); } //if _class is null it was already finalized by the GC
 }
 
 bool SQInstance::getMetaMethod(SQVM* SQ_UNUSED_ARG(v),SQMetaMethod mm,SQObjectPtr &res)
@@ -195,7 +195,7 @@ bool SQInstance::getMetaMethod(SQVM* SQ_UNUSED_ARG(v),SQMetaMethod mm,SQObjectPt
 	return false;
 }
 
-bool SQInstance::InstanceOf(SQClass *trg)
+bool SQInstance::instanceOf(SQClass *trg)
 {
 	SQClass *parent = _class;
 	while(parent != NULL) {

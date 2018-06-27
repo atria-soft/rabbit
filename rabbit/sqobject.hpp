@@ -96,7 +96,7 @@ enum SQMetaMethod{
 
 struct SQObjectPtr;
 
-#define __AddRef(type,unval) if(ISREFCOUNTED(type)) \
+#define __addRef(type,unval) if(ISREFCOUNTED(type)) \
 		{ \
 			unval.pRefCounted->refCountIncrement(); \
 		}
@@ -116,7 +116,7 @@ struct SQObjectPtr;
 	} \
 }
 
-#define __ObjAddRef(obj) { \
+#define __ObjaddRef(obj) { \
 	(obj)->refCountIncrement(); \
 }
 
@@ -206,13 +206,13 @@ struct SQObjectPtr : public SQObject
 	{
 		_type = o._type;
 		_unVal = o._unVal;
-		__AddRef(_type,_unVal);
+		__addRef(_type,_unVal);
 	}
 	SQObjectPtr(const SQObject &o)
 	{
 		_type = o._type;
 		_unVal = o._unVal;
-		__AddRef(_type,_unVal);
+		__addRef(_type,_unVal);
 	}
 	_REF_TYPE_DECL(OT_TABLE,SQTable,pTable)
 	_REF_TYPE_DECL(OT_CLASS,SQClass,pClass)
@@ -260,7 +260,7 @@ struct SQObjectPtr : public SQObject
 		unOldVal=_unVal;
 		_unVal = obj._unVal;
 		_type = obj._type;
-		__AddRef(_type,_unVal);
+		__addRef(_type,_unVal);
 		__release(tOldType,unOldVal);
 		return *this;
 	}
@@ -272,7 +272,7 @@ struct SQObjectPtr : public SQObject
 		unOldVal=_unVal;
 		_unVal = obj._unVal;
 		_type = obj._type;
-		__AddRef(_type,_unVal);
+		__addRef(_type,_unVal);
 		__release(tOldType,unOldVal);
 		return *this;
 	}

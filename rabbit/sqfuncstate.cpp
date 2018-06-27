@@ -80,7 +80,7 @@ SQInstructionDesc g_InstrDesc[]={
 	{_SC("_OP_CLOSE")},
 };
 #endif
-void DumpLiteral(SQObjectPtr &o)
+void dumpLiteral(SQObjectPtr &o)
 {
 	switch(sq_type(o)){
 		case OT_STRING: scprintf(_SC("\"%s\""),_stringval(o));break;
@@ -91,7 +91,7 @@ void DumpLiteral(SQObjectPtr &o)
 	}
 }
 
-SQFuncState::SQFuncState(SQSharedState *ss,SQFuncState *parent,CompilerErrorFunc efunc,void *ed)
+SQFuncState::SQFuncState(SQSharedState *ss,SQFuncState *parent,compilererrorFunc efunc,void *ed)
 {
 		_nliterals = 0;
 		_literals = SQTable::create(ss,0);
@@ -112,13 +112,13 @@ SQFuncState::SQFuncState(SQSharedState *ss,SQFuncState *parent,CompilerErrorFunc
 
 }
 
-void SQFuncState::Error(const SQChar *err)
+void SQFuncState::error(const SQChar *err)
 {
 	_errfunc(_errtarget,err);
 }
 
 #ifdef _DEBUG_DUMP
-void SQFuncState::Dump(SQFunctionProto *func)
+void SQFuncState::dump(SQFunctionProto *func)
 {
 	uint64_t n=0,i;
 	int64_t si;
@@ -137,7 +137,7 @@ void SQFuncState::Dump(SQFunctionProto *func)
 	}
 	for(i=0;i<templiterals.size();i++){
 		scprintf(_SC("[%d] "), (int32_t)n);
-		DumpLiteral(templiterals[i]);
+		dumpLiteral(templiterals[i]);
 		scprintf(_SC("\n"));
 		n++;
 	}
@@ -147,7 +147,7 @@ void SQFuncState::Dump(SQFunctionProto *func)
 	n=0;
 	for(i=0;i<_parameters.size();i++){
 		scprintf(_SC("[%d] "), (int32_t)n);
-		DumpLiteral(_parameters[i]);
+		dumpLiteral(_parameters[i]);
 		scprintf(_SC("\n"));
 		n++;
 	}
@@ -179,7 +179,7 @@ void SQFuncState::Dump(SQFunctionProto *func)
 				while(((refidx=_table(_literals)->next(false,refo,key,val))!= -1) && (_integer(val) != lidx)) {
 					refo = refidx;
 				}
-				DumpLiteral(key);
+				dumpLiteral(key);
 			}
 			if(inst.op != _OP_DLOAD) {
 				scprintf(_SC(" %d %d \n"),inst._arg2,inst._arg3);
@@ -195,7 +195,7 @@ void SQFuncState::Dump(SQFunctionProto *func)
 					while(((refidx=_table(_literals)->next(false,refo,key,val))!= -1) && (_integer(val) != lidx)) {
 						refo = refidx;
 				}
-				DumpLiteral(key);
+				dumpLiteral(key);
 				scprintf(_SC("\n"));
 			}
 			}
@@ -233,11 +233,11 @@ int64_t SQFuncState::getConstant(const SQObject &cons)
 	if(!_table(_literals)->get(cons,val))
 	{
 		val = _nliterals;
-		_table(_literals)->NewSlot(cons,val);
+		_table(_literals)->newSlot(cons,val);
 		_nliterals++;
 		if(_nliterals > MAX_LITERALS) {
 			val.Null();
-			Error(_SC("internal compiler error: too many literals"));
+			error(_SC("internal compiler error: too many literals"));
 		}
 	}
 	return _integer(val);
@@ -261,24 +261,24 @@ void SQFuncState::setIntructionParam(int64_t pos,int64_t arg,int64_t val)
 	};
 }
 
-int64_t SQFuncState::AllocStackPos()
+int64_t SQFuncState::allocStackPos()
 {
 	int64_t npos=_vlocals.size();
 	_vlocals.push_back(SQLocalVarInfo());
 	if(_vlocals.size()>((uint64_t)_stacksize)) {
-		if(_stacksize>MAX_FUNC_STACKSIZE) Error(_SC("internal compiler error: too many locals"));
+		if(_stacksize>MAX_FUNC_STACKSIZE) error(_SC("internal compiler error: too many locals"));
 		_stacksize=_vlocals.size();
 	}
 	return npos;
 }
 
-int64_t SQFuncState::PushTarget(int64_t n)
+int64_t SQFuncState::pushTarget(int64_t n)
 {
 	if(n!=-1){
 		_targetstack.push_back(n);
 		return n;
 	}
-	n=AllocStackPos();
+	n=allocStackPos();
 	_targetstack.push_back(n);
 	return n;
 }
@@ -290,7 +290,7 @@ int64_t SQFuncState::getUpTarget(int64_t n){
 int64_t SQFuncState::topTarget(){
 	return _targetstack.back();
 }
-int64_t SQFuncState::PopTarget()
+int64_t SQFuncState::popTarget()
 {
 	uint64_t npos=_targetstack.back();
 	assert(npos < _vlocals.size());
@@ -338,7 +338,7 @@ void SQFuncState::setStacksize(int64_t n)
 	}
 }
 
-bool SQFuncState::IsConstant(const SQObject &name,SQObject &e)
+bool SQFuncState::isConstant(const SQObject &name,SQObject &e)
 {
 	SQObjectPtr val;
 	if(_table(_sharedstate->_consts)->get(name,val)) {
@@ -348,14 +348,14 @@ bool SQFuncState::IsConstant(const SQObject &name,SQObject &e)
 	return false;
 }
 
-bool SQFuncState::IsLocal(uint64_t stkpos)
+bool SQFuncState::isLocal(uint64_t stkpos)
 {
 	if(stkpos>=_vlocals.size())return false;
 	else if(sq_type(_vlocals[stkpos]._name)!=OT_NULL)return true;
 	return false;
 }
 
-int64_t SQFuncState::PushLocalVariable(const SQObject &name)
+int64_t SQFuncState::pushLocalVariable(const SQObject &name)
 {
 	int64_t pos=_vlocals.size();
 	SQLocalVarInfo lvi;
@@ -382,7 +382,7 @@ int64_t SQFuncState::getLocalVariable(const SQObject &name)
 	return -1;
 }
 
-void SQFuncState::MarkLocalAsOuter(int64_t pos)
+void SQFuncState::markLocalAsOuter(int64_t pos)
 {
 	SQLocalVarInfo &lvi = _vlocals[pos];
 	lvi._end_op = UINT_MINUS_ONE;
@@ -407,7 +407,7 @@ int64_t SQFuncState::getOuterVariable(const SQObject &name)
 			}
 		}
 		else {
-			_parent->MarkLocalAsOuter(pos);
+			_parent->markLocalAsOuter(pos);
 			_outervalues.push_back(SQOuterVar(name,SQObjectPtr(int64_t(pos)),otLOCAL)); //local
 			return _outervalues.size() - 1;
 
@@ -417,18 +417,18 @@ int64_t SQFuncState::getOuterVariable(const SQObject &name)
 	return -1;
 }
 
-void SQFuncState::AddParameter(const SQObject &name)
+void SQFuncState::addParameter(const SQObject &name)
 {
-	PushLocalVariable(name);
+	pushLocalVariable(name);
 	_parameters.push_back(name);
 }
 
-void SQFuncState::AddLineInfos(int64_t line,bool lineop,bool force)
+void SQFuncState::addLineInfos(int64_t line,bool lineop,bool force)
 {
 	if(_lastline!=line || force){
 		SQLineInfo li;
 		li._line=line;li._op=(getCurrentPos()+1);
-		if(lineop)AddInstruction(_OP_LINE,0,line);
+		if(lineop)addInstruction(_OP_LINE,0,line);
 		if(_lastline!=line) {
 			_lineinfos.push_back(li);
 		}
@@ -436,9 +436,9 @@ void SQFuncState::AddLineInfos(int64_t line,bool lineop,bool force)
 	}
 }
 
-void SQFuncState::DiscardTarget()
+void SQFuncState::discardTarget()
 {
-	int64_t discardedtarget = PopTarget();
+	int64_t discardedtarget = popTarget();
 	int64_t size = _instructions.size();
 	if(size > 0 && _optimization){
 		SQInstruction &pi = _instructions[size-1];//previous instruction
@@ -451,7 +451,7 @@ void SQFuncState::DiscardTarget()
 	}
 }
 
-void SQFuncState::AddInstruction(SQInstruction &i)
+void SQFuncState::addInstruction(SQInstruction &i)
 {
 	int64_t size = _instructions.size();
 	if(size > 0 && _optimization){ //simple optimizer
@@ -485,7 +485,7 @@ void SQFuncState::AddInstruction(SQInstruction &i)
 			}
 		break;
 		case _OP_GET:
-			if( pi.op == _OP_LOAD && pi._arg0 == i._arg2 && (!IsLocal(pi._arg0))){
+			if( pi.op == _OP_LOAD && pi._arg0 == i._arg2 && (!isLocal(pi._arg0))){
 				pi._arg1 = pi._arg1;
 				pi._arg2 = (unsigned char)i._arg1;
 				pi.op = _OP_GETK;
@@ -495,7 +495,7 @@ void SQFuncState::AddInstruction(SQInstruction &i)
 			}
 		break;
 		case _OP_PREPCALL:
-			if( pi.op == _OP_LOAD  && pi._arg0 == i._arg1 && (!IsLocal(pi._arg0))){
+			if( pi.op == _OP_LOAD  && pi._arg0 == i._arg1 && (!isLocal(pi._arg0))){
 				pi.op = _OP_PREPCALLK;
 				pi._arg0 = i._arg0;
 				pi._arg1 = pi._arg1;
@@ -513,7 +513,7 @@ void SQFuncState::AddInstruction(SQInstruction &i)
 			case _OP_LOADFLOAT: aat = AAT_FLOAT; break;
 			default: break;
 			}
-			if(aat != -1 && pi._arg0 == i._arg1 && (!IsLocal(pi._arg0))){
+			if(aat != -1 && pi._arg0 == i._arg1 && (!isLocal(pi._arg0))){
 				pi.op = _OP_APPENDARRAY;
 				pi._arg0 = i._arg0;
 				pi._arg1 = pi._arg1;
@@ -554,7 +554,7 @@ void SQFuncState::AddInstruction(SQInstruction &i)
 			}
 			break;
 		case _OP_EQ:case _OP_NE:
-			if(pi.op == _OP_LOAD && pi._arg0 == i._arg1 && (!IsLocal(pi._arg0) ))
+			if(pi.op == _OP_LOAD && pi._arg0 == i._arg1 && (!isLocal(pi._arg0) ))
 			{
 				pi.op = i.op;
 				pi._arg0 = i._arg0;
@@ -587,18 +587,18 @@ void SQFuncState::AddInstruction(SQInstruction &i)
 SQObject SQFuncState::createString(const SQChar *s,int64_t len)
 {
 	SQObjectPtr ns(SQString::create(_sharedstate,s,len));
-	_table(_strings)->NewSlot(ns,(int64_t)1);
+	_table(_strings)->newSlot(ns,(int64_t)1);
 	return ns;
 }
 
 SQObject SQFuncState::createTable()
 {
 	SQObjectPtr nt(SQTable::create(_sharedstate,0));
-	_table(_strings)->NewSlot(nt,(int64_t)1);
+	_table(_strings)->newSlot(nt,(int64_t)1);
 	return nt;
 }
 
-SQFunctionProto *SQFuncState::BuildProto()
+SQFunctionProto *SQFuncState::buildProto()
 {
 
 	SQFunctionProto *f=SQFunctionProto::create(_ss,_instructions.size(),
@@ -632,7 +632,7 @@ SQFunctionProto *SQFuncState::BuildProto()
 	return f;
 }
 
-SQFuncState *SQFuncState::PushChildState(SQSharedState *ss)
+SQFuncState *SQFuncState::pushChildState(SQSharedState *ss)
 {
 	SQFuncState *child = (SQFuncState *)sq_malloc(sizeof(SQFuncState));
 	new (child) SQFuncState(ss,this,_errfunc,_errtarget);
@@ -640,7 +640,7 @@ SQFuncState *SQFuncState::PushChildState(SQSharedState *ss)
 	return child;
 }
 
-void SQFuncState::PopChildState()
+void SQFuncState::popChildState()
 {
 	SQFuncState *child = _childstates.back();
 	sq_delete(child,SQFuncState);
@@ -651,7 +651,7 @@ SQFuncState::~SQFuncState()
 {
 	while(_childstates.size() > 0)
 	{
-		PopChildState();
+		popChildState();
 	}
 }
 

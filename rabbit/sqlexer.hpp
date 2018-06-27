@@ -17,26 +17,26 @@ struct SQLexer
 {
 	SQLexer();
 	~SQLexer();
-	void Init(SQSharedState *ss,SQLEXREADFUNC rg,SQUserPointer up,CompilerErrorFunc efunc,void *ed);
-	void Error(const SQChar *err);
+	void init(SQSharedState *ss,SQLEXREADFUNC rg,SQUserPointer up,compilererrorFunc efunc,void *ed);
+	void error(const SQChar *err);
 	int64_t Lex();
-	const SQChar *Tok2Str(int64_t tok);
+	const SQChar *tok2Str(int64_t tok);
 private:
 	int64_t getIDType(const SQChar *s,int64_t len);
-	int64_t ReadString(int64_t ndelim,bool verbatim);
-	int64_t ReadNumber();
-	void LexBlockComment();
-	void LexLineComment();
-	int64_t ReadID();
+	int64_t readString(int64_t ndelim,bool verbatim);
+	int64_t readNumber();
+	void lexBlockComment();
+	void lexLineComment();
+	int64_t readId();
 	void next();
 #ifdef SQUNICODE
 #if WCHAR_SIZE == 2
-	int64_t AddUTF16(uint64_t ch);
+	int64_t addUTF16(uint64_t ch);
 #endif
 #else
-	int64_t AddUTF8(uint64_t ch);
+	int64_t addUTF8(uint64_t ch);
 #endif
-	int64_t ProcessStringHexEscape(SQChar *dest, int64_t maxdigits);
+	int64_t processStringHexEscape(SQChar *dest, int64_t maxdigits);
 	int64_t _curtoken;
 	SQTable *_keywords;
 	SQBool _reached_eof;
@@ -53,7 +53,7 @@ public:
 	LexChar _currdata;
 	SQSharedState *_sharedstate;
 	sqvector<SQChar> _longstr;
-	CompilerErrorFunc _errfunc;
+	compilererrorFunc _errfunc;
 	void *_errtarget;
 };
 

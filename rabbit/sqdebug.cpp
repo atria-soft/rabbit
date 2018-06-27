@@ -17,7 +17,7 @@ SQRESULT sq_getfunctioninfo(HRABBITVM v,int64_t level,SQFunctionInfo *fi)
 {
 	int64_t cssize = v->_callsstacksize;
 	if (cssize > level) {
-		SQVM::CallInfo &ci = v->_callsstack[cssize-level-1];
+		SQVM::callInfo &ci = v->_callsstack[cssize-level-1];
 		if(sq_isclosure(ci._closure)) {
 			SQClosure *c = _closure(ci._closure);
 			SQFunctionProto *proto = c->_function;
@@ -36,7 +36,7 @@ SQRESULT sq_stackinfos(HRABBITVM v, int64_t level, SQStackInfos *si)
 	int64_t cssize = v->_callsstacksize;
 	if (cssize > level) {
 		memset(si, 0, sizeof(SQStackInfos));
-		SQVM::CallInfo &ci = v->_callsstack[cssize-level-1];
+		SQVM::callInfo &ci = v->_callsstack[cssize-level-1];
 		switch (sq_type(ci._closure)) {
 		case OT_CLOSURE:{
 			SQFunctionProto *func = _closure(ci._closure)->_function;
@@ -61,7 +61,7 @@ SQRESULT sq_stackinfos(HRABBITVM v, int64_t level, SQStackInfos *si)
 	return SQ_ERROR;
 }
 
-void SQVM::Raise_Error(const SQChar *s, ...)
+void SQVM::raise_error(const SQChar *s, ...)
 {
 	va_list vl;
 	va_start(vl, s);
@@ -71,12 +71,12 @@ void SQVM::Raise_Error(const SQChar *s, ...)
 	_lasterror = SQString::create(_ss(this),_spval,-1);
 }
 
-void SQVM::Raise_Error(const SQObjectPtr &desc)
+void SQVM::raise_error(const SQObjectPtr &desc)
 {
 	_lasterror = desc;
 }
 
-SQString *SQVM::PrintObjVal(const SQObjectPtr &o)
+SQString *SQVM::printObjVal(const SQObjectPtr &o)
 {
 	switch(sq_type(o)) {
 	case OT_STRING: return _string(o);
@@ -93,20 +93,20 @@ SQString *SQVM::PrintObjVal(const SQObjectPtr &o)
 	}
 }
 
-void SQVM::Raise_IdxError(const SQObjectPtr &o)
+void SQVM::raise_Idxerror(const SQObjectPtr &o)
 {
-	SQObjectPtr oval = PrintObjVal(o);
-	Raise_Error(_SC("the index '%.50s' does not exist"), _stringval(oval));
+	SQObjectPtr oval = printObjVal(o);
+	raise_error(_SC("the index '%.50s' does not exist"), _stringval(oval));
 }
 
-void SQVM::Raise_CompareError(const SQObject &o1, const SQObject &o2)
+void SQVM::raise_Compareerror(const SQObject &o1, const SQObject &o2)
 {
-	SQObjectPtr oval1 = PrintObjVal(o1), oval2 = PrintObjVal(o2);
-	Raise_Error(_SC("comparison between '%.50s' and '%.50s'"), _stringval(oval1), _stringval(oval2));
+	SQObjectPtr oval1 = printObjVal(o1), oval2 = printObjVal(o2);
+	raise_error(_SC("comparison between '%.50s' and '%.50s'"), _stringval(oval1), _stringval(oval2));
 }
 
 
-void SQVM::Raise_ParamTypeError(int64_t nparam,int64_t typemask,int64_t type)
+void SQVM::raise_ParamTypeerror(int64_t nparam,int64_t typemask,int64_t type)
 {
 	SQObjectPtr exptypes = SQString::create(_ss(this), _SC(""), -1);
 	int64_t found = 0;
@@ -114,10 +114,10 @@ void SQVM::Raise_ParamTypeError(int64_t nparam,int64_t typemask,int64_t type)
 	{
 		int64_t mask = ((int64_t)1) << i;
 		if(typemask & (mask)) {
-			if(found>0) StringCat(exptypes,SQString::create(_ss(this), _SC("|"), -1), exptypes);
+			if(found>0) stringCat(exptypes,SQString::create(_ss(this), _SC("|"), -1), exptypes);
 			found ++;
-			StringCat(exptypes,SQString::create(_ss(this), IdType2Name((SQObjectType)mask), -1), exptypes);
+			stringCat(exptypes,SQString::create(_ss(this), IdType2Name((SQObjectType)mask), -1), exptypes);
 		}
 	}
-	Raise_Error(_SC("parameter %d has an invalid type '%s' ; expected: '%s'"), nparam, IdType2Name((SQObjectType)type), _stringval(exptypes));
+	raise_error(_SC("parameter %d has an invalid type '%s' ; expected: '%s'"), nparam, IdType2Name((SQObjectType)type), _stringval(exptypes));
 }
