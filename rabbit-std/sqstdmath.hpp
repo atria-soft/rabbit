@@ -8,6 +8,7 @@
 #pragma once
 
 #include <rabbit/rabbit.hpp>
+#include <rabbit/RegFunction.hpp>
 
 RABBIT_API rabbit::Result sqstd_register_mathlib(rabbit::VirtualMachine* v);
 

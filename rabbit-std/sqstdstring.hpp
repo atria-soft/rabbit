@@ -7,6 +7,8 @@
  */
 #pragma once
 
+#include <rabbit/RegFunction.hpp>
+
 typedef unsigned int SQRexBool;
 typedef struct SQRex SQRex;
 

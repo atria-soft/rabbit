@@ -16,6 +16,7 @@
 #include <rabbit/sqcompiler.hpp>
 #include <rabbit/sqfuncstate.hpp>
 #include <rabbit/sqclass.hpp>
+#include <rabbit/MemberHandle.hpp>
 
 static bool sq_aux_gettypedarg(rabbit::VirtualMachine* v,int64_t idx,rabbit::ObjectType type,rabbit::ObjectPtr **o)
 {
@@ -299,7 +300,8 @@ rabbit::Bool sq_instanceof(rabbit::VirtualMachine* v)
 {
 	rabbit::ObjectPtr &inst = stack_get(v,-1);
 	rabbit::ObjectPtr &cl = stack_get(v,-2);
-	if(sq_type(inst) != rabbit::OT_INSTANCE || sq_type(cl) != OT_CLASS)
+	if(    sq_type(inst) != rabbit::OT_INSTANCE
+	    || sq_type(cl) != rabbit::OT_CLASS)
 		return sq_throwerror(v,_SC("invalid param type"));
 	return _instance(inst)->instanceOf(_class(cl))?SQTrue:SQFalse;
 }
@@ -872,7 +874,7 @@ rabbit::Result sq_newslot(rabbit::VirtualMachine* v, int64_t idx, rabbit::Bool b
 {
 	sq_aux_paramscheck(v, 3);
 	rabbit::ObjectPtr &self = stack_get(v, idx);
-	if(sq_type(self) == rabbit::OT_TABLE || sq_type(self) == OT_CLASS) {
+	if(sq_type(self) == rabbit::OT_TABLE || sq_type(self) == rabbit::OT_CLASS) {
 		rabbit::ObjectPtr &key = v->getUp(-2);
 		if(sq_type(key) == rabbit::OT_NULL) return sq_throwerror(v, _SC("null is not a valid key"));
 		v->newSlot(self, key, v->getUp(-1),bstatic?true:false);
@@ -1563,9 +1565,9 @@ rabbit::Result sq_getdefaultdelegate(rabbit::VirtualMachine* v,rabbit::ObjectTyp
 	case rabbit::OT_TABLE: v->push(ss->_table_default_delegate); break;
 	case rabbit::OT_ARRAY: v->push(ss->_array_default_delegate); break;
 	case rabbit::OT_STRING: v->push(ss->_string_default_delegate); break;
-	case rabbit::OT_INTEGER: case OT_FLOAT: v->push(ss->_number_default_delegate); break;
+	case rabbit::OT_INTEGER: case rabbit::OT_FLOAT: v->push(ss->_number_default_delegate); break;
 	case rabbit::OT_GENERATOR: v->push(ss->_generator_default_delegate); break;
-	case rabbit::OT_CLOSURE: case OT_NATIVECLOSURE: v->push(ss->_closure_default_delegate); break;
+	case rabbit::OT_CLOSURE: case rabbit::OT_NATIVECLOSURE: v->push(ss->_closure_default_delegate); break;
 	case rabbit::OT_THREAD: v->push(ss->_thread_default_delegate); break;
 	case rabbit::OT_CLASS: v->push(ss->_class_default_delegate); break;
 	case rabbit::OT_INSTANCE: v->push(ss->_instance_default_delegate); break;

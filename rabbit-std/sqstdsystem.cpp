@@ -27,6 +27,8 @@
 #define screname rename
 #endif
 
+#include <rabbit/RegFunction.hpp>
+
 static int64_t _system_getenv(rabbit::VirtualMachine* v)
 {
 	const rabbit::Char *s;

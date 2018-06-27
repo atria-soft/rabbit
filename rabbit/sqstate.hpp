@@ -10,6 +10,7 @@
 #include <rabbit/squtils.hpp>
 #include <rabbit/sqobject.hpp>
 #include <rabbit/RegFunction.hpp>
+#include <rabbit/ObjectPtr.hpp>
 
 struct SQString;
 struct SQTable;

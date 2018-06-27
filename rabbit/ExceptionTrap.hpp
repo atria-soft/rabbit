@@ -10,8 +10,8 @@
 #include <etk/types.hpp>
 #include <rabbit/sqconfig.hpp>
 
+struct SQInstruction;
 namespace rabbit {
-	struct SQInstruction;
 	class ExceptionTrap {
 		public:
 			ExceptionTrap() {

@@ -12,6 +12,8 @@
 #include <rabbit/sqfuncproto.hpp>
 #include <rabbit/sqclosure.hpp>
 
+#define MINPOWER2 4
+
 SQTable::SQTable(SQSharedState *ss,int64_t ninitialsize)
 {
 	int64_t pow2size=MINPOWER2;

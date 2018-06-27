@@ -9,6 +9,7 @@
 #include <rabbit/rabbit.hpp>
 #include <rabbit-std/sqstdaux.hpp>
 #include <assert.h>
+#include <rabbit/StackInfos.hpp>
 
 void sqstd_printcallstack(rabbit::VirtualMachine* v)
 {

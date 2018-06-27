@@ -251,7 +251,7 @@ bool ReadObject(rabbit::VirtualMachine* v,rabbit::UserPointer up,SQREADFUNC read
 		int64_t len;
 		_CHECK_IO(SafeRead(v,read,up,&len,sizeof(int64_t)));
 		_CHECK_IO(SafeRead(v,read,up,_get_shared_state(v)->getScratchPad(sq_rsl(len)),sq_rsl(len)));
-		o=SQString::create(_get_shared_state(v),_ss(v)->getScratchPad(-1),len);
+		o=SQString::create(_get_shared_state(v),_get_shared_state(v)->getScratchPad(-1),len);
 				   }
 		break;
 	case rabbit::OT_INTEGER:{

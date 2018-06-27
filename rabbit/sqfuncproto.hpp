@@ -105,9 +105,9 @@ public:
 		return f;
 	}
 	void release(){
-		_DESTRUCT_VECTOR(rabbit::ObjectPtr,_nliterals,_literals);
-		_DESTRUCT_VECTOR(rabbit::ObjectPtr,_nparameters,_parameters);
-		_DESTRUCT_VECTOR(rabbit::ObjectPtr,_nfunctions,_functions);
+		_DESTRUCT_VECTOR(ObjectPtr,_nliterals,_literals);
+		_DESTRUCT_VECTOR(ObjectPtr,_nparameters,_parameters);
+		_DESTRUCT_VECTOR(ObjectPtr,_nfunctions,_functions);
 		_DESTRUCT_VECTOR(SQOuterVar,_noutervalues,_outervalues);
 		//_DESTRUCT_VECTOR(SQLineInfo,_nlineinfos,_lineinfos); //not required are 2 integers
 		_DESTRUCT_VECTOR(SQLocalVarInfo,_nlocalvarinfos,_localvarinfos);

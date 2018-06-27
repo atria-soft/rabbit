@@ -11,7 +11,7 @@
 #include <rabbit/sqclass.hpp>
 #include <rabbit/sqfuncproto.hpp>
 #include <rabbit/sqclosure.hpp>
-
+#include <rabbit/MetaMethod.hpp>
 
 
 SQClass::SQClass(SQSharedState *ss,SQClass *base)
@@ -27,7 +27,7 @@ SQClass::SQClass(SQSharedState *ss,SQClass *base)
 		_udsize = _base->_udsize;
 		_defaultvalues = base->_defaultvalues;
 		_methods = base->_methods;
-		_COPY_VECTOR(_metamethods,base->_metamethods,MT_LAST);
+		_COPY_VECTOR(_metamethods,base->_metamethods, rabbit::MT_LAST);
 		__ObjaddRef(_base);
 	}
 	_members = base?base->_members->clone() : SQTable::create(ss,0);
@@ -38,7 +38,7 @@ void SQClass::finalize() {
 	_attributes.Null();
 	_NULL_SQOBJECT_VECTOR(_defaultvalues,_defaultvalues.size());
 	_methods.resize(0);
-	_NULL_SQOBJECT_VECTOR(_metamethods,MT_LAST);
+	_NULL_SQOBJECT_VECTOR(_metamethods, rabbit::MT_LAST);
 	__Objrelease(_members);
 	if(_base) {
 		__Objrelease(_base);
@@ -53,7 +53,9 @@ SQClass::~SQClass()
 bool SQClass::newSlot(SQSharedState *ss,const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val,bool bstatic)
 {
 	rabbit::ObjectPtr temp;
-	bool belongs_to_static_table = sq_type(val) == rabbit::OT_CLOSURE || sq_type(val) == OT_NATIVECLOSURE || bstatic;
+	bool belongs_to_static_table =    sq_type(val) == rabbit::OT_CLOSURE
+	                               || sq_type(val) == rabbit::OT_NATIVECLOSURE
+	                               || bstatic;
 	if(_locked && !belongs_to_static_table)
 		return false; //the class already has an instance so cannot be modified
 	if(_members->get(key,temp) && _isfield(temp)) //overrides the default value
@@ -63,8 +65,9 @@ bool SQClass::newSlot(SQSharedState *ss,const rabbit::ObjectPtr &key,const rabbi
 	}
 	if(belongs_to_static_table) {
 		int64_t mmidx;
-		if((sq_type(val) == rabbit::OT_CLOSURE || sq_type(val) == OT_NATIVECLOSURE) &&
-			(mmidx = ss->getMetaMethodIdxByName(key)) != -1) {
+		if(    (    sq_type(val) == rabbit::OT_CLOSURE
+		         || sq_type(val) == rabbit::OT_NATIVECLOSURE )
+		    && (mmidx = ss->getMetaMethodIdxByName(key)) != -1) {
 			_metamethods[mmidx] = val;
 		}
 		else {

@@ -12,6 +12,7 @@
 #include <rabbit/AutoDec.hpp>
 #include <rabbit/sqconfig.hpp>
 #include <rabbit/ExceptionTrap.hpp>
+#include <rabbit/MetaMethod.hpp>
 
 
 #define MAX_NATIVE_CALLS 100

@@ -12,6 +12,8 @@
 #include <rabbit/sqfuncproto.hpp>
 #include <rabbit/sqclosure.hpp>
 #include <rabbit/sqstring.hpp>
+#include <rabbit/FunctionInfo.hpp>
+#include <rabbit/StackInfos.hpp>
 
 rabbit::Result sq_getfunctioninfo(rabbit::VirtualMachine* v,int64_t level,rabbit::FunctionInfo *fi)
 {

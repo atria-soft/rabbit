@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <ctype.h>
+#include <rabbit/StackInfos.hpp>
 
 static bool str2num(const rabbit::Char *s,rabbit::ObjectPtr &res,int64_t base)
 {
@@ -189,7 +190,7 @@ static int64_t base_print(rabbit::VirtualMachine* v)
 	if(SQ_SUCCEEDED(sq_tostring(v,2)))
 	{
 		if(SQ_SUCCEEDED(sq_getstring(v,-1,&str))) {
-			if(_get_shared_state(v)->_printfunc) _ss(v)->_printfunc(v,_SC("%s"),str);
+			if(_get_shared_state(v)->_printfunc) _get_shared_state(v)->_printfunc(v,_SC("%s"),str);
 			return 0;
 		}
 	}
@@ -202,7 +203,7 @@ static int64_t base_error(rabbit::VirtualMachine* v)
 	if(SQ_SUCCEEDED(sq_tostring(v,2)))
 	{
 		if(SQ_SUCCEEDED(sq_getstring(v,-1,&str))) {
-			if(_get_shared_state(v)->_errorfunc) _ss(v)->_errorfunc(v,_SC("%s"),str);
+			if(_get_shared_state(v)->_errorfunc) _get_shared_state(v)->_errorfunc(v,_SC("%s"),str);
 			return 0;
 		}
 	}
@@ -343,7 +344,8 @@ static int64_t default_delegate_tofloat(rabbit::VirtualMachine* v)
 		}}
 		return sq_throwerror(v, _SC("cannot convert the string"));
 		break;
-	case rabbit::OT_INTEGER:case OT_FLOAT:
+	case rabbit::OT_INTEGER:
+	case rabbit::OT_FLOAT:
 		v->push(rabbit::ObjectPtr(tofloat(o)));
 		break;
 	case rabbit::OT_BOOL:
@@ -372,7 +374,8 @@ static int64_t default_delegate_tointeger(rabbit::VirtualMachine* v)
 		}}
 		return sq_throwerror(v, _SC("cannot convert the string"));
 		break;
-	case rabbit::OT_INTEGER:case OT_FLOAT:
+	case rabbit::OT_INTEGER:
+	case rabbit::OT_FLOAT:
 		v->push(rabbit::ObjectPtr(tointeger(o)));
 		break;
 	case rabbit::OT_BOOL:

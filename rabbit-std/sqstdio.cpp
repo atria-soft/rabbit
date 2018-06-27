@@ -136,7 +136,7 @@ static int64_t _file_constructor(rabbit::VirtualMachine* v)
 	bool owns = true;
 	SQFile *f;
 	SQFILE newf;
-	if(sq_gettype(v,2) == rabbit::OT_STRING && sq_gettype(v,3) == OT_STRING) {
+	if(sq_gettype(v,2) == rabbit::OT_STRING && sq_gettype(v,3) == rabbit::OT_STRING) {
 		sq_getstring(v, 2, &filename);
 		sq_getstring(v, 3, &mode);
 		newf = sqstd_fopen(filename, mode);

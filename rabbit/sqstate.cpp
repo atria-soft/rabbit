@@ -102,7 +102,7 @@ void SQSharedState::init()
 	sq_new(_metamethods,etk::Vector<rabbit::ObjectPtr>);
 	sq_new(_systemstrings,etk::Vector<rabbit::ObjectPtr>);
 	sq_new(_types,etk::Vector<rabbit::ObjectPtr>);
-	_metamethodsmap = SQTable::create(this,MT_LAST-1);
+	_metamethodsmap = SQTable::create(this,rabbit::MT_LAST-1);
 	//adding type strings to avoid memory trashing
 	//types names
 	newsysstring(_SC("null"));
@@ -183,10 +183,11 @@ SQSharedState::~SQSharedState()
 	_weakref_default_delegate.Null();
 	_refs_table.finalize();
 
-	sq_delete(_types,etk::Vector<rabbit::ObjectPtr>);
-	sq_delete(_systemstrings,etk::Vector<rabbit::ObjectPtr>);
-	sq_delete(_metamethods,etk::Vector<rabbit::ObjectPtr>);
-	sq_delete(_stringtable,SQStringTable);
+	using tmpType = etk::Vector<rabbit::ObjectPtr>;
+	sq_delete(_types, tmpType);
+	sq_delete(_systemstrings, tmpType);
+	sq_delete(_metamethods, tmpType);
+	sq_delete(_stringtable, SQStringTable);
 	if(_scratchpad)SQ_FREE(_scratchpad,_scratchpadsize);
 }
 

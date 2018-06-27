@@ -76,7 +76,7 @@ public:
 	SQClass *_base;
 	SQClassMemberVec _defaultvalues;
 	SQClassMemberVec _methods;
-	rabbit::ObjectPtr _metamethods[MT_LAST];
+	rabbit::ObjectPtr _metamethods[rabbit::MT_LAST];
 	rabbit::ObjectPtr _attributes;
 	rabbit::UserPointer _typetag;
 	SQRELEASEHOOK _hook;

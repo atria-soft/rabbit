@@ -7,6 +7,8 @@
  */
 #pragma once
 
+#include <rabbit/RegFunction.hpp>
+
 int64_t _stream_readblob(rabbit::VirtualMachine* v);
 int64_t _stream_readline(rabbit::VirtualMachine* v);
 int64_t _stream_readn(rabbit::VirtualMachine* v);

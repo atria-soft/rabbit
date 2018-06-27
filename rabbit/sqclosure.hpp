@@ -36,8 +36,8 @@ public:
 	void release(){
 		SQFunctionProto *f = _function;
 		int64_t size = _CALC_CLOSURE_SIZE(f);
-		_DESTRUCT_VECTOR(rabbit::ObjectPtr,f->_noutervalues,_outervalues);
-		_DESTRUCT_VECTOR(rabbit::ObjectPtr,f->_ndefaultparams,_defaultparams);
+		_DESTRUCT_VECTOR(ObjectPtr,f->_noutervalues,_outervalues);
+		_DESTRUCT_VECTOR(ObjectPtr,f->_ndefaultparams,_defaultparams);
 		__Objrelease(_function);
 		this->~SQClosure();
 		sq_vm_free(this,size);
@@ -177,7 +177,7 @@ public:
 	}
 	void release(){
 		int64_t size = _CALC_NATVIVECLOSURE_SIZE(_noutervalues);
-		_DESTRUCT_VECTOR(rabbit::ObjectPtr,_noutervalues,_outervalues);
+		_DESTRUCT_VECTOR(ObjectPtr,_noutervalues,_outervalues);
 		this->~SQNativeClosure();
 		sq_free(this,size);
 	}
