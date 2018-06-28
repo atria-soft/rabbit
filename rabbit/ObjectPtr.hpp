@@ -34,8 +34,8 @@ namespace rabbit {
 			ObjectPtr(const Object& _obj);
 			
 			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_TABLE, SQTable, pTable)
-			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_CLASS, SQClass, pClass)
-			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_INSTANCE, SQInstance, pInstance)
+			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_CLASS, rabbit::Class, pClass)
+			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_INSTANCE, rabbit::Instance, pInstance)
 			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_ARRAY, rabbit::Array, pArray)
 			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_CLOSURE, SQClosure, pClosure)
 			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_NATIVECLOSURE, SQNativeClosure, pNativeClosure)

@@ -31,7 +31,9 @@ def configure(target, my_module):
 		'rabbit/sqbaselib.cpp',
 		'rabbit/sqapi.cpp',
 		'rabbit/sqlexer.cpp',
-		'rabbit/sqclass.cpp',
+		'rabbit/Class.cpp',
+		'rabbit/ClassMember.cpp',
+		'rabbit/Instance.cpp',
 		'rabbit/AutoDec.cpp',
 		'rabbit/VirtualMachine.cpp',
 		'rabbit/sqtable.cpp',
@@ -62,7 +64,9 @@ def configure(target, my_module):
 		'etk-base',
 		])
 	my_module.add_header_file([
-		'rabbit/sqclass.hpp',
+		'rabbit/Class.hpp',
+		'rabbit/ClassMember.hpp',
+		'rabbit/Instance.hpp',
 		'rabbit/AutoDec.hpp',
 		'rabbit/VirtualMachine.hpp',
 		'rabbit/sqstate.hpp',

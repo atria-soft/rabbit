@@ -14,7 +14,7 @@
 #include <rabbit/sqtable.hpp>
 #include <rabbit/Array.hpp>
 #include <rabbit/UserData.hpp>
-#include <rabbit/sqclass.hpp>
+
 
 SQSharedState::SQSharedState()
 {

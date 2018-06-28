@@ -16,7 +16,8 @@
 #include <rabbit/sqtable.hpp>
 #include <rabbit/UserData.hpp>
 #include <rabbit/Array.hpp>
-#include <rabbit/sqclass.hpp>
+#include <rabbit/Instance.hpp>
+
 
 #define TOP() (_stack[_top-1])
 #define TARGET _stack[_stackbase+arg0]
@@ -616,7 +617,7 @@ bool rabbit::VirtualMachine::CLOSURE_OP(rabbit::ObjectPtr &target, SQFunctionPro
 
 bool rabbit::VirtualMachine::CLASS_OP(rabbit::ObjectPtr &target,int64_t baseclass,int64_t attributes)
 {
-	SQClass *base = NULL;
+	rabbit::Class *base = NULL;
 	rabbit::ObjectPtr attrs;
 	if(baseclass != -1) {
 		if(sq_type(_stack[_stackbase+baseclass]) != rabbit::OT_CLASS) { raise_error(_SC("trying to inherit from a %s"),getTypeName(_stack[_stackbase+baseclass])); return false; }
@@ -625,7 +626,7 @@ bool rabbit::VirtualMachine::CLASS_OP(rabbit::ObjectPtr &target,int64_t baseclas
 	if(attributes != MAX_FUNC_STACKSIZE) {
 		attrs = _stack[_stackbase+attributes];
 	}
-	target = SQClass::create(_get_shared_state(this),base);
+	target = rabbit::Class::create(_get_shared_state(this),base);
 	if(sq_type(_class(target)->_metamethods[MT_INHERITED]) != rabbit::OT_NULL) {
 		int nparams = 2;
 		rabbit::ObjectPtr ret;
@@ -1103,7 +1104,7 @@ exception_trap:
 	assert(0);
 }
 
-bool rabbit::VirtualMachine::createClassInstance(SQClass *theclass, rabbit::ObjectPtr &inst, rabbit::ObjectPtr &constructor)
+bool rabbit::VirtualMachine::createClassInstance(rabbit::Class *theclass, rabbit::ObjectPtr &inst, rabbit::ObjectPtr &constructor)
 {
 	inst = theclass->createInstance();
 	if(!theclass->getConstructor(constructor)) {
@@ -1455,7 +1456,7 @@ bool rabbit::VirtualMachine::newSlotA(const rabbit::ObjectPtr &self,const rabbit
 		raise_error(_SC("object must be a class"));
 		return false;
 	}
-	SQClass *c = _class(self);
+	rabbit::Class *c = _class(self);
 	if(!raw) {
 		rabbit::ObjectPtr &mm = c->_metamethods[MT_NEWMEMBER];
 		if(sq_type(mm) != rabbit::OT_NULL ) {

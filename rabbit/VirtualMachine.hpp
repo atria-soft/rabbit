@@ -67,7 +67,7 @@ namespace rabbit {
 			bool tailcall(SQClosure *closure, int64_t firstparam, int64_t nparams);
 			//starts a RABBIT call in the same "Execution loop"
 			bool startcall(SQClosure *closure, int64_t target, int64_t nargs, int64_t stackbase, bool tailcall);
-			bool createClassInstance(SQClass *theclass, rabbit::ObjectPtr &inst, rabbit::ObjectPtr &constructor);
+			bool createClassInstance(rabbit::Class *theclass, rabbit::ObjectPtr &inst, rabbit::ObjectPtr &constructor);
 			//call a generic closure pure RABBIT or NATIVE
 			bool call(rabbit::ObjectPtr &closure, int64_t nparams, int64_t stackbase, rabbit::ObjectPtr &outres,rabbit::Bool raiseerror);
 			rabbit::Result Suspend();

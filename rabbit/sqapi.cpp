@@ -15,7 +15,8 @@
 #include <rabbit/UserData.hpp>
 #include <rabbit/sqcompiler.hpp>
 #include <rabbit/sqfuncstate.hpp>
-#include <rabbit/sqclass.hpp>
+#include <rabbit/Instance.hpp>
+
 #include <rabbit/MemberHandle.hpp>
 
 static bool sq_aux_gettypedarg(rabbit::VirtualMachine* v,int64_t idx,rabbit::ObjectType type,rabbit::ObjectPtr **o)
@@ -283,14 +284,14 @@ void sq_newarray(rabbit::VirtualMachine* v,int64_t size)
 
 rabbit::Result sq_newclass(rabbit::VirtualMachine* v,rabbit::Bool hasbase)
 {
-	SQClass *baseclass = NULL;
+	rabbit::Class *baseclass = NULL;
 	if(hasbase) {
 		rabbit::ObjectPtr &base = stack_get(v,-1);
 		if(sq_type(base) != rabbit::OT_CLASS)
 			return sq_throwerror(v,_SC("invalid base type"));
 		baseclass = _class(base);
 	}
-	SQClass *newclass = SQClass::create(_get_shared_state(v), baseclass);
+	rabbit::Class *newclass = rabbit::Class::create(_get_shared_state(v), baseclass);
 	if(baseclass) v->pop();
 	v->push(newclass);
 	return SQ_OK;
@@ -820,7 +821,7 @@ rabbit::Result sq_getinstanceup(rabbit::VirtualMachine* v, int64_t idx, rabbit::
 	if(sq_type(o) != rabbit::OT_INSTANCE) return sq_throwerror(v,_SC("the object is not a class instance"));
 	(*p) = _instance(o)->_userpointer;
 	if(typetag != 0) {
-		SQClass *cl = _instance(o)->_class;
+		rabbit::Class *cl = _instance(o)->_class;
 		do{
 			if(cl->_typetag == typetag)
 				return SQ_OK;
@@ -1460,9 +1461,9 @@ rabbit::Result _getmemberbyhandle(rabbit::VirtualMachine* v,rabbit::ObjectPtr &s
 {
 	switch(sq_type(self)) {
 		case rabbit::OT_INSTANCE: {
-				SQInstance *i = _instance(self);
+				rabbit::Instance *i = _instance(self);
 				if(handle->_static) {
-					SQClass *c = i->_class;
+					rabbit::Class *c = i->_class;
 					val = &c->_methods[handle->_index].val;
 				}
 				else {
@@ -1472,7 +1473,7 @@ rabbit::Result _getmemberbyhandle(rabbit::VirtualMachine* v,rabbit::ObjectPtr &s
 			}
 			break;
 		case rabbit::OT_CLASS: {
-				SQClass *c = _class(self);
+				rabbit::Class *c = _class(self);
 				if(handle->_static) {
 					val = &c->_methods[handle->_index].val;
 				}

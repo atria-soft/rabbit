@@ -23,9 +23,9 @@ namespace rabbit {
 		int64_t nInteger;
 		float_t fFloat;
 		struct SQFunctionProto *pFunctionProto;
-		struct SQClass *pClass;
-		struct SQInstance *pInstance;
 		
+		rabbit::Class *pClass;
+		rabbit::Instance *pInstance;
 		rabbit::Delegable *pDelegable;
 		rabbit::UserPointer pUserPointer;
 		rabbit::WeakRef* pWeakRef;

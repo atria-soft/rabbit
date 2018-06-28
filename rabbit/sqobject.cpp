@@ -12,7 +12,7 @@
 #include <rabbit/sqtable.hpp>
 #include <rabbit/UserData.hpp>
 #include <rabbit/sqfuncproto.hpp>
-#include <rabbit/sqclass.hpp>
+
 #include <rabbit/sqclosure.hpp>
 
 SQString *SQString::create(SQSharedState *ss,const rabbit::Char *s,int64_t len)

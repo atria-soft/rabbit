@@ -12,7 +12,7 @@
 #include <rabbit/Array.hpp>
 #include <rabbit/sqfuncproto.hpp>
 #include <rabbit/sqclosure.hpp>
-#include <rabbit/sqclass.hpp>
+
 #include <stdlib.h>
 #include <stdarg.h>
 #include <ctype.h>

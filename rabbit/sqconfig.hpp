@@ -131,8 +131,6 @@ struct SQClosure;
 struct SQGenerator;
 struct SQNativeClosure;
 struct SQFunctionProto;
-struct SQClass;
-struct SQInstance;
 struct SQOuter;
 struct SQSharedState;
 namespace rabbit {
@@ -145,4 +143,6 @@ namespace rabbit {
 	class FunctionInfo;
 	class StackInfos;
 	class MemberHandle;
+	class Instance;
+	class Class;
 }

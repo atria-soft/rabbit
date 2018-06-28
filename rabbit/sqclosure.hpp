@@ -7,10 +7,12 @@
  */
 #pragma once
 
+#include <rabbit/Class.hpp>
+#include <rabbit/sqconfig.hpp>
+
 #define _CALC_CLOSURE_SIZE(func) (sizeof(SQClosure) + (func->_noutervalues*sizeof(rabbit::ObjectPtr)) + (func->_ndefaultparams*sizeof(rabbit::ObjectPtr)))
 
 struct SQFunctionProto;
-struct SQClass;
 struct SQClosure : public rabbit::RefCounted
 {
 private:
@@ -64,7 +66,7 @@ public:
 	static bool load(rabbit::VirtualMachine *v,rabbit::UserPointer up,SQREADFUNC read,rabbit::ObjectPtr &ret);
 	rabbit::WeakRef *_env;
 	rabbit::WeakRef *_root;
-	SQClass *_base;
+	rabbit::Class *_base;
 	SQFunctionProto *_function;
 	rabbit::ObjectPtr *_outervalues;
 	rabbit::ObjectPtr *_defaultparams;
