@@ -38,10 +38,10 @@ namespace rabbit {
 	{
 		public:
 			struct callInfo{
-				SQInstruction *_ip;
+				rabbit::Instruction *_ip;
 				rabbit::ObjectPtr *_literals;
 				rabbit::ObjectPtr _closure;
-				SQGenerator *_generator;
+				rabbit::Generator *_generator;
 				int32_t _etraps;
 				int32_t _prevstkbase;
 				int32_t _prevtop;
@@ -64,10 +64,10 @@ namespace rabbit {
 			bool init(VirtualMachine *friendvm, int64_t stacksize);
 			bool execute(rabbit::ObjectPtr &func, int64_t nargs, int64_t stackbase, rabbit::ObjectPtr &outres, rabbit::Bool raiseerror, ExecutionType et = ET_CALL);
 			//starts a native call return when the NATIVE closure returns
-			bool callNative(SQNativeClosure *nclosure, int64_t nargs, int64_t newbase, rabbit::ObjectPtr &retval, int32_t target, bool &suspend,bool &tailcall);
-			bool tailcall(SQClosure *closure, int64_t firstparam, int64_t nparams);
+			bool callNative(rabbit::NativeClosure *nclosure, int64_t nargs, int64_t newbase, rabbit::ObjectPtr &retval, int32_t target, bool &suspend,bool &tailcall);
+			bool tailcall(rabbit::Closure *closure, int64_t firstparam, int64_t nparams);
 			//starts a RABBIT call in the same "Execution loop"
-			bool startcall(SQClosure *closure, int64_t target, int64_t nargs, int64_t stackbase, bool tailcall);
+			bool startcall(rabbit::Closure *closure, int64_t target, int64_t nargs, int64_t stackbase, bool tailcall);
 			bool createClassInstance(rabbit::Class *theclass, rabbit::ObjectPtr &inst, rabbit::ObjectPtr &constructor);
 			//call a generic closure pure RABBIT or NATIVE
 			bool call(rabbit::ObjectPtr &closure, int64_t nparams, int64_t stackbase, rabbit::ObjectPtr &outres,rabbit::Bool raiseerror);
@@ -110,7 +110,7 @@ namespace rabbit {
 			bool BW_OP(uint64_t op,rabbit::ObjectPtr &trg,const rabbit::ObjectPtr &o1,const rabbit::ObjectPtr &o2);
 			bool NEG_OP(rabbit::ObjectPtr &trg,const rabbit::ObjectPtr &o1);
 			bool CMP_OP(CmpOP op, const rabbit::ObjectPtr &o1,const rabbit::ObjectPtr &o2,rabbit::ObjectPtr &res);
-			bool CLOSURE_OP(rabbit::ObjectPtr &target, SQFunctionProto *func);
+			bool CLOSURE_OP(rabbit::ObjectPtr &target, rabbit::FunctionProto *func);
 			bool CLASS_OP(rabbit::ObjectPtr &target,int64_t base,int64_t attrs);
 			//return true if the loop is finished
 			bool FOREACH_OP(rabbit::ObjectPtr &o1,rabbit::ObjectPtr &o2,rabbit::ObjectPtr &o3,rabbit::ObjectPtr &o4,int64_t arg_2,int exitpos,int &jump);
@@ -152,7 +152,7 @@ namespace rabbit {
 		
 			int64_t _top;
 			int64_t _stackbase;
-			SQOuter* _openouters;
+			rabbit::Outer* _openouters;
 			rabbit::ObjectPtr _roottable;
 			rabbit::ObjectPtr _lasterror;
 			rabbit::ObjectPtr _errorhandler;

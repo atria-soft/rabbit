@@ -1,0 +1,135 @@
+/**
+ * @author Alberto DEMICHELIS
+ * @author Edouard DUPIN
+ * @copyright 2018, Edouard DUPIN, all right reserved
+ * @copyright 2003-2017, Alberto DEMICHELIS, all right reserved
+ * @license MPL-2 (see license file)
+ */
+#include <rabbit/Closure.hpp>
+
+
+
+#define _CHECK_IO(exp)  { if(!exp)return false; }
+bool SafeWrite(rabbit::VirtualMachine* v,SQWRITEFUNC write,rabbit::UserPointer up,rabbit::UserPointer dest,int64_t size)
+{
+	if(write(up,dest,size) != size) {
+		v->raise_error(_SC("io error (write function failure)"));
+		return false;
+	}
+	return true;
+}
+
+bool SafeRead(rabbit::VirtualMachine* v,SQWRITEFUNC read,rabbit::UserPointer up,rabbit::UserPointer dest,int64_t size)
+{
+	if(size && read(up,dest,size) != size) {
+		v->raise_error(_SC("io error, read function failure, the origin stream could be corrupted/trucated"));
+		return false;
+	}
+	return true;
+}
+
+bool WriteTag(rabbit::VirtualMachine* v,SQWRITEFUNC write,rabbit::UserPointer up,uint32_t tag)
+{
+	return SafeWrite(v,write,up,&tag,sizeof(tag));
+}
+
+bool CheckTag(rabbit::VirtualMachine* v,SQWRITEFUNC read,rabbit::UserPointer up,uint32_t tag)
+{
+	uint32_t t;
+	_CHECK_IO(SafeRead(v,read,up,&t,sizeof(t)));
+	if(t != tag){
+		v->raise_error(_SC("invalid or corrupted closure stream"));
+		return false;
+	}
+	return true;
+}
+
+bool WriteObject(rabbit::VirtualMachine* v,rabbit::UserPointer up,SQWRITEFUNC write,rabbit::ObjectPtr &o)
+{
+	uint32_t _type = (uint32_t)sq_type(o);
+	_CHECK_IO(SafeWrite(v,write,up,&_type,sizeof(_type)));
+	switch(sq_type(o)){
+	case rabbit::OT_STRING:
+		_CHECK_IO(SafeWrite(v,write,up,&_string(o)->_len,sizeof(int64_t)));
+		_CHECK_IO(SafeWrite(v,write,up,_stringval(o),sq_rsl(_string(o)->_len)));
+		break;
+	case rabbit::OT_BOOL:
+	case rabbit::OT_INTEGER:
+		_CHECK_IO(SafeWrite(v,write,up,&_integer(o),sizeof(int64_t)));break;
+	case rabbit::OT_FLOAT:
+		_CHECK_IO(SafeWrite(v,write,up,&_float(o),sizeof(float_t)));break;
+	case rabbit::OT_NULL:
+		break;
+	default:
+		v->raise_error(_SC("cannot serialize a %s"),getTypeName(o));
+		return false;
+	}
+	return true;
+}
+
+bool ReadObject(rabbit::VirtualMachine* v,rabbit::UserPointer up,SQREADFUNC read,rabbit::ObjectPtr &o)
+{
+	uint32_t _type;
+	_CHECK_IO(SafeRead(v,read,up,&_type,sizeof(_type)));
+	rabbit::ObjectType t = (rabbit::ObjectType)_type;
+	switch(t){
+	case rabbit::OT_STRING:{
+		int64_t len;
+		_CHECK_IO(SafeRead(v,read,up,&len,sizeof(int64_t)));
+		_CHECK_IO(SafeRead(v,read,up,_get_shared_state(v)->getScratchPad(sq_rsl(len)),sq_rsl(len)));
+		o=rabbit::String::create(_get_shared_state(v),_get_shared_state(v)->getScratchPad(-1),len);
+				   }
+		break;
+	case rabbit::OT_INTEGER:{
+		int64_t i;
+		_CHECK_IO(SafeRead(v,read,up,&i,sizeof(int64_t))); o = i; break;
+					}
+	case rabbit::OT_BOOL:{
+		int64_t i;
+		_CHECK_IO(SafeRead(v,read,up,&i,sizeof(int64_t))); o._type = rabbit::OT_BOOL; o._unVal.nInteger = i; break;
+					}
+	case rabbit::OT_FLOAT:{
+		float_t f;
+		_CHECK_IO(SafeRead(v,read,up,&f,sizeof(float_t))); o = f; break;
+				  }
+	case rabbit::OT_NULL:
+		o.Null();
+		break;
+	default:
+		v->raise_error(_SC("cannot serialize a %s"),IdType2Name(t));
+		return false;
+	}
+	return true;
+}
+
+bool rabbit::Closure::save(rabbit::VirtualMachine *v,rabbit::UserPointer up,SQWRITEFUNC write)
+{
+	_CHECK_IO(WriteTag(v,write,up,SQ_CLOSURESTREAM_HEAD));
+	_CHECK_IO(WriteTag(v,write,up,sizeof(rabbit::Char)));
+	_CHECK_IO(WriteTag(v,write,up,sizeof(int64_t)));
+	_CHECK_IO(WriteTag(v,write,up,sizeof(float_t)));
+	_CHECK_IO(_function->save(v,up,write));
+	_CHECK_IO(WriteTag(v,write,up,SQ_CLOSURESTREAM_TAIL));
+	return true;
+}
+
+bool rabbit::Closure::load(rabbit::VirtualMachine *v,rabbit::UserPointer up,SQREADFUNC read,rabbit::ObjectPtr &ret)
+{
+	_CHECK_IO(CheckTag(v,read,up,SQ_CLOSURESTREAM_HEAD));
+	_CHECK_IO(CheckTag(v,read,up,sizeof(rabbit::Char)));
+	_CHECK_IO(CheckTag(v,read,up,sizeof(int64_t)));
+	_CHECK_IO(CheckTag(v,read,up,sizeof(float_t)));
+	rabbit::ObjectPtr func;
+	_CHECK_IO(rabbit::FunctionProto::load(v,up,read,func));
+	_CHECK_IO(CheckTag(v,read,up,SQ_CLOSURESTREAM_TAIL));
+	ret = rabbit::Closure::create(_get_shared_state(v),_funcproto(func),_table(v->_roottable)->getWeakRef(rabbit::OT_TABLE));
+	//FIXME: load an root for this closure
+	return true;
+}
+
+rabbit::Closure::~Closure()
+{
+	__Objrelease(_root);
+	__Objrelease(_env);
+	__Objrelease(_base);
+}

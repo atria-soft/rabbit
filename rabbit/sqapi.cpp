@@ -138,7 +138,7 @@ rabbit::Result sq_compile(rabbit::VirtualMachine* v,SQLEXREADFUNC read,rabbit::U
 	rabbit::ObjectPtr o;
 #ifndef NO_COMPILER
 	if(compile(v, read, p, sourcename, o, raiseerror?true:false, _get_shared_state(v)->_debuginfo)) {
-		v->push(SQClosure::create(_get_shared_state(v), _funcproto(o), _table(v->_roottable)->getWeakRef(rabbit::OT_TABLE)));
+		v->push(rabbit::Closure::create(_get_shared_state(v), _funcproto(o), _table(v->_roottable)->getWeakRef(rabbit::OT_TABLE)));
 		return SQ_OK;
 	}
 	return SQ_ERROR;
@@ -386,7 +386,7 @@ rabbit::Result sq_arrayinsert(rabbit::VirtualMachine* v,int64_t idx,int64_t dest
 
 void sq_newclosure(rabbit::VirtualMachine* v,SQFUNCTION func,uint64_t nfreevars)
 {
-	SQNativeClosure *nc = SQNativeClosure::create(_get_shared_state(v), func,nfreevars);
+	rabbit::NativeClosure *nc = rabbit::NativeClosure::create(_get_shared_state(v), func,nfreevars);
 	nc->_nparamscheck = 0;
 	for(uint64_t i = 0; i < nfreevars; i++) {
 		nc->_outervalues[i] = v->top();
@@ -399,15 +399,15 @@ rabbit::Result sq_getclosureinfo(rabbit::VirtualMachine* v,int64_t idx,uint64_t 
 {
 	rabbit::Object o = stack_get(v, idx);
 	if(sq_type(o) == rabbit::OT_CLOSURE) {
-		SQClosure *c = _closure(o);
-		SQFunctionProto *proto = c->_function;
+		rabbit::Closure *c = _closure(o);
+		rabbit::FunctionProto *proto = c->_function;
 		*nparams = (uint64_t)proto->_nparameters;
 		*nfreevars = (uint64_t)proto->_noutervalues;
 		return SQ_OK;
 	}
 	else if(sq_type(o) == rabbit::OT_NATIVECLOSURE)
 	{
-		SQNativeClosure *c = _nativeclosure(o);
+		rabbit::NativeClosure *c = _nativeclosure(o);
 		*nparams = (uint64_t)c->_nparamscheck;
 		*nfreevars = c->_noutervalues;
 		return SQ_OK;
@@ -419,7 +419,7 @@ rabbit::Result sq_setnativeclosurename(rabbit::VirtualMachine* v,int64_t idx,con
 {
 	rabbit::Object o = stack_get(v, idx);
 	if(sq_isnativeclosure(o)) {
-		SQNativeClosure *nc = _nativeclosure(o);
+		rabbit::NativeClosure *nc = _nativeclosure(o);
 		nc->_name = rabbit::String::create(_get_shared_state(v),name);
 		return SQ_OK;
 	}
@@ -431,7 +431,7 @@ rabbit::Result sq_setparamscheck(rabbit::VirtualMachine* v,int64_t nparamscheck,
 	rabbit::Object o = stack_get(v, -1);
 	if(!sq_isnativeclosure(o))
 		return sq_throwerror(v, _SC("native closure expected"));
-	SQNativeClosure *nc = _nativeclosure(o);
+	rabbit::NativeClosure *nc = _nativeclosure(o);
 	nc->_nparamscheck = nparamscheck;
 	if(typemask) {
 		etk::Vector<int64_t> res;
@@ -463,7 +463,7 @@ rabbit::Result sq_bindenv(rabbit::VirtualMachine* v,int64_t idx)
 	rabbit::WeakRef *w = _refcounted(env)->getWeakRef(sq_type(env));
 	rabbit::ObjectPtr ret;
 	if(sq_isclosure(o)) {
-		SQClosure *c = _closure(o)->clone();
+		rabbit::Closure *c = _closure(o)->clone();
 		__Objrelease(c->_env);
 		c->_env = w;
 		__ObjaddRef(c->_env);
@@ -474,7 +474,7 @@ rabbit::Result sq_bindenv(rabbit::VirtualMachine* v,int64_t idx)
 		ret = c;
 	}
 	else { //then must be a native closure
-		SQNativeClosure *c = _nativeclosure(o)->clone();
+		rabbit::NativeClosure *c = _nativeclosure(o)->clone();
 		__Objrelease(c->_env);
 		c->_env = w;
 		__ObjaddRef(c->_env);
@@ -1109,8 +1109,8 @@ const rabbit::Char *sq_getlocal(rabbit::VirtualMachine* v,uint64_t level,uint64_
 		rabbit::VirtualMachine::callInfo &ci=v->_callsstack[lvl];
 		if(sq_type(ci._closure)!=rabbit::OT_CLOSURE)
 			return NULL;
-		SQClosure *c=_closure(ci._closure);
-		SQFunctionProto *func=c->_function;
+		rabbit::Closure *c=_closure(ci._closure);
+		rabbit::FunctionProto *func=c->_function;
 		if(func->_noutervalues > (int64_t)idx) {
 			v->push(*_outer(c->_outervalues[idx])->_valptr);
 			return _stringval(func->_outervalues[idx]._name);
@@ -1208,7 +1208,7 @@ rabbit::Result sq_tailcall(rabbit::VirtualMachine* v, int64_t nparams)
 	if (sq_type(res) != rabbit::OT_CLOSURE) {
 		return sq_throwerror(v, _SC("only closure can be tail called"));
 	}
-	SQClosure *clo = _closure(res);
+	rabbit::Closure *clo = _closure(res);
 	if (clo->_function->_bgenerator)
 	{
 		return sq_throwerror(v, _SC("generators cannot be tail called"));
@@ -1312,7 +1312,7 @@ rabbit::Result sq_readclosure(rabbit::VirtualMachine* v,SQREADFUNC r,rabbit::Use
 		return sq_throwerror(v,_SC("io error"));
 	if(tag != SQ_BYTECODE_STREAM_TAG)
 		return sq_throwerror(v,_SC("invalid stream"));
-	if(!SQClosure::load(v,up,r,closure))
+	if(!rabbit::Closure::load(v,up,r,closure))
 		return SQ_ERROR;
 	v->push(closure);
 	return SQ_OK;
@@ -1351,17 +1351,17 @@ const rabbit::Char *sq_getfreevariable(rabbit::VirtualMachine* v,int64_t idx,uin
 	switch(sq_type(self))
 	{
 	case rabbit::OT_CLOSURE:{
-		SQClosure *clo = _closure(self);
-		SQFunctionProto *fp = clo->_function;
+		rabbit::Closure *clo = _closure(self);
+		rabbit::FunctionProto *fp = clo->_function;
 		if(((uint64_t)fp->_noutervalues) > nval) {
 			v->push(*(_outer(clo->_outervalues[nval])->_valptr));
-			SQOuterVar &ov = fp->_outervalues[nval];
+			rabbit::OuterVar &ov = fp->_outervalues[nval];
 			name = _stringval(ov._name);
 		}
 					}
 		break;
 	case rabbit::OT_NATIVECLOSURE:{
-		SQNativeClosure *clo = _nativeclosure(self);
+		rabbit::NativeClosure *clo = _nativeclosure(self);
 		if(clo->_noutervalues > nval) {
 			v->push(clo->_outervalues[nval]);
 			name = _SC("@NATIVE");
@@ -1379,7 +1379,7 @@ rabbit::Result sq_setfreevariable(rabbit::VirtualMachine* v,int64_t idx,uint64_t
 	switch(sq_type(self))
 	{
 	case rabbit::OT_CLOSURE:{
-		SQFunctionProto *fp = _closure(self)->_function;
+		rabbit::FunctionProto *fp = _closure(self)->_function;
 		if(((uint64_t)fp->_noutervalues) > nval){
 			*(_outer(_closure(self)->_outervalues[nval])->_valptr) = stack_get(v,-1);
 		}

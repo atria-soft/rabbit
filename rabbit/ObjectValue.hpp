@@ -13,13 +13,13 @@
 namespace rabbit {
 	
 	union ObjectValue {
-		struct SQClosure *pClosure;
-		struct SQOuter *pOuter;
-		struct SQGenerator *pGenerator;
-		struct SQNativeClosure *pNativeClosure;
+		struct rabbit::Closure *pClosure;
+		struct rabbit::Outer *pOuter;
+		struct rabbit::Generator *pGenerator;
+		struct rabbit::NativeClosure *pNativeClosure;
 		int64_t nInteger;
 		float_t fFloat;
-		struct SQFunctionProto *pFunctionProto;
+		struct rabbit::FunctionProto *pFunctionProto;
 		
 		rabbit::Table* pTable;
 		rabbit::String* pString;

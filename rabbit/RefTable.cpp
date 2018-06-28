@@ -144,13 +144,13 @@ void rabbit::RefTable::allocNodes(uint64_t size)
 	for(n = 0; n < size - 1; n++) {
 		bucks[n] = NULL;
 		temp->refs = 0;
-		new (&temp->obj) rabbit::ObjectPtr;
+		new ((char*)&temp->obj) ObjectPtr;
 		temp->next = temp+1;
 		temp++;
 	}
 	bucks[n] = NULL;
 	temp->refs = 0;
-	new (&temp->obj) rabbit::ObjectPtr;
+	new ((char*)&temp->obj) ObjectPtr;
 	temp->next = NULL;
 	_freelist = nodes;
 	_nodes = nodes;

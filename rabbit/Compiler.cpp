@@ -5,6 +5,8 @@
  * @copyright 2003-2017, Alberto DEMICHELIS, all right reserved
  * @license MPL-2 (see license file)
  */
+#include <rabbit/Compiler.hpp>
+
 #include <rabbit/sqpcheader.hpp>
 #ifndef NO_COMPILER
 #include <stdarg.h>
@@ -73,10 +75,10 @@ struct SQScope {
 					if(__nbreaks__>0)ResolveBreaks(_fs,__nbreaks__); \
 					_fs->_breaktargets.popBack();_fs->_continuetargets.popBack();}
 
-class SQcompiler
+class rabbit::Compiler
 {
 public:
-	SQcompiler(rabbit::VirtualMachine *v, SQLEXREADFUNC rg, rabbit::UserPointer up, const rabbit::Char* sourcename, bool raiseerror, bool lineinfo)
+	rabbit::Compiler(rabbit::VirtualMachine *v, SQLEXREADFUNC rg, rabbit::UserPointer up, const rabbit::Char* sourcename, bool raiseerror, bool lineinfo)
 	{
 		_vm=v;
 		_lex.init(_get_shared_state(v), rg, up,Throwerror,this);
@@ -87,7 +89,7 @@ public:
 		_compilererror[0] = _SC('\0');
 	}
 	static void Throwerror(void *ud, const rabbit::Char *s) {
-		SQcompiler *c = (SQcompiler *)ud;
+		rabbit::Compiler *c = (rabbit::Compiler *)ud;
 		c->error(s);
 	}
 	void error(const rabbit::Char *s, ...)
@@ -170,7 +172,7 @@ public:
 		_debugline = 1;
 		_debugop = 0;
 
-		SQFuncState funcstate(_get_shared_state(_vm), NULL,Throwerror,this);
+		FuncState funcstate(_get_shared_state(_vm), NULL,Throwerror,this);
 		funcstate._name = rabbit::String::create(_get_shared_state(_vm), _SC("main"));
 		_fs = &funcstate;
 		_fs->addParameter(_fs->createString(_SC("this")));
@@ -481,7 +483,7 @@ public:
 			_fs->addInstruction(_OP_OR, trg, 0, first_exp, 0);
 			int64_t jpos = _fs->getCurrentPos();
 			if(trg != first_exp) _fs->addInstruction(_OP_MOVE, trg, first_exp);
-			Lex(); INVOKE_EXP(&SQcompiler::LogicalOrExp);
+			Lex(); INVOKE_EXP(&rabbit::Compiler::LogicalOrExp);
 			_fs->snoozeOpt();
 			int64_t second_exp = _fs->popTarget();
 			if(trg != second_exp) _fs->addInstruction(_OP_MOVE, trg, second_exp);
@@ -501,7 +503,7 @@ public:
 			_fs->addInstruction(_OP_AND, trg, 0, first_exp, 0);
 			int64_t jpos = _fs->getCurrentPos();
 			if(trg != first_exp) _fs->addInstruction(_OP_MOVE, trg, first_exp);
-			Lex(); INVOKE_EXP(&SQcompiler::LogicalAndExp);
+			Lex(); INVOKE_EXP(&rabbit::Compiler::LogicalAndExp);
 			_fs->snoozeOpt();
 			int64_t second_exp = _fs->popTarget();
 			if(trg != second_exp) _fs->addInstruction(_OP_MOVE, trg, second_exp);
@@ -519,30 +521,30 @@ public:
 	{
 		BitwiseXorExp();
 		for(;;) if(_token == _SC('|'))
-		{BIN_EXP(_OP_BITW, &SQcompiler::BitwiseXorExp,BW_OR);
+		{BIN_EXP(_OP_BITW, &rabbit::Compiler::BitwiseXorExp,BW_OR);
 		}else return;
 	}
 	void BitwiseXorExp()
 	{
 		BitwiseAndExp();
 		for(;;) if(_token == _SC('^'))
-		{BIN_EXP(_OP_BITW, &SQcompiler::BitwiseAndExp,BW_XOR);
+		{BIN_EXP(_OP_BITW, &rabbit::Compiler::BitwiseAndExp,BW_XOR);
 		}else return;
 	}
 	void BitwiseAndExp()
 	{
 		EqExp();
 		for(;;) if(_token == _SC('&'))
-		{BIN_EXP(_OP_BITW, &SQcompiler::EqExp,BW_AND);
+		{BIN_EXP(_OP_BITW, &rabbit::Compiler::EqExp,BW_AND);
 		}else return;
 	}
 	void EqExp()
 	{
 		CompExp();
 		for(;;) switch(_token) {
-		case TK_EQ: BIN_EXP(_OP_EQ, &SQcompiler::CompExp); break;
-		case TK_NE: BIN_EXP(_OP_NE, &SQcompiler::CompExp); break;
-		case TK_3WAYSCMP: BIN_EXP(_OP_CMP, &SQcompiler::CompExp,CMP_3W); break;
+		case TK_EQ: BIN_EXP(_OP_EQ, &rabbit::Compiler::CompExp); break;
+		case TK_NE: BIN_EXP(_OP_NE, &rabbit::Compiler::CompExp); break;
+		case TK_3WAYSCMP: BIN_EXP(_OP_CMP, &rabbit::Compiler::CompExp,CMP_3W); break;
 		default: return;
 		}
 	}
@@ -550,12 +552,12 @@ public:
 	{
 		ShiftExp();
 		for(;;) switch(_token) {
-		case _SC('>'): BIN_EXP(_OP_CMP, &SQcompiler::ShiftExp,CMP_G); break;
-		case _SC('<'): BIN_EXP(_OP_CMP, &SQcompiler::ShiftExp,CMP_L); break;
-		case TK_GE: BIN_EXP(_OP_CMP, &SQcompiler::ShiftExp,CMP_GE); break;
-		case TK_LE: BIN_EXP(_OP_CMP, &SQcompiler::ShiftExp,CMP_LE); break;
-		case TK_IN: BIN_EXP(_OP_EXISTS, &SQcompiler::ShiftExp); break;
-		case TK_INSTANCEOF: BIN_EXP(_OP_INSTANCEOF, &SQcompiler::ShiftExp); break;
+		case _SC('>'): BIN_EXP(_OP_CMP, &rabbit::Compiler::ShiftExp,CMP_G); break;
+		case _SC('<'): BIN_EXP(_OP_CMP, &rabbit::Compiler::ShiftExp,CMP_L); break;
+		case TK_GE: BIN_EXP(_OP_CMP, &rabbit::Compiler::ShiftExp,CMP_GE); break;
+		case TK_LE: BIN_EXP(_OP_CMP, &rabbit::Compiler::ShiftExp,CMP_LE); break;
+		case TK_IN: BIN_EXP(_OP_EXISTS, &rabbit::Compiler::ShiftExp); break;
+		case TK_INSTANCEOF: BIN_EXP(_OP_INSTANCEOF, &rabbit::Compiler::ShiftExp); break;
 		default: return;
 		}
 	}
@@ -563,9 +565,9 @@ public:
 	{
 		PlusExp();
 		for(;;) switch(_token) {
-		case TK_USHIFTR: BIN_EXP(_OP_BITW, &SQcompiler::PlusExp,BW_USHIFTR); break;
-		case TK_SHIFTL: BIN_EXP(_OP_BITW, &SQcompiler::PlusExp,BW_SHIFTL); break;
-		case TK_SHIFTR: BIN_EXP(_OP_BITW, &SQcompiler::PlusExp,BW_SHIFTR); break;
+		case TK_USHIFTR: BIN_EXP(_OP_BITW, &rabbit::Compiler::PlusExp,BW_USHIFTR); break;
+		case TK_SHIFTL: BIN_EXP(_OP_BITW, &rabbit::Compiler::PlusExp,BW_SHIFTL); break;
+		case TK_SHIFTR: BIN_EXP(_OP_BITW, &rabbit::Compiler::PlusExp,BW_SHIFTR); break;
 		default: return;
 		}
 	}
@@ -600,7 +602,7 @@ public:
 		MultExp();
 		for(;;) switch(_token) {
 		case _SC('+'): case _SC('-'):
-			BIN_EXP(ChooseArithOpByToken(_token), &SQcompiler::MultExp); break;
+			BIN_EXP(ChooseArithOpByToken(_token), &rabbit::Compiler::MultExp); break;
 		default: return;
 		}
 	}
@@ -610,7 +612,7 @@ public:
 		PrefixedExpr();
 		for(;;) switch(_token) {
 		case _SC('*'): case _SC('/'): case _SC('%'):
-			BIN_EXP(ChooseArithOpByToken(_token), &SQcompiler::PrefixedExpr); break;
+			BIN_EXP(ChooseArithOpByToken(_token), &rabbit::Compiler::PrefixedExpr); break;
 		default: return;
 		}
 	}
@@ -1160,7 +1162,7 @@ public:
 		_fs->snoozeOpt();
 		int64_t expend = _fs->getCurrentPos();
 		int64_t expsize = (expend - expstart) + 1;
-		SQInstructionVec exp;
+		rabbit::InstructionVec exp;
 		if(expsize > 0) {
 			for(int64_t i = 0; i < expsize; i++)
 				exp.pushBack(_fs->getInstruction(expstart + i));
@@ -1490,7 +1492,7 @@ public:
 	}
 	void createFunction(rabbit::Object &name,bool lambda = false)
 	{
-		SQFuncState *funcstate = _fs->pushChildState(_get_shared_state(_vm));
+		FuncState *funcstate = _fs->pushChildState(_get_shared_state(_vm));
 		funcstate->_name = name;
 		rabbit::Object paramname;
 		funcstate->addParameter(_fs->createString(_SC("this")));
@@ -1526,7 +1528,7 @@ public:
 			_fs->popTarget();
 		}
 
-		SQFuncState *currchunk = _fs;
+		FuncState *currchunk = _fs;
 		_fs = funcstate;
 		if(lambda) {
 			Expression();
@@ -1538,7 +1540,7 @@ public:
 		funcstate->addInstruction(_OP_RETURN, -1);
 		funcstate->setStacksize(0);
 
-		SQFunctionProto *func = funcstate->buildProto();
+		rabbit::FunctionProto *func = funcstate->buildProto();
 #ifdef _DEBUG_DUMP
 		funcstate->dump(func);
 #endif
@@ -1546,7 +1548,7 @@ public:
 		_fs->_functions.pushBack(func);
 		_fs->popChildState();
 	}
-	void ResolveBreaks(SQFuncState *funcstate, int64_t ntoresolve)
+	void ResolveBreaks(FuncState *funcstate, int64_t ntoresolve)
 	{
 		while(ntoresolve > 0) {
 			int64_t pos = funcstate->_unresolvedbreaks.back();
@@ -1556,7 +1558,7 @@ public:
 			ntoresolve--;
 		}
 	}
-	void ResolveContinues(SQFuncState *funcstate, int64_t ntoresolve, int64_t targetpos)
+	void ResolveContinues(FuncState *funcstate, int64_t ntoresolve, int64_t targetpos)
 	{
 		while(ntoresolve > 0) {
 			int64_t pos = funcstate->_unresolvedcontinues.back();
@@ -1568,9 +1570,9 @@ public:
 	}
 private:
 	int64_t _token;
-	SQFuncState *_fs;
+	FuncState *_fs;
 	rabbit::ObjectPtr _sourcename;
-	SQLexer _lex;
+	rabbit::Lexer _lex;
 	bool _lineinfo;
 	bool _raiseerror;
 	int64_t _debugline;
@@ -1584,7 +1586,7 @@ private:
 
 bool compile(rabbit::VirtualMachine *vm,SQLEXREADFUNC rg, rabbit::UserPointer up, const rabbit::Char *sourcename, rabbit::ObjectPtr &out, bool raiseerror, bool lineinfo)
 {
-	SQcompiler p(vm, rg, up, sourcename, raiseerror, lineinfo);
+	rabbit::Compiler p(vm, rg, up, sourcename, raiseerror, lineinfo);
 	return p.compile(out);
 }
 

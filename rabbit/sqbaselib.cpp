@@ -972,7 +972,7 @@ static int64_t closure_getinfos(rabbit::VirtualMachine* v) {
 	rabbit::Object o = stack_get(v,1);
 	rabbit::Table *res = rabbit::Table::create(_get_shared_state(v),4);
 	if(sq_type(o) == rabbit::OT_CLOSURE) {
-		SQFunctionProto *f = _closure(o)->_function;
+		rabbit::FunctionProto *f = _closure(o)->_function;
 		int64_t nparams = f->_nparameters + (f->_varparams?1:0);
 		rabbit::ObjectPtr params = rabbit::Array::create(_get_shared_state(v),nparams);
 	rabbit::ObjectPtr defparams = rabbit::Array::create(_get_shared_state(v),f->_ndefaultparams);
@@ -993,7 +993,7 @@ static int64_t closure_getinfos(rabbit::VirtualMachine* v) {
 	res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("defparams"),-1),defparams);
 	}
 	else { //rabbit::OT_NATIVECLOSURE
-		SQNativeClosure *nc = _nativeclosure(o);
+		rabbit::NativeClosure *nc = _nativeclosure(o);
 		res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("native"),-1),true);
 		res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("name"),-1),nc->_name);
 		res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("paramscheck"),-1),nc->_nparamscheck);
@@ -1032,9 +1032,9 @@ static int64_t generator_getstatus(rabbit::VirtualMachine* v)
 {
 	rabbit::Object &o=stack_get(v,1);
 	switch(_generator(o)->_state){
-		case SQGenerator::eSuspended:v->push(rabbit::String::create(_get_shared_state(v),_SC("suspended")));break;
-		case SQGenerator::eRunning:v->push(rabbit::String::create(_get_shared_state(v),_SC("running")));break;
-		case SQGenerator::eDead:v->push(rabbit::String::create(_get_shared_state(v),_SC("dead")));break;
+		case rabbit::Generator::eSuspended:v->push(rabbit::String::create(_get_shared_state(v),_SC("suspended")));break;
+		case rabbit::Generator::eRunning:v->push(rabbit::String::create(_get_shared_state(v),_SC("running")));break;
+		case rabbit::Generator::eDead:v->push(rabbit::String::create(_get_shared_state(v),_SC("dead")));break;
 	}
 	return 1;
 }

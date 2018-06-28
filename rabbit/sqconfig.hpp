@@ -124,11 +124,21 @@ namespace rabbit {
 #define SQTrue  (1)
 #define SQFalse (0)
 
-struct SQClosure;
-struct SQGenerator;
-struct SQNativeClosure;
-struct SQFunctionProto;
-struct SQOuter;
+
+#ifdef _SQ64
+#define UINT_MINUS_ONE (0xFFFFFFFFFFFFFFFF)
+#else
+#define UINT_MINUS_ONE (0xFFFFFFFF)
+#endif
+
+
+
+
+struct rabbit::Closure;
+struct rabbit::Generator;
+struct rabbit::NativeClosure;
+struct rabbit::FunctionProto;
+struct rabbit::Outer;
 namespace rabbit {
 	class UserData;
 	class Array;

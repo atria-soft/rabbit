@@ -5,10 +5,7 @@
  * @copyright 2003-2017, Alberto DEMICHELIS, all right reserved
  * @license MPL-2 (see license file)
  */
-
-#include <rabbit/sqpcheader.hpp>
-#include <ctype.h>
-#include <stdlib.h>
+#include <rabbit/Lexer.hpp>
 
 
 #include <rabbit/sqcompiler.hpp>
@@ -23,13 +20,13 @@
 #define TERMINATE_BUFFER() {_longstr.pushBack(_SC('\0'));}
 #define ADD_KEYWORD(key,id) _keywords->newSlot( rabbit::String::create(ss, _SC(#key)) ,int64_t(id))
 
-SQLexer::SQLexer(){}
-SQLexer::~SQLexer()
+rabbit::Lexer::Lexer(){}
+rabbit::Lexer::~Lexer()
 {
 	_keywords->release();
 }
 
-void SQLexer::init(rabbit::SharedState *ss, SQLEXREADFUNC rg, rabbit::UserPointer up,compilererrorFunc efunc,void *ed)
+void rabbit::Lexer::init(rabbit::SharedState *ss, SQLEXREADFUNC rg, rabbit::UserPointer up,compilererrorFunc efunc,void *ed)
 {
 	_errfunc = efunc;
 	_errtarget = ed;
@@ -84,12 +81,12 @@ void SQLexer::init(rabbit::SharedState *ss, SQLEXREADFUNC rg, rabbit::UserPointe
 	next();
 }
 
-void SQLexer::error(const rabbit::Char *err)
+void rabbit::Lexer::error(const rabbit::Char *err)
 {
 	_errfunc(_errtarget,err);
 }
 
-void SQLexer::next()
+void rabbit::Lexer::next()
 {
 	int64_t t = _readf(_up);
 	if(t > MAX_CHAR) error(_SC("Invalid character"));
@@ -101,7 +98,7 @@ void SQLexer::next()
 	_reached_eof = SQTrue;
 }
 
-const rabbit::Char *SQLexer::tok2Str(int64_t tok)
+const rabbit::Char *rabbit::Lexer::tok2Str(int64_t tok)
 {
 	rabbit::ObjectPtr itr, key, val;
 	int64_t nitr;
@@ -113,7 +110,7 @@ const rabbit::Char *SQLexer::tok2Str(int64_t tok)
 	return NULL;
 }
 
-void SQLexer::lexBlockComment()
+void rabbit::Lexer::lexBlockComment()
 {
 	bool done = false;
 	while(!done) {
@@ -125,12 +122,12 @@ void SQLexer::lexBlockComment()
 		}
 	}
 }
-void SQLexer::lexLineComment()
+void rabbit::Lexer::lexLineComment()
 {
 	do { NEXT(); } while (CUR_CHAR != _SC('\n') && (!IS_EOB()));
 }
 
-int64_t SQLexer::Lex()
+int64_t rabbit::Lexer::Lex()
 {
 	_lasttokenline = _currentline;
 	while(CUR_CHAR != RABBIT_EOB) {
@@ -285,7 +282,7 @@ int64_t SQLexer::Lex()
 	return 0;
 }
 
-int64_t SQLexer::getIDType(const rabbit::Char *s,int64_t len)
+int64_t rabbit::Lexer::getIDType(const rabbit::Char *s,int64_t len)
 {
 	rabbit::ObjectPtr t;
 	if(_keywords->getStr(s,len, t)) {
@@ -296,7 +293,7 @@ int64_t SQLexer::getIDType(const rabbit::Char *s,int64_t len)
 
 #ifdef SQUNICODE
 #if WCHAR_SIZE == 2
-int64_t SQLexer::addUTF16(uint64_t ch)
+int64_t rabbit::Lexer::addUTF16(uint64_t ch)
 {
 	if (ch >= 0x10000)
 	{
@@ -312,7 +309,7 @@ int64_t SQLexer::addUTF16(uint64_t ch)
 }
 #endif
 #else
-int64_t SQLexer::addUTF8(uint64_t ch)
+int64_t rabbit::Lexer::addUTF8(uint64_t ch)
 {
 	if (ch < 0x80) {
 		APPEND_CHAR((char)ch);
@@ -340,7 +337,7 @@ int64_t SQLexer::addUTF8(uint64_t ch)
 }
 #endif
 
-int64_t SQLexer::processStringHexEscape(rabbit::Char *dest, int64_t maxdigits)
+int64_t rabbit::Lexer::processStringHexEscape(rabbit::Char *dest, int64_t maxdigits)
 {
 	NEXT();
 	if (!isxdigit(CUR_CHAR)) error(_SC("hexadecimal number expected"));
@@ -354,7 +351,7 @@ int64_t SQLexer::processStringHexEscape(rabbit::Char *dest, int64_t maxdigits)
 	return n;
 }
 
-int64_t SQLexer::readString(int64_t ndelim,bool verbatim)
+int64_t rabbit::Lexer::readString(int64_t ndelim,bool verbatim)
 {
 	INIT_TEMP_STRING();
 	NEXT();
@@ -482,7 +479,7 @@ int64_t isexponent(int64_t c) { return c == 'e' || c=='E'; }
 
 
 #define MAX_HEX_DIGITS (sizeof(int64_t)*2)
-int64_t SQLexer::readNumber()
+int64_t rabbit::Lexer::readNumber()
 {
 #define TINT 1
 #define TFLOAT 2
@@ -551,7 +548,7 @@ int64_t SQLexer::readNumber()
 	return 0;
 }
 
-int64_t SQLexer::readId()
+int64_t rabbit::Lexer::readId()
 {
 	int64_t res;
 	INIT_TEMP_STRING();

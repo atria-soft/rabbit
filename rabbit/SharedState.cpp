@@ -5,18 +5,17 @@
  * @copyright 2003-2017, Alberto DEMICHELIS, all right reserved
  * @license MPL-2 (see license file)
  */
-#pragma once
-
 #include <rabbit/SharedState.hpp>
-
-
+#include <rabbit/Table.hpp>
+#include <rabbit/String.hpp>
+#include <rabbit/RegFunction.hpp>
 
 static rabbit::Table *createDefaultDelegate(rabbit::SharedState *ss,const rabbit::RegFunction *funcz)
 {
 	int64_t i=0;
 	rabbit::Table *t=rabbit::Table::create(ss,0);
 	while(funcz[i].name!=0){
-		SQNativeClosure *nc = SQNativeClosure::create(ss,funcz[i].f,0);
+		rabbit::NativeClosure *nc = rabbit::NativeClosure::create(ss,funcz[i].f,0);
 		nc->_nparamscheck = funcz[i].nparamscheck;
 		nc->_name = rabbit::String::create(ss,funcz[i].name);
 		if(funcz[i].typemask && !compileTypemask(nc->_typecheck,funcz[i].typemask))

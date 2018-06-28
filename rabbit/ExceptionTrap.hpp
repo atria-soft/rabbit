@@ -10,7 +10,7 @@
 #include <etk/types.hpp>
 #include <rabbit/sqconfig.hpp>
 
-struct SQInstruction;
+struct rabbit::Instruction;
 namespace rabbit {
 	class ExceptionTrap {
 		public:
@@ -19,7 +19,7 @@ namespace rabbit {
 			}
 			ExceptionTrap(int64_t ss,
 			                int64_t stackbase,
-			                SQInstruction *ip,
+			                rabbit::Instruction *ip,
 			                int64_t ex_target) {
 				_stacksize = ss;
 				_stackbase = stackbase;
@@ -32,7 +32,7 @@ namespace rabbit {
 		
 			int64_t _stackbase;
 			int64_t _stacksize;
-			SQInstruction *_ip;
+			rabbit::Instruction *_ip;
 			int64_t _extarget;
 	};
 }

@@ -21,5 +21,28 @@ void sq_vm_free(void *p,uint64_t size);
 #define sq_aligning(v) (((size_t)(v) + (SQ_ALIGNMENT-1)) & (~(SQ_ALIGNMENT-1)))
 
 
-#include <etk/Vector.hpp>
+
+#define _CONSTRUCT_VECTOR(type, size, ptr) { \
+	for(int64_t n = 0; n < ((int64_t)size); n++) { \
+			new (&ptr[n]) type(); \
+		} \
+}
+
+#define _DESTRUCT_VECTOR(type, size, ptr) { \
+	for(int64_t nl = 0; nl < ((int64_t)size); nl++) { \
+			ptr[nl].~type(); \
+	} \
+}
+
+#define _COPY_VECTOR(dest, src, size) { \
+	for(int64_t _n_ = 0; _n_ < ((int64_t)size); _n_++) { \
+		dest[_n_] = src[_n_]; \
+	} \
+}
+
+#define _NULL_SQOBJECT_VECTOR(vec, size) { \
+	for(int64_t _n_ = 0; _n_ < ((int64_t)size); _n_++) { \
+		vec[_n_].Null(); \
+	} \
+}
 

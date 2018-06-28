@@ -376,9 +376,9 @@ bool rabbit::VirtualMachine::init(rabbit::VirtualMachine *friendvm, int64_t stac
 }
 
 
-bool rabbit::VirtualMachine::startcall(SQClosure *closure,int64_t target,int64_t args,int64_t stackbase,bool tailcall)
+bool rabbit::VirtualMachine::startcall(rabbit::Closure *closure,int64_t target,int64_t args,int64_t stackbase,bool tailcall)
 {
-	SQFunctionProto *func = closure->_function;
+	rabbit::FunctionProto *func = closure->_function;
 
 	int64_t paramssize = func->_nparameters;
 	const int64_t newtop = stackbase + func->_stacksize;
@@ -434,8 +434,8 @@ bool rabbit::VirtualMachine::startcall(SQClosure *closure,int64_t target,int64_t
 	}
 
 	if (closure->_function->_bgenerator) {
-		SQFunctionProto *f = closure->_function;
-		SQGenerator *gen = SQGenerator::create(_get_shared_state(this), closure);
+		rabbit::FunctionProto *f = closure->_function;
+		rabbit::Generator *gen = rabbit::Generator::create(_get_shared_state(this), closure);
 		if(!gen->yield(this,f->_stacksize))
 			return false;
 		rabbit::ObjectPtr temp;
@@ -562,8 +562,8 @@ bool rabbit::VirtualMachine::FOREACH_OP(rabbit::ObjectPtr &o1,rabbit::ObjectPtr 
 		}
 		break;
 	case rabbit::OT_GENERATOR:
-		if(_generator(o1)->_state == SQGenerator::eDead) _FINISH(exitpos);
-		if(_generator(o1)->_state == SQGenerator::eSuspended) {
+		if(_generator(o1)->_state == rabbit::Generator::eDead) _FINISH(exitpos);
+		if(_generator(o1)->_state == rabbit::Generator::eSuspended) {
 			int64_t idx = 0;
 			if(sq_type(o4) == rabbit::OT_INTEGER) {
 				idx = _integer(o4) + 1;
@@ -585,13 +585,13 @@ bool rabbit::VirtualMachine::FOREACH_OP(rabbit::ObjectPtr &o1,rabbit::ObjectPtr 
 
 #define _GUARD(exp) { if(!exp) { SQ_THROW();} }
 
-bool rabbit::VirtualMachine::CLOSURE_OP(rabbit::ObjectPtr &target, SQFunctionProto *func)
+bool rabbit::VirtualMachine::CLOSURE_OP(rabbit::ObjectPtr &target, rabbit::FunctionProto *func)
 {
 	int64_t nouters;
-	SQClosure *closure = SQClosure::create(_get_shared_state(this), func,_table(_roottable)->getWeakRef(rabbit::OT_TABLE));
+	rabbit::Closure *closure = rabbit::Closure::create(_get_shared_state(this), func,_table(_roottable)->getWeakRef(rabbit::OT_TABLE));
 	if((nouters = func->_noutervalues)) {
 		for(int64_t i = 0; i<nouters; i++) {
-			SQOuterVar &v = func->_outervalues[i];
+			rabbit::OuterVar &v = func->_outervalues[i];
 			switch(v._type){
 			case otLOCAL:
 				findOuter(closure->_outervalues[i], &STK(_integer(v._src)));
@@ -671,7 +671,7 @@ bool rabbit::VirtualMachine::IsFalse(rabbit::ObjectPtr &o)
 	}
 	return false;
 }
-extern SQInstructionDesc g_InstrDesc[];
+extern rabbit::InstructionDesc g_InstrDesc[];
 bool rabbit::VirtualMachine::execute(rabbit::ObjectPtr &closure, int64_t nargs, int64_t stackbase,rabbit::ObjectPtr &outres, rabbit::Bool raiseerror,ExecutionType et)
 {
 	if ((_nnativecalls + 1) > MAX_NATIVE_CALLS) { raise_error(_SC("Native stack overflow")); return false; }
@@ -710,7 +710,7 @@ exception_restore:
 	{
 		for(;;)
 		{
-			const SQInstruction &_i_ = *ci->_ip++;
+			const rabbit::Instruction &_i_ = *ci->_ip++;
 			//dumpstack(_stackbase);
 			//scprintf("\n[%d] %s %d %d %d %d\n",ci->_ip-_closure(ci->_closure)->_function->_instructions,g_InstrDesc[_i_.op].name,arg0,arg1,arg2,arg3);
 			switch(_i_.op)
@@ -885,14 +885,14 @@ exception_restore:
 				continue;
 			case _OP_JZ: if(IsFalse(STK(arg0))) ci->_ip+=(sarg1); continue;
 			case _OP_GETOUTER: {
-				SQClosure *cur_cls = _closure(ci->_closure);
-				SQOuter *otr = _outer(cur_cls->_outervalues[arg1]);
+				rabbit::Closure *cur_cls = _closure(ci->_closure);
+				rabbit::Outer *otr = _outer(cur_cls->_outervalues[arg1]);
 				TARGET = *(otr->_valptr);
 				}
 			continue;
 			case _OP_SETOUTER: {
-				SQClosure *cur_cls = _closure(ci->_closure);
-				SQOuter   *otr = _outer(cur_cls->_outervalues[arg1]);
+				rabbit::Closure *cur_cls = _closure(ci->_closure);
+				rabbit::Outer   *otr = _outer(cur_cls->_outervalues[arg1]);
 				*(otr->_valptr) = STK(arg2);
 				if(arg0 != 0xFF) {
 					TARGET = STK(arg2);
@@ -994,8 +994,8 @@ exception_restore:
 				raise_error(_SC("attempt to perform a bitwise op on a %s"), getTypeName(STK(arg1)));
 				SQ_THROW();
 			case _OP_CLOSURE: {
-				SQClosure *c = ci->_closure._unVal.pClosure;
-				SQFunctionProto *fp = c->_function;
+				rabbit::Closure *c = ci->_closure._unVal.pClosure;
+				rabbit::FunctionProto *fp = c->_function;
 				if(!CLOSURE_OP(TARGET,fp->_functions[arg1]._unVal.pFunctionProto)) { SQ_THROW(); }
 				continue;
 			}
@@ -1026,13 +1026,13 @@ exception_restore:
 				continue;
 			case _OP_POSTFOREACH:
 				assert(sq_type(STK(arg0)) == rabbit::OT_GENERATOR);
-				if(_generator(STK(arg0))->_state == SQGenerator::eDead)
+				if(_generator(STK(arg0))->_state == rabbit::Generator::eDead)
 					ci->_ip += (sarg1 - 1);
 				continue;
 			case _OP_CLONE: _GUARD(clone(STK(arg1), TARGET)); continue;
 			case _OP_TYPEOF: _GUARD(typeOf(STK(arg1), TARGET)) continue;
 			case _OP_PUSHTRAP:{
-				SQInstruction *_iv = _closure(ci->_closure)->_function->_instructions;
+				rabbit::Instruction *_iv = _closure(ci->_closure)->_function->_instructions;
 				_etraps.pushBack(rabbit::ExceptionTrap(_top,_stackbase, &_iv[(ci->_ip-_iv)+arg1], arg0)); traps++;
 				ci->_etraps++;
 							  }
@@ -1049,7 +1049,7 @@ exception_restore:
 				_GUARD(newSlotA(STK(arg1),STK(arg2),STK(arg3),(arg0&NEW_SLOT_ATTRIBUTES_FLAG) ? STK(arg2-1) : rabbit::ObjectPtr(),(arg0&NEW_SLOT_STATIC_FLAG)?true:false,false));
 				continue;
 			case _OP_GETBASE:{
-				SQClosure *clo = _closure(ci->_closure);
+				rabbit::Closure *clo = _closure(ci->_closure);
 				if(clo->_base) {
 					TARGET = clo->_base;
 				}
@@ -1127,7 +1127,7 @@ void rabbit::VirtualMachine::callerrorHandler(rabbit::ObjectPtr &error)
 void rabbit::VirtualMachine::callDebugHook(int64_t type,int64_t forcedline)
 {
 	_debughook = false;
-	SQFunctionProto *func=_closure(ci->_closure)->_function;
+	rabbit::FunctionProto *func=_closure(ci->_closure)->_function;
 	if(_debughook_native) {
 		const rabbit::Char *src = sq_type(func->_sourcename) == rabbit::OT_STRING?_stringval(func->_sourcename):NULL;
 		const rabbit::Char *fname = sq_type(func->_name) == rabbit::OT_STRING?_stringval(func->_name):NULL;
@@ -1148,7 +1148,7 @@ void rabbit::VirtualMachine::callDebugHook(int64_t type,int64_t forcedline)
 	_debughook = true;
 }
 
-bool rabbit::VirtualMachine::callNative(SQNativeClosure *nclosure, int64_t nargs, int64_t newbase, rabbit::ObjectPtr &retval, int32_t target,bool &suspend, bool &tailcall)
+bool rabbit::VirtualMachine::callNative(rabbit::NativeClosure *nclosure, int64_t nargs, int64_t newbase, rabbit::ObjectPtr &retval, int32_t target,bool &suspend, bool &tailcall)
 {
 	int64_t nparamscheck = nclosure->_nparamscheck;
 	int64_t newtop = newbase + nargs + nclosure->_noutervalues;
@@ -1217,7 +1217,7 @@ bool rabbit::VirtualMachine::callNative(SQNativeClosure *nclosure, int64_t nargs
 	return true;
 }
 
-bool rabbit::VirtualMachine::tailcall(SQClosure *closure, int64_t parambase,int64_t nparams)
+bool rabbit::VirtualMachine::tailcall(rabbit::Closure *closure, int64_t parambase,int64_t nparams)
 {
 	int64_t last_top = _top;
 	rabbit::ObjectPtr clo = closure;
@@ -1629,9 +1629,9 @@ bool rabbit::VirtualMachine::callMetaMethod(rabbit::ObjectPtr &closure,rabbit::M
 
 void rabbit::VirtualMachine::findOuter(rabbit::ObjectPtr &target, rabbit::ObjectPtr *stackindex)
 {
-	SQOuter **pp = &_openouters;
-	SQOuter *p;
-	SQOuter *otr;
+	rabbit::Outer **pp = &_openouters;
+	rabbit::Outer *p;
+	rabbit::Outer *otr;
 
 	while ((p = *pp) != NULL && p->_valptr >= stackindex) {
 		if (p->_valptr == stackindex) {
@@ -1640,7 +1640,7 @@ void rabbit::VirtualMachine::findOuter(rabbit::ObjectPtr &target, rabbit::Object
 		}
 		pp = &p->_next;
 	}
-	otr = SQOuter::create(_get_shared_state(this), stackindex);
+	otr = rabbit::Outer::create(_get_shared_state(this), stackindex);
 	otr->_next = *pp;
 	// TODO: rework this, this is absolutly not safe...
 	otr->_idx  = (stackindex - &_stack[0]);
@@ -1699,7 +1699,7 @@ void rabbit::VirtualMachine::leaveFrame() {
 
 void rabbit::VirtualMachine::relocateOuters()
 {
-	SQOuter *p = _openouters;
+	rabbit::Outer *p = _openouters;
 	while (p) {
 		p->_valptr = &_stack[p->_idx];
 		p = p->_next;
@@ -1707,7 +1707,7 @@ void rabbit::VirtualMachine::relocateOuters()
 }
 
 void rabbit::VirtualMachine::closeOuters(rabbit::ObjectPtr *stackindex) {
-  SQOuter *p;
+  rabbit::Outer *p;
   while ((p = _openouters) != NULL && p->_valptr >= stackindex) {
 	p->_value = *(p->_valptr);
 	p->_valptr = &p->_value;

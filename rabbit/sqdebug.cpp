@@ -21,8 +21,8 @@ rabbit::Result sq_getfunctioninfo(rabbit::VirtualMachine* v,int64_t level,rabbit
 	if (cssize > level) {
 		rabbit::VirtualMachine::callInfo &ci = v->_callsstack[cssize-level-1];
 		if(sq_isclosure(ci._closure)) {
-			SQClosure *c = _closure(ci._closure);
-			SQFunctionProto *proto = c->_function;
+			rabbit::Closure *c = _closure(ci._closure);
+			rabbit::FunctionProto *proto = c->_function;
 			fi->funcid = proto;
 			fi->name = sq_type(proto->_name) == rabbit::OT_STRING?_stringval(proto->_name):_SC("unknown");
 			fi->source = sq_type(proto->_sourcename) == rabbit::OT_STRING?_stringval(proto->_sourcename):_SC("unknown");
@@ -41,7 +41,7 @@ rabbit::Result sq_stackinfos(rabbit::VirtualMachine* v, int64_t level, rabbit::S
 		rabbit::VirtualMachine::callInfo &ci = v->_callsstack[cssize-level-1];
 		switch (sq_type(ci._closure)) {
 		case rabbit::OT_CLOSURE:{
-			SQFunctionProto *func = _closure(ci._closure)->_function;
+			rabbit::FunctionProto *func = _closure(ci._closure)->_function;
 			if (sq_type(func->_name) == rabbit::OT_STRING)
 				si->funcname = _stringval(func->_name);
 			if (sq_type(func->_sourcename) == rabbit::OT_STRING)

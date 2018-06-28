@@ -8,8 +8,10 @@
 #pragma once
 
 #include <etk/types.hpp>
+#include <etk/Vector.hpp>
 #include <rabbit/sqconfig.hpp>
 #include <rabbit/RefTable.hpp>
+#include <rabbit/rabbit.hpp>
 
 namespace rabbit {
 	class StringTable;
