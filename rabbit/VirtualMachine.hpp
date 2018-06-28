@@ -13,6 +13,7 @@
 #include <rabbit/sqconfig.hpp>
 #include <rabbit/ExceptionTrap.hpp>
 #include <rabbit/MetaMethod.hpp>
+#include <rabbit/ObjectPtr.hpp>
 
 
 #define MAX_NATIVE_CALLS 100
@@ -58,7 +59,7 @@ namespace rabbit {
 				ET_RESUME_VM,
 				ET_RESUME_THROW_VM
 			};
-			VirtualMachine(SQSharedState *ss);
+			VirtualMachine(rabbit::SharedState *ss);
 			~VirtualMachine();
 			bool init(VirtualMachine *friendvm, int64_t stacksize);
 			bool execute(rabbit::ObjectPtr &func, int64_t nargs, int64_t stackbase, rabbit::ObjectPtr &outres, rabbit::Bool raiseerror, ExecutionType et = ET_CALL);
@@ -87,7 +88,7 @@ namespace rabbit {
 			bool stringCat(const rabbit::ObjectPtr &str, const rabbit::ObjectPtr &obj, rabbit::ObjectPtr &dest);
 			static bool isEqual(const rabbit::ObjectPtr &o1,const rabbit::ObjectPtr &o2,bool &res);
 			bool toString(const rabbit::ObjectPtr &o,rabbit::ObjectPtr &res);
-			SQString *printObjVal(const rabbit::ObjectPtr &o);
+			rabbit::String *printObjVal(const rabbit::ObjectPtr &o);
 		
 		
 			void raise_error(const rabbit::Char *s, ...);
@@ -172,7 +173,7 @@ namespace rabbit {
 			callInfo *ci;
 			rabbit::UserPointer _foreignptr;
 			//VMs sharing the same state
-			SQSharedState *_sharedstate;
+			rabbit::SharedState *_sharedstate;
 			int64_t _nnativecalls;
 			int64_t _nmetamethodscall;
 			SQRELEASEHOOK _releasehook;

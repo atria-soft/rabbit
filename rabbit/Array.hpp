@@ -11,7 +11,7 @@ namespace rabbit {
 	class Array : public rabbit::RefCounted
 	{
 		private:
-			Array(SQSharedState* _ss,
+			Array(rabbit::SharedState* _ss,
 			      int64_t _nsize) {
 				m_data.resize(_nsize);
 			}
@@ -20,7 +20,7 @@ namespace rabbit {
 			}
 		public:
 			// TODO : remove this ETK_ALLOC can do it natively ...
-			static Array* create(SQSharedState* _ss,
+			static Array* create(rabbit::SharedState* _ss,
 			                     int64_t _ninitialsize) {
 				Array *newarray=(Array*)SQ_MALLOC(sizeof(Array));
 				new (newarray) Array(_ss, _ninitialsize);

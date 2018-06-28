@@ -21,8 +21,6 @@
 #define SQ_CLOSURESTREAM_PART (('P'<<24)|('A'<<16)|('R'<<8)|('T'))
 #define SQ_CLOSURESTREAM_TAIL (('T'<<24)|('A'<<16)|('I'<<8)|('L'))
 
-struct SQSharedState;
-
 #define _CONSTRUCT_VECTOR(type, size, ptr) { \
 	for(int64_t n = 0; n < ((int64_t)size); n++) { \
 			new (&ptr[n]) type(); \
@@ -45,15 +43,4 @@ struct SQSharedState;
 	for(int64_t _n_ = 0; _n_ < ((int64_t)size); _n_++) { \
 		vec[_n_].Null(); \
 	} \
-}
-
-
-inline void _Swap(rabbit::Object &a,rabbit::Object &b)
-{
-	rabbit::ObjectType tOldType = a._type;
-	rabbit::ObjectValue unOldVal = a._unVal;
-	a._type = b._type;
-	a._unVal = b._unVal;
-	b._type = tOldType;
-	b._unVal = unOldVal;
 }

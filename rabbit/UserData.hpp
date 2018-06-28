@@ -10,14 +10,14 @@
 namespace rabbit {
 	class UserData : public rabbit::Delegable {
 		public:
-			UserData(SQSharedState *ss) {
+			UserData(rabbit::SharedState *ss) {
 				_delegate = 0;
 				m_hook = NULL;
 			}
 			~UserData() {
 				setDelegate(NULL);
 			}
-			static UserData* create(SQSharedState *ss, int64_t size) {
+			static UserData* create(rabbit::SharedState *ss, int64_t size) {
 				UserData* ud = (UserData*)SQ_MALLOC(sq_aligning(sizeof(UserData))+size);
 				new (ud) UserData(ss);
 				ud->m_size = size;

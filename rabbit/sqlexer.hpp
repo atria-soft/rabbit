@@ -17,7 +17,7 @@ struct SQLexer
 {
 	SQLexer();
 	~SQLexer();
-	void init(SQSharedState *ss,SQLEXREADFUNC rg,rabbit::UserPointer up,compilererrorFunc efunc,void *ed);
+	void init(rabbit::SharedState *ss,SQLEXREADFUNC rg,rabbit::UserPointer up,compilererrorFunc efunc,void *ed);
 	void error(const rabbit::Char *err);
 	int64_t Lex();
 	const rabbit::Char *tok2Str(int64_t tok);
@@ -38,7 +38,7 @@ private:
 #endif
 	int64_t processStringHexEscape(rabbit::Char *dest, int64_t maxdigits);
 	int64_t _curtoken;
-	SQTable *_keywords;
+	rabbit::Table *_keywords;
 	rabbit::Bool _reached_eof;
 public:
 	int64_t _prevtoken;
@@ -51,7 +51,7 @@ public:
 	SQLEXREADFUNC _readf;
 	rabbit::UserPointer _up;
 	LexChar _currdata;
-	SQSharedState *_sharedstate;
+	rabbit::SharedState *_sharedstate;
 	etk::Vector<rabbit::Char> _longstr;
 	compilererrorFunc _errfunc;
 	void *_errtarget;

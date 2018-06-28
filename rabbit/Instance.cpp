@@ -6,15 +6,17 @@
  * @license MPL-2 (see license file)
  */
 #include <rabbit/Instance.hpp>
+#include <rabbit/Table.hpp>
+#include <rabbit/SharedState.hpp>
 
-void rabbit::Instance::init(SQSharedState *ss) {
+void rabbit::Instance::init(rabbit::SharedState *ss) {
 	_userpointer = NULL;
 	_hook = NULL;
 	__ObjaddRef(_class);
 	_delegate = _class->_members;
 }
 
-rabbit::Instance::Instance(SQSharedState *ss, rabbit::Class *c, int64_t memsize) {
+rabbit::Instance::Instance(rabbit::SharedState *ss, rabbit::Class *c, int64_t memsize) {
 	_memsize = memsize;
 	_class = c;
 	uint64_t nvalues = _class->_defaultvalues.size();
@@ -24,7 +26,7 @@ rabbit::Instance::Instance(SQSharedState *ss, rabbit::Class *c, int64_t memsize)
 	init(ss);
 }
 
-rabbit::Instance::Instance(SQSharedState *ss, rabbit::Instance *i, int64_t memsize) {
+rabbit::Instance::Instance(rabbit::SharedState *ss, rabbit::Instance *i, int64_t memsize) {
 	_memsize = memsize;
 	_class = i->_class;
 	uint64_t nvalues = _class->_defaultvalues.size();
@@ -64,3 +66,60 @@ bool rabbit::Instance::instanceOf(rabbit::Class *trg) {
 	}
 	return false;
 }
+
+rabbit::Instance* rabbit::Instance::create(rabbit::SharedState *ss,rabbit::Class *theclass) {
+	int64_t size = calcinstancesize(theclass);
+	Instance *newinst = (Instance *)SQ_MALLOC(size);
+	new (newinst) Instance(ss, theclass,size);
+	if(theclass->_udsize) {
+		newinst->_userpointer = ((unsigned char *)newinst) + (size - theclass->_udsize);
+	}
+	return newinst;
+}
+
+rabbit::Instance* rabbit::Instance::clone(rabbit::SharedState *ss) {
+	int64_t size = calcinstancesize(_class);
+	Instance *newinst = (Instance *)SQ_MALLOC(size);
+	new (newinst) Instance(ss, this,size);
+	if(_class->_udsize) {
+		newinst->_userpointer = ((unsigned char *)newinst) + (size - _class->_udsize);
+	}
+	return newinst;
+}
+
+bool rabbit::Instance::get(const rabbit::ObjectPtr &key,rabbit::ObjectPtr &val)  {
+	if(_class->_members->get(key,val)) {
+		if(_isfield(val)) {
+			rabbit::ObjectPtr &o = _values[_member_idx(val)];
+			val = _realval(o);
+		} else {
+			val = _class->_methods[_member_idx(val)].val;
+		}
+		return true;
+	}
+	return false;
+}
+
+bool rabbit::Instance::set(const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val) {
+	rabbit::ObjectPtr idx;
+	if(_class->_members->get(key,idx) && _isfield(idx)) {
+		_values[_member_idx(idx)] = val;
+		return true;
+	}
+	return false;
+}
+
+void rabbit::Instance::release() {
+	_uiRef++;
+	if (_hook) {
+		_hook(_userpointer,0);
+	}
+	_uiRef--;
+	if(_uiRef > 0) {
+		return;
+	}
+	int64_t size = _memsize;
+	this->~Instance();
+	SQ_FREE(this, size);
+}
+

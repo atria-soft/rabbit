@@ -12,8 +12,8 @@
 #include <rabbit/VirtualMachine.hpp>
 #include <rabbit/sqfuncproto.hpp>
 #include <rabbit/sqclosure.hpp>
-#include <rabbit/sqstring.hpp>
-#include <rabbit/sqtable.hpp>
+
+
 #include <rabbit/UserData.hpp>
 #include <rabbit/Array.hpp>
 #include <rabbit/Instance.hpp>
@@ -112,7 +112,7 @@ bool rabbit::VirtualMachine::ARITH_OP(uint64_t op,rabbit::ObjectPtr &trg,const r
 	return true;
 }
 
-rabbit::VirtualMachine::VirtualMachine(SQSharedState *ss)
+rabbit::VirtualMachine::VirtualMachine(rabbit::SharedState *ss)
 {
 	_sharedstate=ss;
 	_suspended = SQFalse;
@@ -319,7 +319,7 @@ bool rabbit::VirtualMachine::toString(const rabbit::ObjectPtr &o,rabbit::ObjectP
 	default:
 		scsprintf(_sp(sq_rsl((sizeof(void*)*2)+NUMBER_MAX_CHAR)),sq_rsl((sizeof(void*)*2)+NUMBER_MAX_CHAR),_SC("(%s : 0x%p)"),getTypeName(o),(void*)_rawval(o));
 	}
-	res = SQString::create(_get_shared_state(this),_spval);
+	res = rabbit::String::create(_get_shared_state(this),_spval);
 	return true;
 }
 
@@ -333,7 +333,7 @@ bool rabbit::VirtualMachine::stringCat(const rabbit::ObjectPtr &str,const rabbit
 	rabbit::Char *s = _sp(sq_rsl(l + ol + 1));
 	memcpy(s, _stringval(a), sq_rsl(l));
 	memcpy(s + l, _stringval(b), sq_rsl(ol));
-	dest = SQString::create(_get_shared_state(this), _spval, l + ol);
+	dest = rabbit::String::create(_get_shared_state(this), _spval, l + ol);
 	return true;
 }
 
@@ -346,7 +346,7 @@ bool rabbit::VirtualMachine::typeOf(const rabbit::ObjectPtr &obj1,rabbit::Object
 			return callMetaMethod(closure,MT_TYPEOF,1,dest);
 		}
 	}
-	dest = SQString::create(_get_shared_state(this),getTypeName(obj1));
+	dest = rabbit::String::create(_get_shared_state(this),getTypeName(obj1));
 	return true;
 }
 
@@ -360,7 +360,7 @@ bool rabbit::VirtualMachine::init(rabbit::VirtualMachine *friendvm, int64_t stac
 	_stackbase = 0;
 	_top = 0;
 	if(!friendvm) {
-		_roottable = SQTable::create(_get_shared_state(this), 0);
+		_roottable = rabbit::Table::create(_get_shared_state(this), 0);
 		sq_base_register(this);
 	}
 	else {
@@ -901,7 +901,7 @@ exception_restore:
 			continue;
 			case _OP_NEWOBJ:
 				switch(arg3) {
-					case NOT_TABLE: TARGET = SQTable::create(_get_shared_state(this), arg1); continue;
+					case NOT_TABLE: TARGET = rabbit::Table::create(_get_shared_state(this), arg1); continue;
 					case NOT_ARRAY: TARGET = rabbit::Array::create(_get_shared_state(this), 0); _array(TARGET)->reserve(arg1); continue;
 					case NOT_CLASS: _GUARD(CLASS_OP(TARGET,arg1,arg2)); continue;
 					default: assert(0); continue;
@@ -1294,7 +1294,7 @@ bool rabbit::VirtualMachine::get(const rabbit::ObjectPtr &self, const rabbit::Ob
 
 bool rabbit::VirtualMachine::invokeDefaultDelegate(const rabbit::ObjectPtr &self,const rabbit::ObjectPtr &key,rabbit::ObjectPtr &dest)
 {
-	SQTable *ddel = NULL;
+	rabbit::Table *ddel = NULL;
 	switch(sq_type(self)) {
 		case rabbit::OT_CLASS: ddel = _class_ddel; break;
 		case rabbit::OT_TABLE: ddel = _table_ddel; break;

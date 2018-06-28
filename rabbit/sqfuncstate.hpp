@@ -11,13 +11,13 @@
 
 struct SQFuncState
 {
-	SQFuncState(SQSharedState *ss,SQFuncState *parent,compilererrorFunc efunc,void *ed);
+	SQFuncState(rabbit::SharedState *ss,SQFuncState *parent,compilererrorFunc efunc,void *ed);
 	~SQFuncState();
 #ifdef _DEBUG_DUMP
 	void dump(SQFunctionProto *func);
 #endif
 	void error(const rabbit::Char *err);
-	SQFuncState *pushChildState(SQSharedState *ss);
+	SQFuncState *pushChildState(rabbit::SharedState *ss);
 	void popChildState();
 	void addInstruction(SQOpcode _op,int64_t arg0=0,int64_t arg1=0,int64_t arg2=0,int64_t arg3=0){SQInstruction i(_op,arg0,arg1,arg2,arg3);addInstruction(i);}
 	void addInstruction(SQInstruction &i);
@@ -82,13 +82,13 @@ struct SQFuncState
 	int64_t _traps; //contains number of nested exception traps
 	int64_t _outers;
 	bool _optimization;
-	SQSharedState *_sharedstate;
+	rabbit::SharedState *_sharedstate;
 	etk::Vector<SQFuncState*> _childstates;
 	int64_t getConstant(const rabbit::Object &cons);
 private:
 	compilererrorFunc _errfunc;
 	void *_errtarget;
-	SQSharedState *_ss;
+	rabbit::SharedState *_ss;
 };
 
 

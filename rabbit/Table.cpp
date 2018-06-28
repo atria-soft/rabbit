@@ -5,17 +5,28 @@
  * @copyright 2003-2017, Alberto DEMICHELIS, all right reserved
  * @license MPL-2 (see license file)
  */
+#pragma once
 
-#include <rabbit/sqpcheader.hpp>
-#include <rabbit/VirtualMachine.hpp>
-#include <rabbit/sqtable.hpp>
-#include <rabbit/sqfuncproto.hpp>
-#include <rabbit/sqclosure.hpp>
+#include <rabbit/Table.hpp>
+
+rabbit::Hash rabbit::HashObj(const rabbit::ObjectPtr &key); {
+	switch(sq_type(key)) {
+		case rabbit::OT_STRING:
+			return _string(key)->_hash;
+		case rabbit::OT_FLOAT:
+			return (rabbit::Hash)((int64_t)_float(key));
+		case rabbit::OT_BOOL:
+		case rabbit::OT_INTEGER:
+			return (rabbit::Hash)((int64_t)_integer(key));
+		default:
+			return hashptr(key._unVal.pRefCounted);
+	}
+}
+
 
 #define MINPOWER2 4
 
-SQTable::SQTable(SQSharedState *ss,int64_t ninitialsize)
-{
+rabbit::Table::rabbit::Table(rabbit::SharedState *ss,int64_t ninitialsize) {
 	int64_t pow2size=MINPOWER2;
 	while(ninitialsize>pow2size)pow2size=pow2size<<1;
 	allocNodes(pow2size);
@@ -23,9 +34,7 @@ SQTable::SQTable(SQSharedState *ss,int64_t ninitialsize)
 	_delegate = NULL;
 }
 
-void SQTable::remove(const rabbit::ObjectPtr &key)
-{
-
+void rabbit::Table::remove(const rabbit::ObjectPtr &key) {
 	_HashNode *n = _get(key, HashObj(key) & (_numofnodes - 1));
 	if (n) {
 		n->val.Null();
@@ -35,7 +44,7 @@ void SQTable::remove(const rabbit::ObjectPtr &key)
 	}
 }
 
-void SQTable::allocNodes(int64_t nsize)
+void rabbit::Table::allocNodes(int64_t nsize)
 {
 	_HashNode *nodes=(_HashNode *)SQ_MALLOC(sizeof(_HashNode)*nsize);
 	for(int64_t i=0;i<nsize;i++){
@@ -48,7 +57,7 @@ void SQTable::allocNodes(int64_t nsize)
 	_firstfree=&_nodes[_numofnodes-1];
 }
 
-void SQTable::Rehash(bool force)
+void rabbit::Table::Rehash(bool force)
 {
 	int64_t oldsize=_numofnodes;
 	//prevent problems with the integer division
@@ -75,9 +84,9 @@ void SQTable::Rehash(bool force)
 	SQ_FREE(nold,oldsize*sizeof(_HashNode));
 }
 
-SQTable *SQTable::clone()
+rabbit::Table *rabbit::Table::clone()
 {
-	SQTable *nt=create(NULL,_numofnodes);
+	rabbit::Table *nt=create(NULL,_numofnodes);
 #ifdef _FAST_CLONE
 	_HashNode *basesrc = _nodes;
 	_HashNode *basedst = nt->_nodes;
@@ -110,7 +119,7 @@ SQTable *SQTable::clone()
 	return nt;
 }
 
-bool SQTable::get(const rabbit::ObjectPtr &key,rabbit::ObjectPtr &val)
+bool rabbit::Table::get(const rabbit::ObjectPtr &key,rabbit::ObjectPtr &val)
 {
 	if(sq_type(key) == rabbit::OT_NULL)
 		return false;
@@ -121,10 +130,10 @@ bool SQTable::get(const rabbit::ObjectPtr &key,rabbit::ObjectPtr &val)
 	}
 	return false;
 }
-bool SQTable::newSlot(const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val)
+bool rabbit::Table::newSlot(const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val)
 {
 	assert(sq_type(key) != rabbit::OT_NULL);
-	SQHash h = HashObj(key) & (_numofnodes - 1);
+	rabbit::Hash h = HashObj(key) & (_numofnodes - 1);
 	_HashNode *n = _get(key, h);
 	if (n) {
 		n->val = val;
@@ -139,7 +148,7 @@ bool SQTable::newSlot(const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val)
 
 	if(sq_type(mp->key) != rabbit::OT_NULL) {
 		n = _firstfree;  /* get a free place */
-		SQHash mph = HashObj(mp->key) & (_numofnodes - 1);
+		rabbit::Hash mph = HashObj(mp->key) & (_numofnodes - 1);
 		_HashNode *othern;  /* main position of colliding node */
 
 		if (mp > n && (othern = &_nodes[mph]) != mp){
@@ -178,7 +187,7 @@ bool SQTable::newSlot(const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val)
 	return newSlot(key, val);
 }
 
-int64_t SQTable::next(bool getweakrefs,const rabbit::ObjectPtr &refpos, rabbit::ObjectPtr &outkey, rabbit::ObjectPtr &outval)
+int64_t rabbit::Table::next(bool getweakrefs,const rabbit::ObjectPtr &refpos, rabbit::ObjectPtr &outkey, rabbit::ObjectPtr &outval)
 {
 	int64_t idx = (int64_t)translateIndex(refpos);
 	while (idx < _numofnodes) {
@@ -197,7 +206,7 @@ int64_t SQTable::next(bool getweakrefs,const rabbit::ObjectPtr &refpos, rabbit::
 }
 
 
-bool SQTable::set(const rabbit::ObjectPtr &key, const rabbit::ObjectPtr &val)
+bool rabbit::Table::set(const rabbit::ObjectPtr &key, const rabbit::ObjectPtr &val)
 {
 	_HashNode *n = _get(key, HashObj(key) & (_numofnodes - 1));
 	if (n) {
@@ -207,20 +216,72 @@ bool SQTable::set(const rabbit::ObjectPtr &key, const rabbit::ObjectPtr &val)
 	return false;
 }
 
-void SQTable::_clearNodes()
+void rabbit::Table::_clearNodes()
 {
 	for(int64_t i = 0;i < _numofnodes; i++) { _HashNode &n = _nodes[i]; n.key.Null(); n.val.Null(); }
 }
 
-void SQTable::finalize()
+void rabbit::Table::finalize()
 {
 	_clearNodes();
 	setDelegate(NULL);
 }
 
-void SQTable::clear()
+void rabbit::Table::clear()
 {
 	_clearNodes();
 	_usednodes = 0;
 	Rehash(true);
+}
+
+
+rabbit::Table* rabbit::Table::create(rabbit::SharedState *ss,int64_t ninitialsize)
+{
+	char* tmp = (char*)SQ_MALLOC(sizeof(rabbit::Table));
+	rabbit::Table *newtable = new (tmp) rabbit::Table(ss, ninitialsize);
+	newtable->_delegate = NULL;
+	return newtable;
+}
+
+rabbit::Table::~Table() {
+	setDelegate(NULL);
+	for (int64_t i = 0; i < _numofnodes; i++) _nodes[i].~_HashNode();
+	SQ_FREE(_nodes, _numofnodes * sizeof(_HashNode));
+}
+
+_HashNode* rabbit::Table::_get(const rabbit::ObjectPtr &key,rabbit::Hash hash) {
+	_HashNode *n = &_nodes[hash];
+	do {
+		if(    _rawval(n->key) == _rawval(key)
+		    && sq_type(n->key) == sq_type(key)){
+			return n;
+		}
+	} while((n = n->next));
+	return NULL;
+}
+
+//for compiler use
+bool rabbit::Table::getStr(const rabbit::Char* key,int64_t keylen,rabbit::ObjectPtr &val) {
+	rabbit::Hash hash = _hashstr(key,keylen);
+	_HashNode *n = &_nodes[hash & (_numofnodes - 1)];
+	_HashNode *res = NULL;
+	do{
+		if(sq_type(n->key) == rabbit::OT_STRING && (scstrcmp(_stringval(n->key),key) == 0)){
+			res = n;
+			break;
+		}
+	}while((n = n->next));
+	if (res) {
+		val = _realval(res->val);
+		return true;
+	}
+	return false;
+}
+
+int64_t rabbit::Table::countUsed() {
+	return _usednodes;
+}
+
+void rabbit::Table::release() {
+	sq_delete(this, rabbit::Table);
 }

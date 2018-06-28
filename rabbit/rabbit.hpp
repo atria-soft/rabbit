@@ -28,19 +28,20 @@
 
 #include "sqconfig.hpp"
 
-#define RABBIT_VERSION	_SC("Rabbit 0.1 un-stable")
+#define RABBIT_VERSION    _SC("Rabbit 0.1 un-stable")
 #define RABBIT_COPYRIGHT  _SC("Copyright (C) 2003-2017 Alberto Demichelis")
-#define RABBIT_AUTHOR	 _SC("Edouard DUPIN")
+#define RABBIT_AUTHOR     _SC("Edouard DUPIN")
 #define RABBIT_VERSION_NUMBER 010
 
-#define SQ_VMSTATE_IDLE		 0
-#define SQ_VMSTATE_RUNNING	  1
-#define SQ_VMSTATE_SUSPENDED	2
+#define SQ_VMSTATE_IDLE       0
+#define SQ_VMSTATE_RUNNING    1
+#define SQ_VMSTATE_SUSPENDED  2
 
 #define RABBIT_EOB 0
 #define SQ_BYTECODE_STREAM_TAG  0xFAFA
 
 #include <rabbit/Object.hpp>
+#include <rabbit/Hash.hpp>
 
 
 
@@ -114,7 +115,7 @@ RABBIT_API void sq_pushthread(rabbit::VirtualMachine* v, rabbit::VirtualMachine*
 RABBIT_API rabbit::ObjectType sq_gettype(rabbit::VirtualMachine* v,int64_t idx);
 RABBIT_API rabbit::Result sq_typeof(rabbit::VirtualMachine* v,int64_t idx);
 RABBIT_API int64_t sq_getsize(rabbit::VirtualMachine* v,int64_t idx);
-RABBIT_API SQHash sq_gethash(rabbit::VirtualMachine* v, int64_t idx);
+RABBIT_API rabbit::Hash sq_gethash(rabbit::VirtualMachine* v, int64_t idx);
 RABBIT_API rabbit::Result sq_getbase(rabbit::VirtualMachine* v,int64_t idx);
 RABBIT_API rabbit::Bool sq_instanceof(rabbit::VirtualMachine* v);
 RABBIT_API rabbit::Result sq_tostring(rabbit::VirtualMachine* v,int64_t idx);

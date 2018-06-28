@@ -7,8 +7,8 @@
  */
 #include <rabbit/sqpcheader.hpp>
 #include <rabbit/VirtualMachine.hpp>
-#include <rabbit/sqstring.hpp>
-#include <rabbit/sqtable.hpp>
+
+
 #include <rabbit/Array.hpp>
 #include <rabbit/sqfuncproto.hpp>
 #include <rabbit/sqclosure.hpp>
@@ -47,8 +47,8 @@ int64_t sq_aux_invalidtype(rabbit::VirtualMachine* v,rabbit::ObjectType type)
 
 rabbit::VirtualMachine* sq_open(int64_t initialstacksize)
 {
-	SQSharedState *ss;
-	sq_new(ss, SQSharedState);
+	rabbit::SharedState *ss;
+	sq_new(ss, rabbit::SharedState);
 	ss->init();
 	
 	char* allocatedData = (char*)SQ_MALLOC(sizeof(rabbit::VirtualMachine));
@@ -67,7 +67,7 @@ rabbit::VirtualMachine* sq_open(int64_t initialstacksize)
 
 rabbit::VirtualMachine* sq_newthread(rabbit::VirtualMachine* friendvm, int64_t initialstacksize)
 {
-	SQSharedState *ss;
+	rabbit::SharedState *ss;
 	ss=_get_shared_state(friendvm);
 	
 	char* allocatedData = (char*)SQ_MALLOC(sizeof(rabbit::VirtualMachine));
@@ -123,9 +123,9 @@ void sq_setdebughook(rabbit::VirtualMachine* v)
 
 void sq_close(rabbit::VirtualMachine* v)
 {
-	SQSharedState *ss = _get_shared_state(v);
+	rabbit::SharedState *ss = _get_shared_state(v);
 	_thread(ss->_root_vm)->finalize();
-	sq_delete(ss, SQSharedState);
+	sq_delete(ss, rabbit::SharedState);
 }
 
 int64_t sq_getversion()
@@ -231,7 +231,7 @@ void sq_pushnull(rabbit::VirtualMachine* v)
 void sq_pushstring(rabbit::VirtualMachine* v,const rabbit::Char *s,int64_t len)
 {
 	if(s)
-		v->push(rabbit::ObjectPtr(SQString::create(_get_shared_state(v), s, len)));
+		v->push(rabbit::ObjectPtr(rabbit::String::create(_get_shared_state(v), s, len)));
 	else v->pushNull();
 }
 
@@ -269,12 +269,12 @@ rabbit::UserPointer sq_newuserdata(rabbit::VirtualMachine* v,uint64_t size)
 
 void sq_newtable(rabbit::VirtualMachine* v)
 {
-	v->push(SQTable::create(_get_shared_state(v), 0));
+	v->push(rabbit::Table::create(_get_shared_state(v), 0));
 }
 
 void sq_newtableex(rabbit::VirtualMachine* v,int64_t initialcapacity)
 {
-	v->push(SQTable::create(_get_shared_state(v), initialcapacity));
+	v->push(rabbit::Table::create(_get_shared_state(v), initialcapacity));
 }
 
 void sq_newarray(rabbit::VirtualMachine* v,int64_t size)
@@ -420,7 +420,7 @@ rabbit::Result sq_setnativeclosurename(rabbit::VirtualMachine* v,int64_t idx,con
 	rabbit::Object o = stack_get(v, idx);
 	if(sq_isnativeclosure(o)) {
 		SQNativeClosure *nc = _nativeclosure(o);
-		nc->_name = SQString::create(_get_shared_state(v),name);
+		nc->_name = rabbit::String::create(_get_shared_state(v),name);
 		return SQ_OK;
 	}
 	return sq_throwerror(v,_SC("the object is not a nativeclosure"));
@@ -737,7 +737,7 @@ int64_t sq_getsize(rabbit::VirtualMachine* v, int64_t idx)
 	}
 }
 
-SQHash sq_gethash(rabbit::VirtualMachine* v, int64_t idx)
+rabbit::Hash sq_gethash(rabbit::VirtualMachine* v, int64_t idx)
 {
 	rabbit::ObjectPtr &o = stack_get(v, idx);
 	return HashObj(o);
@@ -1133,7 +1133,7 @@ void sq_resetobject(rabbit::Object *po)
 
 rabbit::Result sq_throwerror(rabbit::VirtualMachine* v,const rabbit::Char *err)
 {
-	v->_lasterror=SQString::create(_get_shared_state(v),err);
+	v->_lasterror=rabbit::String::create(_get_shared_state(v),err);
 	return SQ_ERROR;
 }
 
@@ -1446,7 +1446,7 @@ rabbit::Result sq_getmemberhandle(rabbit::VirtualMachine* v,int64_t idx,rabbit::
 	rabbit::ObjectPtr *o = NULL;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_CLASS,o);
 	rabbit::ObjectPtr &key = stack_get(v,-1);
-	SQTable *m = _class(*o)->_members;
+	rabbit::Table *m = _class(*o)->_members;
 	rabbit::ObjectPtr val;
 	if(m->get(key,val)) {
 		handle->_static = _isfield(val) ? SQFalse : SQTrue;
@@ -1561,7 +1561,7 @@ rabbit::Result sq_getweakrefval(rabbit::VirtualMachine* v,int64_t idx)
 
 rabbit::Result sq_getdefaultdelegate(rabbit::VirtualMachine* v,rabbit::ObjectType t)
 {
-	SQSharedState *ss = _get_shared_state(v);
+	rabbit::SharedState *ss = _get_shared_state(v);
 	switch(t) {
 	case rabbit::OT_TABLE: v->push(ss->_table_default_delegate); break;
 	case rabbit::OT_ARRAY: v->push(ss->_array_default_delegate); break;

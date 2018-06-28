@@ -49,7 +49,7 @@
 	}
 
 
-RABBIT_OBJ_REF_TYPE_INSTANCIATE(rabbit::OT_TABLE, SQTable, pTable)
+RABBIT_OBJ_REF_TYPE_INSTANCIATE(rabbit::OT_TABLE, rabbit::Table, pTable)
 RABBIT_OBJ_REF_TYPE_INSTANCIATE(rabbit::OT_CLASS, rabbit::Class, pClass)
 RABBIT_OBJ_REF_TYPE_INSTANCIATE(rabbit::OT_INSTANCE, rabbit::Instance, pInstance)
 RABBIT_OBJ_REF_TYPE_INSTANCIATE(rabbit::OT_ARRAY, rabbit::Array, pArray)
@@ -57,7 +57,7 @@ RABBIT_OBJ_REF_TYPE_INSTANCIATE(rabbit::OT_CLOSURE, SQClosure, pClosure)
 RABBIT_OBJ_REF_TYPE_INSTANCIATE(rabbit::OT_NATIVECLOSURE, SQNativeClosure, pNativeClosure)
 RABBIT_OBJ_REF_TYPE_INSTANCIATE(rabbit::OT_OUTER, SQOuter, pOuter)
 RABBIT_OBJ_REF_TYPE_INSTANCIATE(rabbit::OT_GENERATOR, SQGenerator, pGenerator)
-RABBIT_OBJ_REF_TYPE_INSTANCIATE(rabbit::OT_STRING, SQString, pString)
+RABBIT_OBJ_REF_TYPE_INSTANCIATE(rabbit::OT_STRING, rabbit::String, pString)
 RABBIT_OBJ_REF_TYPE_INSTANCIATE(rabbit::OT_USERDATA, rabbit::UserData, pUserData)
 RABBIT_OBJ_REF_TYPE_INSTANCIATE(rabbit::OT_WEAKREF, rabbit::WeakRef, pWeakRef)
 RABBIT_OBJ_REF_TYPE_INSTANCIATE(rabbit::OT_THREAD, rabbit::VirtualMachine, pThread)

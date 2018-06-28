@@ -10,69 +10,26 @@
 #include <etk/types.hpp>
 #include <rabbit/sqpcheader.hpp>
 #include <rabbit/VirtualMachine.hpp>
-#include <rabbit/sqtable.hpp>
+
 
 #include <rabbit/sqfuncproto.hpp>
 #include <rabbit/sqclosure.hpp>
 #include <rabbit/MetaMethod.hpp>
+#include <rabbit/Delegable.hpp>
 
 namespace rabbit {
 	class Instance : public rabbit::Delegable {
 		public:
-			void init(SQSharedState *ss);
-			Instance(SQSharedState *ss, rabbit::Class *c, int64_t memsize);
-			Instance(SQSharedState *ss, Instance *c, int64_t memsize);
+			void init(rabbit::SharedState *ss);
+			Instance(rabbit::SharedState *ss, rabbit::Class *c, int64_t memsize);
+			Instance(rabbit::SharedState *ss, Instance *c, int64_t memsize);
 		public:
-			static Instance* create(SQSharedState *ss,rabbit::Class *theclass) {
-				int64_t size = calcinstancesize(theclass);
-				Instance *newinst = (Instance *)SQ_MALLOC(size);
-				new (newinst) Instance(ss, theclass,size);
-				if(theclass->_udsize) {
-					newinst->_userpointer = ((unsigned char *)newinst) + (size - theclass->_udsize);
-				}
-				return newinst;
-			}
-			Instance *clone(SQSharedState *ss)
-			{
-				int64_t size = calcinstancesize(_class);
-				Instance *newinst = (Instance *)SQ_MALLOC(size);
-				new (newinst) Instance(ss, this,size);
-				if(_class->_udsize) {
-					newinst->_userpointer = ((unsigned char *)newinst) + (size - _class->_udsize);
-				}
-				return newinst;
-			}
+			static Instance* create(rabbit::SharedState *ss,rabbit::Class *theclass);
+			Instance *clone(rabbit::SharedState *ss);
 			~Instance();
-			bool get(const rabbit::ObjectPtr &key,rabbit::ObjectPtr &val)  {
-				if(_class->_members->get(key,val)) {
-					if(_isfield(val)) {
-						rabbit::ObjectPtr &o = _values[_member_idx(val)];
-						val = _realval(o);
-					}
-					else {
-						val = _class->_methods[_member_idx(val)].val;
-					}
-					return true;
-				}
-				return false;
-			}
-			bool set(const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val) {
-				rabbit::ObjectPtr idx;
-				if(_class->_members->get(key,idx) && _isfield(idx)) {
-					_values[_member_idx(idx)] = val;
-					return true;
-				}
-				return false;
-			}
-			void release() {
-				_uiRef++;
-				if (_hook) { _hook(_userpointer,0);}
-				_uiRef--;
-				if(_uiRef > 0) return;
-				int64_t size = _memsize;
-				this->~Instance();
-				SQ_FREE(this, size);
-			}
+			bool get(const rabbit::ObjectPtr &key,rabbit::ObjectPtr &val);
+			bool set(const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val);
+			void release();
 			void finalize();
 			bool instanceOf(rabbit::Class *trg);
 			bool getMetaMethod(rabbit::VirtualMachine *v,rabbit::MetaMethod mm,rabbit::ObjectPtr &res);

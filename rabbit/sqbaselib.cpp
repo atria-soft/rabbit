@@ -7,8 +7,8 @@
  */
 #include <rabbit/sqpcheader.hpp>
 #include <rabbit/VirtualMachine.hpp>
-#include <rabbit/sqstring.hpp>
-#include <rabbit/sqtable.hpp>
+
+
 #include <rabbit/Array.hpp>
 #include <rabbit/sqfuncproto.hpp>
 #include <rabbit/sqclosure.hpp>
@@ -258,7 +258,7 @@ static int64_t base_array(rabbit::VirtualMachine* v)
 static int64_t base_type(rabbit::VirtualMachine* v)
 {
 	rabbit::ObjectPtr &o = stack_get(v,2);
-	v->push(SQString::create(_get_shared_state(v),getTypeName(o),-1));
+	v->push(rabbit::String::create(_get_shared_state(v),getTypeName(o),-1));
 	return 1;
 }
 
@@ -411,7 +411,7 @@ static int64_t number_delegate_tochar(rabbit::VirtualMachine* v)
 {
 	rabbit::Object &o=stack_get(v,1);
 	rabbit::Char c = (rabbit::Char)tointeger(o);
-	v->push(SQString::create(_get_shared_state(v),(const rabbit::Char *)&c,1));
+	v->push(rabbit::String::create(_get_shared_state(v),(const rabbit::Char *)&c,1));
 	return 1;
 }
 
@@ -465,8 +465,8 @@ static int64_t table_getdelegate(rabbit::VirtualMachine* v)
 static int64_t table_filter(rabbit::VirtualMachine* v)
 {
 	rabbit::Object &o = stack_get(v,1);
-	SQTable *tbl = _table(o);
-	rabbit::ObjectPtr ret = SQTable::create(_get_shared_state(v),0);
+	rabbit::Table *tbl = _table(o);
+	rabbit::ObjectPtr ret = rabbit::Table::create(_get_shared_state(v),0);
 
 	rabbit::ObjectPtr itr, key, val;
 	int64_t nitr;
@@ -490,7 +490,7 @@ static int64_t table_filter(rabbit::VirtualMachine* v)
 }
 
 
-const rabbit::RegFunction SQSharedState::_table_default_delegate_funcz[]={
+const rabbit::RegFunction rabbit::SharedState::_table_default_delegate_funcz[]={
 	{_SC("len"),default_delegate_len,1, _SC("t")},
 	{_SC("rawget"),container_rawget,2, _SC("t")},
 	{_SC("rawset"),container_rawset,3, _SC("t")},
@@ -809,7 +809,7 @@ static int64_t array_slice(rabbit::VirtualMachine* v)
 
 }
 
-const rabbit::RegFunction SQSharedState::_array_default_delegate_funcz[]={
+const rabbit::RegFunction rabbit::SharedState::_array_default_delegate_funcz[]={
 	{_SC("len"),default_delegate_len,1, _SC("a")},
 	{_SC("append"),array_append,2, _SC("a")},
 	{_SC("extend"),array_extend,2, _SC("aa")},
@@ -844,7 +844,7 @@ static int64_t string_slice(rabbit::VirtualMachine* v)
 	if(eidx < 0)eidx = slen + eidx;
 	if(eidx < sidx) return sq_throwerror(v,_SC("wrong indexes"));
 	if(eidx > slen || sidx < 0) return sq_throwerror(v, _SC("slice out of range"));
-	v->push(SQString::create(_get_shared_state(v),&_stringval(o)[sidx],eidx-sidx));
+	v->push(rabbit::String::create(_get_shared_state(v),&_stringval(o)[sidx],eidx-sidx));
 	return 1;
 }
 
@@ -881,7 +881,7 @@ static int64_t string_find(rabbit::VirtualMachine* v)
 	rabbit::Char *snew=(_get_shared_state(v)->getScratchPad(sq_rsl(len))); \
 	memcpy(snew,sthis,sq_rsl(len));\
 	for(int64_t i=sidx;i<eidx;i++) snew[i] = func(sthis[i]); \
-	v->push(SQString::create(_get_shared_state(v),snew,len)); \
+	v->push(rabbit::String::create(_get_shared_state(v),snew,len)); \
 	return 1; \
 }
 
@@ -889,7 +889,7 @@ static int64_t string_find(rabbit::VirtualMachine* v)
 STRING_TOFUNCZ(tolower)
 STRING_TOFUNCZ(toupper)
 
-const rabbit::RegFunction SQSharedState::_string_default_delegate_funcz[]={
+const rabbit::RegFunction rabbit::SharedState::_string_default_delegate_funcz[]={
 	{_SC("len"),default_delegate_len,1, _SC("s")},
 	{_SC("tointeger"),default_delegate_tointeger,-1, _SC("sn")},
 	{_SC("tofloat"),default_delegate_tofloat,1, _SC("s")},
@@ -903,7 +903,7 @@ const rabbit::RegFunction SQSharedState::_string_default_delegate_funcz[]={
 };
 
 //INTEGER DEFAULT DELEGATE//////////////////////////
-const rabbit::RegFunction SQSharedState::_number_default_delegate_funcz[]={
+const rabbit::RegFunction rabbit::SharedState::_number_default_delegate_funcz[]={
 	{_SC("tointeger"),default_delegate_tointeger,1, _SC("n|b")},
 	{_SC("tofloat"),default_delegate_tofloat,1, _SC("n|b")},
 	{_SC("tostring"),default_delegate_tostring,1, _SC(".")},
@@ -970,7 +970,7 @@ static int64_t closure_setroot(rabbit::VirtualMachine* v)
 
 static int64_t closure_getinfos(rabbit::VirtualMachine* v) {
 	rabbit::Object o = stack_get(v,1);
-	SQTable *res = SQTable::create(_get_shared_state(v),4);
+	rabbit::Table *res = rabbit::Table::create(_get_shared_state(v),4);
 	if(sq_type(o) == rabbit::OT_CLOSURE) {
 		SQFunctionProto *f = _closure(o)->_function;
 		int64_t nparams = f->_nparameters + (f->_varparams?1:0);
@@ -983,20 +983,20 @@ static int64_t closure_getinfos(rabbit::VirtualMachine* v) {
 			_array(defparams)->set((int64_t)j,_closure(o)->_defaultparams[j]);
 		}
 		if(f->_varparams) {
-			_array(params)->set(nparams-1,SQString::create(_get_shared_state(v),_SC("..."),-1));
+			_array(params)->set(nparams-1,rabbit::String::create(_get_shared_state(v),_SC("..."),-1));
 		}
-		res->newSlot(SQString::create(_get_shared_state(v),_SC("native"),-1),false);
-		res->newSlot(SQString::create(_get_shared_state(v),_SC("name"),-1),f->_name);
-		res->newSlot(SQString::create(_get_shared_state(v),_SC("src"),-1),f->_sourcename);
-		res->newSlot(SQString::create(_get_shared_state(v),_SC("parameters"),-1),params);
-		res->newSlot(SQString::create(_get_shared_state(v),_SC("varargs"),-1),f->_varparams);
-	res->newSlot(SQString::create(_get_shared_state(v),_SC("defparams"),-1),defparams);
+		res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("native"),-1),false);
+		res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("name"),-1),f->_name);
+		res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("src"),-1),f->_sourcename);
+		res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("parameters"),-1),params);
+		res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("varargs"),-1),f->_varparams);
+	res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("defparams"),-1),defparams);
 	}
 	else { //rabbit::OT_NATIVECLOSURE
 		SQNativeClosure *nc = _nativeclosure(o);
-		res->newSlot(SQString::create(_get_shared_state(v),_SC("native"),-1),true);
-		res->newSlot(SQString::create(_get_shared_state(v),_SC("name"),-1),nc->_name);
-		res->newSlot(SQString::create(_get_shared_state(v),_SC("paramscheck"),-1),nc->_nparamscheck);
+		res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("native"),-1),true);
+		res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("name"),-1),nc->_name);
+		res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("paramscheck"),-1),nc->_nparamscheck);
 		rabbit::ObjectPtr typecheck;
 		if(nc->_typecheck.size() > 0) {
 			typecheck =
@@ -1005,7 +1005,7 @@ static int64_t closure_getinfos(rabbit::VirtualMachine* v) {
 					_array(typecheck)->set((int64_t)n,nc->_typecheck[n]);
 			}
 		}
-		res->newSlot(SQString::create(_get_shared_state(v),_SC("typecheck"),-1),typecheck);
+		res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("typecheck"),-1),typecheck);
 	}
 	v->push(res);
 	return 1;
@@ -1013,7 +1013,7 @@ static int64_t closure_getinfos(rabbit::VirtualMachine* v) {
 
 
 
-const rabbit::RegFunction SQSharedState::_closure_default_delegate_funcz[]={
+const rabbit::RegFunction rabbit::SharedState::_closure_default_delegate_funcz[]={
 	{_SC("call"),closure_call,-1, _SC("c")},
 	{_SC("pcall"),closure_pcall,-1, _SC("c")},
 	{_SC("acall"),closure_acall,2, _SC("ca")},
@@ -1032,14 +1032,14 @@ static int64_t generator_getstatus(rabbit::VirtualMachine* v)
 {
 	rabbit::Object &o=stack_get(v,1);
 	switch(_generator(o)->_state){
-		case SQGenerator::eSuspended:v->push(SQString::create(_get_shared_state(v),_SC("suspended")));break;
-		case SQGenerator::eRunning:v->push(SQString::create(_get_shared_state(v),_SC("running")));break;
-		case SQGenerator::eDead:v->push(SQString::create(_get_shared_state(v),_SC("dead")));break;
+		case SQGenerator::eSuspended:v->push(rabbit::String::create(_get_shared_state(v),_SC("suspended")));break;
+		case SQGenerator::eRunning:v->push(rabbit::String::create(_get_shared_state(v),_SC("running")));break;
+		case SQGenerator::eDead:v->push(rabbit::String::create(_get_shared_state(v),_SC("dead")));break;
 	}
 	return 1;
 }
 
-const rabbit::RegFunction SQSharedState::_generator_default_delegate_funcz[]={
+const rabbit::RegFunction rabbit::SharedState::_generator_default_delegate_funcz[]={
 	{_SC("getstatus"),generator_getstatus,1, _SC("g")},
 	{_SC("weakref"),obj_delegate_weakref,1, NULL },
 	{_SC("tostring"),default_delegate_tostring,1, _SC(".")},
@@ -1195,7 +1195,7 @@ static int64_t thread_getstackinfos(rabbit::VirtualMachine* v)
 	return sq_throwerror(v,_SC("wrong parameter"));
 }
 
-const rabbit::RegFunction SQSharedState::_thread_default_delegate_funcz[] = {
+const rabbit::RegFunction rabbit::SharedState::_thread_default_delegate_funcz[] = {
 	{_SC("call"), thread_call, -1, _SC("v")},
 	{_SC("wakeup"), thread_wakeup, -1, _SC("v")},
 	{_SC("wakeupthrow"), thread_wakeupthrow, -2, _SC("v.b")},
@@ -1258,7 +1258,7 @@ static int64_t class_rawnewmember(rabbit::VirtualMachine* v)
 	return SQ_SUCCEEDED(sq_rawnewmember(v,-4,bstatic))?1:SQ_ERROR;
 }
 
-const rabbit::RegFunction SQSharedState::_class_default_delegate_funcz[] = {
+const rabbit::RegFunction rabbit::SharedState::_class_default_delegate_funcz[] = {
 	{_SC("getattributes"), class_getattributes, 2, _SC("y.")},
 	{_SC("setattributes"), class_setattributes, 3, _SC("y..")},
 	{_SC("rawget"),container_rawget,2, _SC("y")},
@@ -1281,7 +1281,7 @@ static int64_t instance_getclass(rabbit::VirtualMachine* v)
 	return SQ_ERROR;
 }
 
-const rabbit::RegFunction SQSharedState::_instance_default_delegate_funcz[] = {
+const rabbit::RegFunction rabbit::SharedState::_instance_default_delegate_funcz[] = {
 	{_SC("getclass"), instance_getclass, 1, _SC("x")},
 	{_SC("rawget"),container_rawget,2, _SC("x")},
 	{_SC("rawset"),container_rawset,3, _SC("x")},
@@ -1298,7 +1298,7 @@ static int64_t weakref_ref(rabbit::VirtualMachine* v)
 	return 1;
 }
 
-const rabbit::RegFunction SQSharedState::_weakref_default_delegate_funcz[] = {
+const rabbit::RegFunction rabbit::SharedState::_weakref_default_delegate_funcz[] = {
 	{_SC("ref"),weakref_ref,1, _SC("r")},
 	{_SC("weakref"),obj_delegate_weakref,1, NULL },
 	{_SC("tostring"),default_delegate_tostring,1, _SC(".")},

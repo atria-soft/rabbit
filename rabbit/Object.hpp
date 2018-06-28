@@ -81,4 +81,13 @@ namespace rabbit {
 	#define sq_isweakref(o) ((o)._type==rabbit::OT_WEAKREF)
 	#define sq_type(o) ((o)._type)
 	
+	inline void _Swap(rabbit::Object &a,rabbit::Object &b)
+	{
+		rabbit::ObjectType tOldType = a._type;
+		rabbit::ObjectValue unOldVal = a._unVal;
+		a._type = b._type;
+		a._unVal = b._unVal;
+		b._type = tOldType;
+		b._unVal = unOldVal;
+	}
 }

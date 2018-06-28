@@ -67,11 +67,11 @@ typedef etk::Vector<SQLineInfo> SQLineInfoVec;
 struct SQFunctionProto : public rabbit::RefCounted
 {
 private:
-	SQFunctionProto(SQSharedState *ss);
+	SQFunctionProto(rabbit::SharedState *ss);
 	~SQFunctionProto();
 
 public:
-	static SQFunctionProto *create(SQSharedState *ss,int64_t ninstructions,
+	static SQFunctionProto *create(rabbit::SharedState *ss,int64_t ninstructions,
 		int64_t nliterals,int64_t nparameters,
 		int64_t nfunctions,int64_t noutervalues,
 		int64_t nlineinfos,int64_t nlocalvarinfos,int64_t ndefaultparams)

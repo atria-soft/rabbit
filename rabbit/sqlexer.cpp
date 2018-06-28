@@ -9,8 +9,8 @@
 #include <rabbit/sqpcheader.hpp>
 #include <ctype.h>
 #include <stdlib.h>
-#include <rabbit/sqtable.hpp>
-#include <rabbit/sqstring.hpp>
+
+
 #include <rabbit/sqcompiler.hpp>
 #include <rabbit/sqlexer.hpp>
 
@@ -21,7 +21,7 @@
 #define INIT_TEMP_STRING() { _longstr.resize(0);}
 #define APPEND_CHAR(c) { _longstr.pushBack(c);}
 #define TERMINATE_BUFFER() {_longstr.pushBack(_SC('\0'));}
-#define ADD_KEYWORD(key,id) _keywords->newSlot( SQString::create(ss, _SC(#key)) ,int64_t(id))
+#define ADD_KEYWORD(key,id) _keywords->newSlot( rabbit::String::create(ss, _SC(#key)) ,int64_t(id))
 
 SQLexer::SQLexer(){}
 SQLexer::~SQLexer()
@@ -29,12 +29,12 @@ SQLexer::~SQLexer()
 	_keywords->release();
 }
 
-void SQLexer::init(SQSharedState *ss, SQLEXREADFUNC rg, rabbit::UserPointer up,compilererrorFunc efunc,void *ed)
+void SQLexer::init(rabbit::SharedState *ss, SQLEXREADFUNC rg, rabbit::UserPointer up,compilererrorFunc efunc,void *ed)
 {
 	_errfunc = efunc;
 	_errtarget = ed;
 	_sharedstate = ss;
-	_keywords = SQTable::create(ss, 37);
+	_keywords = rabbit::Table::create(ss, 37);
 	ADD_KEYWORD(while, TK_WHILE);
 	ADD_KEYWORD(do, TK_DO);
 	ADD_KEYWORD(if, TK_IF);

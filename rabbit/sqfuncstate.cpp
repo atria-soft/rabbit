@@ -9,9 +9,9 @@
 #include <rabbit/sqpcheader.hpp>
 #ifndef NO_COMPILER
 #include <rabbit/sqcompiler.hpp>
-#include <rabbit/sqstring.hpp>
+
 #include <rabbit/sqfuncproto.hpp>
-#include <rabbit/sqtable.hpp>
+
 #include <rabbit/sqopcodes.hpp>
 #include <rabbit/sqfuncstate.hpp>
 
@@ -91,11 +91,11 @@ void dumpLiteral(rabbit::ObjectPtr &o)
 	}
 }
 
-SQFuncState::SQFuncState(SQSharedState *ss,SQFuncState *parent,compilererrorFunc efunc,void *ed)
+SQFuncState::SQFuncState(rabbit::SharedState *ss,SQFuncState *parent,compilererrorFunc efunc,void *ed)
 {
 		_nliterals = 0;
-		_literals = SQTable::create(ss,0);
-		_strings =  SQTable::create(ss,0);
+		_literals = rabbit::Table::create(ss,0);
+		_strings =  rabbit::Table::create(ss,0);
 		_sharedstate = ss;
 		_lastline = 0;
 		_optimization = true;
@@ -586,14 +586,14 @@ void SQFuncState::addInstruction(SQInstruction &i)
 
 rabbit::Object SQFuncState::createString(const rabbit::Char *s,int64_t len)
 {
-	rabbit::ObjectPtr ns(SQString::create(_sharedstate,s,len));
+	rabbit::ObjectPtr ns(rabbit::String::create(_sharedstate,s,len));
 	_table(_strings)->newSlot(ns,(int64_t)1);
 	return ns;
 }
 
 rabbit::Object SQFuncState::createTable()
 {
-	rabbit::ObjectPtr nt(SQTable::create(_sharedstate,0));
+	rabbit::ObjectPtr nt(rabbit::Table::create(_sharedstate,0));
 	_table(_strings)->newSlot(nt,(int64_t)1);
 	return nt;
 }
@@ -632,7 +632,7 @@ SQFunctionProto *SQFuncState::buildProto()
 	return f;
 }
 
-SQFuncState *SQFuncState::pushChildState(SQSharedState *ss)
+SQFuncState *SQFuncState::pushChildState(rabbit::SharedState *ss)
 {
 	SQFuncState *child = (SQFuncState *)sq_malloc(sizeof(SQFuncState));
 	new (child) SQFuncState(ss,this,_errfunc,_errtarget);

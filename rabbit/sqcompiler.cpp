@@ -10,13 +10,13 @@
 #include <stdarg.h>
 #include <setjmp.h>
 #include <rabbit/sqopcodes.hpp>
-#include <rabbit/sqstring.hpp>
+
 #include <rabbit/sqfuncproto.hpp>
 #include <rabbit/sqcompiler.hpp>
 #include <rabbit/sqfuncstate.hpp>
 #include <rabbit/sqlexer.hpp>
 #include <rabbit/VirtualMachine.hpp>
-#include <rabbit/sqtable.hpp>
+
 
 #define EXPR   1
 #define OBJECT 2
@@ -80,7 +80,7 @@ public:
 	{
 		_vm=v;
 		_lex.init(_get_shared_state(v), rg, up,Throwerror,this);
-		_sourcename = SQString::create(_get_shared_state(v), sourcename);
+		_sourcename = rabbit::String::create(_get_shared_state(v), sourcename);
 		_lineinfo = lineinfo;_raiseerror = raiseerror;
 		_scope.outers = 0;
 		_scope.stacksize = 0;
@@ -171,7 +171,7 @@ public:
 		_debugop = 0;
 
 		SQFuncState funcstate(_get_shared_state(_vm), NULL,Throwerror,this);
-		funcstate._name = SQString::create(_get_shared_state(_vm), _SC("main"));
+		funcstate._name = rabbit::String::create(_get_shared_state(_vm), _SC("main"));
 		_fs = &funcstate;
 		_fs->addParameter(_fs->createString(_SC("this")));
 		_fs->addParameter(_fs->createString(_SC("vargv")));
@@ -198,7 +198,7 @@ public:
 				_get_shared_state(_vm)->_compilererrorhandler(_vm, _compilererror, sq_type(_sourcename) == rabbit::OT_STRING?_stringval(_sourcename):_SC("unknown"),
 					_lex._currentline, _lex._currentcolumn);
 			}
-			_vm->_lasterror = SQString::create(_get_shared_state(_vm), _compilererror, -1);
+			_vm->_lasterror = rabbit::String::create(_get_shared_state(_vm), _compilererror, -1);
 			return false;
 		}
 		return true;
@@ -305,7 +305,7 @@ public:
 			Expect('=');
 			rabbit::Object val = ExpectScalar();
 			OptionalSemicolon();
-			SQTable *enums = _table(_get_shared_state(_vm)->_consts);
+			rabbit::Table *enums = _table(_get_shared_state(_vm)->_consts);
 			rabbit::ObjectPtr strongid = id;
 			enums->newSlot(strongid,rabbit::ObjectPtr(val));
 			strongid.Null();
@@ -1381,7 +1381,7 @@ public:
 			_table(table)->newSlot(rabbit::ObjectPtr(key),rabbit::ObjectPtr(val));
 			if(_token == ',') Lex();
 		}
-		SQTable *enums = _table(_get_shared_state(_vm)->_consts);
+		rabbit::Table *enums = _table(_get_shared_state(_vm)->_consts);
 		rabbit::ObjectPtr strongid = id;
 		enums->newSlot(rabbit::ObjectPtr(strongid),rabbit::ObjectPtr(table));
 		strongid.Null();

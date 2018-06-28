@@ -7,9 +7,11 @@
  */
 
 #include <rabbit/Delegable.hpp>
-#include <rabbit/sqtable.hpp>
+
 #include <rabbit/VirtualMachine.hpp>
-#include <rabbit/sqstate.hpp>
+#include <rabbit/Table.hpp>
+#include <rabbit/SharedState.hpp>
+
 
 bool rabbit::Delegable::getMetaMethod(rabbit::VirtualMachine *v,rabbit::MetaMethod mm,rabbit::ObjectPtr &res) {
 	if(_delegate) {
@@ -18,8 +20,8 @@ bool rabbit::Delegable::getMetaMethod(rabbit::VirtualMachine *v,rabbit::MetaMeth
 	return false;
 }
 
-bool rabbit::Delegable::setDelegate(SQTable *mt) {
-	SQTable *temp = mt;
+bool rabbit::Delegable::setDelegate(rabbit::Table *mt) {
+	rabbit::Table *temp = mt;
 	if(temp == this) {
 		return false;
 	}

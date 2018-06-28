@@ -12,21 +12,20 @@
 
 namespace rabbit {
 	
-	union ObjectValue
-	{
-		struct SQTable *pTable;
+	union ObjectValue {
 		struct SQClosure *pClosure;
 		struct SQOuter *pOuter;
 		struct SQGenerator *pGenerator;
 		struct SQNativeClosure *pNativeClosure;
-		struct SQString *pString;
 		int64_t nInteger;
 		float_t fFloat;
 		struct SQFunctionProto *pFunctionProto;
 		
-		rabbit::Class *pClass;
-		rabbit::Instance *pInstance;
-		rabbit::Delegable *pDelegable;
+		rabbit::Table* pTable;
+		rabbit::String* pString;
+		rabbit::Class* pClass;
+		rabbit::Instance* pInstance;
+		rabbit::Delegable* pDelegable;
 		rabbit::UserPointer pUserPointer;
 		rabbit::WeakRef* pWeakRef;
 		rabbit::VirtualMachine* pThread;

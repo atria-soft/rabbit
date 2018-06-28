@@ -9,10 +9,6 @@
 
 #include <etk/types.hpp>
 
-// should be the same size of a pointer
-using SQHash = size_t;
-
-
 #ifdef SQUSEDOUBLE
 typedef double float_t;
 #else
@@ -30,6 +26,9 @@ typedef uint64_t SQRawObjectVal; //is 32 bits on 32 bits builds and 64 bits othe
 #ifndef SQ_ALIGNMENT
 	#define SQ_ALIGNMENT 8
 #endif
+
+//max number of character for a printed number
+#define NUMBER_MAX_CHAR 50
 
 namespace rabbit {
 	using UserPointer = void*;
@@ -125,14 +124,11 @@ namespace rabbit {
 #define SQTrue  (1)
 #define SQFalse (0)
 
-struct SQTable;
-struct SQString;
 struct SQClosure;
 struct SQGenerator;
 struct SQNativeClosure;
 struct SQFunctionProto;
 struct SQOuter;
-struct SQSharedState;
 namespace rabbit {
 	class UserData;
 	class Array;
@@ -145,4 +141,7 @@ namespace rabbit {
 	class MemberHandle;
 	class Instance;
 	class Class;
+	class Table;
+	class String;
+	class SharedState;
 }

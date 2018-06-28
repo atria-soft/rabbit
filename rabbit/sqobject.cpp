@@ -7,38 +7,13 @@
  */
 #include <rabbit/sqpcheader.hpp>
 #include <rabbit/VirtualMachine.hpp>
-#include <rabbit/sqstring.hpp>
+
 #include <rabbit/Array.hpp>
-#include <rabbit/sqtable.hpp>
+
 #include <rabbit/UserData.hpp>
 #include <rabbit/sqfuncproto.hpp>
 
 #include <rabbit/sqclosure.hpp>
-
-SQString *SQString::create(SQSharedState *ss,const rabbit::Char *s,int64_t len)
-{
-	SQString *str=ADD_STRING(ss,s,len);
-	return str;
-}
-
-void SQString::release()
-{
-	REMOVE_STRING(_sharedstate,this);
-}
-
-int64_t SQString::next(const rabbit::ObjectPtr &refpos, rabbit::ObjectPtr &outkey, rabbit::ObjectPtr &outval)
-{
-	int64_t idx = (int64_t)translateIndex(refpos);
-	while(idx < _len){
-		outkey = (int64_t)idx;
-		outval = (int64_t)((uint64_t)_val[idx]);
-		//return idx for the next iteration
-		return ++idx;
-	}
-	//nothing to iterate anymore
-	return -1;
-}
-
 
 bool SQGenerator::yield(rabbit::VirtualMachine *v,int64_t target)
 {
@@ -251,7 +226,7 @@ bool ReadObject(rabbit::VirtualMachine* v,rabbit::UserPointer up,SQREADFUNC read
 		int64_t len;
 		_CHECK_IO(SafeRead(v,read,up,&len,sizeof(int64_t)));
 		_CHECK_IO(SafeRead(v,read,up,_get_shared_state(v)->getScratchPad(sq_rsl(len)),sq_rsl(len)));
-		o=SQString::create(_get_shared_state(v),_get_shared_state(v)->getScratchPad(-1),len);
+		o=rabbit::String::create(_get_shared_state(v),_get_shared_state(v)->getScratchPad(-1),len);
 				   }
 		break;
 	case rabbit::OT_INTEGER:{
@@ -301,7 +276,7 @@ bool SQClosure::load(rabbit::VirtualMachine *v,rabbit::UserPointer up,SQREADFUNC
 	return true;
 }
 
-SQFunctionProto::SQFunctionProto(SQSharedState *ss)
+SQFunctionProto::SQFunctionProto(rabbit::SharedState *ss)
 {
 	_stacksize=0;
 	_bgenerator=false;

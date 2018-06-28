@@ -11,7 +11,7 @@
 #include <rabbit/VirtualMachine.hpp>
 #include <rabbit/sqfuncproto.hpp>
 #include <rabbit/sqclosure.hpp>
-#include <rabbit/sqstring.hpp>
+
 #include <rabbit/FunctionInfo.hpp>
 #include <rabbit/StackInfos.hpp>
 
@@ -70,7 +70,7 @@ void rabbit::VirtualMachine::raise_error(const rabbit::Char *s, ...)
 	int64_t buffersize = (int64_t)scstrlen(s)+(NUMBER_MAX_CHAR*2);
 	scvsprintf(_sp(sq_rsl(buffersize)),buffersize, s, vl);
 	va_end(vl);
-	_lasterror = SQString::create(_get_shared_state(this),_spval,-1);
+	_lasterror = rabbit::String::create(_get_shared_state(this),_spval,-1);
 }
 
 void rabbit::VirtualMachine::raise_error(const rabbit::ObjectPtr &desc)
@@ -78,20 +78,20 @@ void rabbit::VirtualMachine::raise_error(const rabbit::ObjectPtr &desc)
 	_lasterror = desc;
 }
 
-SQString *rabbit::VirtualMachine::printObjVal(const rabbit::ObjectPtr &o)
+rabbit::String *rabbit::VirtualMachine::printObjVal(const rabbit::ObjectPtr &o)
 {
 	switch(sq_type(o)) {
 	case rabbit::OT_STRING: return _string(o);
 	case rabbit::OT_INTEGER:
 		scsprintf(_sp(sq_rsl(NUMBER_MAX_CHAR+1)),sq_rsl(NUMBER_MAX_CHAR), _PRINT_INT_FMT, _integer(o));
-		return SQString::create(_get_shared_state(this), _spval);
+		return rabbit::String::create(_get_shared_state(this), _spval);
 		break;
 	case rabbit::OT_FLOAT:
 		scsprintf(_sp(sq_rsl(NUMBER_MAX_CHAR+1)), sq_rsl(NUMBER_MAX_CHAR), _SC("%.14g"), _float(o));
-		return SQString::create(_get_shared_state(this), _spval);
+		return rabbit::String::create(_get_shared_state(this), _spval);
 		break;
 	default:
-		return SQString::create(_get_shared_state(this), getTypeName(o));
+		return rabbit::String::create(_get_shared_state(this), getTypeName(o));
 	}
 }
 
@@ -110,15 +110,15 @@ void rabbit::VirtualMachine::raise_Compareerror(const rabbit::Object &o1, const 
 
 void rabbit::VirtualMachine::raise_ParamTypeerror(int64_t nparam,int64_t typemask,int64_t type)
 {
-	rabbit::ObjectPtr exptypes = SQString::create(_get_shared_state(this), _SC(""), -1);
+	rabbit::ObjectPtr exptypes = rabbit::String::create(_get_shared_state(this), _SC(""), -1);
 	int64_t found = 0;
 	for(int64_t i=0; i<16; i++)
 	{
 		int64_t mask = ((int64_t)1) << i;
 		if(typemask & (mask)) {
-			if(found>0) stringCat(exptypes,SQString::create(_get_shared_state(this), _SC("|"), -1), exptypes);
+			if(found>0) stringCat(exptypes,rabbit::String::create(_get_shared_state(this), _SC("|"), -1), exptypes);
 			found ++;
-			stringCat(exptypes,SQString::create(_get_shared_state(this), IdType2Name((rabbit::ObjectType)mask), -1), exptypes);
+			stringCat(exptypes,rabbit::String::create(_get_shared_state(this), IdType2Name((rabbit::ObjectType)mask), -1), exptypes);
 		}
 	}
 	raise_error(_SC("parameter %d has an invalid type '%s' ; expected: '%s'"), nparam, IdType2Name((rabbit::ObjectType)type), _stringval(exptypes));

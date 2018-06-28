@@ -12,14 +12,14 @@
 #include <rabbit/MetaMethod.hpp>
 #include <rabbit/ObjectPtr.hpp>
 
-struct SQTable;
 namespace rabbit {
+	class Table;
 	class VirtualMachine;
 	class Delegable : public rabbit::RefCounted {
 		public:
-			bool setDelegate(SQTable *m);
+			bool setDelegate(rabbit::Table *m);
 		public:
 			virtual bool getMetaMethod(rabbit::VirtualMachine *v, rabbit::MetaMethod mm, rabbit::ObjectPtr& res);
-			SQTable *_delegate;
+			rabbit::Table *_delegate;
 	};
 }

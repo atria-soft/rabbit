@@ -16,14 +16,14 @@ struct SQFunctionProto;
 struct SQClosure : public rabbit::RefCounted
 {
 private:
-	SQClosure(SQSharedState *ss,SQFunctionProto *func){
+	SQClosure(rabbit::SharedState *ss,SQFunctionProto *func){
 		_function = func;
 		__ObjaddRef(_function); _base = NULL;
 		_env = NULL;
 		_root=NULL;
 	}
 public:
-	static SQClosure *create(SQSharedState *ss,SQFunctionProto *func,rabbit::WeakRef *root){
+	static SQClosure *create(rabbit::SharedState *ss,SQFunctionProto *func,rabbit::WeakRef *root){
 		int64_t size = _CALC_CLOSURE_SIZE(func);
 		SQClosure *nc=(SQClosure*)SQ_MALLOC(size);
 		new (nc) SQClosure(ss,func);
@@ -77,13 +77,13 @@ struct SQOuter : public rabbit::RefCounted
 {
 
 private:
-	SQOuter(SQSharedState *ss, rabbit::ObjectPtr *outer){
+	SQOuter(rabbit::SharedState *ss, rabbit::ObjectPtr *outer){
 		_valptr = outer;
 		_next = NULL;
 	}
 
 public:
-	static SQOuter *create(SQSharedState *ss, rabbit::ObjectPtr *outer)
+	static SQOuter *create(rabbit::SharedState *ss, rabbit::ObjectPtr *outer)
 	{
 		SQOuter *nc  = (SQOuter*)SQ_MALLOC(sizeof(SQOuter));
 		new (nc) SQOuter(ss, outer);
@@ -110,13 +110,13 @@ struct SQGenerator : public rabbit::RefCounted
 {
 	enum SQGeneratorState{eRunning,eSuspended,eDead};
 private:
-	SQGenerator(SQSharedState *ss,SQClosure *closure){
+	SQGenerator(rabbit::SharedState *ss,SQClosure *closure){
 		_closure=closure;
 		_state=eRunning;
 		_ci._generator=NULL;
 	}
 public:
-	static SQGenerator *create(SQSharedState *ss,SQClosure *closure){
+	static SQGenerator *create(rabbit::SharedState *ss,SQClosure *closure){
 		SQGenerator *nc=(SQGenerator*)SQ_MALLOC(sizeof(SQGenerator));
 		new (nc) SQGenerator(ss,closure);
 		return nc;
@@ -147,12 +147,12 @@ public:
 struct SQNativeClosure : public rabbit::RefCounted
 {
 private:
-	SQNativeClosure(SQSharedState *ss,SQFUNCTION func){
+	SQNativeClosure(rabbit::SharedState *ss,SQFUNCTION func){
 		_function=func;
 		_env = NULL;
 	}
 public:
-	static SQNativeClosure *create(SQSharedState *ss,SQFUNCTION func,int64_t nouters)
+	static SQNativeClosure *create(rabbit::SharedState *ss,SQFUNCTION func,int64_t nouters)
 	{
 		int64_t size = _CALC_NATVIVECLOSURE_SIZE(nouters);
 		SQNativeClosure *nc=(SQNativeClosure*)SQ_MALLOC(size);

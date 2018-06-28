@@ -7,9 +7,11 @@
  */
 #include <rabbit/Class.hpp>
 #include <rabbit/Instance.hpp>
+#include <rabbit/Table.hpp>
+#include <rabbit/SharedState.hpp>
 
 
-rabbit::Class::Class(SQSharedState *ss,rabbit::Class *base) {
+rabbit::Class::Class(rabbit::SharedState *ss, rabbit::Class *base) {
 	_base = base;
 	_typetag = 0;
 	_hook = NULL;
@@ -24,7 +26,7 @@ rabbit::Class::Class(SQSharedState *ss,rabbit::Class *base) {
 		_COPY_VECTOR(_metamethods,base->_metamethods, rabbit::MT_LAST);
 		__ObjaddRef(_base);
 	}
-	_members = base?base->_members->clone() : SQTable::create(ss,0);
+	_members = base?base->_members->clone() : rabbit::Table::create(ss,0);
 	__ObjaddRef(_members);
 }
 
@@ -43,7 +45,48 @@ rabbit::Class::~Class() {
 	finalize();
 }
 
-bool rabbit::Class::newSlot(SQSharedState *ss,const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val,bool bstatic) {
+rabbit::Class* rabbit::Class::create(rabbit::SharedState *ss, Class *base) {
+	rabbit::Class *newclass = (Class *)SQ_MALLOC(sizeof(Class));
+	new (newclass) Class(ss, base);
+	return newclass;
+}
+
+bool rabbit::Class::get(const rabbit::ObjectPtr &key,rabbit::ObjectPtr &val) {
+	if(_members->get(key,val)) {
+		if(_isfield(val)) {
+			rabbit::ObjectPtr &o = _defaultvalues[_member_idx(val)].val;
+			val = _realval(o);
+		} else {
+			val = _methods[_member_idx(val)].val;
+		}
+		return true;
+	}
+	return false;
+}
+
+bool rabbit::Class::getConstructor(rabbit::ObjectPtr &ctor) {
+	if(_constructoridx != -1) {
+		ctor = _methods[_constructoridx].val;
+		return true;
+	}
+	return false;
+}
+
+void rabbit::Class::lock() {
+	_locked = true;
+	if(_base) {
+		_base->lock();
+	}
+}
+
+void rabbit::Class::release() {
+	if (_hook) {
+		_hook(_typetag,0);
+	}
+	sq_delete(this, Class);
+}
+
+bool rabbit::Class::newSlot(rabbit::SharedState *ss,const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val,bool bstatic) {
 	rabbit::ObjectPtr temp;
 	bool belongs_to_static_table =    sq_type(val) == rabbit::OT_CLOSURE
 	                               || sq_type(val) == rabbit::OT_NATIVECLOSURE

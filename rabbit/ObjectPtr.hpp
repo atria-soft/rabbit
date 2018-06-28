@@ -33,7 +33,7 @@ namespace rabbit {
 			ObjectPtr(const ObjectPtr& _obj);
 			ObjectPtr(const Object& _obj);
 			
-			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_TABLE, SQTable, pTable)
+			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_TABLE, rabbit::Table, pTable)
 			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_CLASS, rabbit::Class, pClass)
 			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_INSTANCE, rabbit::Instance, pInstance)
 			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_ARRAY, rabbit::Array, pArray)
@@ -41,7 +41,7 @@ namespace rabbit {
 			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_NATIVECLOSURE, SQNativeClosure, pNativeClosure)
 			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_OUTER, SQOuter, pOuter)
 			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_GENERATOR, SQGenerator, pGenerator)
-			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_STRING, SQString, pString)
+			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_STRING, rabbit::String, pString)
 			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_USERDATA, UserData, pUserData)
 			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_WEAKREF, WeakRef, pWeakRef)
 			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_THREAD, VirtualMachine, pThread)
