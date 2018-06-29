@@ -13,14 +13,14 @@
 namespace rabbit {
 	
 	union ObjectValue {
-		struct rabbit::Closure *pClosure;
-		struct rabbit::Outer *pOuter;
-		struct rabbit::Generator *pGenerator;
-		struct rabbit::NativeClosure *pNativeClosure;
 		int64_t nInteger;
 		float_t fFloat;
-		struct rabbit::FunctionProto *pFunctionProto;
 		
+		rabbit::FunctionProto *pFunctionProto;
+		rabbit::Closure *pClosure;
+		rabbit::Outer *pOuter;
+		rabbit::Generator *pGenerator;
+		rabbit::NativeClosure *pNativeClosure;
 		rabbit::Table* pTable;
 		rabbit::String* pString;
 		rabbit::Class* pClass;
@@ -33,7 +33,7 @@ namespace rabbit {
 		rabbit::Array* pArray;
 		rabbit::UserData* pUserData;
 		
-		SQRawObjectVal raw;
+		rabbit::RawObjectVal raw;
 	};
 
 }

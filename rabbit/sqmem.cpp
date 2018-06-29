@@ -6,7 +6,7 @@
  * @license MPL-2 (see license file)
  */
 
-#include <rabbit/sqpcheader.hpp>
+
 
 #ifndef SQ_EXCLUDE_DEFAULT_MEMFUNCTIONS
 void *sq_vm_malloc(uint64_t size){ return malloc(size); }

@@ -39,14 +39,14 @@ namespace rabbit {
 				ret->_nparamscheck = _nparamscheck;
 				return ret;
 			}
-			~rabbit::NativeClosure()
+			~NativeClosure()
 			{
 				__Objrelease(_env);
 			}
 			void release(){
 				int64_t size = _CALC_NATVIVECLOSURE_SIZE(_noutervalues);
 				_DESTRUCT_VECTOR(ObjectPtr,_noutervalues,_outervalues);
-				this->~rabbit::NativeClosure();
+				this->~NativeClosure();
 				sq_free(this,size);
 			}
 		

@@ -66,12 +66,8 @@ def configure(target, my_module):
 	    'rabbit/WeakRef.cpp',
 	    'rabbit/sqapi.cpp',
 	    'rabbit/sqbaselib.cpp',
-	    'rabbit/sqcompiler.cpp',
 	    'rabbit/sqdebug.cpp',
-	    'rabbit/sqfuncstate.cpp',
-	    'rabbit/sqlexer.cpp',
 	    'rabbit/sqmem.cpp',
-	    'rabbit/sqobject.cpp',
 	    ])
 	my_module.compile_version("c++", 2011)
 	my_module.add_depend([
@@ -120,15 +116,8 @@ def configure(target, my_module):
 	    'rabbit/VirtualMachine.hpp',
 	    'rabbit/WeakRef.hpp',
 	    'rabbit/rabbit.hpp',
-	    'rabbit/sqclosure.hpp',
-	    'rabbit/sqcompiler.hpp',
 	    'rabbit/sqconfig.hpp',
-	    'rabbit/sqfuncproto.hpp',
-	    'rabbit/sqfuncstate.hpp',
-	    'rabbit/sqlexer.hpp',
-	    'rabbit/sqobject.hpp',
 	    'rabbit/sqopcodes.hpp',
-	    'rabbit/sqpcheader.hpp',
 	    'rabbit/squtils.hpp',
 	    ])
 

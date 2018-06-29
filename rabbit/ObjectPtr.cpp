@@ -133,7 +133,7 @@ void rabbit::ObjectPtr::Null() {
 	rabbit::ObjectType tOldType = _type;
 	rabbit::ObjectValue unOldVal = _unVal;
 	_type = rabbit::OT_NULL;
-	_unVal.raw = (SQRawObjectVal)NULL;
+	_unVal.raw = (rabbit::RawObjectVal)NULL;
 	__release(tOldType ,unOldVal);
 }
 

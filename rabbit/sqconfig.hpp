@@ -15,13 +15,15 @@ typedef double float_t;
 typedef float float_t;
 #endif
 
-#if defined(SQUSEDOUBLE) && !defined(_SQ64) || !defined(SQUSEDOUBLE) && defined(_SQ64)
-typedef uint64_t SQRawObjectVal; //must be 64bits
-#define SQ_OBJECT_RAWINIT() { _unVal.raw = 0; }
-#else
-typedef uint64_t SQRawObjectVal; //is 32 bits on 32 bits builds and 64 bits otherwise
-#define SQ_OBJECT_RAWINIT()
-#endif
+namespace rabbit {
+	#if defined(SQUSEDOUBLE) && !defined(_SQ64) || !defined(SQUSEDOUBLE) && defined(_SQ64)
+		using RawObjectVal = uint64_t; //must be 64bits
+		#define SQ_OBJECT_RAWINIT() { _unVal.raw = 0; }
+	#else
+		using RawObjectVal = uint64_t; //is 32 bits on 32 bits builds and 64 bits otherwise
+		#define SQ_OBJECT_RAWINIT()
+	#endif
+}
 
 #ifndef SQ_ALIGNMENT
 	#define SQ_ALIGNMENT 8
@@ -134,11 +136,6 @@ namespace rabbit {
 
 
 
-struct rabbit::Closure;
-struct rabbit::Generator;
-struct rabbit::NativeClosure;
-struct rabbit::FunctionProto;
-struct rabbit::Outer;
 namespace rabbit {
 	class UserData;
 	class Array;
@@ -154,4 +151,9 @@ namespace rabbit {
 	class Table;
 	class String;
 	class SharedState;
+	class Closure;
+	class Generator;
+	class NativeClosure;
+	class FunctionProto;
+	class Outer;
 }

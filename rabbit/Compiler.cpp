@@ -7,7 +7,7 @@
  */
 #include <rabbit/Compiler.hpp>
 
-#include <rabbit/sqpcheader.hpp>
+
 #ifndef NO_COMPILER
 #include <stdarg.h>
 #include <setjmp.h>
@@ -1162,7 +1162,7 @@ public:
 		_fs->snoozeOpt();
 		int64_t expend = _fs->getCurrentPos();
 		int64_t expsize = (expend - expstart) + 1;
-		rabbit::InstructionVec exp;
+		etk::Vector<rabbit::Instruction> exp;
 		if(expsize > 0) {
 			for(int64_t i = 0; i < expsize; i++)
 				exp.pushBack(_fs->getInstruction(expstart + i));

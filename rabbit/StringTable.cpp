@@ -91,7 +91,7 @@ void rabbit::StringTable::remove(rabbit::String *bs)
 				_strings[h] = s->_next;
 			_slotused--;
 			int64_t slen = s->_len;
-			s->~rabbit::String();
+			s->~String();
 			SQ_FREE(s,sizeof(rabbit::String) + sq_rsl(slen));
 			return;
 		}

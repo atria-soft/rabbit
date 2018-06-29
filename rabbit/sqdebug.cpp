@@ -6,7 +6,7 @@
  * @license MPL-2 (see license file)
  */
 
-#include <rabbit/sqpcheader.hpp>
+
 #include <stdarg.h>
 #include <rabbit/VirtualMachine.hpp>
 #include <rabbit/sqfuncproto.hpp>

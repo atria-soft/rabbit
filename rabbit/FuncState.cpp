@@ -647,7 +647,7 @@ void FuncState::popChildState()
 	_childstates.popBack();
 }
 
-FuncState::~rabbit::FuncState()
+FuncState::~FuncState()
 {
 	while(_childstates.size() > 0)
 	{

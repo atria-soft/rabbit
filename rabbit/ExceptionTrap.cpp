@@ -7,3 +7,19 @@
  */
 
 #include <rabbit/ExceptionTrap.hpp>
+#include <rabbit/Instruction.hpp>
+
+
+rabbit::ExceptionTrap::ExceptionTrap(int64_t ss,
+                                     int64_t stackbase,
+                                     rabbit::Instruction *ip,
+                                     int64_t ex_target) {
+	_stacksize = ss;
+	_stackbase = stackbase;
+	_ip = ip;
+	_extarget = ex_target;
+}
+
+rabbit::ExceptionTrap::ExceptionTrap(const rabbit::ExceptionTrap &et) {
+	(*this) = et;
+}

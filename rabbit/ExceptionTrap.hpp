@@ -10,29 +10,20 @@
 #include <etk/types.hpp>
 #include <rabbit/sqconfig.hpp>
 
-struct rabbit::Instruction;
 namespace rabbit {
+	class Instruction;
 	class ExceptionTrap {
 		public:
-			ExceptionTrap() {
-				
-			}
+			ExceptionTrap() = default;
 			ExceptionTrap(int64_t ss,
-			                int64_t stackbase,
-			                rabbit::Instruction *ip,
-			                int64_t ex_target) {
-				_stacksize = ss;
-				_stackbase = stackbase;
-				_ip = ip;
-				_extarget = ex_target;
-			}
-			ExceptionTrap(const rabbit::ExceptionTrap &et) {
-				(*this) = et;
-			}
+			              int64_t stackbase,
+			              rabbit::Instruction *ip,
+			              int64_t ex_target);
+			ExceptionTrap(const rabbit::ExceptionTrap &et);
 		
-			int64_t _stackbase;
-			int64_t _stacksize;
-			rabbit::Instruction *_ip;
-			int64_t _extarget;
+			int64_t _stackbase = 0;
+			int64_t _stacksize = 0;
+			rabbit::Instruction *_ip = nullptr;
+			int64_t _extarget = 0;
 	};
 }

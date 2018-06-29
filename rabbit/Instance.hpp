@@ -8,7 +8,7 @@
 #pragma once
 
 #include <etk/types.hpp>
-#include <rabbit/sqpcheader.hpp>
+
 #include <rabbit/VirtualMachine.hpp>
 
 

@@ -22,7 +22,7 @@ namespace rabbit {
 			~FunctionProto();
 		
 		public:
-			static rabbit::FunctionProto *create(rabbit::SharedState *ss,int64_t ninstructions,
+			FunctionProto *create(rabbit::SharedState *ss,int64_t ninstructions,
 				int64_t nliterals,int64_t nparameters,
 				int64_t nfunctions,int64_t noutervalues,
 				int64_t nlineinfos,int64_t nlocalvarinfos,int64_t ndefaultparams)
@@ -30,7 +30,7 @@ namespace rabbit {
 				rabbit::FunctionProto *f;
 				//I compact the whole class and members in a single memory allocation
 				f = (rabbit::FunctionProto *)sq_vm_malloc(_FUNC_SIZE(ninstructions,nliterals,nparameters,nfunctions,noutervalues,nlineinfos,nlocalvarinfos,ndefaultparams));
-				new (f) rabbit::FunctionProto(ss);
+				new ((char*)f) rabbit::FunctionProto(ss);
 				f->_ninstructions = ninstructions;
 				f->_literals = (rabbit::ObjectPtr*)&f->_instructions[ninstructions];
 				f->_nliterals = nliterals;
@@ -63,7 +63,7 @@ namespace rabbit {
 				//_DESTRUCT_VECTOR(rabbit::LineInfo,_nlineinfos,_lineinfos); //not required are 2 integers
 				_DESTRUCT_VECTOR(rabbit::LocalVarInfo,_nlocalvarinfos,_localvarinfos);
 				int64_t size = _FUNC_SIZE(_ninstructions,_nliterals,_nparameters,_nfunctions,_noutervalues,_nlineinfos,_nlocalvarinfos,_ndefaultparams);
-				this->~rabbit::FunctionProto();
+				this->~FunctionProto();
 				sq_vm_free(this,size);
 			}
 		

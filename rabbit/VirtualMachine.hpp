@@ -7,13 +7,15 @@
  */
 #pragma once
 
+#include <etk/Vector.hpp>
 #include <rabbit/sqopcodes.hpp>
-#include <rabbit/sqobject.hpp>
+
 #include <rabbit/AutoDec.hpp>
 #include <rabbit/sqconfig.hpp>
 #include <rabbit/ExceptionTrap.hpp>
 #include <rabbit/MetaMethod.hpp>
 #include <rabbit/ObjectPtr.hpp>
+#include <rabbit/RefCounted.hpp>
 
 
 #define MAX_NATIVE_CALLS 100

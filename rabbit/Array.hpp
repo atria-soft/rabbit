@@ -7,7 +7,11 @@
  */
 #pragma once
 
+#include <rabbit/RefCounted.hpp>
+#include <rabbit/ObjectPtr.hpp>
+
 namespace rabbit {
+	class SharedState;
 	class Array : public rabbit::RefCounted
 	{
 		private:

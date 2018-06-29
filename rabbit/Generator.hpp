@@ -12,18 +12,18 @@ namespace rabbit {
 		public:
 			enum rabbit::GeneratorState{eRunning,eSuspended,eDead};
 		private:
-			rabbit::Generator(rabbit::SharedState *ss,rabbit::Closure *closure){
-				_closure=closure;
-				_state=eRunning;
-				_ci._generator=NULL;
+			Generator(rabbit::SharedState *ss,rabbit::Closure *closure){
+				_closure = closure;
+				_state = eRunning;
+				_ci._generator = NULL;
 			}
 		public:
-			static rabbit::Generator *create(rabbit::SharedState *ss,rabbit::Closure *closure){
+			static Generator *create(rabbit::SharedState *ss,rabbit::Closure *closure){
 				rabbit::Generator *nc=(rabbit::Generator*)SQ_MALLOC(sizeof(rabbit::Generator));
-				new (nc) rabbit::Generator(ss,closure);
+				new ((char*)nc) rabbit::Generator(ss,closure);
 				return nc;
 			}
-			~rabbit::Generator()
+			~Generator()
 			{
 				
 			}

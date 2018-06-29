@@ -64,7 +64,7 @@ namespace rabbit {
 			etk::Vector<rabbit::ObjectPtr> _functions;
 			etk::Vector<rabbit::ObjectPtr> _parameters;
 			etk::Vector<rabbit::OuterVar> _outervalues;
-			rabbit::InstructionVec _instructions;
+			etk::Vector<rabbit::Instruction> _instructions;
 			etk::Vector<rabbit::LocalVarInfo> _localvarinfos;
 			rabbit::ObjectPtr _literals;
 			rabbit::ObjectPtr _strings;

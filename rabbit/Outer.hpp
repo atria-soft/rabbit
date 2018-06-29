@@ -25,7 +25,7 @@ namespace rabbit {
 			}
 			void release()
 			{
-				this->~rabbit::Outer();
+				this->~Outer();
 				sq_vm_free(this,sizeof(rabbit::Outer));
 			}
 			rabbit::ObjectPtr *_valptr;  /* pointer to value on stack, or _value below */
