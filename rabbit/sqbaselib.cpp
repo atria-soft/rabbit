@@ -26,13 +26,13 @@
 #include <ctype.h>
 #include <rabbit/StackInfos.hpp>
 
-static bool str2num(const rabbit::Char *s,rabbit::ObjectPtr &res,int64_t base)
+static bool str2num(const char *s,rabbit::ObjectPtr &res,int64_t base)
 {
-	rabbit::Char *end;
-	const rabbit::Char *e = s;
+	char *end;
+	const char *e = s;
 	bool iseintbase = base > 13; //to fix error converting hexadecimals with e like 56f0791e
 	bool isfloat = false;
-	rabbit::Char c;
+	char c;
 	while((c = *e) != _SC('\0'))
 	{
 		if (c == _SC('.') || (!iseintbase && (c == _SC('E') || c == _SC('e')))) { //e and E is for scientific notation
@@ -42,12 +42,12 @@ static bool str2num(const rabbit::Char *s,rabbit::ObjectPtr &res,int64_t base)
 		e++;
 	}
 	if(isfloat){
-		float_t r = float_t(scstrtod(s,&end));
+		float_t r = float_t(strtod(s,&end));
 		if(s == end) return false;
 		res = r;
 	}
 	else{
-		int64_t r = int64_t(scstrtol(s,&end,(int)base));
+		int64_t r = int64_t(strtol(s,&end,(int)base));
 		if(s == end) return false;
 		res = r;
 	}
@@ -112,12 +112,12 @@ static int64_t __getcallstackinfos(rabbit::VirtualMachine* v,int64_t level)
 {
 	rabbit::StackInfos si;
 	int64_t seq = 0;
-	const rabbit::Char *name = NULL;
+	const char *name = NULL;
 
 	if (SQ_SUCCEEDED(sq_stackinfos(v, level, &si)))
 	{
-		const rabbit::Char *fn = _SC("unknown");
-		const rabbit::Char *src = _SC("unknown");
+		const char *fn = _SC("unknown");
+		const char *src = _SC("unknown");
 		if(si.funcname)fn = si.funcname;
 		if(si.source)src = si.source;
 		sq_newtable(v);
@@ -158,7 +158,7 @@ static int64_t base_assert(rabbit::VirtualMachine* v)
 	if(rabbit::VirtualMachine::IsFalse(stack_get(v,2))){
 		int64_t top = sq_gettop(v);
 		if (top>2 && SQ_SUCCEEDED(sq_tostring(v,3))) {
-			const rabbit::Char *str = 0;
+			const char *str = 0;
 			if (SQ_SUCCEEDED(sq_getstring(v,-1,&str))) {
 				return sq_throwerror(v, str);
 			}
@@ -194,7 +194,7 @@ static int64_t get_slice_params(rabbit::VirtualMachine* v,int64_t &sidx,int64_t 
 
 static int64_t base_print(rabbit::VirtualMachine* v)
 {
-	const rabbit::Char *str;
+	const char *str;
 	if(SQ_SUCCEEDED(sq_tostring(v,2)))
 	{
 		if(SQ_SUCCEEDED(sq_getstring(v,-1,&str))) {
@@ -207,7 +207,7 @@ static int64_t base_print(rabbit::VirtualMachine* v)
 
 static int64_t base_error(rabbit::VirtualMachine* v)
 {
-	const rabbit::Char *str;
+	const char *str;
 	if(SQ_SUCCEEDED(sq_tostring(v,2)))
 	{
 		if(SQ_SUCCEEDED(sq_getstring(v,-1,&str))) {
@@ -221,7 +221,7 @@ static int64_t base_error(rabbit::VirtualMachine* v)
 static int64_t base_compilestring(rabbit::VirtualMachine* v)
 {
 	int64_t nargs=sq_gettop(v);
-	const rabbit::Char *src=NULL,*name=_SC("unnamedbuffer");
+	const char *src=NULL,*name=_SC("unnamedbuffer");
 	int64_t size;
 	sq_getstring(v,2,&src);
 	size=sq_getsize(v,2);
@@ -323,7 +323,7 @@ void sq_base_register(rabbit::VirtualMachine* v)
 	sq_pushstring(v,RABBIT_VERSION,-1);
 	sq_newslot(v,-3, SQFalse);
 	sq_pushstring(v,_SC("_charsize_"),-1);
-	sq_pushinteger(v,sizeof(rabbit::Char));
+	sq_pushinteger(v,sizeof(char));
 	sq_newslot(v,-3, SQFalse);
 	sq_pushstring(v,_SC("_intsize_"),-1);
 	sq_pushinteger(v,sizeof(int64_t));
@@ -418,8 +418,8 @@ static int64_t obj_clear(rabbit::VirtualMachine* v)
 static int64_t number_delegate_tochar(rabbit::VirtualMachine* v)
 {
 	rabbit::Object &o=stack_get(v,1);
-	rabbit::Char c = (rabbit::Char)tointeger(o);
-	v->push(rabbit::String::create(_get_shared_state(v),(const rabbit::Char *)&c,1));
+	char c = (char)tointeger(o);
+	v->push(rabbit::String::create(_get_shared_state(v),(const char *)&c,1));
 	return 1;
 }
 
@@ -859,11 +859,11 @@ static int64_t string_slice(rabbit::VirtualMachine* v)
 static int64_t string_find(rabbit::VirtualMachine* v)
 {
 	int64_t top,start_idx=0;
-	const rabbit::Char *str,*substr,*ret;
+	const char *str,*substr,*ret;
 	if(((top=sq_gettop(v))>1) && SQ_SUCCEEDED(sq_getstring(v,1,&str)) && SQ_SUCCEEDED(sq_getstring(v,2,&substr))){
 		if(top>2)sq_getinteger(v,3,&start_idx);
 		if((sq_getsize(v,1)>start_idx) && (start_idx>=0)){
-			ret=scstrstr(&str[start_idx],substr);
+			ret=strstr(&str[start_idx],substr);
 			if(ret){
 				sq_pushinteger(v,(int64_t)(ret-str));
 				return 1;
@@ -885,8 +885,8 @@ static int64_t string_find(rabbit::VirtualMachine* v)
 	if(eidx < sidx) return sq_throwerror(v,_SC("wrong indexes")); \
 	if(eidx > slen || sidx < 0) return sq_throwerror(v,_SC("slice out of range")); \
 	int64_t len=_string(str)->_len; \
-	const rabbit::Char *sthis=_stringval(str); \
-	rabbit::Char *snew=(_get_shared_state(v)->getScratchPad(sq_rsl(len))); \
+	const char *sthis=_stringval(str); \
+	char *snew=(_get_shared_state(v)->getScratchPad(sq_rsl(len))); \
 	memcpy(snew,sthis,sq_rsl(len));\
 	for(int64_t i=sidx;i<eidx;i++) snew[i] = func(sthis[i]); \
 	v->push(rabbit::String::create(_get_shared_state(v),snew,len)); \

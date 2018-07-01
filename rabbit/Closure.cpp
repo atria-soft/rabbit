@@ -120,7 +120,7 @@ bool rabbit::ReadObject(rabbit::VirtualMachine* v,rabbit::UserPointer up,SQREADF
 bool rabbit::Closure::save(rabbit::VirtualMachine *v,rabbit::UserPointer up,SQWRITEFUNC write)
 {
 	_CHECK_IO(WriteTag(v,write,up,SQ_CLOSURESTREAM_HEAD));
-	_CHECK_IO(WriteTag(v,write,up,sizeof(rabbit::Char)));
+	_CHECK_IO(WriteTag(v,write,up,sizeof(char)));
 	_CHECK_IO(WriteTag(v,write,up,sizeof(int64_t)));
 	_CHECK_IO(WriteTag(v,write,up,sizeof(float_t)));
 	_CHECK_IO(_function->save(v,up,write));
@@ -131,7 +131,7 @@ bool rabbit::Closure::save(rabbit::VirtualMachine *v,rabbit::UserPointer up,SQWR
 bool rabbit::Closure::load(rabbit::VirtualMachine *v,rabbit::UserPointer up,SQREADFUNC read,rabbit::ObjectPtr &ret)
 {
 	_CHECK_IO(CheckTag(v,read,up,SQ_CLOSURESTREAM_HEAD));
-	_CHECK_IO(CheckTag(v,read,up,sizeof(rabbit::Char)));
+	_CHECK_IO(CheckTag(v,read,up,sizeof(char)));
 	_CHECK_IO(CheckTag(v,read,up,sizeof(int64_t)));
 	_CHECK_IO(CheckTag(v,read,up,sizeof(float_t)));
 	rabbit::ObjectPtr func;

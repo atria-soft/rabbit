@@ -51,8 +51,8 @@ static bool sq_aux_gettypedarg(rabbit::VirtualMachine* v,int64_t idx,rabbit::Obj
 namespace rabbit {
 	int64_t sq_aux_invalidtype(rabbit::VirtualMachine* v,rabbit::ObjectType type)
 	{
-		uint64_t buf_size = 100 *sizeof(rabbit::Char);
-		scsprintf(_get_shared_state(v)->getScratchPad(buf_size), buf_size, _SC("unexpected type %s"), IdType2Name(type));
+		uint64_t buf_size = 100 *sizeof(char);
+		snprintf(_get_shared_state(v)->getScratchPad(buf_size), buf_size, _SC("unexpected type %s"), IdType2Name(type));
 		return sq_throwerror(v, _get_shared_state(v)->getScratchPad(-1));
 	}
 }
@@ -144,7 +144,7 @@ int64_t rabbit::sq_getversion()
 	return RABBIT_VERSION_NUMBER;
 }
 
-rabbit::Result rabbit::sq_compile(rabbit::VirtualMachine* v,SQLEXREADFUNC read,rabbit::UserPointer p,const rabbit::Char *sourcename,rabbit::Bool raiseerror)
+rabbit::Result rabbit::sq_compile(rabbit::VirtualMachine* v,SQLEXREADFUNC read,rabbit::UserPointer p,const char *sourcename,rabbit::Bool raiseerror)
 {
 	rabbit::ObjectPtr o;
 #ifndef NO_COMPILER
@@ -194,7 +194,7 @@ uint64_t rabbit::sq_getvmrefcount(rabbit::VirtualMachine* SQ_UNUSED_ARG(v), cons
 	return po->_unVal.pRefCounted->refCountget();
 }
 
-const rabbit::Char * rabbit::sq_objtostring(const rabbit::Object *o)
+const char * rabbit::sq_objtostring(const rabbit::Object *o)
 {
 	if(sq_type(*o) == rabbit::OT_STRING) {
 		return _stringval(*o);
@@ -239,7 +239,7 @@ void rabbit::sq_pushnull(rabbit::VirtualMachine* v)
 	v->pushNull();
 }
 
-void rabbit::sq_pushstring(rabbit::VirtualMachine* v,const rabbit::Char *s,int64_t len)
+void rabbit::sq_pushstring(rabbit::VirtualMachine* v,const char *s,int64_t len)
 {
 	if(s)
 		v->push(rabbit::ObjectPtr(rabbit::String::create(_get_shared_state(v), s, len)));
@@ -426,7 +426,7 @@ rabbit::Result rabbit::sq_getclosureinfo(rabbit::VirtualMachine* v,int64_t idx,u
 	return sq_throwerror(v,_SC("the object is not a closure"));
 }
 
-rabbit::Result rabbit::sq_setnativeclosurename(rabbit::VirtualMachine* v,int64_t idx,const rabbit::Char *name)
+rabbit::Result rabbit::sq_setnativeclosurename(rabbit::VirtualMachine* v,int64_t idx,const char *name)
 {
 	rabbit::Object o = stack_get(v, idx);
 	if(sq_isnativeclosure(o)) {
@@ -437,7 +437,7 @@ rabbit::Result rabbit::sq_setnativeclosurename(rabbit::VirtualMachine* v,int64_t
 	return sq_throwerror(v,_SC("the object is not a nativeclosure"));
 }
 
-rabbit::Result rabbit::sq_setparamscheck(rabbit::VirtualMachine* v,int64_t nparamscheck,const rabbit::Char *typemask)
+rabbit::Result rabbit::sq_setparamscheck(rabbit::VirtualMachine* v,int64_t nparamscheck,const char *typemask)
 {
 	rabbit::Object o = stack_get(v, -1);
 	if(!sq_isnativeclosure(o))
@@ -696,7 +696,7 @@ rabbit::Result rabbit::sq_getbool(rabbit::VirtualMachine* v,int64_t idx,rabbit::
 	return SQ_ERROR;
 }
 
-rabbit::Result rabbit::sq_getstringandsize(rabbit::VirtualMachine* v,int64_t idx,const rabbit::Char **c,int64_t *size)
+rabbit::Result rabbit::sq_getstringandsize(rabbit::VirtualMachine* v,int64_t idx,const char **c,int64_t *size)
 {
 	rabbit::ObjectPtr *o = NULL;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_STRING,o);
@@ -705,7 +705,7 @@ rabbit::Result rabbit::sq_getstringandsize(rabbit::VirtualMachine* v,int64_t idx
 	return SQ_OK;
 }
 
-rabbit::Result rabbit::sq_getstring(rabbit::VirtualMachine* v,int64_t idx,const rabbit::Char **c)
+rabbit::Result rabbit::sq_getstring(rabbit::VirtualMachine* v,int64_t idx,const char **c)
 {
 	rabbit::ObjectPtr *o = NULL;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_STRING,o);
@@ -1107,7 +1107,7 @@ rabbit::Result rabbit::sq_getstackobj(rabbit::VirtualMachine* v,int64_t idx,rabb
 	return SQ_OK;
 }
 
-const rabbit::Char * rabbit::sq_getlocal(rabbit::VirtualMachine* v,uint64_t level,uint64_t idx)
+const char * rabbit::sq_getlocal(rabbit::VirtualMachine* v,uint64_t level,uint64_t idx)
 {
 	uint64_t cstksize=v->_callsstacksize;
 	uint64_t lvl=(cstksize-level)-1;
@@ -1142,7 +1142,7 @@ void rabbit::sq_resetobject(rabbit::Object *po)
 	po->_unVal.pUserPointer=NULL;po->_type=rabbit::OT_NULL;
 }
 
-rabbit::Result rabbit::sq_throwerror(rabbit::VirtualMachine* v,const rabbit::Char *err)
+rabbit::Result rabbit::sq_throwerror(rabbit::VirtualMachine* v,const char *err)
 {
 	v->_lasterror=rabbit::String::create(_get_shared_state(v),err);
 	return SQ_ERROR;
@@ -1329,7 +1329,7 @@ rabbit::Result rabbit::sq_readclosure(rabbit::VirtualMachine* v,SQREADFUNC r,rab
 	return SQ_OK;
 }
 
-rabbit::Char * rabbit::sq_getscratchpad(rabbit::VirtualMachine* v,int64_t minsize)
+char * rabbit::sq_getscratchpad(rabbit::VirtualMachine* v,int64_t minsize)
 {
 	return _get_shared_state(v)->getScratchPad(minsize);
 }
@@ -1355,10 +1355,10 @@ rabbit::Result rabbit::sq_getcallee(rabbit::VirtualMachine* v)
 	return sq_throwerror(v,_SC("no closure in the calls stack"));
 }
 
-const rabbit::Char * rabbit::sq_getfreevariable(rabbit::VirtualMachine* v,int64_t idx,uint64_t nval)
+const char * rabbit::sq_getfreevariable(rabbit::VirtualMachine* v,int64_t idx,uint64_t nval)
 {
 	rabbit::ObjectPtr &self=stack_get(v,idx);
-	const rabbit::Char *name = NULL;
+	const char *name = NULL;
 	switch(sq_type(self))
 	{
 	case rabbit::OT_CLOSURE:{
@@ -1608,7 +1608,7 @@ rabbit::Result rabbit::sq_next(rabbit::VirtualMachine* v,int64_t idx)
 
 namespace rabbit {
 	struct BufState{
-		const rabbit::Char *buf;
+		const char *buf;
 		int64_t ptr;
 		int64_t size;
 	};
@@ -1621,7 +1621,7 @@ namespace rabbit {
 		return buf->buf[buf->ptr++];
 	}
 }
-rabbit::Result rabbit::sq_compilebuffer(rabbit::VirtualMachine* v,const rabbit::Char *s,int64_t size,const rabbit::Char *sourcename,rabbit::Bool raiseerror) {
+rabbit::Result rabbit::sq_compilebuffer(rabbit::VirtualMachine* v,const char *s,int64_t size,const char *sourcename,rabbit::Bool raiseerror) {
 	BufState buf;
 	buf.buf = s;
 	buf.size = size;

@@ -11,7 +11,7 @@
 #include <rabbit/StringTable.hpp>
 
 
-rabbit::Hash rabbit::_hashstr(const rabbit::Char *s, size_t l) {
+rabbit::Hash rabbit::_hashstr(const char *s, size_t l) {
 	rabbit::Hash h = (rabbit::Hash)l;  /* seed */
 	size_t step = (l>>5)|1;  /* if string is too long, don't hash all its chars */
 	for (; l>=step; l-=step)
@@ -20,7 +20,7 @@ rabbit::Hash rabbit::_hashstr(const rabbit::Char *s, size_t l) {
 }
 
 
-rabbit::String *rabbit::String::create(rabbit::SharedState *ss,const rabbit::Char *s,int64_t len)
+rabbit::String *rabbit::String::create(rabbit::SharedState *ss,const char *s,int64_t len)
 {
 	rabbit::String *str=ADD_STRING(ss,s,len);
 	return str;

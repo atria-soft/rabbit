@@ -30,7 +30,7 @@ namespace rabbit {
 #endif
 
 //max number of character for a printed number
-#define NUMBER_MAX_CHAR 50
+#define NUMBER_UINT8_MAX 50
 
 namespace rabbit {
 	using UserPointer = void*;
@@ -39,86 +39,7 @@ namespace rabbit {
 	
 }
 
-#ifdef SQUNICODE
-	#include <wchar.h>
-	#include <wctype.h>
-	namespace rabbit {
-		using Char = wchar_t;
-	}
-	#define scstrcmp	wcscmp
-	#ifdef _WIN32
-		#define scsprintf   _snwprintf
-	#else
-		#define scsprintf   swprintf
-	#endif
-	#define scstrlen	wcslen
-	#define scstrtod	wcstod
-	#ifdef _SQ64
-		#define scstrtol	wcstoll
-	#else
-		#define scstrtol	wcstol
-	#endif
-	#define scstrtoul   wcstoul
-	#define scvsprintf  vswprintf
-	#define scstrstr	wcsstr
-	#define scprintf	wprintf
-
-	#ifdef _WIN32
-		#define WCHAR_SIZE 2
-		#define WCHAR_SHIFT_MUL 1
-		#define MAX_CHAR 0xFFFF
-	#else
-		#define WCHAR_SIZE 4
-		#define WCHAR_SHIFT_MUL 2
-		#define MAX_CHAR 0xFFFFFFFF
-	#endif
-	#define _SC(a) L##a
-	#define scisspace   iswspace
-	#define scisdigit   iswdigit
-	#define scisprint   iswprint
-	#define scisxdigit  iswxdigit
-	#define scisalpha   iswalpha
-	#define sciscntrl   iswcntrl
-	#define scisalnum   iswalnum
-	#define sq_rsl(l) ((l)<<WCHAR_SHIFT_MUL)
-#else
-	namespace rabbit {
-		using Char = char;
-	}
-	#define _SC(a) a
-	#define scstrcmp	strcmp
-	#ifdef _MSC_VER
-		#define scsprintf   _snprintf
-	#else
-		#define scsprintf   snprintf
-	#endif
-	#define scstrlen	strlen
-	#define scstrtod	strtod
-	#ifdef _SQ64
-		#ifdef _MSC_VER
-			#define scstrtol	_strtoi64
-		#else
-			#define scstrtol	strtoll
-		#endif
-	#else
-		#define scstrtol	strtol
-	#endif
-	#define scstrtoul   strtoul
-	#define scvsprintf  vsnprintf
-	#define scstrstr	strstr
-	#define scisspace   isspace
-	#define scisdigit   isdigit
-	#define scisprint   isprint
-	#define scisxdigit  isxdigit
-	#define sciscntrl   iscntrl
-	#define scisalpha   isalpha
-	#define scisalnum   isalnum
-	#define scprintf	printf
-	#define MAX_CHAR 0xFF
-	
-	#define sq_rsl(l) (l)
-
-#endif
+#define sq_rsl(l) (l)
 
 #define _PRINT_INT_PREC _SC("ll")
 #define _PRINT_INT_FMT _SC("%ld")
@@ -133,7 +54,7 @@ namespace rabbit {
 #define UINT_MINUS_ONE (0xFFFFFFFF)
 #endif
 
-
+#define _SC(a) a
 
 
 namespace rabbit {

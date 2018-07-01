@@ -15,7 +15,7 @@ namespace rabbit {
 	
 	class InstructionDesc {
 		public:
-			const rabbit::Char *name;
+			const char *name;
 	};
 
 	class Instruction {

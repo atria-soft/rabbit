@@ -81,7 +81,7 @@ void rabbit::Lexer::init(rabbit::SharedState *ss, SQLEXREADFUNC rg, rabbit::User
 	next();
 }
 
-void rabbit::Lexer::error(const rabbit::Char *err)
+void rabbit::Lexer::error(const char *err)
 {
 	_errfunc(_errtarget,err);
 }
@@ -89,16 +89,16 @@ void rabbit::Lexer::error(const rabbit::Char *err)
 void rabbit::Lexer::next()
 {
 	int64_t t = _readf(_up);
-	if(t > MAX_CHAR) error(_SC("Invalid character"));
+	if(t > UINT8_MAX) error(_SC("Invalid character"));
 	if(t != 0) {
-		_currdata = (LexChar)t;
+		_currdata = (Lexchar)t;
 		return;
 	}
 	_currdata = RABBIT_EOB;
 	_reached_eof = SQTrue;
 }
 
-const rabbit::Char *rabbit::Lexer::tok2Str(int64_t tok)
+const char *rabbit::Lexer::tok2Str(int64_t tok)
 {
 	rabbit::ObjectPtr itr, key, val;
 	int64_t nitr;
@@ -261,17 +261,17 @@ int64_t rabbit::Lexer::Lex()
 		case RABBIT_EOB:
 			return 0;
 		default:{
-				if (scisdigit(CUR_CHAR)) {
+				if (isdigit(CUR_CHAR)) {
 					int64_t ret = readNumber();
 					RETURN_TOKEN(ret);
 				}
-				else if (scisalpha(CUR_CHAR) || CUR_CHAR == _SC('_')) {
+				else if (isalpha(CUR_CHAR) || CUR_CHAR == _SC('_')) {
 					int64_t t = readId();
 					RETURN_TOKEN(t);
 				}
 				else {
 					int64_t c = CUR_CHAR;
-					if (sciscntrl((int)c)) error(_SC("unexpected character(control)"));
+					if (iscntrl((int)c)) error(_SC("unexpected character(control)"));
 					NEXT();
 					RETURN_TOKEN(c);
 				}
@@ -282,7 +282,7 @@ int64_t rabbit::Lexer::Lex()
 	return 0;
 }
 
-int64_t rabbit::Lexer::getIDType(const rabbit::Char *s,int64_t len)
+int64_t rabbit::Lexer::getIDType(const char *s,int64_t len)
 {
 	rabbit::ObjectPtr t;
 	if(_keywords->getStr(s,len, t)) {
@@ -291,24 +291,6 @@ int64_t rabbit::Lexer::getIDType(const rabbit::Char *s,int64_t len)
 	return TK_IDENTIFIER;
 }
 
-#ifdef SQUNICODE
-#if WCHAR_SIZE == 2
-int64_t rabbit::Lexer::addUTF16(uint64_t ch)
-{
-	if (ch >= 0x10000)
-	{
-		uint64_t code = (ch - 0x10000);
-		APPEND_CHAR((rabbit::Char)(0xD800 | (code >> 10)));
-		APPEND_CHAR((rabbit::Char)(0xDC00 | (code & 0x3FF)));
-		return 2;
-	}
-	else {
-		APPEND_CHAR((rabbit::Char)ch);
-		return 1;
-	}
-}
-#endif
-#else
 int64_t rabbit::Lexer::addUTF8(uint64_t ch)
 {
 	if (ch < 0x80) {
@@ -316,28 +298,27 @@ int64_t rabbit::Lexer::addUTF8(uint64_t ch)
 		return 1;
 	}
 	if (ch < 0x800) {
-		APPEND_CHAR((rabbit::Char)((ch >> 6) | 0xC0));
-		APPEND_CHAR((rabbit::Char)((ch & 0x3F) | 0x80));
+		APPEND_CHAR((char)((ch >> 6) | 0xC0));
+		APPEND_CHAR((char)((ch & 0x3F) | 0x80));
 		return 2;
 	}
 	if (ch < 0x10000) {
-		APPEND_CHAR((rabbit::Char)((ch >> 12) | 0xE0));
-		APPEND_CHAR((rabbit::Char)(((ch >> 6) & 0x3F) | 0x80));
-		APPEND_CHAR((rabbit::Char)((ch & 0x3F) | 0x80));
+		APPEND_CHAR((char)((ch >> 12) | 0xE0));
+		APPEND_CHAR((char)(((ch >> 6) & 0x3F) | 0x80));
+		APPEND_CHAR((char)((ch & 0x3F) | 0x80));
 		return 3;
 	}
 	if (ch < 0x110000) {
-		APPEND_CHAR((rabbit::Char)((ch >> 18) | 0xF0));
-		APPEND_CHAR((rabbit::Char)(((ch >> 12) & 0x3F) | 0x80));
-		APPEND_CHAR((rabbit::Char)(((ch >> 6) & 0x3F) | 0x80));
-		APPEND_CHAR((rabbit::Char)((ch & 0x3F) | 0x80));
+		APPEND_CHAR((char)((ch >> 18) | 0xF0));
+		APPEND_CHAR((char)(((ch >> 12) & 0x3F) | 0x80));
+		APPEND_CHAR((char)(((ch >> 6) & 0x3F) | 0x80));
+		APPEND_CHAR((char)((ch & 0x3F) | 0x80));
 		return 4;
 	}
 	return 0;
 }
-#endif
 
-int64_t rabbit::Lexer::processStringHexEscape(rabbit::Char *dest, int64_t maxdigits)
+int64_t rabbit::Lexer::processStringHexEscape(char *dest, int64_t maxdigits)
 {
 	NEXT();
 	if (!isxdigit(CUR_CHAR)) error(_SC("hexadecimal number expected"));
@@ -376,28 +357,20 @@ int64_t rabbit::Lexer::readString(int64_t ndelim,bool verbatim)
 					NEXT();
 					switch(CUR_CHAR) {
 					case _SC('x'):  {
-						const int64_t maxdigits = sizeof(rabbit::Char) * 2;
-						rabbit::Char temp[maxdigits + 1];
+						const int64_t maxdigits = sizeof(char) * 2;
+						char temp[maxdigits + 1];
 						processStringHexEscape(temp, maxdigits);
-						rabbit::Char *stemp;
-						APPEND_CHAR((rabbit::Char)scstrtoul(temp, &stemp, 16));
+						char *stemp;
+						APPEND_CHAR((char)strtoul(temp, &stemp, 16));
 					}
 					break;
 					case _SC('U'):
 					case _SC('u'):  {
 						const int64_t maxdigits = CUR_CHAR == 'u' ? 4 : 8;
-						rabbit::Char temp[8 + 1];
+						char temp[8 + 1];
 						processStringHexEscape(temp, maxdigits);
-						rabbit::Char *stemp;
-#ifdef SQUNICODE
-#if WCHAR_SIZE == 2
-						addUTF16(scstrtoul(temp, &stemp, 16));
-#else
-						APPEND_CHAR((rabbit::Char)scstrtoul(temp, &stemp, 16));
-#endif
-#else
-						addUTF8(scstrtoul(temp, &stemp, 16));
-#endif
+						char *stemp;
+						addUTF8(strtoul(temp, &stemp, 16));
 					}
 					break;
 					case _SC('t'): APPEND_CHAR(_SC('\t')); NEXT(); break;
@@ -443,18 +416,18 @@ int64_t rabbit::Lexer::readString(int64_t ndelim,bool verbatim)
 	return TK_STRING_LITERAL;
 }
 
-void LexHexadecimal(const rabbit::Char *s,uint64_t *res)
+void LexHexadecimal(const char *s,uint64_t *res)
 {
 	*res = 0;
 	while(*s != 0)
 	{
-		if(scisdigit(*s)) *res = (*res)*16+((*s++)-'0');
-		else if(scisxdigit(*s)) *res = (*res)*16+(toupper(*s++)-'A'+10);
+		if(isdigit(*s)) *res = (*res)*16+((*s++)-'0');
+		else if(isxdigit(*s)) *res = (*res)*16+(toupper(*s++)-'A'+10);
 		else { assert(0); }
 	}
 }
 
-void LexInteger(const rabbit::Char *s,uint64_t *res)
+void LexInteger(const char *s,uint64_t *res)
 {
 	*res = 0;
 	while(*s != 0)
@@ -465,7 +438,7 @@ void LexInteger(const rabbit::Char *s,uint64_t *res)
 
 int64_t scisodigit(int64_t c) { return c >= _SC('0') && c <= _SC('7'); }
 
-void LexOctal(const rabbit::Char *s,uint64_t *res)
+void LexOctal(const char *s,uint64_t *res)
 {
 	*res = 0;
 	while(*s != 0)
@@ -487,7 +460,7 @@ int64_t rabbit::Lexer::readNumber()
 #define TSCIENTIFIC 4
 #define TOCTAL 5
 	int64_t type = TINT, firstchar = CUR_CHAR;
-	rabbit::Char *sTemp;
+	char *sTemp;
 	INIT_TEMP_STRING();
 	NEXT();
 	if(firstchar == _SC('0') && (toupper(CUR_CHAR) == _SC('X') || scisodigit(CUR_CHAR)) ) {
@@ -497,7 +470,7 @@ int64_t rabbit::Lexer::readNumber()
 				APPEND_CHAR(CUR_CHAR);
 				NEXT();
 			}
-			if(scisdigit(CUR_CHAR)) error(_SC("invalid octal number"));
+			if(isdigit(CUR_CHAR)) error(_SC("invalid octal number"));
 		}
 		else {
 			NEXT();
@@ -511,7 +484,7 @@ int64_t rabbit::Lexer::readNumber()
 	}
 	else {
 		APPEND_CHAR((int)firstchar);
-		while (CUR_CHAR == _SC('.') || scisdigit(CUR_CHAR) || isexponent(CUR_CHAR)) {
+		while (CUR_CHAR == _SC('.') || isdigit(CUR_CHAR) || isexponent(CUR_CHAR)) {
 			if(CUR_CHAR == _SC('.') || isexponent(CUR_CHAR)) type = TFLOAT;
 			if(isexponent(CUR_CHAR)) {
 				if(type != TFLOAT) error(_SC("invalid numeric format"));
@@ -522,7 +495,7 @@ int64_t rabbit::Lexer::readNumber()
 					APPEND_CHAR(CUR_CHAR);
 					NEXT();
 				}
-				if(!scisdigit(CUR_CHAR)) error(_SC("exponent expected"));
+				if(!isdigit(CUR_CHAR)) error(_SC("exponent expected"));
 			}
 
 			APPEND_CHAR(CUR_CHAR);
@@ -533,7 +506,7 @@ int64_t rabbit::Lexer::readNumber()
 	switch(type) {
 	case TSCIENTIFIC:
 	case TFLOAT:
-		_fvalue = (float_t)scstrtod(&_longstr[0],&sTemp);
+		_fvalue = (float_t)strtod(&_longstr[0],&sTemp);
 		return TK_FLOAT;
 	case TINT:
 		LexInteger(&_longstr[0],(uint64_t *)&_nvalue);
@@ -555,7 +528,7 @@ int64_t rabbit::Lexer::readId()
 	do {
 		APPEND_CHAR(CUR_CHAR);
 		NEXT();
-	} while(scisalnum(CUR_CHAR) || CUR_CHAR == _SC('_'));
+	} while(isalnum(CUR_CHAR) || CUR_CHAR == _SC('_'));
 	TERMINATE_BUFFER();
 	res = getIDType(&_longstr[0],_longstr.size() - 1);
 	if(res == TK_IDENTIFIER || res == TK_CONSTRUCTOR) {

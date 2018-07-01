@@ -82,7 +82,7 @@ namespace rabbit {
 	
 	
 	
-	typedef void(*compilererrorFunc)(void *ud, const rabbit::Char *s);
-	bool compile(rabbit::VirtualMachine *vm, SQLEXREADFUNC rg, rabbit::UserPointer up, const rabbit::Char *sourcename, rabbit::ObjectPtr &out, bool raiseerror, bool lineinfo);
+	typedef void(*compilererrorFunc)(void *ud, const char *s);
+	bool compile(rabbit::VirtualMachine *vm, SQLEXREADFUNC rg, rabbit::UserPointer up, const char *sourcename, rabbit::ObjectPtr &out, bool raiseerror, bool lineinfo);
 
 }

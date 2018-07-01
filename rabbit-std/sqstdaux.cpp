@@ -18,15 +18,15 @@ void rabbit::std::printcallstack(rabbit::VirtualMachine* v)
 		rabbit::StackInfos si;
 		int64_t i;
 		float_t f;
-		const rabbit::Char *s;
+		const char *s;
 		int64_t level=1; //1 is to skip this function that is level 0
-		const rabbit::Char *name=0;
+		const char *name=0;
 		int64_t seq=0;
 		pf(v,_SC("\nCALLSTACK\n"));
 		while(SQ_SUCCEEDED(sq_stackinfos(v,level,&si)))
 		{
-			const rabbit::Char *fn=_SC("unknown");
-			const rabbit::Char *src=_SC("unknown");
+			const char *fn=_SC("unknown");
+			const char *src=_SC("unknown");
 			if(si.funcname)fn=si.funcname;
 			if(si.source)src=si.source;
 			pf(v,_SC("*FUNCTION [%s()] %s line [%d]\n"),fn,src,si.line);
@@ -110,7 +110,7 @@ namespace rabbit {
 		static int64_t aux_printerror(rabbit::VirtualMachine* v) {
 			SQPRINTFUNCTION pf = sq_geterrorfunc(v);
 			if(pf) {
-				const rabbit::Char *sErr = 0;
+				const char *sErr = 0;
 				if(sq_gettop(v)>=1) {
 					if(SQ_SUCCEEDED(sq_getstring(v,2,&sErr)))   {
 						pf(v,_SC("\nAN ERROR HAS OCCURRED [%s]\n"),sErr);
@@ -124,7 +124,7 @@ namespace rabbit {
 			return 0;
 		}
 		
-		void compiler_error(rabbit::VirtualMachine* v,const rabbit::Char *sErr,const rabbit::Char *sSource,int64_t line,int64_t column) {
+		void compiler_error(rabbit::VirtualMachine* v,const char *sErr,const char *sSource,int64_t line,int64_t column) {
 			SQPRINTFUNCTION pf = sq_geterrorfunc(v);
 			if(pf) {
 				pf(v,_SC("%s line = (%d) column = (%d) : error %s\n"),sSource,line,column,sErr);

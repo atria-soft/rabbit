@@ -14,8 +14,8 @@ namespace rabbit {
 	class FunctionInfo {
 		public:
 			rabbit::UserPointer funcid;
-			const rabbit::Char* name;
-			const rabbit::Char* source;
+			const char* name;
+			const char* source;
 			int64_t line;
 	};
 }

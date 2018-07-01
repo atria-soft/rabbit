@@ -152,7 +152,7 @@ uint64_t rabbit::translateIndex(const rabbit::ObjectPtr &idx)
 }
 
 
-const rabbit::Char* rabbit::IdType2Name(rabbit::ObjectType type)
+const char* rabbit::IdType2Name(rabbit::ObjectType type)
 {
 	switch(_RAW_TYPE(type))
 	{
@@ -195,7 +195,7 @@ const rabbit::Char* rabbit::IdType2Name(rabbit::ObjectType type)
 	}
 }
 
-const rabbit::Char* rabbit::getTypeName(const rabbit::ObjectPtr &obj1)
+const char* rabbit::getTypeName(const rabbit::ObjectPtr &obj1)
 {
 	return IdType2Name(sq_type(obj1));
 }

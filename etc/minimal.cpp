@@ -5,36 +5,23 @@
 #include <sqstdio.h>
 #include <sqstdaux.h>
 
-#ifdef _MSC_VER
-#pragma comment (lib ,"squirrel.lib")
-#pragma comment (lib ,"sqstdlib.lib")
-#endif
-
-#ifdef SQUNICODE
-
-#define scvprintf vfwprintf
-#else
-
-#define scvprintf vfprintf
-#endif
-
-void printfunc(HSQUIRRELVM v,const rabbit::Char *s,...)
+void printfunc(HSQUIRRELVM v,const char *s,...)
 {
 	va_list vl;
 	va_start(vl, s);
-	scvprintf(stdout, s, vl);
+	vfprintf(stdout, s, vl);
 	va_end(vl);
 }
 
-void errorfunc(HSQUIRRELVM v,const rabbit::Char *s,...)
+void errorfunc(HSQUIRRELVM v,const char *s,...)
 {
 	va_list vl;
 	va_start(vl, s);
-	scvprintf(stderr, s, vl);
+	vfprintf(stderr, s, vl);
 	va_end(vl);
 }
 
-void call_foo(HSQUIRRELVM v, int n,float f,const rabbit::Char *s)
+void call_foo(HSQUIRRELVM v, int n,float f,const char *s)
 {
 	int64_t top = sq_gettop(v); //saves the stack size before the call
 	sq_pushroottable(v); //pushes the global table

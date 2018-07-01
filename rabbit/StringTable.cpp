@@ -34,10 +34,10 @@ void rabbit::StringTable::allocNodes(int64_t size)
 	memset(_strings,0,sizeof(rabbit::String*)*_numofslots);
 }
 
-rabbit::String *rabbit::StringTable::add(const rabbit::Char *news,int64_t len)
+rabbit::String *rabbit::StringTable::add(const char *news,int64_t len)
 {
 	if(len<0)
-		len = (int64_t)scstrlen(news);
+		len = (int64_t)strlen(news);
 	rabbit::Hash newhash = _hashstr(news,len);
 	rabbit::Hash h = newhash&(_numofslots-1);
 	rabbit::String *s;

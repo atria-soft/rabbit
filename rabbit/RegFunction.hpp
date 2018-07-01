@@ -15,10 +15,10 @@ namespace rabbit {
 
 	class RegFunction{
 		public:
-			const rabbit::Char *name;
+			const char *name;
 			SQFUNCTION f;
 			int64_t nparamscheck;
-			const rabbit::Char *typemask;
+			const char *typemask;
 	};
 
 }

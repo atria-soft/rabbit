@@ -21,7 +21,7 @@ namespace rabbit {
 			#ifdef _DEBUG_DUMP
 				void dump(rabbit::FunctionProto *func);
 			#endif
-			void error(const rabbit::Char *err);
+			void error(const char *err);
 			FuncState *pushChildState(rabbit::SharedState *ss);
 			void popChildState();
 			void addInstruction(SQOpcode _op,int64_t arg0=0,int64_t arg1=0,int64_t arg2=0,int64_t arg3=0);
@@ -56,7 +56,7 @@ namespace rabbit {
 			int64_t getUpTarget(int64_t n);
 			void discardTarget();
 			bool isLocal(uint64_t stkpos);
-			rabbit::Object createString(const rabbit::Char *s,int64_t len = -1);
+			rabbit::Object createString(const char *s,int64_t len = -1);
 			rabbit::Object createTable();
 			bool isConstant(const rabbit::Object &name,rabbit::Object &e);
 			int64_t _returnexp;

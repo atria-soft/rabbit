@@ -17,11 +17,6 @@
 #endif
 #endif
 
-
-#ifdef _UNICODE
-#define SQUNICODE
-#endif
-
 #include "sqconfig.hpp"
 
 #define RABBIT_VERSION    _SC("Rabbit 0.1 un-stable")
@@ -44,9 +39,9 @@
 
 typedef int64_t (*SQFUNCTION)(rabbit::VirtualMachine*);
 typedef int64_t (*SQRELEASEHOOK)(rabbit::UserPointer,int64_t size);
-typedef void (*SQCOMPILERERROR)(rabbit::VirtualMachine*,const rabbit::Char * /*desc*/,const rabbit::Char * /*source*/,int64_t /*line*/,int64_t /*column*/);
-typedef void (*SQPRINTFUNCTION)(rabbit::VirtualMachine*,const rabbit::Char * ,...);
-typedef void (*SQDEBUGHOOK)(rabbit::VirtualMachine* /*v*/, int64_t /*type*/, const rabbit::Char * /*sourcename*/, int64_t /*line*/, const rabbit::Char * /*funcname*/);
+typedef void (*SQCOMPILERERROR)(rabbit::VirtualMachine*,const char * /*desc*/,const char * /*source*/,int64_t /*line*/,int64_t /*column*/);
+typedef void (*SQPRINTFUNCTION)(rabbit::VirtualMachine*,const char * ,...);
+typedef void (*SQDEBUGHOOK)(rabbit::VirtualMachine* /*v*/, int64_t /*type*/, const char * /*sourcename*/, int64_t /*line*/, const char * /*funcname*/);
 typedef int64_t (*SQWRITEFUNC)(rabbit::UserPointer,rabbit::UserPointer,int64_t);
 typedef int64_t (*SQREADFUNC)(rabbit::UserPointer,rabbit::UserPointer,int64_t);
 
@@ -75,8 +70,8 @@ int64_t sq_getvmstate(rabbit::VirtualMachine* v);
 int64_t sq_getversion();
 
 /*compiler*/
-rabbit::Result sq_compile(rabbit::VirtualMachine* v,SQLEXREADFUNC read,rabbit::UserPointer p,const rabbit::Char *sourcename,rabbit::Bool raiseerror);
-rabbit::Result sq_compilebuffer(rabbit::VirtualMachine* v,const rabbit::Char *s,int64_t size,const rabbit::Char *sourcename,rabbit::Bool raiseerror);
+rabbit::Result sq_compile(rabbit::VirtualMachine* v,SQLEXREADFUNC read,rabbit::UserPointer p,const char *sourcename,rabbit::Bool raiseerror);
+rabbit::Result sq_compilebuffer(rabbit::VirtualMachine* v,const char *s,int64_t size,const char *sourcename,rabbit::Bool raiseerror);
 void sq_enabledebuginfo(rabbit::VirtualMachine* v, rabbit::Bool enable);
 void sq_notifyallexceptions(rabbit::VirtualMachine* v, rabbit::Bool enable);
 void sq_setcompilererrorhandler(rabbit::VirtualMachine* v,SQCOMPILERERROR f);
@@ -98,11 +93,11 @@ void sq_newtable(rabbit::VirtualMachine* v);
 void sq_newtableex(rabbit::VirtualMachine* v,int64_t initialcapacity);
 void sq_newarray(rabbit::VirtualMachine* v,int64_t size);
 void sq_newclosure(rabbit::VirtualMachine* v,SQFUNCTION func,uint64_t nfreevars);
-rabbit::Result sq_setparamscheck(rabbit::VirtualMachine* v,int64_t nparamscheck,const rabbit::Char *typemask);
+rabbit::Result sq_setparamscheck(rabbit::VirtualMachine* v,int64_t nparamscheck,const char *typemask);
 rabbit::Result sq_bindenv(rabbit::VirtualMachine* v,int64_t idx);
 rabbit::Result sq_setclosureroot(rabbit::VirtualMachine* v,int64_t idx);
 rabbit::Result sq_getclosureroot(rabbit::VirtualMachine* v,int64_t idx);
-void sq_pushstring(rabbit::VirtualMachine* v,const rabbit::Char *s,int64_t len);
+void sq_pushstring(rabbit::VirtualMachine* v,const char *s,int64_t len);
 void sq_pushfloat(rabbit::VirtualMachine* v,float_t f);
 void sq_pushinteger(rabbit::VirtualMachine* v,int64_t n);
 void sq_pushbool(rabbit::VirtualMachine* v,rabbit::Bool b);
@@ -117,8 +112,8 @@ rabbit::Result sq_getbase(rabbit::VirtualMachine* v,int64_t idx);
 rabbit::Bool sq_instanceof(rabbit::VirtualMachine* v);
 rabbit::Result sq_tostring(rabbit::VirtualMachine* v,int64_t idx);
 void sq_tobool(rabbit::VirtualMachine* v, int64_t idx, rabbit::Bool *b);
-rabbit::Result sq_getstringandsize(rabbit::VirtualMachine* v,int64_t idx,const rabbit::Char **c,int64_t *size);
-rabbit::Result sq_getstring(rabbit::VirtualMachine* v,int64_t idx,const rabbit::Char **c);
+rabbit::Result sq_getstringandsize(rabbit::VirtualMachine* v,int64_t idx,const char **c,int64_t *size);
+rabbit::Result sq_getstring(rabbit::VirtualMachine* v,int64_t idx,const char **c);
 rabbit::Result sq_getinteger(rabbit::VirtualMachine* v,int64_t idx,int64_t *i);
 rabbit::Result sq_getfloat(rabbit::VirtualMachine* v,int64_t idx,float_t *f);
 rabbit::Result sq_getbool(rabbit::VirtualMachine* v,int64_t idx,rabbit::Bool *b);
@@ -129,11 +124,11 @@ rabbit::Result sq_settypetag(rabbit::VirtualMachine* v,int64_t idx,rabbit::UserP
 rabbit::Result sq_gettypetag(rabbit::VirtualMachine* v,int64_t idx,rabbit::UserPointer *typetag);
 void sq_setreleasehook(rabbit::VirtualMachine* v,int64_t idx,SQRELEASEHOOK hook);
 SQRELEASEHOOK sq_getreleasehook(rabbit::VirtualMachine* v,int64_t idx);
-rabbit::Char *sq_getscratchpad(rabbit::VirtualMachine* v,int64_t minsize);
+char *sq_getscratchpad(rabbit::VirtualMachine* v,int64_t minsize);
 rabbit::Result sq_getfunctioninfo(rabbit::VirtualMachine* v,int64_t level,rabbit::FunctionInfo *fi);
 rabbit::Result sq_getclosureinfo(rabbit::VirtualMachine* v,int64_t idx,uint64_t *nparams,uint64_t *nfreevars);
 rabbit::Result sq_getclosurename(rabbit::VirtualMachine* v,int64_t idx);
-rabbit::Result sq_setnativeclosurename(rabbit::VirtualMachine* v,int64_t idx,const rabbit::Char *name);
+rabbit::Result sq_setnativeclosurename(rabbit::VirtualMachine* v,int64_t idx,const char *name);
 rabbit::Result sq_setinstanceup(rabbit::VirtualMachine* v, int64_t idx, rabbit::UserPointer p);
 rabbit::Result sq_getinstanceup(rabbit::VirtualMachine* v, int64_t idx, rabbit::UserPointer *p,rabbit::UserPointer typetag);
 rabbit::Result sq_setclassudsize(rabbit::VirtualMachine* v, int64_t idx, int64_t udsize);
@@ -180,10 +175,10 @@ rabbit::Result sq_clear(rabbit::VirtualMachine* v,int64_t idx);
 /*calls*/
 rabbit::Result sq_call(rabbit::VirtualMachine* v,int64_t params,rabbit::Bool retval,rabbit::Bool raiseerror);
 rabbit::Result sq_resume(rabbit::VirtualMachine* v,rabbit::Bool retval,rabbit::Bool raiseerror);
-const rabbit::Char *sq_getlocal(rabbit::VirtualMachine* v,uint64_t level,uint64_t idx);
+const char *sq_getlocal(rabbit::VirtualMachine* v,uint64_t level,uint64_t idx);
 rabbit::Result sq_getcallee(rabbit::VirtualMachine* v);
-const rabbit::Char *sq_getfreevariable(rabbit::VirtualMachine* v,int64_t idx,uint64_t nval);
-rabbit::Result sq_throwerror(rabbit::VirtualMachine* v,const rabbit::Char *err);
+const char *sq_getfreevariable(rabbit::VirtualMachine* v,int64_t idx,uint64_t nval);
+rabbit::Result sq_throwerror(rabbit::VirtualMachine* v,const char *err);
 rabbit::Result sq_throwobject(rabbit::VirtualMachine* v);
 void sq_reseterror(rabbit::VirtualMachine* v);
 void sq_getlasterror(rabbit::VirtualMachine* v);
@@ -196,7 +191,7 @@ void sq_addref(rabbit::VirtualMachine* v,rabbit::Object *po);
 rabbit::Bool sq_release(rabbit::VirtualMachine* v,rabbit::Object *po);
 uint64_t sq_getrefcount(rabbit::VirtualMachine* v,rabbit::Object *po);
 void sq_resetobject(rabbit::Object *po);
-const rabbit::Char *sq_objtostring(const rabbit::Object *o);
+const char *sq_objtostring(const rabbit::Object *o);
 rabbit::Bool sq_objtobool(const rabbit::Object *o);
 int64_t sq_objtointeger(const rabbit::Object *o);
 float_t sq_objtofloat(const rabbit::Object *o);

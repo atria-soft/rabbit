@@ -70,12 +70,12 @@ rabbit::Result rabbit::sq_stackinfos(rabbit::VirtualMachine* v, int64_t level, r
 	return SQ_ERROR;
 }
 
-void rabbit::VirtualMachine::raise_error(const rabbit::Char *s, ...)
+void rabbit::VirtualMachine::raise_error(const char *s, ...)
 {
 	va_list vl;
 	va_start(vl, s);
-	int64_t buffersize = (int64_t)scstrlen(s)+(NUMBER_MAX_CHAR*2);
-	scvsprintf(_sp(sq_rsl(buffersize)),buffersize, s, vl);
+	int64_t buffersize = (int64_t)strlen(s)+(NUMBER_UINT8_MAX*2);
+	vsnprintf(_sp(sq_rsl(buffersize)),buffersize, s, vl);
 	va_end(vl);
 	_lasterror = rabbit::String::create(_get_shared_state(this),_spval,-1);
 }
@@ -90,11 +90,11 @@ rabbit::String *rabbit::VirtualMachine::printObjVal(const rabbit::ObjectPtr &o)
 	switch(sq_type(o)) {
 	case rabbit::OT_STRING: return _string(o);
 	case rabbit::OT_INTEGER:
-		scsprintf(_sp(sq_rsl(NUMBER_MAX_CHAR+1)),sq_rsl(NUMBER_MAX_CHAR), _PRINT_INT_FMT, _integer(o));
+		snprintf(_sp(sq_rsl(NUMBER_UINT8_MAX+1)),sq_rsl(NUMBER_UINT8_MAX), _PRINT_INT_FMT, _integer(o));
 		return rabbit::String::create(_get_shared_state(this), _spval);
 		break;
 	case rabbit::OT_FLOAT:
-		scsprintf(_sp(sq_rsl(NUMBER_MAX_CHAR+1)), sq_rsl(NUMBER_MAX_CHAR), _SC("%.14g"), _float(o));
+		snprintf(_sp(sq_rsl(NUMBER_UINT8_MAX+1)), sq_rsl(NUMBER_UINT8_MAX), _SC("%.14g"), _float(o));
 		return rabbit::String::create(_get_shared_state(this), _spval);
 		break;
 	default:

@@ -97,11 +97,11 @@ void rabbit::FuncState::addInstruction(SQOpcode _op,int64_t arg0,int64_t arg1,in
 
 static void dumpLiteral(rabbit::ObjectPtr &o) {
 	switch(sq_type(o)){
-		case rabbit::OT_STRING: scprintf(_SC("\"%s\""),_stringval(o));break;
-		case rabbit::OT_FLOAT: scprintf(_SC("{%f}"),_float(o));break;
-		case rabbit::OT_INTEGER: scprintf(_SC("{") _PRINT_INT_FMT _SC("}"),_integer(o));break;
-		case rabbit::OT_BOOL: scprintf(_SC("%s"),_integer(o)?_SC("true"):_SC("false"));break;
-		default: scprintf(_SC("(%s %p)"),getTypeName(o),(void*)_rawval(o));break; break; //shut up compiler
+		case rabbit::OT_STRING: printf(_SC("\"%s\""),_stringval(o));break;
+		case rabbit::OT_FLOAT: printf(_SC("{%f}"),_float(o));break;
+		case rabbit::OT_INTEGER: printf(_SC("{") _PRINT_INT_FMT _SC("}"),_integer(o));break;
+		case rabbit::OT_BOOL: printf(_SC("%s"),_integer(o)?_SC("true"):_SC("false"));break;
+		default: printf(_SC("(%s %p)"),getTypeName(o),(void*)_rawval(o));break; break; //shut up compiler
 	}
 }
 
@@ -126,7 +126,7 @@ rabbit::FuncState::FuncState(rabbit::SharedState *ss,rabbit::FuncState *parent,c
 
 }
 
-void rabbit::FuncState::error(const rabbit::Char *err)
+void rabbit::FuncState::error(const char *err)
 {
 	_errfunc(_errtarget,err);
 }
@@ -136,11 +136,11 @@ void rabbit::FuncState::dump(rabbit::FunctionProto *func)
 {
 	uint64_t n=0,i;
 	int64_t si;
-	scprintf(_SC("rabbit::Instruction sizeof %d\n"),(int32_t)sizeof(rabbit::Instruction));
-	scprintf(_SC("rabbit::Object sizeof %d\n"), (int32_t)sizeof(rabbit::Object));
-	scprintf(_SC("--------------------------------------------------------------------\n"));
-	scprintf(_SC("*****FUNCTION [%s]\n"),sq_type(func->_name)==rabbit::OT_STRING?_stringval(func->_name):_SC("unknown"));
-	scprintf(_SC("-----LITERALS\n"));
+	printf(_SC("rabbit::Instruction sizeof %d\n"),(int32_t)sizeof(rabbit::Instruction));
+	printf(_SC("rabbit::Object sizeof %d\n"), (int32_t)sizeof(rabbit::Object));
+	printf(_SC("--------------------------------------------------------------------\n"));
+	printf(_SC("*****FUNCTION [%s]\n"),sq_type(func->_name)==rabbit::OT_STRING?_stringval(func->_name):_SC("unknown"));
+	printf(_SC("-----LITERALS\n"));
 	rabbit::ObjectPtr refidx,key,val;
 	int64_t idx;
 	etk::Vector<rabbit::ObjectPtr> templiterals;
@@ -150,43 +150,43 @@ void rabbit::FuncState::dump(rabbit::FunctionProto *func)
 		templiterals[_integer(val)]=key;
 	}
 	for(i=0;i<templiterals.size();i++){
-		scprintf(_SC("[%d] "), (int32_t)n);
+		printf(_SC("[%d] "), (int32_t)n);
 		dumpLiteral(templiterals[i]);
-		scprintf(_SC("\n"));
+		printf(_SC("\n"));
 		n++;
 	}
-	scprintf(_SC("-----PARAMS\n"));
+	printf(_SC("-----PARAMS\n"));
 	if(_varparams)
-		scprintf(_SC("<<VARPARAMS>>\n"));
+		printf(_SC("<<VARPARAMS>>\n"));
 	n=0;
 	for(i=0;i<_parameters.size();i++){
-		scprintf(_SC("[%d] "), (int32_t)n);
+		printf(_SC("[%d] "), (int32_t)n);
 		dumpLiteral(_parameters[i]);
-		scprintf(_SC("\n"));
+		printf(_SC("\n"));
 		n++;
 	}
-	scprintf(_SC("-----LOCALS\n"));
+	printf(_SC("-----LOCALS\n"));
 	for(si=0;si<func->_nlocalvarinfos;si++){
 		rabbit::LocalVarInfo lvi=func->_localvarinfos[si];
-		scprintf(_SC("[%d] %s \t%d %d\n"), (int32_t)lvi._pos,_stringval(lvi._name), (int32_t)lvi._start_op, (int32_t)lvi._end_op);
+		printf(_SC("[%d] %s \t%d %d\n"), (int32_t)lvi._pos,_stringval(lvi._name), (int32_t)lvi._start_op, (int32_t)lvi._end_op);
 		n++;
 	}
-	scprintf(_SC("-----LINE INFO\n"));
+	printf(_SC("-----LINE INFO\n"));
 	for(i=0;i<_lineinfos.size();i++){
 		rabbit::LineInfo li=_lineinfos[i];
-		scprintf(_SC("op [%d] line [%d] \n"), (int32_t)li._op, (int32_t)li._line);
+		printf(_SC("op [%d] line [%d] \n"), (int32_t)li._op, (int32_t)li._line);
 		n++;
 	}
-	scprintf(_SC("-----dump\n"));
+	printf(_SC("-----dump\n"));
 	n=0;
 	for(i=0;i<_instructions.size();i++){
 		rabbit::Instruction &inst=_instructions[i];
 		if(inst.op==_OP_LOAD || inst.op==_OP_DLOAD || inst.op==_OP_PREPCALLK || inst.op==_OP_GETK ){
 
 			int64_t lidx = inst._arg1;
-			scprintf(_SC("[%03d] %15s %d "), (int32_t)n,g_InstrDesc[inst.op].name,inst._arg0);
+			printf(_SC("[%03d] %15s %d "), (int32_t)n,g_InstrDesc[inst.op].name,inst._arg0);
 			if(lidx >= 0xFFFFFFFF)
-				scprintf(_SC("null"));
+				printf(_SC("null"));
 			else {
 				int64_t refidx;
 				rabbit::ObjectPtr val,key,refo;
@@ -196,13 +196,13 @@ void rabbit::FuncState::dump(rabbit::FunctionProto *func)
 				dumpLiteral(key);
 			}
 			if(inst.op != _OP_DLOAD) {
-				scprintf(_SC(" %d %d \n"),inst._arg2,inst._arg3);
+				printf(_SC(" %d %d \n"),inst._arg2,inst._arg3);
 			}
 			else {
-				scprintf(_SC(" %d "),inst._arg2);
+				printf(_SC(" %d "),inst._arg2);
 				lidx = inst._arg3;
 				if(lidx >= 0xFFFFFFFF)
-					scprintf(_SC("null"));
+					printf(_SC("null"));
 				else {
 					int64_t refidx;
 					rabbit::ObjectPtr val,key,refo;
@@ -210,24 +210,24 @@ void rabbit::FuncState::dump(rabbit::FunctionProto *func)
 						refo = refidx;
 				}
 				dumpLiteral(key);
-				scprintf(_SC("\n"));
+				printf(_SC("\n"));
 			}
 			}
 		}
 		else if(inst.op==_OP_LOADFLOAT) {
-			scprintf(_SC("[%03d] %15s %d %f %d %d\n"), (int32_t)n,g_InstrDesc[inst.op].name,inst._arg0,*((float_t*)&inst._arg1),inst._arg2,inst._arg3);
+			printf(_SC("[%03d] %15s %d %f %d %d\n"), (int32_t)n,g_InstrDesc[inst.op].name,inst._arg0,*((float_t*)&inst._arg1),inst._arg2,inst._arg3);
 		}
 	/*  else if(inst.op==_OP_ARITH){
-			scprintf(_SC("[%03d] %15s %d %d %d %c\n"),n,g_InstrDesc[inst.op].name,inst._arg0,inst._arg1,inst._arg2,inst._arg3);
+			printf(_SC("[%03d] %15s %d %d %d %c\n"),n,g_InstrDesc[inst.op].name,inst._arg0,inst._arg1,inst._arg2,inst._arg3);
 		}*/
 		else {
-			scprintf(_SC("[%03d] %15s %d %d %d %d\n"), (int32_t)n,g_InstrDesc[inst.op].name,inst._arg0,inst._arg1,inst._arg2,inst._arg3);
+			printf(_SC("[%03d] %15s %d %d %d %d\n"), (int32_t)n,g_InstrDesc[inst.op].name,inst._arg0,inst._arg1,inst._arg2,inst._arg3);
 		}
 		n++;
 	}
-	scprintf(_SC("-----\n"));
-	scprintf(_SC("stack size[%d]\n"), (int32_t)func->_stacksize);
-	scprintf(_SC("--------------------------------------------------------------------\n\n"));
+	printf(_SC("-----\n"));
+	printf(_SC("stack size[%d]\n"), (int32_t)func->_stacksize);
+	printf(_SC("--------------------------------------------------------------------\n\n"));
 }
 #endif
 
@@ -595,7 +595,7 @@ void rabbit::FuncState::addInstruction(rabbit::Instruction &i)
 	_instructions.pushBack(i);
 }
 
-rabbit::Object rabbit::FuncState::createString(const rabbit::Char *s,int64_t len)
+rabbit::Object rabbit::FuncState::createString(const char *s,int64_t len)
 {
 	rabbit::ObjectPtr ns(rabbit::String::create(_sharedstate,s,len));
 	_table(_strings)->newSlot(ns,(int64_t)1);

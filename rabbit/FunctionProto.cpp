@@ -65,10 +65,10 @@ void rabbit::FunctionProto::release(){
 	sq_vm_free(this,size);
 }
 
-const rabbit::Char* rabbit::FunctionProto::getLocal(rabbit::VirtualMachine *vm,uint64_t stackbase,uint64_t nseq,uint64_t nop)
+const char* rabbit::FunctionProto::getLocal(rabbit::VirtualMachine *vm,uint64_t stackbase,uint64_t nseq,uint64_t nop)
 {
 	uint64_t nvars=_nlocalvarinfos;
-	const rabbit::Char *res=NULL;
+	const char *res=NULL;
 	if(nvars>=nseq){
 		for(uint64_t i=0;i<nvars;i++){
 			if(_localvarinfos[i]._start_op<=nop && _localvarinfos[i]._end_op>=nop)

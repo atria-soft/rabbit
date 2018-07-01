@@ -262,12 +262,12 @@ rabbit::Table::_HashNode* rabbit::Table::_get(const rabbit::ObjectPtr &key,rabbi
 }
 
 //for compiler use
-bool rabbit::Table::getStr(const rabbit::Char* key,int64_t keylen,rabbit::ObjectPtr &val) {
+bool rabbit::Table::getStr(const char* key,int64_t keylen,rabbit::ObjectPtr &val) {
 	rabbit::Hash hash = _hashstr(key,keylen);
 	_HashNode *n = &_nodes[hash & (_numofnodes - 1)];
 	_HashNode *res = NULL;
 	do{
-		if(sq_type(n->key) == rabbit::OT_STRING && (scstrcmp(_stringval(n->key),key) == 0)){
+		if(sq_type(n->key) == rabbit::OT_STRING && (strcmp(_stringval(n->key),key) == 0)){
 			res = n;
 			break;
 		}

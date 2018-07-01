@@ -87,7 +87,7 @@ struct SQScope {
 class Compiler
 {
 public:
-	Compiler(rabbit::VirtualMachine *v, SQLEXREADFUNC rg, rabbit::UserPointer up, const rabbit::Char* sourcename, bool raiseerror, bool lineinfo)
+	Compiler(rabbit::VirtualMachine *v, SQLEXREADFUNC rg, rabbit::UserPointer up, const char* sourcename, bool raiseerror, bool lineinfo)
 	{
 		_vm=v;
 		_lex.init(_get_shared_state(v), rg, up,Throwerror,this);
@@ -97,15 +97,15 @@ public:
 		_scope.stacksize = 0;
 		_compilererror[0] = _SC('\0');
 	}
-	static void Throwerror(void *ud, const rabbit::Char *s) {
+	static void Throwerror(void *ud, const char *s) {
 		rabbit::Compiler *c = (rabbit::Compiler *)ud;
 		c->error(s);
 	}
-	void error(const rabbit::Char *s, ...)
+	void error(const char *s, ...)
 	{
 		va_list vl;
 		va_start(vl, s);
-		scvsprintf(_compilererror, MAX_COMPILER_ERROR_LEN, s, vl);
+		vsnprintf(_compilererror, MAX_COMPILER_ERROR_LEN, s, vl);
 		va_end(vl);
 		longjmp(_errorjmp,1);
 	}
@@ -118,7 +118,7 @@ public:
 				//do nothing
 			}
 			else {
-				const rabbit::Char *etypename;
+				const char *etypename;
 				if(tok > 255) {
 					switch(tok)
 					{
@@ -363,7 +363,7 @@ public:
 				int64_t key = _fs->popTarget();
 				int64_t src = _fs->popTarget();
 				/* _OP_COMPARITH mixes dest obj and source val in the arg1 */
-				_fs->addInstruction(_OP_COMPARITH, _fs->pushTarget(), (src<<16)|val, key, ChooseCompArithCharByToken(tok));
+				_fs->addInstruction(_OP_COMPARITH, _fs->pushTarget(), (src<<16)|val, key, ChooseCompArithcharByToken(tok));
 			}
 			break;
 		case OUTER:
@@ -592,7 +592,7 @@ public:
 		}
 		return _OP_ADD;
 	}
-	int64_t ChooseCompArithCharByToken(int64_t tok)
+	int64_t ChooseCompArithcharByToken(int64_t tok)
 	{
 		int64_t oper;
 		switch(tok){
@@ -1588,13 +1588,13 @@ private:
 	int64_t _debugop;
 	SQExpState   _es;
 	SQScope _scope;
-	rabbit::Char _compilererror[MAX_COMPILER_ERROR_LEN];
+	char _compilererror[MAX_COMPILER_ERROR_LEN];
 	jmp_buf _errorjmp;
 	rabbit::VirtualMachine *_vm;
 };
 }
 
-bool rabbit::compile(rabbit::VirtualMachine *vm,SQLEXREADFUNC rg, rabbit::UserPointer up, const rabbit::Char *sourcename, rabbit::ObjectPtr &out, bool raiseerror, bool lineinfo)
+bool rabbit::compile(rabbit::VirtualMachine *vm,SQLEXREADFUNC rg, rabbit::UserPointer up, const char *sourcename, rabbit::ObjectPtr &out, bool raiseerror, bool lineinfo)
 {
 	rabbit::Compiler p(vm, rg, up, sourcename, raiseerror, lineinfo);
 	return p.compile(out);

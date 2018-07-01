@@ -51,7 +51,7 @@ rabbit::SharedState::SharedState()
 	_table(_metamethodsmap)->newSlot(_metamethods->back(),(int64_t)(_metamethods->size()-1)); \
 	}
 
-bool rabbit::compileTypemask(etk::Vector<int64_t> &res,const rabbit::Char *typemask)
+bool rabbit::compileTypemask(etk::Vector<int64_t> &res,const char *typemask)
 {
 	int64_t i = 0;
 	int64_t mask = 0;
@@ -206,16 +206,16 @@ int64_t rabbit::SharedState::getMetaMethodIdxByName(const rabbit::ObjectPtr &nam
 }
 
 
-rabbit::Char* rabbit::SharedState::getScratchPad(int64_t size) {
+char* rabbit::SharedState::getScratchPad(int64_t size) {
 	int64_t newsize;
 	if(size>0) {
 		if(_scratchpadsize < size) {
 			newsize = size + (size>>1);
-			_scratchpad = (rabbit::Char *)SQ_REALLOC(_scratchpad,_scratchpadsize,newsize);
+			_scratchpad = (char *)SQ_REALLOC(_scratchpad,_scratchpadsize,newsize);
 			_scratchpadsize = newsize;
 		} else if(_scratchpadsize >= (size<<5)) {
 			newsize = _scratchpadsize >> 1;
-			_scratchpad = (rabbit::Char *)SQ_REALLOC(_scratchpad,_scratchpadsize,newsize);
+			_scratchpad = (char *)SQ_REALLOC(_scratchpad,_scratchpadsize,newsize);
 			_scratchpadsize = newsize;
 		}
 	}

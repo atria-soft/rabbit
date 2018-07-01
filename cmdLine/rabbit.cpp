@@ -23,15 +23,6 @@
 #include <rabbit-std/sqstdstring.hpp>
 #include <rabbit-std/sqstdaux.hpp>
 
-#ifdef SQUNICODE
-#define scfprintf fwprintf
-#define scvprintf vfwprintf
-#else
-#define scfprintf fprintf
-#define scvprintf vfprintf
-#endif
-
-
 void PrintVersionInfos();
 
 #if defined(_MSC_VER) && defined(_DEBUG)
@@ -56,30 +47,30 @@ int64_t quit(rabbit::VirtualMachine* v)
 	return 0;
 }
 
-void printfunc(rabbit::VirtualMachine* SQ_UNUSED_ARG(v),const rabbit::Char *s,...)
+void printfunc(rabbit::VirtualMachine* SQ_UNUSED_ARG(v),const char *s,...)
 {
 	va_list vl;
 	va_start(vl, s);
-	scvprintf(stdout, s, vl);
+	vfprintf(stdout, s, vl);
 	va_end(vl);
 }
 
-void errorfunc(rabbit::VirtualMachine* SQ_UNUSED_ARG(v),const rabbit::Char *s,...)
+void errorfunc(rabbit::VirtualMachine* SQ_UNUSED_ARG(v),const char *s,...)
 {
 	va_list vl;
 	va_start(vl, s);
-	scvprintf(stderr, s, vl);
+	vfprintf(stderr, s, vl);
 	va_end(vl);
 }
 
 void PrintVersionInfos()
 {
-	scfprintf(stdout,_SC("%s %s (%d bits)\n"),RABBIT_VERSION,RABBIT_COPYRIGHT,((int)(sizeof(int64_t)*8)));
+	fprintf(stdout,_SC("%s %s (%d bits)\n"),RABBIT_VERSION,RABBIT_COPYRIGHT,((int)(sizeof(int64_t)*8)));
 }
 
 void PrintUsage()
 {
-	scfprintf(stderr,_SC("usage: sq <options> <scriptpath [args]>.\n")
+	fprintf(stderr,_SC("usage: sq <options> <scriptpath [args]>.\n")
 		_SC("Available options are:\n")
 		_SC("   -c			  compiles the file to bytecode(default output 'out.karrot')\n")
 		_SC("   -o			  specifies output file for the -c option\n")
@@ -97,9 +88,6 @@ int getargs(rabbit::VirtualMachine* v,int argc, char* argv[],int64_t *retval)
 {
 	int i;
 	int compiles_only = 0;
-#ifdef SQUNICODE
-	static rabbit::Char temp[500];
-#endif
 	char * output = NULL;
 	*retval = 0;
 	if(argc>1)
@@ -135,7 +123,7 @@ int getargs(rabbit::VirtualMachine* v,int argc, char* argv[],int64_t *retval)
 					return _DONE;
 				default:
 					PrintVersionInfos();
-					scprintf(_SC("unknown prameter '-%c'\n"),argv[arg][1]);
+					printf(_SC("unknown prameter '-%c'\n"),argv[arg][1]);
 					PrintUsage();
 					*retval = -1;
 					return _ERROR;
@@ -147,13 +135,8 @@ int getargs(rabbit::VirtualMachine* v,int argc, char* argv[],int64_t *retval)
 		// src file
 
 		if(arg<argc) {
-			const rabbit::Char *filename=NULL;
-#ifdef SQUNICODE
-			mbstowcs(temp,argv[arg],strlen(argv[arg]));
-			filename=temp;
-#else
+			const char *filename=NULL;
 			filename=argv[arg];
-#endif
 
 			arg++;
 
@@ -164,15 +147,9 @@ int getargs(rabbit::VirtualMachine* v,int argc, char* argv[],int64_t *retval)
 			//sq_pop(v,1);
 			if(compiles_only) {
 				if(SQ_SUCCEEDED(rabbit::std::loadfile(v,filename,SQTrue))){
-					const rabbit::Char *outfile = _SC("out.karrot");
+					const char *outfile = _SC("out.karrot");
 					if(output) {
-#ifdef SQUNICODE
-						int len = (int)(strlen(output)+1);
-						mbstowcs(sq_getscratchpad(v,len*sizeof(rabbit::Char)),output,len);
-						outfile = sq_getscratchpad(v,-1);
-#else
 						outfile = output;
-#endif
 					}
 					if(SQ_SUCCEEDED(rabbit::std::writeclosuretofile(v,outfile)))
 						return _DONE;
@@ -187,15 +164,8 @@ int getargs(rabbit::VirtualMachine* v,int argc, char* argv[],int64_t *retval)
 					sq_pushroottable(v);
 					for(i=arg;i<argc;i++)
 					{
-						const rabbit::Char *a;
-#ifdef SQUNICODE
-						int alen=(int)strlen(argv[i]);
-						a=sq_getscratchpad(v,(int)(alen*sizeof(rabbit::Char)));
-						mbstowcs(sq_getscratchpad(v,-1),argv[i],alen);
-						sq_getscratchpad(v,-1)[alen] = _SC('\0');
-#else
+						const char *a;
 						a=argv[i];
-#endif
 						sq_pushstring(v,a,-1);
 						callargs++;
 						//sq_arrayappend(v,-2);
@@ -216,10 +186,10 @@ int getargs(rabbit::VirtualMachine* v,int argc, char* argv[],int64_t *retval)
 			}
 			//if this point is reached an error occurred
 			{
-				const rabbit::Char *err;
+				const char *err;
 				sq_getlasterror(v);
 				if(SQ_SUCCEEDED(sq_getstring(v,-1,&err))) {
-					scprintf(_SC("error [%s]\n"),err);
+					printf(_SC("error [%s]\n"),err);
 					*retval = -2;
 					return _ERROR;
 				}
@@ -235,7 +205,7 @@ void Interactive(rabbit::VirtualMachine* v)
 {
 
 #define MAXINPUT 1024
-	rabbit::Char buffer[MAXINPUT];
+	char buffer[MAXINPUT];
 	int64_t blocks =0;
 	int64_t string=0;
 	int64_t retval=0;
@@ -253,7 +223,7 @@ void Interactive(rabbit::VirtualMachine* v)
 	while (!done)
 	{
 		int64_t i = 0;
-		scprintf(_SC("\nrabbit> "));
+		printf(_SC("\nrabbit> "));
 		for(;;) {
 			int c;
 			if(done)return;
@@ -266,37 +236,37 @@ void Interactive(rabbit::VirtualMachine* v)
 				else if(blocks==0)break;
 				buffer[i++] = _SC('\n');
 			}
-			else if (c==_SC('}')) {blocks--; buffer[i++] = (rabbit::Char)c;}
+			else if (c==_SC('}')) {blocks--; buffer[i++] = (char)c;}
 			else if(c==_SC('{') && !string){
 					blocks++;
-					buffer[i++] = (rabbit::Char)c;
+					buffer[i++] = (char)c;
 			}
 			else if(c==_SC('"') || c==_SC('\'')){
 					string=!string;
-					buffer[i++] = (rabbit::Char)c;
+					buffer[i++] = (char)c;
 			}
 			else if (i >= MAXINPUT-1) {
-				scfprintf(stderr, _SC("sq : input line too long\n"));
+				fprintf(stderr, _SC("sq : input line too long\n"));
 				break;
 			}
 			else{
-				buffer[i++] = (rabbit::Char)c;
+				buffer[i++] = (char)c;
 			}
 		}
 		buffer[i] = _SC('\0');
 
 		if(buffer[0]==_SC('=')){
-			scsprintf(sq_getscratchpad(v,MAXINPUT),(size_t)MAXINPUT,_SC("return (%s)"),&buffer[1]);
-			memcpy(buffer,sq_getscratchpad(v,-1),(scstrlen(sq_getscratchpad(v,-1))+1)*sizeof(rabbit::Char));
+			snprintf(sq_getscratchpad(v,MAXINPUT),(size_t)MAXINPUT,_SC("return (%s)"),&buffer[1]);
+			memcpy(buffer,sq_getscratchpad(v,-1),(strlen(sq_getscratchpad(v,-1))+1)*sizeof(char));
 			retval=1;
 		}
-		i=scstrlen(buffer);
+		i=strlen(buffer);
 		if(i>0){
 			int64_t oldtop=sq_gettop(v);
 			if(SQ_SUCCEEDED(sq_compilebuffer(v,buffer,i,_SC("interactive console"),SQTrue))){
 				sq_pushroottable(v);
 				if(SQ_SUCCEEDED(sq_call(v,1,retval,SQTrue)) &&  retval){
-					scprintf(_SC("\n"));
+					printf(_SC("\n"));
 					sq_pushroottable(v);
 					sq_pushstring(v,_SC("print"),-1);
 					sq_get(v,-2);
@@ -304,7 +274,7 @@ void Interactive(rabbit::VirtualMachine* v)
 					sq_push(v,-4);
 					sq_call(v,2,SQFalse,SQTrue);
 					retval=0;
-					scprintf(_SC("\n"));
+					printf(_SC("\n"));
 				}
 			}
 

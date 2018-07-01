@@ -15,19 +15,19 @@ namespace rabbit {
 		using SQRex = struct SQRex;
 		
 		typedef struct {
-			const rabbit::Char *begin;
+			const char *begin;
 			int64_t len;
 		} SQRexMatch;
 		
-		SQRex *rex_compile(const rabbit::Char *pattern,const rabbit::Char **error);
+		SQRex *rex_compile(const char *pattern,const char **error);
 		void rex_free(SQRex *exp);
-		rabbit::Bool rex_match(SQRex* exp,const rabbit::Char* text);
-		rabbit::Bool rex_search(SQRex* exp,const rabbit::Char* text, const rabbit::Char** out_begin, const rabbit::Char** out_end);
-		rabbit::Bool rex_searchrange(SQRex* exp,const rabbit::Char* text_begin,const rabbit::Char* text_end,const rabbit::Char** out_begin, const rabbit::Char** out_end);
+		rabbit::Bool rex_match(SQRex* exp,const char* text);
+		rabbit::Bool rex_search(SQRex* exp,const char* text, const char** out_begin, const char** out_end);
+		rabbit::Bool rex_searchrange(SQRex* exp,const char* text_begin,const char* text_end,const char** out_begin, const char** out_end);
 		int64_t rex_getsubexpcount(SQRex* exp);
 		rabbit::Bool rex_getsubexp(SQRex* exp, int64_t n, SQRexMatch *subexp);
 		
-		rabbit::Result format(rabbit::VirtualMachine* v,int64_t nformatstringidx,int64_t *outlen,rabbit::Char **output);
+		rabbit::Result format(rabbit::VirtualMachine* v,int64_t nformatstringidx,int64_t *outlen,char **output);
 		
 		rabbit::Result register_stringlib(rabbit::VirtualMachine* v);
 

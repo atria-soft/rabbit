@@ -14,13 +14,9 @@
 
 #define SQSTD_FILE_TYPE_TAG ((uint64_t)(SQSTD_STREAM_TYPE_TAG | 0x00000001))
 //basic API
-rabbit::std::SQFILE rabbit::std::fopen(const rabbit::Char *filename ,const rabbit::Char *mode)
+rabbit::std::SQFILE rabbit::std::fopen(const char *filename ,const char *mode)
 {
-#ifndef SQUNICODE
 	return (SQFILE)::fopen(filename,mode);
-#else
-	return (SQFILE)::_wfopen(filename,mode);
-#endif
 }
 
 int64_t rabbit::std::fread(void* buffer, int64_t size, int64_t count, SQFILE file)
@@ -73,7 +69,7 @@ namespace rabbit {
 			File() { _handle = NULL; _owns = false;}
 			File(SQFILE file, bool owns) { _handle = file; _owns = owns;}
 			virtual ~File() { close(); }
-			bool Open(const rabbit::Char *filename ,const rabbit::Char *mode) {
+			bool Open(const char *filename ,const char *mode) {
 				close();
 				if( (_handle = rabbit::std::fopen(filename,mode)) ) {
 					_owns = true;
@@ -135,7 +131,7 @@ static int64_t _file_releasehook(rabbit::UserPointer p, int64_t SQ_UNUSED_ARG(si
 
 static int64_t _file_constructor(rabbit::VirtualMachine* v)
 {
-	const rabbit::Char *filename,*mode;
+	const char *filename,*mode;
 	bool owns = true;
 	rabbit::std::File *f;
 	rabbit::std::SQFILE newf;
@@ -275,46 +271,6 @@ static int64_t _io_file_lexfeed_PLAIN(rabbit::UserPointer iobuf)
 
 }
 
-#ifdef SQUNICODE
-static int64_t _io_file_lexfeed_UTF8(rabbit::UserPointer iobuf)
-{
-	IOBuffer *iobuffer = (IOBuffer *)iobuf;
-#define READ(iobuf) \
-	if((inchar = (unsigned char)_read_byte(iobuf)) == 0) \
-		return 0;
-
-	static const int64_t utf8_lengths[16] =
-	{
-		1,1,1,1,1,1,1,1,		/* 0000 to 0111 : 1 byte (plain ASCII) */
-		0,0,0,0,				/* 1000 to 1011 : not valid */
-		2,2,					/* 1100, 1101 : 2 bytes */
-		3,					  /* 1110 : 3 bytes */
-		4					   /* 1111 :4 bytes */
-	};
-	static const unsigned char byte_masks[5] = {0,0,0x1f,0x0f,0x07};
-	unsigned char inchar;
-	int64_t c = 0;
-	READ(iobuffer);
-	c = inchar;
-	//
-	if(c >= 0x80) {
-		int64_t tmp;
-		int64_t codelen = utf8_lengths[c>>4];
-		if(codelen == 0)
-			return 0;
-			//"invalid UTF-8 stream";
-		tmp = c&byte_masks[codelen];
-		for(int64_t n = 0; n < codelen-1; n++) {
-			tmp<<=6;
-			READ(iobuffer);
-			tmp |= inchar & 0x3F;
-		}
-		c = tmp;
-	}
-	return c;
-}
-#endif
-
 static int64_t _io_file_lexfeed_UCS2_LE(rabbit::UserPointer iobuf)
 {
 	int64_t ret;
@@ -347,7 +303,7 @@ int64_t file_write(rabbit::UserPointer file,rabbit::UserPointer p,int64_t size)
 	return rabbit::std::fwrite(p,1,size,(rabbit::std::SQFILE)file);
 }
 
-rabbit::Result rabbit::std::loadfile(rabbit::VirtualMachine* v,const rabbit::Char *filename,rabbit::Bool printerror)
+rabbit::Result rabbit::std::loadfile(rabbit::VirtualMachine* v,const char *filename,rabbit::Bool printerror)
 {
 	SQFILE file = rabbit::std::fopen(filename,_SC("rb"));
 
@@ -384,11 +340,7 @@ rabbit::Result rabbit::std::loadfile(rabbit::VirtualMachine* v,const rabbit::Cha
 						rabbit::std::fclose(file);
 						return sq_throwerror(v,_SC("Unrecognized encoding"));
 					}
-#ifdef SQUNICODE
-					func = _io_file_lexfeed_UTF8;
-#else
 					func = _io_file_lexfeed_PLAIN;
-#endif
 					break;//UTF-8 ;
 				default: rabbit::std::fseek(file,0,SQ_SEEK_SET); break; // ascii
 			}
@@ -407,7 +359,7 @@ rabbit::Result rabbit::std::loadfile(rabbit::VirtualMachine* v,const rabbit::Cha
 	return sq_throwerror(v,_SC("cannot open the file"));
 }
 
-rabbit::Result rabbit::std::dofile(rabbit::VirtualMachine* v,const rabbit::Char *filename,rabbit::Bool retval,rabbit::Bool printerror)
+rabbit::Result rabbit::std::dofile(rabbit::VirtualMachine* v,const char *filename,rabbit::Bool retval,rabbit::Bool printerror)
 {
 	//at least one entry must exist in order for us to push it as the environment
 	if(sq_gettop(v) == 0)
@@ -424,7 +376,7 @@ rabbit::Result rabbit::std::dofile(rabbit::VirtualMachine* v,const rabbit::Char 
 	return SQ_ERROR;
 }
 
-rabbit::Result rabbit::std::writeclosuretofile(rabbit::VirtualMachine* v,const rabbit::Char *filename)
+rabbit::Result rabbit::std::writeclosuretofile(rabbit::VirtualMachine* v,const char *filename)
 {
 	SQFILE file = rabbit::std::fopen(filename,_SC("wb+"));
 	if(!file) return sq_throwerror(v,_SC("cannot open the file"));
@@ -438,7 +390,7 @@ rabbit::Result rabbit::std::writeclosuretofile(rabbit::VirtualMachine* v,const r
 
 int64_t _g_io_loadfile(rabbit::VirtualMachine* v)
 {
-	const rabbit::Char *filename;
+	const char *filename;
 	rabbit::Bool printerror = SQFalse;
 	sq_getstring(v,2,&filename);
 	if(sq_gettop(v) >= 3) {
@@ -451,7 +403,7 @@ int64_t _g_io_loadfile(rabbit::VirtualMachine* v)
 
 int64_t _g_io_writeclosuretofile(rabbit::VirtualMachine* v)
 {
-	const rabbit::Char *filename;
+	const char *filename;
 	sq_getstring(v,2,&filename);
 	if(SQ_SUCCEEDED(rabbit::std::writeclosuretofile(v,filename)))
 		return 1;
@@ -460,7 +412,7 @@ int64_t _g_io_writeclosuretofile(rabbit::VirtualMachine* v)
 
 int64_t _g_io_dofile(rabbit::VirtualMachine* v)
 {
-	const rabbit::Char *filename;
+	const char *filename;
 	rabbit::Bool printerror = SQFalse;
 	sq_getstring(v,2,&filename);
 	if(sq_gettop(v) >= 3) {

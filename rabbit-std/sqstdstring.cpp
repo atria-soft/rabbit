@@ -16,9 +16,9 @@
 
 #define MAX_FORMAT_LEN  20
 #define MAX_WFORMAT_LEN 3
-#define ADDITIONAL_FORMAT_SPACE (100*sizeof(rabbit::Char))
+#define ADDITIONAL_FORMAT_SPACE (100*sizeof(char))
 
-static rabbit::Bool isfmtchr(rabbit::Char ch)
+static rabbit::Bool isfmtchr(char ch)
 {
 	switch(ch) {
 		case '-':
@@ -31,15 +31,15 @@ static rabbit::Bool isfmtchr(rabbit::Char ch)
 	return SQFalse;
 }
 
-static int64_t validate_format(rabbit::VirtualMachine* v, rabbit::Char *fmt, const rabbit::Char *src, int64_t n,int64_t &width)
+static int64_t validate_format(rabbit::VirtualMachine* v, char *fmt, const char *src, int64_t n,int64_t &width)
 {
-	rabbit::Char *dummy;
-	rabbit::Char swidth[MAX_WFORMAT_LEN];
+	char *dummy;
+	char swidth[MAX_WFORMAT_LEN];
 	int64_t wc = 0;
 	int64_t start = n;
 	fmt[0] = '%';
 	while (isfmtchr(src[n])) n++;
-	while (scisdigit(src[n])) {
+	while (isdigit(src[n])) {
 		swidth[wc] = src[n];
 		n++;
 		wc++;
@@ -48,7 +48,7 @@ static int64_t validate_format(rabbit::VirtualMachine* v, rabbit::Char *fmt, con
 	}
 	swidth[wc] = '\0';
 	if(wc > 0) {
-		width = scstrtol(swidth,&dummy,10);
+		width = strtol(swidth,&dummy,10);
 	}
 	else
 		width = 0;
@@ -56,7 +56,7 @@ static int64_t validate_format(rabbit::VirtualMachine* v, rabbit::Char *fmt, con
 		n++;
 
 		wc = 0;
-		while (scisdigit(src[n])) {
+		while (isdigit(src[n])) {
 			swidth[wc] = src[n];
 			n++;
 			wc++;
@@ -65,28 +65,28 @@ static int64_t validate_format(rabbit::VirtualMachine* v, rabbit::Char *fmt, con
 		}
 		swidth[wc] = '\0';
 		if(wc > 0) {
-			width += scstrtol(swidth,&dummy,10);
+			width += strtol(swidth,&dummy,10);
 
 		}
 	}
 	if (n-start > MAX_FORMAT_LEN )
 		return sq_throwerror(v,_SC("format too long"));
-	memcpy(&fmt[1],&src[start],((n-start)+1)*sizeof(rabbit::Char));
+	memcpy(&fmt[1],&src[start],((n-start)+1)*sizeof(char));
 	fmt[(n-start)+2] = '\0';
 	return n;
 }
 
-rabbit::Result rabbit::std::format(rabbit::VirtualMachine* v,int64_t nformatstringidx,int64_t *outlen,rabbit::Char **output)
+rabbit::Result rabbit::std::format(rabbit::VirtualMachine* v,int64_t nformatstringidx,int64_t *outlen,char **output)
 {
-	const rabbit::Char *format;
-	rabbit::Char *dest;
-	rabbit::Char fmt[MAX_FORMAT_LEN];
+	const char *format;
+	char *dest;
+	char fmt[MAX_FORMAT_LEN];
 	const rabbit::Result res = sq_getstring(v,nformatstringidx,&format);
 	if (SQ_FAILED(res)) {
 		return res; // propagate the error
 	}
 	int64_t format_size = sq_getsize(v,nformatstringidx);
-	int64_t allocated = (format_size+2)*sizeof(rabbit::Char);
+	int64_t allocated = (format_size+2)*sizeof(char);
 	dest = sq_getscratchpad(v,allocated);
 	int64_t n = 0,i = 0, nparam = nformatstringidx+1, w = 0;
 	//while(format[n] != '\0')
@@ -109,23 +109,23 @@ rabbit::Result rabbit::std::format(rabbit::VirtualMachine* v,int64_t nformatstri
 			if(n < 0) return -1;
 			int64_t addlen = 0;
 			int64_t valtype = 0;
-			const rabbit::Char *ts = NULL;
+			const char *ts = NULL;
 			int64_t ti = 0;
 			float_t tf = 0;
 			switch(format[n]) {
 			case 's':
 				if(SQ_FAILED(sq_getstring(v,nparam,&ts)))
 					return sq_throwerror(v,_SC("string expected for the specified format"));
-				addlen = (sq_getsize(v,nparam)*sizeof(rabbit::Char))+((w+1)*sizeof(rabbit::Char));
+				addlen = (sq_getsize(v,nparam)*sizeof(char))+((w+1)*sizeof(char));
 				valtype = 's';
 				break;
 			case 'i': case 'd': case 'o': case 'u':  case 'x':  case 'X':
 #ifdef _SQ64
 				{
-				size_t flen = scstrlen(fmt);
+				size_t flen = strlen(fmt);
 				int64_t fpos = flen - 1;
-				rabbit::Char f = fmt[fpos];
-				const rabbit::Char *prec = (const rabbit::Char *)_PRINT_INT_PREC;
+				char f = fmt[fpos];
+				const char *prec = (const char *)_PRINT_INT_PREC;
 				while(*prec != _SC('\0')) {
 					fmt[fpos++] = *prec++;
 				}
@@ -136,25 +136,25 @@ rabbit::Result rabbit::std::format(rabbit::VirtualMachine* v,int64_t nformatstri
 			case 'c':
 				if(SQ_FAILED(sq_getinteger(v,nparam,&ti)))
 					return sq_throwerror(v,_SC("integer expected for the specified format"));
-				addlen = (ADDITIONAL_FORMAT_SPACE)+((w+1)*sizeof(rabbit::Char));
+				addlen = (ADDITIONAL_FORMAT_SPACE)+((w+1)*sizeof(char));
 				valtype = 'i';
 				break;
 			case 'f': case 'g': case 'G': case 'e':  case 'E':
 				if(SQ_FAILED(sq_getfloat(v,nparam,&tf)))
 					return sq_throwerror(v,_SC("float expected for the specified format"));
-				addlen = (ADDITIONAL_FORMAT_SPACE)+((w+1)*sizeof(rabbit::Char));
+				addlen = (ADDITIONAL_FORMAT_SPACE)+((w+1)*sizeof(char));
 				valtype = 'f';
 				break;
 			default:
 				return sq_throwerror(v,_SC("invalid format"));
 			}
 			n++;
-			allocated += addlen + sizeof(rabbit::Char);
+			allocated += addlen + sizeof(char);
 			dest = sq_getscratchpad(v,allocated);
 			switch(valtype) {
-			case 's': i += scsprintf(&dest[i],allocated,fmt,ts); break;
-			case 'i': i += scsprintf(&dest[i],allocated,fmt,ti); break;
-			case 'f': i += scsprintf(&dest[i],allocated,fmt,tf); break;
+			case 's': i += snprintf(&dest[i],allocated,fmt,ts); break;
+			case 'i': i += snprintf(&dest[i],allocated,fmt,ti); break;
+			case 'f': i += snprintf(&dest[i],allocated,fmt,tf); break;
 			};
 			nparam ++;
 		}
@@ -167,7 +167,7 @@ rabbit::Result rabbit::std::format(rabbit::VirtualMachine* v,int64_t nformatstri
 
 static int64_t _string_printf(rabbit::VirtualMachine* v)
 {
-	rabbit::Char *dest = NULL;
+	char *dest = NULL;
 	int64_t length = 0;
 	if(SQ_FAILED(rabbit::std::format(v,2,&length,&dest)))
 		return -1;
@@ -180,7 +180,7 @@ static int64_t _string_printf(rabbit::VirtualMachine* v)
 
 static int64_t _string_format(rabbit::VirtualMachine* v)
 {
-	rabbit::Char *dest = NULL;
+	char *dest = NULL;
 	int64_t length = 0;
 	if(SQ_FAILED(rabbit::std::format(v,2,&length,&dest)))
 		return -1;
@@ -188,27 +188,27 @@ static int64_t _string_format(rabbit::VirtualMachine* v)
 	return 1;
 }
 
-static void __strip_l(const rabbit::Char *str,const rabbit::Char **start)
+static void __strip_l(const char *str,const char **start)
 {
-	const rabbit::Char *t = str;
-	while(((*t) != '\0') && scisspace(*t)){ t++; }
+	const char *t = str;
+	while(((*t) != '\0') && isspace(*t)){ t++; }
 	*start = t;
 }
 
-static void __strip_r(const rabbit::Char *str,int64_t len,const rabbit::Char **end)
+static void __strip_r(const char *str,int64_t len,const char **end)
 {
 	if(len == 0) {
 		*end = str;
 		return;
 	}
-	const rabbit::Char *t = &str[len-1];
-	while(t >= str && scisspace(*t)) { t--; }
+	const char *t = &str[len-1];
+	while(t >= str && isspace(*t)) { t--; }
 	*end = t + 1;
 }
 
 static int64_t _string_strip(rabbit::VirtualMachine* v)
 {
-	const rabbit::Char *str,*start,*end;
+	const char *str,*start,*end;
 	sq_getstring(v,2,&str);
 	int64_t len = sq_getsize(v,2);
 	__strip_l(str,&start);
@@ -219,7 +219,7 @@ static int64_t _string_strip(rabbit::VirtualMachine* v)
 
 static int64_t _string_lstrip(rabbit::VirtualMachine* v)
 {
-	const rabbit::Char *str,*start;
+	const char *str,*start;
 	sq_getstring(v,2,&str);
 	__strip_l(str,&start);
 	sq_pushstring(v,start,-1);
@@ -228,7 +228,7 @@ static int64_t _string_lstrip(rabbit::VirtualMachine* v)
 
 static int64_t _string_rstrip(rabbit::VirtualMachine* v)
 {
-	const rabbit::Char *str,*end;
+	const char *str,*end;
 	sq_getstring(v,2,&str);
 	int64_t len = sq_getsize(v,2);
 	__strip_r(str,len,&end);
@@ -238,21 +238,21 @@ static int64_t _string_rstrip(rabbit::VirtualMachine* v)
 
 static int64_t _string_split(rabbit::VirtualMachine* v)
 {
-	const rabbit::Char *str,*seps;
-	rabbit::Char *stemp;
+	const char *str,*seps;
+	char *stemp;
 	sq_getstring(v,2,&str);
 	sq_getstring(v,3,&seps);
 	int64_t sepsize = sq_getsize(v,3);
 	if(sepsize == 0) return sq_throwerror(v,_SC("empty separators string"));
-	int64_t memsize = (sq_getsize(v,2)+1)*sizeof(rabbit::Char);
+	int64_t memsize = (sq_getsize(v,2)+1)*sizeof(char);
 	stemp = sq_getscratchpad(v,memsize);
 	memcpy(stemp,str,memsize);
-	rabbit::Char *start = stemp;
-	rabbit::Char *end = stemp;
+	char *start = stemp;
+	char *end = stemp;
 	sq_newarray(v,0);
 	while(*end != '\0')
 	{
-		rabbit::Char cur = *end;
+		char cur = *end;
 		for(int64_t i = 0; i < sepsize; i++)
 		{
 			if(cur == seps[i])
@@ -276,8 +276,8 @@ static int64_t _string_split(rabbit::VirtualMachine* v)
 
 static int64_t _string_escape(rabbit::VirtualMachine* v)
 {
-	const rabbit::Char *str;
-	rabbit::Char *dest,*resstr;
+	const char *str;
+	char *dest,*resstr;
 	int64_t size;
 	sq_getstring(v,2,&str);
 	size = sq_getsize(v,2);
@@ -285,27 +285,17 @@ static int64_t _string_escape(rabbit::VirtualMachine* v)
 		sq_push(v,2);
 		return 1;
 	}
-#ifdef SQUNICODE
-#if WCHAR_SIZE == 2
-	const rabbit::Char *escpat = _SC("\\x%04x");
-	const int64_t maxescsize = 6;
-#else //WCHAR_SIZE == 4
-	const rabbit::Char *escpat = _SC("\\x%08x");
-	const int64_t maxescsize = 10;
-#endif
-#else
-	const rabbit::Char *escpat = _SC("\\x%02x");
+	const char *escpat = _SC("\\x%02x");
 	const int64_t maxescsize = 4;
-#endif
 	int64_t destcharsize = (size * maxescsize); //assumes every char could be escaped
-	resstr = dest = (rabbit::Char *)sq_getscratchpad(v,destcharsize * sizeof(rabbit::Char));
-	rabbit::Char c;
-	rabbit::Char escch;
+	resstr = dest = (char *)sq_getscratchpad(v,destcharsize * sizeof(char));
+	char c;
+	char escch;
 	int64_t escaped = 0;
 	for(int n = 0; n < size; n++){
 		c = *str++;
 		escch = 0;
-		if(scisprint(c) || c == 0) {
+		if(isprint(c) || c == 0) {
 			switch(c) {
 			case '\a': escch = 'a'; break;
 			case '\b': escch = 'b'; break;
@@ -330,7 +320,7 @@ static int64_t _string_escape(rabbit::VirtualMachine* v)
 		}
 		else {
 
-			dest += scsprintf(dest, destcharsize, escpat, c);
+			dest += snprintf(dest, destcharsize, escpat, c);
 			escaped++;
 		}
 	}
@@ -346,7 +336,7 @@ static int64_t _string_escape(rabbit::VirtualMachine* v)
 
 static int64_t _string_startswith(rabbit::VirtualMachine* v)
 {
-	const rabbit::Char *str,*cmp;
+	const char *str,*cmp;
 	sq_getstring(v,2,&str);
 	sq_getstring(v,3,&cmp);
 	int64_t len = sq_getsize(v,2);
@@ -361,7 +351,7 @@ static int64_t _string_startswith(rabbit::VirtualMachine* v)
 
 static int64_t _string_endswith(rabbit::VirtualMachine* v)
 {
-	const rabbit::Char *str,*cmp;
+	const char *str,*cmp;
 	sq_getstring(v,2,&str);
 	sq_getstring(v,3,&cmp);
 	int64_t len = sq_getsize(v,2);
@@ -388,7 +378,7 @@ static int64_t _rexobj_releasehook(rabbit::UserPointer p, int64_t SQ_UNUSED_ARG(
 static int64_t _regexp_match(rabbit::VirtualMachine* v)
 {
 	SETUP_REX(v);
-	const rabbit::Char *str;
+	const char *str;
 	sq_getstring(v,2,&str);
 	if(rabbit::std::rex_match(self,str) == SQTrue)
 	{
@@ -399,7 +389,7 @@ static int64_t _regexp_match(rabbit::VirtualMachine* v)
 	return 1;
 }
 
-static void _addrexmatch(rabbit::VirtualMachine* v,const rabbit::Char *str,const rabbit::Char *begin,const rabbit::Char *end)
+static void _addrexmatch(rabbit::VirtualMachine* v,const char *str,const char *begin,const char *end)
 {
 	sq_newtable(v);
 	sq_pushstring(v,_SC("begin"),-1);
@@ -413,7 +403,7 @@ static void _addrexmatch(rabbit::VirtualMachine* v,const rabbit::Char *str,const
 static int64_t _regexp_search(rabbit::VirtualMachine* v)
 {
 	SETUP_REX(v);
-	const rabbit::Char *str,*begin,*end;
+	const char *str,*begin,*end;
 	int64_t start = 0;
 	sq_getstring(v,2,&str);
 	if(sq_gettop(v) > 2) sq_getinteger(v,3,&start);
@@ -427,7 +417,7 @@ static int64_t _regexp_search(rabbit::VirtualMachine* v)
 static int64_t _regexp_capture(rabbit::VirtualMachine* v)
 {
 	SETUP_REX(v);
-	const rabbit::Char *str,*begin,*end;
+	const char *str,*begin,*end;
 	int64_t start = 0;
 	sq_getstring(v,2,&str);
 	if(sq_gettop(v) > 2) sq_getinteger(v,3,&start);
@@ -457,7 +447,7 @@ static int64_t _regexp_subexpcount(rabbit::VirtualMachine* v)
 
 static int64_t _regexp_constructor(rabbit::VirtualMachine* v)
 {
-	const rabbit::Char *error,*pattern;
+	const char *error,*pattern;
 	sq_getstring(v,2,&pattern);
 	rabbit::std::SQRex *rex = rabbit::std::rex_compile(pattern,&error);
 	if(!rex) return sq_throwerror(v,error);

@@ -290,7 +290,7 @@ void init_streamclass(rabbit::VirtualMachine* v)
 	sq_pop(v,1);
 }
 
-rabbit::Result rabbit::std::declare_stream(rabbit::VirtualMachine* v,const rabbit::Char* name,rabbit::UserPointer typetag,const rabbit::Char* reg_name,const rabbit::RegFunction *methods,const rabbit::RegFunction *globals)
+rabbit::Result rabbit::std::declare_stream(rabbit::VirtualMachine* v,const char* name,rabbit::UserPointer typetag,const char* reg_name,const rabbit::RegFunction *methods,const rabbit::RegFunction *globals)
 {
 	if(sq_gettype(v,-1) != rabbit::OT_TABLE)
 		return sq_throwerror(v,_SC("table expected"));

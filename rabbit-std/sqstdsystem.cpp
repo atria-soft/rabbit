@@ -12,28 +12,13 @@
 #include <stdio.h>
 #include <rabbit-std/sqstdsystem.hpp>
 
-#ifdef SQUNICODE
-#include <wchar.h>
-#define scgetenv _wgetenv
-#define scsystem _wsystem
-#define scasctime _wasctime
-#define scremove _wremove
-#define screname _wrename
-#else
-#define scgetenv getenv
-#define scsystem system
-#define scasctime asctime
-#define scremove remove
-#define screname rename
-#endif
-
 #include <rabbit/RegFunction.hpp>
 
 static int64_t _system_getenv(rabbit::VirtualMachine* v)
 {
-	const rabbit::Char *s;
+	const char *s;
 	if(SQ_SUCCEEDED(sq_getstring(v,2,&s))){
-		sq_pushstring(v,scgetenv(s),-1);
+		sq_pushstring(v,getenv(s),-1);
 		return 1;
 	}
 	return 0;
@@ -42,9 +27,9 @@ static int64_t _system_getenv(rabbit::VirtualMachine* v)
 
 static int64_t _system_system(rabbit::VirtualMachine* v)
 {
-	const rabbit::Char *s;
+	const char *s;
 	if(SQ_SUCCEEDED(sq_getstring(v,2,&s))){
-		sq_pushinteger(v,scsystem(s));
+		sq_pushinteger(v,system(s));
 		return 1;
 	}
 	return sq_throwerror(v,_SC("wrong param"));
@@ -66,24 +51,24 @@ static int64_t _system_time(rabbit::VirtualMachine* v)
 
 static int64_t _system_remove(rabbit::VirtualMachine* v)
 {
-	const rabbit::Char *s;
+	const char *s;
 	sq_getstring(v,2,&s);
-	if(scremove(s)==-1)
+	if(remove(s)==-1)
 		return sq_throwerror(v,_SC("remove() failed"));
 	return 0;
 }
 
 static int64_t _system_rename(rabbit::VirtualMachine* v)
 {
-	const rabbit::Char *oldn,*newn;
+	const char *oldn,*newn;
 	sq_getstring(v,2,&oldn);
 	sq_getstring(v,3,&newn);
-	if(screname(oldn,newn)==-1)
+	if(rename(oldn,newn)==-1)
 		return sq_throwerror(v,_SC("rename() failed"));
 	return 0;
 }
 
-static void _set_integer_slot(rabbit::VirtualMachine* v,const rabbit::Char *name,int64_t val)
+static void _set_integer_slot(rabbit::VirtualMachine* v,const char *name,int64_t val)
 {
 	sq_pushstring(v,name,-1);
 	sq_pushinteger(v,val);

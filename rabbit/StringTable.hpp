@@ -16,7 +16,7 @@ namespace rabbit {
 		public:
 			StringTable(rabbit::SharedState*ss);
 			~StringTable();
-			rabbit::String *add(const rabbit::Char *,int64_t len);
+			rabbit::String *add(const char *,int64_t len);
 			void remove(rabbit::String *);
 		private:
 			void resize(int64_t size);

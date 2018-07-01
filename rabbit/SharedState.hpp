@@ -22,7 +22,7 @@ namespace rabbit {
 			~SharedState();
 			void init();
 		public:
-			rabbit::Char* getScratchPad(int64_t size);
+			char* getScratchPad(int64_t size);
 			int64_t getMetaMethodIdxByName(const rabbit::ObjectPtr &name);
 			etk::Vector<rabbit::ObjectPtr> *_metamethods;
 			rabbit::ObjectPtr _metamethodsmap;
@@ -63,7 +63,7 @@ namespace rabbit {
 			rabbit::UserPointer _foreignptr;
 			SQRELEASEHOOK _releasehook;
 		private:
-			rabbit::Char *_scratchpad;
+			char *_scratchpad;
 			int64_t _scratchpadsize;
 	};
 	
@@ -81,7 +81,7 @@ namespace rabbit {
 	#define _instance_ddel  _table(_sharedstate->_instance_default_delegate)
 	#define _weakref_ddel   _table(_sharedstate->_weakref_default_delegate)
 	
-	bool compileTypemask(etk::Vector<int64_t> &res,const rabbit::Char *typemask);
+	bool compileTypemask(etk::Vector<int64_t> &res,const char *typemask);
 	
 }
 

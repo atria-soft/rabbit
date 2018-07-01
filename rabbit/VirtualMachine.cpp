@@ -231,7 +231,7 @@ bool rabbit::VirtualMachine::objCmp(const rabbit::ObjectPtr &o1,const rabbit::Ob
 		rabbit::ObjectPtr res;
 		switch(t1){
 		case rabbit::OT_STRING:
-			_RET_SUCCEED(scstrcmp(_stringval(o1),_stringval(o2)));
+			_RET_SUCCEED(strcmp(_stringval(o1),_stringval(o2)));
 		case rabbit::OT_INTEGER:
 			_RET_SUCCEED((_integer(o1)<_integer(o2))?-1:1);
 		case rabbit::OT_FLOAT:
@@ -307,13 +307,13 @@ bool rabbit::VirtualMachine::toString(const rabbit::ObjectPtr &o,rabbit::ObjectP
 		res = o;
 		return true;
 	case rabbit::OT_FLOAT:
-		scsprintf(_sp(sq_rsl(NUMBER_MAX_CHAR+1)),sq_rsl(NUMBER_MAX_CHAR),_SC("%g"),_float(o));
+		snprintf(_sp(sq_rsl(NUMBER_UINT8_MAX+1)),sq_rsl(NUMBER_UINT8_MAX),_SC("%g"),_float(o));
 		break;
 	case rabbit::OT_INTEGER:
-		scsprintf(_sp(sq_rsl(NUMBER_MAX_CHAR+1)),sq_rsl(NUMBER_MAX_CHAR),_PRINT_INT_FMT,_integer(o));
+		snprintf(_sp(sq_rsl(NUMBER_UINT8_MAX+1)),sq_rsl(NUMBER_UINT8_MAX),_PRINT_INT_FMT,_integer(o));
 		break;
 	case rabbit::OT_BOOL:
-		scsprintf(_sp(sq_rsl(6)),sq_rsl(6),_integer(o)?_SC("true"):_SC("false"));
+		snprintf(_sp(sq_rsl(6)),sq_rsl(6),_integer(o)?_SC("true"):_SC("false"));
 		break;
 	case rabbit::OT_TABLE:
 	case rabbit::OT_USERDATA:
@@ -332,7 +332,7 @@ bool rabbit::VirtualMachine::toString(const rabbit::ObjectPtr &o,rabbit::ObjectP
 			}
 		}
 	default:
-		scsprintf(_sp(sq_rsl((sizeof(void*)*2)+NUMBER_MAX_CHAR)),sq_rsl((sizeof(void*)*2)+NUMBER_MAX_CHAR),_SC("(%s : 0x%p)"),getTypeName(o),(void*)_rawval(o));
+		snprintf(_sp(sq_rsl((sizeof(void*)*2)+NUMBER_UINT8_MAX)),sq_rsl((sizeof(void*)*2)+NUMBER_UINT8_MAX),_SC("(%s : 0x%p)"),getTypeName(o),(void*)_rawval(o));
 	}
 	res = rabbit::String::create(_get_shared_state(this),_spval);
 	return true;
@@ -345,7 +345,7 @@ bool rabbit::VirtualMachine::stringCat(const rabbit::ObjectPtr &str,const rabbit
 	if(!toString(str, a)) return false;
 	if(!toString(obj, b)) return false;
 	int64_t l = _string(a)->_len , ol = _string(b)->_len;
-	rabbit::Char *s = _sp(sq_rsl(l + ol + 1));
+	char *s = _sp(sq_rsl(l + ol + 1));
 	memcpy(s, _stringval(a), sq_rsl(l));
 	memcpy(s + l, _stringval(b), sq_rsl(ol));
 	dest = rabbit::String::create(_get_shared_state(this), _spval, l + ol);
@@ -727,7 +727,7 @@ exception_restore:
 		{
 			const rabbit::Instruction &_i_ = *ci->_ip++;
 			//dumpstack(_stackbase);
-			//scprintf("\n[%d] %s %d %d %d %d\n",ci->_ip-_closure(ci->_closure)->_function->_instructions,g_InstrDesc[_i_.op].name,arg0,arg1,arg2,arg3);
+			//printf("\n[%d] %s %d %d %d %d\n",ci->_ip-_closure(ci->_closure)->_function->_instructions,g_InstrDesc[_i_.op].name,arg0,arg1,arg2,arg3);
 			switch(_i_.op)
 			{
 			case _OP_LINE: if (_debughook) callDebugHook(_SC('l'),arg1); continue;
@@ -1144,8 +1144,8 @@ void rabbit::VirtualMachine::callDebugHook(int64_t type,int64_t forcedline)
 	_debughook = false;
 	rabbit::FunctionProto *func=_closure(ci->_closure)->_function;
 	if(_debughook_native) {
-		const rabbit::Char *src = sq_type(func->_sourcename) == rabbit::OT_STRING?_stringval(func->_sourcename):NULL;
-		const rabbit::Char *fname = sq_type(func->_name) == rabbit::OT_STRING?_stringval(func->_name):NULL;
+		const char *src = sq_type(func->_sourcename) == rabbit::OT_STRING?_stringval(func->_sourcename):NULL;
+		const char *fname = sq_type(func->_name) == rabbit::OT_STRING?_stringval(func->_name):NULL;
 		int64_t line = forcedline?forcedline:func->getLine(ci->_ip);
 		_debughook_native(this,type,src,line,fname);
 	}
@@ -1762,37 +1762,37 @@ void rabbit::VirtualMachine::dumpstack(int64_t stackbase,bool dumpall)
 {
 	int64_t size=dumpall?_stack.size():_top;
 	int64_t n=0;
-	scprintf(_SC("\n>>>>stack dump<<<<\n"));
+	printf(_SC("\n>>>>stack dump<<<<\n"));
 	callInfo &ci=_callsstack[_callsstacksize-1];
-	scprintf(_SC("IP: %p\n"),ci._ip);
-	scprintf(_SC("prev stack base: %d\n"),ci._prevstkbase);
-	scprintf(_SC("prev top: %d\n"),ci._prevtop);
+	printf(_SC("IP: %p\n"),ci._ip);
+	printf(_SC("prev stack base: %d\n"),ci._prevstkbase);
+	printf(_SC("prev top: %d\n"),ci._prevtop);
 	for(int64_t i=0;i<size;i++){
 		rabbit::ObjectPtr &obj=_stack[i];
-		if(stackbase==i)scprintf(_SC(">"));else scprintf(_SC(" "));
-		scprintf(_SC("[" _PRINT_INT_FMT "]:"),n);
+		if(stackbase==i)printf(_SC(">"));else printf(_SC(" "));
+		printf(_SC("[" _PRINT_INT_FMT "]:"),n);
 		switch(sq_type(obj)){
-		case rabbit::OT_FLOAT:		  scprintf(_SC("FLOAT %.3f"),_float(obj));break;
-		case rabbit::OT_INTEGER:		scprintf(_SC("INTEGER " _PRINT_INT_FMT),_integer(obj));break;
-		case rabbit::OT_BOOL:		   scprintf(_SC("BOOL %s"),_integer(obj)?"true":"false");break;
-		case rabbit::OT_STRING:		 scprintf(_SC("STRING %s"),_stringval(obj));break;
-		case rabbit::OT_NULL:		   scprintf(_SC("NULL"));  break;
-		case rabbit::OT_TABLE:		  scprintf(_SC("TABLE %p[%p]"),_table(obj),_table(obj)->_delegate);break;
-		case rabbit::OT_ARRAY:		  scprintf(_SC("ARRAY %p"),_array(obj));break;
-		case rabbit::OT_CLOSURE:		scprintf(_SC("CLOSURE [%p]"),_closure(obj));break;
-		case rabbit::OT_NATIVECLOSURE:  scprintf(_SC("NATIVECLOSURE"));break;
-		case rabbit::OT_USERDATA:	   scprintf(_SC("USERDATA %p[%p]"),_userdataval(obj),_userdata(obj)->_delegate);break;
-		case rabbit::OT_GENERATOR:	  scprintf(_SC("GENERATOR %p"),_generator(obj));break;
-		case rabbit::OT_THREAD:		 scprintf(_SC("THREAD [%p]"),_thread(obj));break;
-		case rabbit::OT_USERPOINTER:	scprintf(_SC("USERPOINTER %p"),_userpointer(obj));break;
-		case rabbit::OT_CLASS:		  scprintf(_SC("CLASS %p"),_class(obj));break;
-		case rabbit::OT_INSTANCE:	   scprintf(_SC("INSTANCE %p"),_instance(obj));break;
-		case rabbit::OT_WEAKREF:		scprintf(_SC("WEAKERF %p"),_weakref(obj));break;
+		case rabbit::OT_FLOAT:		  printf(_SC("FLOAT %.3f"),_float(obj));break;
+		case rabbit::OT_INTEGER:		printf(_SC("INTEGER " _PRINT_INT_FMT),_integer(obj));break;
+		case rabbit::OT_BOOL:		   printf(_SC("BOOL %s"),_integer(obj)?"true":"false");break;
+		case rabbit::OT_STRING:		 printf(_SC("STRING %s"),_stringval(obj));break;
+		case rabbit::OT_NULL:		   printf(_SC("NULL"));  break;
+		case rabbit::OT_TABLE:		  printf(_SC("TABLE %p[%p]"),_table(obj),_table(obj)->_delegate);break;
+		case rabbit::OT_ARRAY:		  printf(_SC("ARRAY %p"),_array(obj));break;
+		case rabbit::OT_CLOSURE:		printf(_SC("CLOSURE [%p]"),_closure(obj));break;
+		case rabbit::OT_NATIVECLOSURE:  printf(_SC("NATIVECLOSURE"));break;
+		case rabbit::OT_USERDATA:	   printf(_SC("USERDATA %p[%p]"),_userdataval(obj),_userdata(obj)->_delegate);break;
+		case rabbit::OT_GENERATOR:	  printf(_SC("GENERATOR %p"),_generator(obj));break;
+		case rabbit::OT_THREAD:		 printf(_SC("THREAD [%p]"),_thread(obj));break;
+		case rabbit::OT_USERPOINTER:	printf(_SC("USERPOINTER %p"),_userpointer(obj));break;
+		case rabbit::OT_CLASS:		  printf(_SC("CLASS %p"),_class(obj));break;
+		case rabbit::OT_INSTANCE:	   printf(_SC("INSTANCE %p"),_instance(obj));break;
+		case rabbit::OT_WEAKREF:		printf(_SC("WEAKERF %p"),_weakref(obj));break;
 		default:
 			assert(0);
 			break;
 		};
-		scprintf(_SC("\n"));
+		printf(_SC("\n"));
 		++n;
 	}
 }

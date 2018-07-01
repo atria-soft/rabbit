@@ -51,8 +51,8 @@ namespace rabbit {
 				rabbit::Bool _root;
 			};
 		public:
-			void DebugHookProxy(int64_t type, const rabbit::Char * sourcename, int64_t line, const rabbit::Char * funcname);
-			static void _DebugHookProxy(rabbit::VirtualMachine* v, int64_t type, const rabbit::Char * sourcename, int64_t line, const rabbit::Char * funcname);
+			void DebugHookProxy(int64_t type, const char * sourcename, int64_t line, const char * funcname);
+			static void _DebugHookProxy(rabbit::VirtualMachine* v, int64_t type, const char * sourcename, int64_t line, const char * funcname);
 			enum ExecutionType {
 				ET_CALL,
 				ET_RESUME_GENERATOR,
@@ -91,7 +91,7 @@ namespace rabbit {
 			rabbit::String *printObjVal(const rabbit::ObjectPtr &o);
 		
 		
-			void raise_error(const rabbit::Char *s, ...);
+			void raise_error(const char *s, ...);
 			void raise_error(const rabbit::ObjectPtr &desc);
 			void raise_Idxerror(const rabbit::ObjectPtr &o);
 			void raise_Compareerror(const rabbit::Object &o1, const rabbit::Object &o2);

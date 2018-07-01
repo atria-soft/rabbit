@@ -40,7 +40,7 @@ namespace rabbit {
 			~Table();
 			_HashNode *_get(const rabbit::ObjectPtr &key,rabbit::Hash hash);
 			//for compiler use
-			bool getStr(const rabbit::Char* key,int64_t keylen,rabbit::ObjectPtr &val);
+			bool getStr(const char* key,int64_t keylen,rabbit::ObjectPtr &val);
 			bool get(const rabbit::ObjectPtr &key,rabbit::ObjectPtr &val);
 			void remove(const rabbit::ObjectPtr &key);
 			bool set(const rabbit::ObjectPtr &key, const rabbit::ObjectPtr &val);

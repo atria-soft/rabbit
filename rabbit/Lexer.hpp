@@ -15,36 +15,26 @@
 
 namespace rabbit {
 	
-	#ifdef SQUNICODE
-	typedef Char LexChar;
-	#else
-	typedef unsigned char LexChar;
-	#endif
+	typedef unsigned char Lexchar;
 	
 	class Lexer {
 		public:
 			Lexer();
 			~Lexer();
 			void init(SharedState *ss,SQLEXREADFUNC rg,UserPointer up,compilererrorFunc efunc,void *ed);
-			void error(const Char *err);
+			void error(const char *err);
 			int64_t Lex();
-			const Char *tok2Str(int64_t tok);
+			const char *tok2Str(int64_t tok);
 		private:
-			int64_t getIDType(const Char *s,int64_t len);
+			int64_t getIDType(const char *s,int64_t len);
 			int64_t readString(int64_t ndelim,bool verbatim);
 			int64_t readNumber();
 			void lexBlockComment();
 			void lexLineComment();
 			int64_t readId();
 			void next();
-			#ifdef SQUNICODE
-			#if WCHAR_SIZE == 2
-				int64_t addUTF16(uint64_t ch);
-			#endif
-			#else
-				int64_t addUTF8(uint64_t ch);
-			#endif
-			int64_t processStringHexEscape(Char *dest, int64_t maxdigits);
+			int64_t addUTF8(uint64_t ch);
+			int64_t processStringHexEscape(char *dest, int64_t maxdigits);
 			int64_t _curtoken;
 			Table *_keywords;
 			Bool _reached_eof;
@@ -53,14 +43,14 @@ namespace rabbit {
 			int64_t _currentline;
 			int64_t _lasttokenline;
 			int64_t _currentcolumn;
-			const Char *_svalue;
+			const char *_svalue;
 			int64_t _nvalue;
 			float_t _fvalue;
 			SQLEXREADFUNC _readf;
 			UserPointer _up;
-			LexChar _currdata;
+			Lexchar _currdata;
 			SharedState *_sharedstate;
-			etk::Vector<Char> _longstr;
+			etk::Vector<char> _longstr;
 			compilererrorFunc _errfunc;
 			void *_errtarget;
 	};

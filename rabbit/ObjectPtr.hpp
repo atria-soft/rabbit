@@ -58,12 +58,12 @@ namespace rabbit {
 			ObjectPtr& operator=(const Object& _obj);
 			void Null();
 		private:
-			ObjectPtr(const rabbit::Char * _obj){} //safety
+			ObjectPtr(const char * _obj){} //safety
 	};
 	
 	
 	uint64_t translateIndex(const rabbit::ObjectPtr &idx);
-	const rabbit::Char *getTypeName(const rabbit::ObjectPtr &obj1);
-	const rabbit::Char *IdType2Name(rabbit::ObjectType type);
+	const char *getTypeName(const rabbit::ObjectPtr &obj1);
+	const char *IdType2Name(rabbit::ObjectType type);
 
 }

@@ -13,8 +13,8 @@ namespace rabbit {
 
 	class StackInfos{
 		public:
-			const rabbit::Char* funcname;
-			const rabbit::Char* source;
+			const char* funcname;
+			const char* source;
 			int64_t line;
 	};
 

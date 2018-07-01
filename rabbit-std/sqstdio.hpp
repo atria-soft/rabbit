@@ -29,7 +29,7 @@ struct SQStream {
 
 using SQFILE = void*;
 
-SQFILE fopen(const rabbit::Char *,const rabbit::Char *);
+SQFILE fopen(const char *,const char *);
 int64_t fread(rabbit::UserPointer, int64_t, int64_t, SQFILE);
 int64_t fwrite(const rabbit::UserPointer, int64_t, int64_t, SQFILE);
 int64_t fseek(SQFILE , int64_t , int64_t);
@@ -42,9 +42,9 @@ rabbit::Result createfile(rabbit::VirtualMachine* v, SQFILE file,rabbit::Bool ow
 rabbit::Result getfile(rabbit::VirtualMachine* v, int64_t idx, SQFILE *file);
 
 //compiler helpers
-rabbit::Result loadfile(rabbit::VirtualMachine* v,const rabbit::Char *filename,rabbit::Bool printerror);
-rabbit::Result dofile(rabbit::VirtualMachine* v,const rabbit::Char *filename,rabbit::Bool retval,rabbit::Bool printerror);
-rabbit::Result writeclosuretofile(rabbit::VirtualMachine* v,const rabbit::Char *filename);
+rabbit::Result loadfile(rabbit::VirtualMachine* v,const char *filename,rabbit::Bool printerror);
+rabbit::Result dofile(rabbit::VirtualMachine* v,const char *filename,rabbit::Bool retval,rabbit::Bool printerror);
+rabbit::Result writeclosuretofile(rabbit::VirtualMachine* v,const char *filename);
 
 rabbit::Result register_iolib(rabbit::VirtualMachine* v);
 
