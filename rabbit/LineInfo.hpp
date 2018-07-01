@@ -7,6 +7,8 @@
  */
 #pragma once
 
+#include <etk/types.hpp>
+
 namespace rabbit {
 	class LineInfo {
 		public:

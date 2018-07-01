@@ -7,6 +7,8 @@
  */
 #pragma once
 
+namespace rabbit {
+	namespace std {
 #define SQSTD_STREAM_TYPE_TAG 0x80000000
 
 struct SQStream {
@@ -25,24 +27,26 @@ struct SQStream {
 #define SQ_SEEK_END 1
 #define SQ_SEEK_SET 2
 
-typedef void* SQFILE;
+using SQFILE = void*;
 
-RABBIT_API SQFILE sqstd_fopen(const rabbit::Char *,const rabbit::Char *);
-RABBIT_API int64_t sqstd_fread(rabbit::UserPointer, int64_t, int64_t, SQFILE);
-RABBIT_API int64_t sqstd_fwrite(const rabbit::UserPointer, int64_t, int64_t, SQFILE);
-RABBIT_API int64_t sqstd_fseek(SQFILE , int64_t , int64_t);
-RABBIT_API int64_t sqstd_ftell(SQFILE);
-RABBIT_API int64_t sqstd_fflush(SQFILE);
-RABBIT_API int64_t sqstd_fclose(SQFILE);
-RABBIT_API int64_t sqstd_feof(SQFILE);
+SQFILE fopen(const rabbit::Char *,const rabbit::Char *);
+int64_t fread(rabbit::UserPointer, int64_t, int64_t, SQFILE);
+int64_t fwrite(const rabbit::UserPointer, int64_t, int64_t, SQFILE);
+int64_t fseek(SQFILE , int64_t , int64_t);
+int64_t ftell(SQFILE);
+int64_t fflush(SQFILE);
+int64_t fclose(SQFILE);
+int64_t feof(SQFILE);
 
-RABBIT_API rabbit::Result sqstd_createfile(rabbit::VirtualMachine* v, SQFILE file,rabbit::Bool own);
-RABBIT_API rabbit::Result sqstd_getfile(rabbit::VirtualMachine* v, int64_t idx, SQFILE *file);
+rabbit::Result createfile(rabbit::VirtualMachine* v, SQFILE file,rabbit::Bool own);
+rabbit::Result getfile(rabbit::VirtualMachine* v, int64_t idx, SQFILE *file);
 
 //compiler helpers
-RABBIT_API rabbit::Result sqstd_loadfile(rabbit::VirtualMachine* v,const rabbit::Char *filename,rabbit::Bool printerror);
-RABBIT_API rabbit::Result sqstd_dofile(rabbit::VirtualMachine* v,const rabbit::Char *filename,rabbit::Bool retval,rabbit::Bool printerror);
-RABBIT_API rabbit::Result sqstd_writeclosuretofile(rabbit::VirtualMachine* v,const rabbit::Char *filename);
+rabbit::Result loadfile(rabbit::VirtualMachine* v,const rabbit::Char *filename,rabbit::Bool printerror);
+rabbit::Result dofile(rabbit::VirtualMachine* v,const rabbit::Char *filename,rabbit::Bool retval,rabbit::Bool printerror);
+rabbit::Result writeclosuretofile(rabbit::VirtualMachine* v,const rabbit::Char *filename);
 
-RABBIT_API rabbit::Result sqstd_register_iolib(rabbit::VirtualMachine* v);
+rabbit::Result register_iolib(rabbit::VirtualMachine* v);
 
+	}
+}

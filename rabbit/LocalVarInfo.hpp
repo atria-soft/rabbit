@@ -7,6 +7,12 @@
  */
 #pragma once
 
+#include <etk/types.hpp>
+#include <rabbit/ObjectPtr.hpp>
+#include <rabbit/squtils.hpp>
+#include <rabbit/rabbit.hpp>
+#include <rabbit/sqconfig.hpp>
+
 namespace rabbit {
 	
 	class LocalVarInfo {

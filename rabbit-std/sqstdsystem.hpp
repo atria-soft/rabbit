@@ -7,4 +7,8 @@
  */
 #pragma once
 
-RABBIT_API int64_t sqstd_register_systemlib(rabbit::VirtualMachine* v);
+namespace rabbit {
+	namespace std {
+int64_t register_systemlib(rabbit::VirtualMachine* v);
+	}
+}

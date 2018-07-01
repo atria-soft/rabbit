@@ -11,7 +11,7 @@
 #include <assert.h>
 #include <rabbit/StackInfos.hpp>
 
-void sqstd_printcallstack(rabbit::VirtualMachine* v)
+void rabbit::std::printcallstack(rabbit::VirtualMachine* v)
 {
 	SQPRINTFUNCTION pf = sq_geterrorfunc(v);
 	if(pf) {
@@ -90,11 +90,12 @@ void sqstd_printcallstack(rabbit::VirtualMachine* v)
 				case rabbit::OT_WEAKREF:
 					pf(v,_SC("[%s] WEAKREF\n"),name);
 					break;
-				case rabbit::OT_BOOL:{
-					rabbit::Bool bval;
-					sq_getbool(v,-1,&bval);
-					pf(v,_SC("[%s] %s\n"),name,bval == SQTrue ? _SC("true"):_SC("false"));
-							 }
+				case rabbit::OT_BOOL:
+					{
+						rabbit::Bool bval;
+						sq_getbool(v,-1,&bval);
+						pf(v,_SC("[%s] %s\n"),name,bval == SQTrue ? _SC("true"):_SC("false"));
+					}
 					break;
 				default: assert(0); break;
 				}
@@ -104,35 +105,38 @@ void sqstd_printcallstack(rabbit::VirtualMachine* v)
 	}
 }
 
-static int64_t _sqstd_aux_printerror(rabbit::VirtualMachine* v)
-{
-	SQPRINTFUNCTION pf = sq_geterrorfunc(v);
-	if(pf) {
-		const rabbit::Char *sErr = 0;
-		if(sq_gettop(v)>=1) {
-			if(SQ_SUCCEEDED(sq_getstring(v,2,&sErr)))   {
-				pf(v,_SC("\nAN ERROR HAS OCCURRED [%s]\n"),sErr);
+namespace rabbit {
+	namespace std {
+		static int64_t aux_printerror(rabbit::VirtualMachine* v) {
+			SQPRINTFUNCTION pf = sq_geterrorfunc(v);
+			if(pf) {
+				const rabbit::Char *sErr = 0;
+				if(sq_gettop(v)>=1) {
+					if(SQ_SUCCEEDED(sq_getstring(v,2,&sErr)))   {
+						pf(v,_SC("\nAN ERROR HAS OCCURRED [%s]\n"),sErr);
+					}
+					else{
+						pf(v,_SC("\nAN ERROR HAS OCCURRED [unknown]\n"));
+					}
+					rabbit::std::printcallstack(v);
+				}
 			}
-			else{
-				pf(v,_SC("\nAN ERROR HAS OCCURRED [unknown]\n"));
+			return 0;
+		}
+		
+		void compiler_error(rabbit::VirtualMachine* v,const rabbit::Char *sErr,const rabbit::Char *sSource,int64_t line,int64_t column) {
+			SQPRINTFUNCTION pf = sq_geterrorfunc(v);
+			if(pf) {
+				pf(v,_SC("%s line = (%d) column = (%d) : error %s\n"),sSource,line,column,sErr);
 			}
-			sqstd_printcallstack(v);
 		}
 	}
-	return 0;
 }
 
-void _sqstd_compiler_error(rabbit::VirtualMachine* v,const rabbit::Char *sErr,const rabbit::Char *sSource,int64_t line,int64_t column)
-{
-	SQPRINTFUNCTION pf = sq_geterrorfunc(v);
-	if(pf) {
-		pf(v,_SC("%s line = (%d) column = (%d) : error %s\n"),sSource,line,column,sErr);
-	}
-}
 
-void sqstd_seterrorhandlers(rabbit::VirtualMachine* v)
+void rabbit::std::seterrorhandlers(rabbit::VirtualMachine* v)
 {
-	sq_setcompilererrorhandler(v,_sqstd_compiler_error);
-	sq_newclosure(v,_sqstd_aux_printerror,0);
+	sq_setcompilererrorhandler(v,rabbit::std::compiler_error);
+	sq_newclosure(v,rabbit::std::aux_printerror,0);
 	sq_seterrorhandler(v);
 }

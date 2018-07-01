@@ -9,7 +9,11 @@
 #include <rabbit/Instance.hpp>
 #include <rabbit/Table.hpp>
 #include <rabbit/SharedState.hpp>
+#include <rabbit/squtils.hpp>
 
+#include <rabbit/VirtualMachine.hpp>
+#include <rabbit/WeakRef.hpp>
+#include <rabbit/Closure.hpp>
 
 rabbit::Class::Class(rabbit::SharedState *ss, rabbit::Class *base) {
 	_base = base;
@@ -47,7 +51,7 @@ rabbit::Class::~Class() {
 
 rabbit::Class* rabbit::Class::create(rabbit::SharedState *ss, Class *base) {
 	rabbit::Class *newclass = (Class *)SQ_MALLOC(sizeof(Class));
-	new (newclass) Class(ss, base);
+	new ((char*)newclass) Class(ss, base);
 	return newclass;
 }
 

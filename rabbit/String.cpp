@@ -5,12 +5,13 @@
  * @copyright 2003-2017, Alberto DEMICHELIS, all right reserved
  * @license MPL-2 (see license file)
  */
-#pragma once
-
 #include <rabbit/String.hpp>
+#include <rabbit/SharedState.hpp>
+#include <rabbit/ObjectPtr.hpp>
+#include <rabbit/StringTable.hpp>
 
 
-rabbit::Hash rabbit::_hashstr(const rabbit::Char *s, size_t l); {
+rabbit::Hash rabbit::_hashstr(const rabbit::Char *s, size_t l) {
 	rabbit::Hash h = (rabbit::Hash)l;  /* seed */
 	size_t step = (l>>5)|1;  /* if string is too long, don't hash all its chars */
 	for (; l>=step; l-=step)

@@ -5,11 +5,12 @@
  * @copyright 2003-2017, Alberto DEMICHELIS, all right reserved
  * @license MPL-2 (see license file)
  */
-#pragma once
-
 #include <rabbit/Table.hpp>
+#include <rabbit/String.hpp>
+#include <rabbit/WeakRef.hpp>
+#include <etk/Allocator.hpp>
 
-rabbit::Hash rabbit::HashObj(const rabbit::ObjectPtr &key); {
+rabbit::Hash rabbit::HashObj(const rabbit::ObjectPtr &key) {
 	switch(sq_type(key)) {
 		case rabbit::OT_STRING:
 			return _string(key)->_hash;
@@ -26,7 +27,7 @@ rabbit::Hash rabbit::HashObj(const rabbit::ObjectPtr &key); {
 
 #define MINPOWER2 4
 
-rabbit::Table::rabbit::Table(rabbit::SharedState *ss,int64_t ninitialsize) {
+rabbit::Table::Table(rabbit::SharedState *ss,int64_t ninitialsize) {
 	int64_t pow2size=MINPOWER2;
 	while(ninitialsize>pow2size)pow2size=pow2size<<1;
 	allocNodes(pow2size);
@@ -49,7 +50,7 @@ void rabbit::Table::allocNodes(int64_t nsize)
 	_HashNode *nodes=(_HashNode *)SQ_MALLOC(sizeof(_HashNode)*nsize);
 	for(int64_t i=0;i<nsize;i++){
 		_HashNode &n = nodes[i];
-		new (&n) _HashNode;
+		new ((char*)&n) _HashNode;
 		n.next=NULL;
 	}
 	_numofnodes=nsize;
@@ -249,7 +250,7 @@ rabbit::Table::~Table() {
 	SQ_FREE(_nodes, _numofnodes * sizeof(_HashNode));
 }
 
-_HashNode* rabbit::Table::_get(const rabbit::ObjectPtr &key,rabbit::Hash hash) {
+rabbit::Table::_HashNode* rabbit::Table::_get(const rabbit::ObjectPtr &key,rabbit::Hash hash) {
 	_HashNode *n = &_nodes[hash];
 	do {
 		if(    _rawval(n->key) == _rawval(key)
@@ -283,5 +284,5 @@ int64_t rabbit::Table::countUsed() {
 }
 
 void rabbit::Table::release() {
-	sq_delete(this, rabbit::Table);
+	sq_delete(this, Table);
 }

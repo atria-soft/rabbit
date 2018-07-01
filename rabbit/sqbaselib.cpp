@@ -10,8 +10,16 @@
 
 
 #include <rabbit/Array.hpp>
-#include <rabbit/sqfuncproto.hpp>
-#include <rabbit/sqclosure.hpp>
+#include <rabbit/SharedState.hpp>
+
+#include <rabbit/String.hpp>
+#include <rabbit/Table.hpp>
+#include <rabbit/Closure.hpp>
+#include <rabbit/RegFunction.hpp>
+#include <rabbit/NativeClosure.hpp>
+#include <rabbit/FunctionProto.hpp>
+#include <rabbit/Generator.hpp>
+
 
 #include <stdlib.h>
 #include <stdarg.h>

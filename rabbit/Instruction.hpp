@@ -6,6 +6,10 @@
  * @license MPL-2 (see license file)
  */
 #pragma once
+#include <rabbit/sqopcodes.hpp>
+#include <rabbit/squtils.hpp>
+#include <rabbit/rabbit.hpp>
+#include <rabbit/sqconfig.hpp>
 
 namespace rabbit {
 	
@@ -15,18 +19,21 @@ namespace rabbit {
 	};
 
 	class Instruction {
-		Instruction(){};
-		Instruction(SQOpcode _op,int64_t a0=0,int64_t a1=0,int64_t a2=0,int64_t a3=0) {
-			op = (unsigned char)_op;
-			_arg0 = (unsigned char)a0;_arg1 = (int32_t)a1;
-			_arg2 = (unsigned char)a2;_arg3 = (unsigned char)a3;
-		}
-	
-		int32_t _arg1;
-		unsigned char op;
-		unsigned char _arg0;
-		unsigned char _arg2;
-		unsigned char _arg3;
+		public:
+			Instruction(){};
+			Instruction(SQOpcode _op,int64_t a0=0,int64_t a1=0,int64_t a2=0,int64_t a3=0) {
+				op = (unsigned char)_op;
+				_arg0 = (unsigned char)a0;
+				_arg1 = (int32_t)a1;
+				_arg2 = (unsigned char)a2;
+				_arg3 = (unsigned char)a3;
+			}
+		
+			int32_t _arg1;
+			unsigned char op;
+			unsigned char _arg0;
+			unsigned char _arg2;
+			unsigned char _arg3;
 	};
 
 }

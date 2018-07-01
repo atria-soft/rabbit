@@ -6,47 +6,21 @@
  * @license MPL-2 (see license file)
  */
 #pragma once
+#include <etk/types.hpp>
+#include <rabbit/Delegable.hpp>
 
 namespace rabbit {
 	class UserData : public rabbit::Delegable {
 		public:
-			UserData(rabbit::SharedState *ss) {
-				_delegate = 0;
-				m_hook = NULL;
-			}
-			~UserData() {
-				setDelegate(NULL);
-			}
-			static UserData* create(rabbit::SharedState *ss, int64_t size) {
-				UserData* ud = (UserData*)SQ_MALLOC(sq_aligning(sizeof(UserData))+size);
-				new (ud) UserData(ss);
-				ud->m_size = size;
-				ud->m_typetag = 0;
-				return ud;
-			}
-			void release() {
-				if (m_hook) {
-					m_hook((rabbit::UserPointer)sq_aligning(this + 1),m_size);
-				}
-				int64_t tsize = m_size;
-				this->~UserData();
-				SQ_FREE(this, sq_aligning(sizeof(UserData)) + tsize);
-			}
-			const int64_t& getsize() const {
-				return m_size;
-			}
-			const rabbit::UserPointer& getTypeTag() const {
-				return m_typetag;
-			}
-			void setTypeTag(const rabbit::UserPointer& _value) {
-				m_typetag = _value;
-			}
-			const SQRELEASEHOOK& getHook() const {
-				return m_hook;
-			}
-			void setHook(const SQRELEASEHOOK& _value) {
-				m_hook = _value;
-			}
+			UserData(rabbit::SharedState *ss);
+			~UserData();
+			static UserData* create(rabbit::SharedState *ss, int64_t size);
+			void release();
+			const int64_t& getsize() const;
+			const rabbit::UserPointer& getTypeTag() const;
+			void setTypeTag(const rabbit::UserPointer& _value);
+			const SQRELEASEHOOK& getHook() const;
+			void setHook(const SQRELEASEHOOK& _value);
 		protected:
 			int64_t m_size;
 			SQRELEASEHOOK m_hook;

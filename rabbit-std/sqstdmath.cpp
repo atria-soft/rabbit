@@ -93,7 +93,7 @@ static const rabbit::RegFunction mathlib_funcs[] = {
 #define M_PI (3.14159265358979323846)
 #endif
 
-rabbit::Result sqstd_register_mathlib(rabbit::VirtualMachine* v)
+rabbit::Result rabbit::std::register_mathlib(rabbit::VirtualMachine* v)
 {
 	int64_t i=0;
 	while(mathlib_funcs[i].name!=0) {

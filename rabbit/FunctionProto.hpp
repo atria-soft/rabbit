@@ -6,6 +6,13 @@
  * @license MPL-2 (see license file)
  */
 #pragma once
+#include <rabbit/LocalVarInfo.hpp>
+#include <rabbit/LineInfo.hpp>
+#include <rabbit/OuterVar.hpp>
+#include <rabbit/Instruction.hpp>
+#include <rabbit/RefCounted.hpp>
+#include <rabbit/rabbit.hpp>
+
 
 namespace rabbit {
 	
@@ -22,50 +29,11 @@ namespace rabbit {
 			~FunctionProto();
 		
 		public:
-			FunctionProto *create(rabbit::SharedState *ss,int64_t ninstructions,
+			static FunctionProto *create(rabbit::SharedState *ss,int64_t ninstructions,
 				int64_t nliterals,int64_t nparameters,
 				int64_t nfunctions,int64_t noutervalues,
-				int64_t nlineinfos,int64_t nlocalvarinfos,int64_t ndefaultparams)
-			{
-				rabbit::FunctionProto *f;
-				//I compact the whole class and members in a single memory allocation
-				f = (rabbit::FunctionProto *)sq_vm_malloc(_FUNC_SIZE(ninstructions,nliterals,nparameters,nfunctions,noutervalues,nlineinfos,nlocalvarinfos,ndefaultparams));
-				new ((char*)f) rabbit::FunctionProto(ss);
-				f->_ninstructions = ninstructions;
-				f->_literals = (rabbit::ObjectPtr*)&f->_instructions[ninstructions];
-				f->_nliterals = nliterals;
-				f->_parameters = (rabbit::ObjectPtr*)&f->_literals[nliterals];
-				f->_nparameters = nparameters;
-				f->_functions = (rabbit::ObjectPtr*)&f->_parameters[nparameters];
-				f->_nfunctions = nfunctions;
-				f->_outervalues = (rabbit::OuterVar*)&f->_functions[nfunctions];
-				f->_noutervalues = noutervalues;
-				f->_lineinfos = (rabbit::LineInfo *)&f->_outervalues[noutervalues];
-				f->_nlineinfos = nlineinfos;
-				f->_localvarinfos = (rabbit::LocalVarInfo *)&f->_lineinfos[nlineinfos];
-				f->_nlocalvarinfos = nlocalvarinfos;
-				f->_defaultparams = (int64_t *)&f->_localvarinfos[nlocalvarinfos];
-				f->_ndefaultparams = ndefaultparams;
-		
-				_CONSTRUCT_VECTOR(rabbit::ObjectPtr,f->_nliterals,f->_literals);
-				_CONSTRUCT_VECTOR(rabbit::ObjectPtr,f->_nparameters,f->_parameters);
-				_CONSTRUCT_VECTOR(rabbit::ObjectPtr,f->_nfunctions,f->_functions);
-				_CONSTRUCT_VECTOR(rabbit::OuterVar,f->_noutervalues,f->_outervalues);
-				//_CONSTRUCT_VECTOR(rabbit::LineInfo,f->_nlineinfos,f->_lineinfos); //not required are 2 integers
-				_CONSTRUCT_VECTOR(rabbit::LocalVarInfo,f->_nlocalvarinfos,f->_localvarinfos);
-				return f;
-			}
-			void release(){
-				_DESTRUCT_VECTOR(ObjectPtr,_nliterals,_literals);
-				_DESTRUCT_VECTOR(ObjectPtr,_nparameters,_parameters);
-				_DESTRUCT_VECTOR(ObjectPtr,_nfunctions,_functions);
-				_DESTRUCT_VECTOR(rabbit::OuterVar,_noutervalues,_outervalues);
-				//_DESTRUCT_VECTOR(rabbit::LineInfo,_nlineinfos,_lineinfos); //not required are 2 integers
-				_DESTRUCT_VECTOR(rabbit::LocalVarInfo,_nlocalvarinfos,_localvarinfos);
-				int64_t size = _FUNC_SIZE(_ninstructions,_nliterals,_nparameters,_nfunctions,_noutervalues,_nlineinfos,_nlocalvarinfos,_ndefaultparams);
-				this->~FunctionProto();
-				sq_vm_free(this,size);
-			}
+				int64_t nlineinfos,int64_t nlocalvarinfos,int64_t ndefaultparams);
+			void release();
 		
 			const rabbit::Char* getLocal(rabbit::VirtualMachine *v,uint64_t stackbase,uint64_t nseq,uint64_t nop);
 			int64_t getLine(rabbit::Instruction *curr);

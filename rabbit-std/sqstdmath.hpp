@@ -10,5 +10,8 @@
 #include <rabbit/rabbit.hpp>
 #include <rabbit/RegFunction.hpp>
 
-RABBIT_API rabbit::Result sqstd_register_mathlib(rabbit::VirtualMachine* v);
-
+namespace rabbit {
+	namespace std {
+		rabbit::Result register_mathlib(rabbit::VirtualMachine* v);
+	}
+}

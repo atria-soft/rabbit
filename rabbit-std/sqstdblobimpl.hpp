@@ -7,9 +7,11 @@
  */
 #pragma once
 
-struct SQBlob : public SQStream
+namespace rabbit {
+	namespace std {
+struct Blob : public SQStream
 {
-	SQBlob(int64_t size) {
+	Blob(int64_t size) {
 		_size = size;
 		_allocated = size;
 		_buf = (unsigned char *)sq_malloc(size);
@@ -17,7 +19,7 @@ struct SQBlob : public SQStream
 		_ptr = 0;
 		_owns = true;
 	}
-	virtual ~SQBlob() {
+	virtual ~Blob() {
 		sq_free(_buf, _allocated);
 	}
 	int64_t Write(void *buffer, int64_t size) {
@@ -110,3 +112,5 @@ private:
 	bool _owns;
 };
 
+	}
+}

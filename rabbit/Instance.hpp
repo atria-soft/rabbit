@@ -10,10 +10,13 @@
 #include <etk/types.hpp>
 
 #include <rabbit/VirtualMachine.hpp>
+#include <rabbit/squtils.hpp>
+#include <rabbit/rabbit.hpp>
+#include <rabbit/sqconfig.hpp>
 
 
-#include <rabbit/sqfuncproto.hpp>
-#include <rabbit/sqclosure.hpp>
+
+
 #include <rabbit/MetaMethod.hpp>
 #include <rabbit/Delegable.hpp>
 

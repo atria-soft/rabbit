@@ -6,6 +6,7 @@
  * @license MPL-2 (see license file)
  */
 #pragma once
+#include <etk/types.hpp>
 
 void *sq_vm_malloc(uint64_t size);
 void *sq_vm_realloc(void *p,uint64_t oldsize,uint64_t size);
@@ -24,7 +25,7 @@ void sq_vm_free(void *p,uint64_t size);
 
 #define _CONSTRUCT_VECTOR(type, size, ptr) { \
 	for(int64_t n = 0; n < ((int64_t)size); n++) { \
-			new (&ptr[n]) type(); \
+			new ((char*)&ptr[n]) type(); \
 		} \
 }
 

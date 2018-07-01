@@ -5,15 +5,23 @@
  * @copyright 2003-2017, Alberto DEMICHELIS, all right reserved
  * @license MPL-2 (see license file)
  */
+#include <rabbit/Compiler.hpp>
 #include <rabbit/FuncState.hpp>
 
 #ifndef NO_COMPILER
 #include <rabbit/Compiler.hpp>
 
-#include <rabbit/FuncProto.hpp>
+#include <rabbit/FunctionProto.hpp>
+#include <rabbit/Instruction.hpp>
+#include <rabbit/String.hpp>
+#include <rabbit/Class.hpp>
+#include <rabbit/Table.hpp>
+#include <rabbit/SharedState.hpp>
+
+
 
 #include <rabbit/sqopcodes.hpp>
-#include <rabbit/sqfuncstate.hpp>
+#include <rabbit/squtils.hpp>
 
 #ifdef _DEBUG_DUMP
 rabbit::InstructionDesc g_InstrDesc[]={
@@ -80,8 +88,14 @@ rabbit::InstructionDesc g_InstrDesc[]={
 	{_SC("_OP_CLOSE")},
 };
 #endif
-void dumpLiteral(rabbit::ObjectPtr &o)
-{
+
+
+void rabbit::FuncState::addInstruction(SQOpcode _op,int64_t arg0,int64_t arg1,int64_t arg2,int64_t arg3){
+	rabbit::Instruction i(_op,arg0,arg1,arg2,arg3);
+	addInstruction(i);
+}
+
+static void dumpLiteral(rabbit::ObjectPtr &o) {
 	switch(sq_type(o)){
 		case rabbit::OT_STRING: scprintf(_SC("\"%s\""),_stringval(o));break;
 		case rabbit::OT_FLOAT: scprintf(_SC("{%f}"),_float(o));break;
@@ -91,7 +105,7 @@ void dumpLiteral(rabbit::ObjectPtr &o)
 	}
 }
 
-FuncState::rabbit::FuncState(rabbit::SharedState *ss,rabbit::FuncState *parent,compilererrorFunc efunc,void *ed)
+rabbit::FuncState::FuncState(rabbit::SharedState *ss,rabbit::FuncState *parent,compilererrorFunc efunc,void *ed)
 {
 		_nliterals = 0;
 		_literals = rabbit::Table::create(ss,0);
@@ -112,13 +126,13 @@ FuncState::rabbit::FuncState(rabbit::SharedState *ss,rabbit::FuncState *parent,c
 
 }
 
-void FuncState::error(const rabbit::Char *err)
+void rabbit::FuncState::error(const rabbit::Char *err)
 {
 	_errfunc(_errtarget,err);
 }
 
 #ifdef _DEBUG_DUMP
-void FuncState::dump(rabbit::FunctionProto *func)
+void rabbit::FuncState::dump(rabbit::FunctionProto *func)
 {
 	uint64_t n=0,i;
 	int64_t si;
@@ -217,17 +231,17 @@ void FuncState::dump(rabbit::FunctionProto *func)
 }
 #endif
 
-int64_t FuncState::getNumericConstant(const int64_t cons)
+int64_t rabbit::FuncState::getNumericConstant(const int64_t cons)
 {
 	return getConstant(rabbit::ObjectPtr(cons));
 }
 
-int64_t FuncState::getNumericConstant(const float_t cons)
+int64_t rabbit::FuncState::getNumericConstant(const float_t cons)
 {
 	return getConstant(rabbit::ObjectPtr(cons));
 }
 
-int64_t FuncState::getConstant(const rabbit::Object &cons)
+int64_t rabbit::FuncState::getConstant(const rabbit::Object &cons)
 {
 	rabbit::ObjectPtr val;
 	if(!_table(_literals)->get(cons,val))
@@ -243,7 +257,7 @@ int64_t FuncState::getConstant(const rabbit::Object &cons)
 	return _integer(val);
 }
 
-void FuncState::setIntructionParams(int64_t pos,int64_t arg0,int64_t arg1,int64_t arg2,int64_t arg3)
+void rabbit::FuncState::setIntructionParams(int64_t pos,int64_t arg0,int64_t arg1,int64_t arg2,int64_t arg3)
 {
 	_instructions[pos]._arg0=(unsigned char)*((uint64_t *)&arg0);
 	_instructions[pos]._arg1=(int32_t)*((uint64_t *)&arg1);
@@ -251,7 +265,7 @@ void FuncState::setIntructionParams(int64_t pos,int64_t arg0,int64_t arg1,int64_
 	_instructions[pos]._arg3=(unsigned char)*((uint64_t *)&arg3);
 }
 
-void FuncState::setIntructionParam(int64_t pos,int64_t arg,int64_t val)
+void rabbit::FuncState::setIntructionParam(int64_t pos,int64_t arg,int64_t val)
 {
 	switch(arg){
 		case 0:_instructions[pos]._arg0=(unsigned char)*((uint64_t *)&val);break;
@@ -261,7 +275,7 @@ void FuncState::setIntructionParam(int64_t pos,int64_t arg,int64_t val)
 	};
 }
 
-int64_t FuncState::allocStackPos()
+int64_t rabbit::FuncState::allocStackPos()
 {
 	int64_t npos=_vlocals.size();
 	_vlocals.pushBack(rabbit::LocalVarInfo());
@@ -272,7 +286,7 @@ int64_t FuncState::allocStackPos()
 	return npos;
 }
 
-int64_t FuncState::pushTarget(int64_t n)
+int64_t rabbit::FuncState::pushTarget(int64_t n)
 {
 	if(n!=-1){
 		_targetstack.pushBack(n);
@@ -283,14 +297,14 @@ int64_t FuncState::pushTarget(int64_t n)
 	return n;
 }
 
-int64_t FuncState::getUpTarget(int64_t n){
+int64_t rabbit::FuncState::getUpTarget(int64_t n){
 	return _targetstack[((_targetstack.size()-1)-n)];
 }
 
-int64_t FuncState::topTarget(){
+int64_t rabbit::FuncState::topTarget(){
 	return _targetstack.back();
 }
-int64_t FuncState::popTarget()
+int64_t rabbit::FuncState::popTarget()
 {
 	uint64_t npos=_targetstack.back();
 	assert(npos < _vlocals.size());
@@ -302,12 +316,12 @@ int64_t FuncState::popTarget()
 	return npos;
 }
 
-int64_t FuncState::getStacksize()
+int64_t rabbit::FuncState::getStacksize()
 {
 	return _vlocals.size();
 }
 
-int64_t FuncState::CountOuters(int64_t stacksize)
+int64_t rabbit::FuncState::CountOuters(int64_t stacksize)
 {
 	int64_t outers = 0;
 	int64_t k = _vlocals.size() - 1;
@@ -321,7 +335,7 @@ int64_t FuncState::CountOuters(int64_t stacksize)
 	return outers;
 }
 
-void FuncState::setStacksize(int64_t n)
+void rabbit::FuncState::setStacksize(int64_t n)
 {
 	int64_t size=_vlocals.size();
 	while(size>n){
@@ -338,7 +352,7 @@ void FuncState::setStacksize(int64_t n)
 	}
 }
 
-bool FuncState::isConstant(const rabbit::Object &name,rabbit::Object &e)
+bool rabbit::FuncState::isConstant(const rabbit::Object &name,rabbit::Object &e)
 {
 	rabbit::ObjectPtr val;
 	if(_table(_sharedstate->_consts)->get(name,val)) {
@@ -348,14 +362,14 @@ bool FuncState::isConstant(const rabbit::Object &name,rabbit::Object &e)
 	return false;
 }
 
-bool FuncState::isLocal(uint64_t stkpos)
+bool rabbit::FuncState::isLocal(uint64_t stkpos)
 {
 	if(stkpos>=_vlocals.size())return false;
 	else if(sq_type(_vlocals[stkpos]._name)!=rabbit::OT_NULL)return true;
 	return false;
 }
 
-int64_t FuncState::pushLocalVariable(const rabbit::Object &name)
+int64_t rabbit::FuncState::pushLocalVariable(const rabbit::Object &name)
 {
 	int64_t pos=_vlocals.size();
 	rabbit::LocalVarInfo lvi;
@@ -369,7 +383,7 @@ int64_t FuncState::pushLocalVariable(const rabbit::Object &name)
 
 
 
-int64_t FuncState::getLocalVariable(const rabbit::Object &name)
+int64_t rabbit::FuncState::getLocalVariable(const rabbit::Object &name)
 {
 	int64_t locals=_vlocals.size();
 	while(locals>=1){
@@ -382,14 +396,14 @@ int64_t FuncState::getLocalVariable(const rabbit::Object &name)
 	return -1;
 }
 
-void FuncState::markLocalAsOuter(int64_t pos)
+void rabbit::FuncState::markLocalAsOuter(int64_t pos)
 {
 	rabbit::LocalVarInfo &lvi = _vlocals[pos];
 	lvi._end_op = UINT_MINUS_ONE;
 	_outers++;
 }
 
-int64_t FuncState::getOuterVariable(const rabbit::Object &name)
+int64_t rabbit::FuncState::getOuterVariable(const rabbit::Object &name)
 {
 	int64_t outers = _outervalues.size();
 	for(int64_t i = 0; i<outers; i++) {
@@ -405,25 +419,22 @@ int64_t FuncState::getOuterVariable(const rabbit::Object &name)
 				_outervalues.pushBack(rabbit::OuterVar(name,rabbit::ObjectPtr(int64_t(pos)),otOUTER)); //local
 				return _outervalues.size() - 1;
 			}
-		}
-		else {
+		} else {
 			_parent->markLocalAsOuter(pos);
 			_outervalues.pushBack(rabbit::OuterVar(name,rabbit::ObjectPtr(int64_t(pos)),otLOCAL)); //local
 			return _outervalues.size() - 1;
-
-
 		}
 	}
 	return -1;
 }
 
-void FuncState::addParameter(const rabbit::Object &name)
+void rabbit::FuncState::addParameter(const rabbit::Object &name)
 {
 	pushLocalVariable(name);
 	_parameters.pushBack(name);
 }
 
-void FuncState::addLineInfos(int64_t line,bool lineop,bool force)
+void rabbit::FuncState::addLineInfos(int64_t line,bool lineop,bool force)
 {
 	if(_lastline!=line || force){
 		rabbit::LineInfo li;
@@ -436,7 +447,7 @@ void FuncState::addLineInfos(int64_t line,bool lineop,bool force)
 	}
 }
 
-void FuncState::discardTarget()
+void rabbit::FuncState::discardTarget()
 {
 	int64_t discardedtarget = popTarget();
 	int64_t size = _instructions.size();
@@ -451,7 +462,7 @@ void FuncState::discardTarget()
 	}
 }
 
-void FuncState::addInstruction(rabbit::Instruction &i)
+void rabbit::FuncState::addInstruction(rabbit::Instruction &i)
 {
 	int64_t size = _instructions.size();
 	if(size > 0 && _optimization){ //simple optimizer
@@ -584,23 +595,21 @@ void FuncState::addInstruction(rabbit::Instruction &i)
 	_instructions.pushBack(i);
 }
 
-rabbit::Object FuncState::createString(const rabbit::Char *s,int64_t len)
+rabbit::Object rabbit::FuncState::createString(const rabbit::Char *s,int64_t len)
 {
 	rabbit::ObjectPtr ns(rabbit::String::create(_sharedstate,s,len));
 	_table(_strings)->newSlot(ns,(int64_t)1);
 	return ns;
 }
 
-rabbit::Object FuncState::createTable()
+rabbit::Object rabbit::FuncState::createTable()
 {
 	rabbit::ObjectPtr nt(rabbit::Table::create(_sharedstate,0));
 	_table(_strings)->newSlot(nt,(int64_t)1);
 	return nt;
 }
 
-rabbit::FunctionProto *FuncState::buildProto()
-{
-
+rabbit::FunctionProto* rabbit::FuncState::buildProto() {
 	rabbit::FunctionProto *f=rabbit::FunctionProto::create(_ss,_instructions.size(),
 		_nliterals,_parameters.size(),_functions.size(),_outervalues.size(),
 		_lineinfos.size(),_localvarinfos.size(),_defaultparams.size());
@@ -632,25 +641,22 @@ rabbit::FunctionProto *FuncState::buildProto()
 	return f;
 }
 
-FuncState *rabbit::FuncState::pushChildState(rabbit::SharedState *ss)
+rabbit::FuncState *rabbit::FuncState::pushChildState(rabbit::SharedState *ss)
 {
 	FuncState *child = (rabbit::FuncState *)sq_malloc(sizeof(rabbit::FuncState));
-	new (child) FuncState(ss,this,_errfunc,_errtarget);
+	new ((char*)child) FuncState(ss,this,_errfunc,_errtarget);
 	_childstates.pushBack(child);
 	return child;
 }
 
-void FuncState::popChildState()
-{
+void rabbit::FuncState::popChildState() {
 	FuncState *child = _childstates.back();
-	sq_delete(child,FuncState);
+	sq_delete(child, FuncState);
 	_childstates.popBack();
 }
 
-FuncState::~FuncState()
-{
-	while(_childstates.size() > 0)
-	{
+rabbit::FuncState::~FuncState() {
+	while(_childstates.size() > 0) {
 		popChildState();
 	}
 }

@@ -11,14 +11,23 @@
 #ifndef NO_COMPILER
 #include <stdarg.h>
 #include <setjmp.h>
+#include <etk/types.hpp>
 #include <rabbit/sqopcodes.hpp>
+#include <rabbit/Lexer.hpp>
 
-#include <rabbit/sqfuncproto.hpp>
-#include <rabbit/sqcompiler.hpp>
-#include <rabbit/sqfuncstate.hpp>
-#include <rabbit/sqlexer.hpp>
+
 #include <rabbit/VirtualMachine.hpp>
+#include <rabbit/rabbit.hpp>
+#include <rabbit/sqconfig.hpp>
+#include <rabbit/FuncState.hpp>
+#include <rabbit/LocalVarInfo.hpp>
+#include <rabbit/OuterVar.hpp>
+#include <rabbit/String.hpp>
+#include <rabbit/SharedState.hpp>
+#include <rabbit/Table.hpp>
+#include <rabbit/Instruction.hpp>
 
+namespace rabbit {
 
 #define EXPR   1
 #define OBJECT 2
@@ -75,10 +84,10 @@ struct SQScope {
 					if(__nbreaks__>0)ResolveBreaks(_fs,__nbreaks__); \
 					_fs->_breaktargets.popBack();_fs->_continuetargets.popBack();}
 
-class rabbit::Compiler
+class Compiler
 {
 public:
-	rabbit::Compiler(rabbit::VirtualMachine *v, SQLEXREADFUNC rg, rabbit::UserPointer up, const rabbit::Char* sourcename, bool raiseerror, bool lineinfo)
+	Compiler(rabbit::VirtualMachine *v, SQLEXREADFUNC rg, rabbit::UserPointer up, const rabbit::Char* sourcename, bool raiseerror, bool lineinfo)
 	{
 		_vm=v;
 		_lex.init(_get_shared_state(v), rg, up,Throwerror,this);
@@ -886,7 +895,7 @@ public:
 		if(target < 0) {
 			target = _fs->pushTarget();
 		}
-		if(value <= INT_MAX && value > INT_MIN) { //does it fit in 32 bits?
+		if(value <= INT64_MAX && value > INT64_MIN) { //does it fit in 32 bits?
 			_fs->addInstruction(_OP_LOADINT, target,value);
 		}
 		else {
@@ -1583,8 +1592,9 @@ private:
 	jmp_buf _errorjmp;
 	rabbit::VirtualMachine *_vm;
 };
+}
 
-bool compile(rabbit::VirtualMachine *vm,SQLEXREADFUNC rg, rabbit::UserPointer up, const rabbit::Char *sourcename, rabbit::ObjectPtr &out, bool raiseerror, bool lineinfo)
+bool rabbit::compile(rabbit::VirtualMachine *vm,SQLEXREADFUNC rg, rabbit::UserPointer up, const rabbit::Char *sourcename, rabbit::ObjectPtr &out, bool raiseerror, bool lineinfo)
 {
 	rabbit::Compiler p(vm, rg, up, sourcename, raiseerror, lineinfo);
 	return p.compile(out);

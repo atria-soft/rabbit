@@ -17,11 +17,11 @@
 #include <rabbit-std/sqstdblobimpl.hpp>
 
 #define SETUP_STREAM(v) \
-	SQStream *self = NULL; \
+	rabbit::std::SQStream *self = NULL; \
 	if(SQ_FAILED(sq_getinstanceup(v,1,(rabbit::UserPointer*)&self,(rabbit::UserPointer)((uint64_t)SQSTD_STREAM_TYPE_TAG)))) \
-		return sq_throwerror(v,_SC("invalid type tag")); \
+		return rabbit::sq_throwerror(v,_SC("invalid type tag")); \
 	if(!self || !self->IsValid())  \
-		return sq_throwerror(v,_SC("the stream is invalid"));
+		return rabbit::sq_throwerror(v,_SC("the stream is invalid"));
 
 int64_t _stream_readblob(rabbit::VirtualMachine* v)
 {
@@ -36,7 +36,7 @@ int64_t _stream_readblob(rabbit::VirtualMachine* v)
 	res = self->Read(data,size);
 	if(res <= 0)
 		return sq_throwerror(v,_SC("no data left to read"));
-	blobp = sqstd_createblob(v,res);
+	blobp = rabbit::std::createblob(v,res);
 	memcpy(blobp,data,res);
 	return 1;
 }
@@ -109,9 +109,9 @@ int64_t _stream_writeblob(rabbit::VirtualMachine* v)
 	rabbit::UserPointer data;
 	int64_t size;
 	SETUP_STREAM(v);
-	if(SQ_FAILED(sqstd_getblob(v,2,&data)))
+	if(SQ_FAILED(rabbit::std::getblob(v,2,&data)))
 		return sq_throwerror(v,_SC("invalid parameter"));
-	size = sqstd_getblobsize(v,2);
+	size = rabbit::std::getblobsize(v,2);
 	if(self->Write(data,size) != size)
 		return sq_throwerror(v,_SC("io error"));
 	sq_pushinteger(v,size);
@@ -290,7 +290,7 @@ void init_streamclass(rabbit::VirtualMachine* v)
 	sq_pop(v,1);
 }
 
-rabbit::Result declare_stream(rabbit::VirtualMachine* v,const rabbit::Char* name,rabbit::UserPointer typetag,const rabbit::Char* reg_name,const rabbit::RegFunction *methods,const rabbit::RegFunction *globals)
+rabbit::Result rabbit::std::declare_stream(rabbit::VirtualMachine* v,const rabbit::Char* name,rabbit::UserPointer typetag,const rabbit::Char* reg_name,const rabbit::RegFunction *methods,const rabbit::RegFunction *globals)
 {
 	if(sq_gettype(v,-1) != rabbit::OT_TABLE)
 		return sq_throwerror(v,_SC("table expected"));

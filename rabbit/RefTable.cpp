@@ -9,6 +9,7 @@
 #include <rabbit/Table.hpp>
 
 #include <rabbit/squtils.hpp>
+#include <etk/Allocator.hpp>
 
 rabbit::RefTable::RefTable()
 {

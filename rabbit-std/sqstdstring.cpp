@@ -21,7 +21,12 @@
 static rabbit::Bool isfmtchr(rabbit::Char ch)
 {
 	switch(ch) {
-	case '-': case '+': case ' ': case '#': case '0': return SQTrue;
+		case '-':
+		case '+':
+		case ' ':
+		case '#':
+		case '0':
+			return SQTrue;
 	}
 	return SQFalse;
 }
@@ -71,7 +76,7 @@ static int64_t validate_format(rabbit::VirtualMachine* v, rabbit::Char *fmt, con
 	return n;
 }
 
-rabbit::Result sqstd_format(rabbit::VirtualMachine* v,int64_t nformatstringidx,int64_t *outlen,rabbit::Char **output)
+rabbit::Result rabbit::std::format(rabbit::VirtualMachine* v,int64_t nformatstringidx,int64_t *outlen,rabbit::Char **output)
 {
 	const rabbit::Char *format;
 	rabbit::Char *dest;
@@ -164,7 +169,7 @@ static int64_t _string_printf(rabbit::VirtualMachine* v)
 {
 	rabbit::Char *dest = NULL;
 	int64_t length = 0;
-	if(SQ_FAILED(sqstd_format(v,2,&length,&dest)))
+	if(SQ_FAILED(rabbit::std::format(v,2,&length,&dest)))
 		return -1;
 
 	SQPRINTFUNCTION printfunc = sq_getprintfunc(v);
@@ -177,7 +182,7 @@ static int64_t _string_format(rabbit::VirtualMachine* v)
 {
 	rabbit::Char *dest = NULL;
 	int64_t length = 0;
-	if(SQ_FAILED(sqstd_format(v,2,&length,&dest)))
+	if(SQ_FAILED(rabbit::std::format(v,2,&length,&dest)))
 		return -1;
 	sq_pushstring(v,dest,length);
 	return 1;
@@ -370,13 +375,13 @@ static int64_t _string_endswith(rabbit::VirtualMachine* v)
 }
 
 #define SETUP_REX(v) \
-	SQRex *self = NULL; \
-	sq_getinstanceup(v,1,(rabbit::UserPointer *)&self,0);
+	rabbit::std::SQRex *self = NULL; \
+	rabbit::sq_getinstanceup(v,1,(rabbit::UserPointer *)&self,0);
 
 static int64_t _rexobj_releasehook(rabbit::UserPointer p, int64_t SQ_UNUSED_ARG(size))
 {
-	SQRex *self = ((SQRex *)p);
-	sqstd_rex_free(self);
+	rabbit::std::SQRex *self = ((rabbit::std::SQRex *)p);
+	rabbit::std::rex_free(self);
 	return 1;
 }
 
@@ -385,7 +390,7 @@ static int64_t _regexp_match(rabbit::VirtualMachine* v)
 	SETUP_REX(v);
 	const rabbit::Char *str;
 	sq_getstring(v,2,&str);
-	if(sqstd_rex_match(self,str) == SQTrue)
+	if(rabbit::std::rex_match(self,str) == SQTrue)
 	{
 		sq_pushbool(v,SQTrue);
 		return 1;
@@ -412,7 +417,7 @@ static int64_t _regexp_search(rabbit::VirtualMachine* v)
 	int64_t start = 0;
 	sq_getstring(v,2,&str);
 	if(sq_gettop(v) > 2) sq_getinteger(v,3,&start);
-	if(sqstd_rex_search(self,str+start,&begin,&end) == SQTrue) {
+	if(rabbit::std::rex_search(self,str+start,&begin,&end) == SQTrue) {
 		_addrexmatch(v,str,begin,end);
 		return 1;
 	}
@@ -426,12 +431,12 @@ static int64_t _regexp_capture(rabbit::VirtualMachine* v)
 	int64_t start = 0;
 	sq_getstring(v,2,&str);
 	if(sq_gettop(v) > 2) sq_getinteger(v,3,&start);
-	if(sqstd_rex_search(self,str+start,&begin,&end) == SQTrue) {
-		int64_t n = sqstd_rex_getsubexpcount(self);
-		SQRexMatch match;
+	if(rabbit::std::rex_search(self,str+start,&begin,&end) == SQTrue) {
+		int64_t n = rabbit::std::rex_getsubexpcount(self);
+		rabbit::std::SQRexMatch match;
 		sq_newarray(v,0);
 		for(int64_t i = 0;i < n; i++) {
-			sqstd_rex_getsubexp(self,i,&match);
+			rabbit::std::rex_getsubexp(self,i,&match);
 			if(match.len > 0)
 				_addrexmatch(v,str,match.begin,match.begin+match.len);
 			else
@@ -446,7 +451,7 @@ static int64_t _regexp_capture(rabbit::VirtualMachine* v)
 static int64_t _regexp_subexpcount(rabbit::VirtualMachine* v)
 {
 	SETUP_REX(v);
-	sq_pushinteger(v,sqstd_rex_getsubexpcount(self));
+	sq_pushinteger(v,rabbit::std::rex_getsubexpcount(self));
 	return 1;
 }
 
@@ -454,7 +459,7 @@ static int64_t _regexp_constructor(rabbit::VirtualMachine* v)
 {
 	const rabbit::Char *error,*pattern;
 	sq_getstring(v,2,&pattern);
-	SQRex *rex = sqstd_rex_compile(pattern,&error);
+	rabbit::std::SQRex *rex = rabbit::std::rex_compile(pattern,&error);
 	if(!rex) return sq_throwerror(v,error);
 	sq_setinstanceup(v,1,rex);
 	sq_setreleasehook(v,1,_rexobj_releasehook);
@@ -495,7 +500,7 @@ static const rabbit::RegFunction stringlib_funcs[]={
 #undef _DECL_FUNC
 
 
-int64_t sqstd_register_stringlib(rabbit::VirtualMachine* v)
+int64_t rabbit::std::register_stringlib(rabbit::VirtualMachine* v)
 {
 	sq_pushstring(v,_SC("regexp"),-1);
 	sq_newclass(v,SQFalse);

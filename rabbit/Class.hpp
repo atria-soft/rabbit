@@ -11,8 +11,8 @@
 
 #include <rabbit/VirtualMachine.hpp>
 
-#include <rabbit/sqfuncproto.hpp>
-#include <rabbit/sqclosure.hpp>
+
+
 #include <rabbit/ClassMember.hpp>
 
 namespace rabbit {

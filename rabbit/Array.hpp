@@ -9,128 +9,42 @@
 
 #include <rabbit/RefCounted.hpp>
 #include <rabbit/ObjectPtr.hpp>
+#include <etk/Vector.hpp>
 
 namespace rabbit {
 	class SharedState;
-	class Array : public rabbit::RefCounted
-	{
+	class Array : public rabbit::RefCounted {
 		private:
 			Array(rabbit::SharedState* _ss,
-			      int64_t _nsize) {
-				m_data.resize(_nsize);
-			}
-			~Array() {
-				// TODO: Clean DATA ...
-			}
+			      int64_t _nsize);
+			~Array();
 		public:
 			// TODO : remove this ETK_ALLOC can do it natively ...
 			static Array* create(rabbit::SharedState* _ss,
-			                     int64_t _ninitialsize) {
-				Array *newarray=(Array*)SQ_MALLOC(sizeof(Array));
-				new (newarray) Array(_ss, _ninitialsize);
-				return newarray;
-			}
-			void finalize() {
-				m_data.resize(0);
-			}
+			                     int64_t _ninitialsize);
+			void finalize();
 			bool get(const int64_t _nidx,
-			         rabbit::ObjectPtr& _val) {
-				if(    _nidx >= 0
-				    && _nidx < (int64_t)m_data.size()){
-					rabbit::ObjectPtr &o = m_data[_nidx];
-					_val = _realval(o);
-					return true;
-				}
-				return false;
-			}
-			bool set(const int64_t _nidx,const rabbit::ObjectPtr& _val) {
-				if(_nidx>=0 && _nidx<(int64_t)m_data.size()){
-					m_data[_nidx] = _val;
-					return true;
-				}
-				return false;
-			}
+			         rabbit::ObjectPtr& _val);
+			bool set(const int64_t _nidx,const rabbit::ObjectPtr& _val);
 			int64_t next(const rabbit::ObjectPtr& _refpos,
 			             rabbit::ObjectPtr& _outkey,
-			             rabbit::ObjectPtr& _outval) {
-				uint64_t idx=translateIndex(_refpos);
-				while(idx<m_data.size()){
-					//first found
-					_outkey=(int64_t)idx;
-					rabbit::ObjectPtr& o = m_data[idx];
-					_outval = _realval(o);
-					//return idx for the next iteration
-					return ++idx;
-				}
-				//nothing to iterate anymore
-				return -1;
-			}
-			Array* clone() {
-				Array *anew = create(NULL,0);
-				anew->m_data = m_data;
-				return anew;
-			}
-			int64_t size() const {
-				return m_data.size();
-			}
-			void resize(int64_t _size) {
-				rabbit::ObjectPtr empty;
-				resize(_size, empty);
-			}
+			             rabbit::ObjectPtr& _outval);
+			Array* clone();
+			int64_t size() const;
+			void resize(int64_t _size);
 			void resize(int64_t _size,
-			            rabbit::ObjectPtr& _fill) {
-				m_data.resize(_size, _fill);
-				shrinkIfNeeded();
-			}
-			void reserve(int64_t _size) {
-				m_data.reserve(_size);
-			}
-			void append(const rabbit::Object& _o) {
-				m_data.pushBack(_o);
-			}
+			            rabbit::ObjectPtr& _fill);
+			void reserve(int64_t _size);
+			void append(const rabbit::Object& _o);
 			void extend(const Array* _a);
-			rabbit::ObjectPtr &top(){
-				return m_data.back();
-			}
-			void pop() {
-				m_data.popBack();
-				shrinkIfNeeded();
-			}
-			bool insert(int64_t _idx,const rabbit::Object& _val) {
-				if(    _idx < 0
-				    || _idx > (int64_t)m_data.size()) {
-					return false;
-				}
-				m_data.insert(_idx, _val);
-				return true;
-			}
-			void shrinkIfNeeded() {
-				// TODO: Check this. No real need with etk ==> automatic ...
-				/*
-				if(m_data.size() <= m_data.capacity()>>2) {
-					//shrink the array
-					m_data.shrinktofit();
-				}
-				*/
-			}
-			bool remove(int64_t _idx) {
-				if(    _idx < 0
-				    || _idx >= (int64_t)m_data.size()) {
-					return false;
-				}
-				m_data.remove(_idx);
-				shrinkIfNeeded();
-				return true;
-			}
-			void release() {
-				sq_delete(this, Array);
-			}
-			rabbit::ObjectPtr& operator[] (const size_t _pos) {
-				return m_data[_pos];
-			}
-			const rabbit::ObjectPtr& operator[] (const size_t _pos) const {
-				return m_data[_pos];
-			}
+			rabbit::ObjectPtr &top();
+			void pop();
+			bool insert(int64_t _idx,const rabbit::Object& _val);
+			void shrinkIfNeeded();
+			bool remove(int64_t _idx);
+			void release();
+			rabbit::ObjectPtr& operator[] (const size_t _pos);
+			const rabbit::ObjectPtr& operator[] (const size_t _pos) const;
 		private:
 			etk::Vector<rabbit::ObjectPtr> m_data;
 	};

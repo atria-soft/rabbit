@@ -7,6 +7,10 @@
  */
 #pragma once
 
+#include <etk/types.hpp>
+#include <rabbit/RefCounted.hpp>
+#include <rabbit/ObjectPtr.hpp>
+
 namespace rabbit {
 	enum OuterType {
 		otLOCAL = 0,

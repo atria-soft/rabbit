@@ -163,7 +163,7 @@ int getargs(rabbit::VirtualMachine* v,int argc, char* argv[],int64_t *retval)
 			//sq_createslot(v,-3);
 			//sq_pop(v,1);
 			if(compiles_only) {
-				if(SQ_SUCCEEDED(sqstd_loadfile(v,filename,SQTrue))){
+				if(SQ_SUCCEEDED(rabbit::std::loadfile(v,filename,SQTrue))){
 					const rabbit::Char *outfile = _SC("out.karrot");
 					if(output) {
 #ifdef SQUNICODE
@@ -174,15 +174,15 @@ int getargs(rabbit::VirtualMachine* v,int argc, char* argv[],int64_t *retval)
 						outfile = output;
 #endif
 					}
-					if(SQ_SUCCEEDED(sqstd_writeclosuretofile(v,outfile)))
+					if(SQ_SUCCEEDED(rabbit::std::writeclosuretofile(v,outfile)))
 						return _DONE;
 				}
 			}
 			else {
-				//if(SQ_SUCCEEDED(sqstd_dofile(v,filename,SQFalse,SQTrue))) {
+				//if(SQ_SUCCEEDED(rabbit::std::dofile(v,filename,SQFalse,SQTrue))) {
 					//return _DONE;
 				//}
-				if(SQ_SUCCEEDED(sqstd_loadfile(v,filename,SQTrue))) {
+				if(SQ_SUCCEEDED(rabbit::std::loadfile(v,filename,SQTrue))) {
 					int callargs = 1;
 					sq_pushroottable(v);
 					for(i=arg;i<argc;i++)
@@ -321,20 +321,20 @@ int main(int argc, char* argv[])
 	_CrtsetAllocHook(MemAllocHook);
 #endif
 
-	v=sq_open(1024);
+	v=rabbit::sq_open(1024);
 	sq_setprintfunc(v,printfunc,errorfunc);
 
 	sq_pushroottable(v);
 
-	sqstd_register_bloblib(v);
-	sqstd_register_iolib(v);
-	sqstd_register_systemlib(v);
-	sqstd_register_mathlib(v);
-	sqstd_register_stringlib(v);
+	rabbit::std::register_bloblib(v);
+	rabbit::std::register_iolib(v);
+	rabbit::std::register_systemlib(v);
+	rabbit::std::register_mathlib(v);
+	rabbit::std::register_stringlib(v);
 
 	//aux library
 	//sets error handlers
-	sqstd_seterrorhandlers(v);
+	rabbit::std::seterrorhandlers(v);
 
 	//gets arguments
 	switch(getargs(v,argc,argv,&retval))

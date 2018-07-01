@@ -5,9 +5,11 @@
  * @copyright 2003-2017, Alberto DEMICHELIS, all right reserved
  * @license MPL-2 (see license file)
  */
-#pragma once
-
 #include <rabbit/StringTable.hpp>
+#include <rabbit/SharedState.hpp>
+#include <rabbit/ObjectPtr.hpp>
+#include <rabbit/StringTable.hpp>
+#include <rabbit/squtils.hpp>
 
 
 
@@ -36,7 +38,7 @@ rabbit::String *rabbit::StringTable::add(const rabbit::Char *news,int64_t len)
 {
 	if(len<0)
 		len = (int64_t)scstrlen(news);
-	rabbit::Hash newhash = ::_hashstr(news,len);
+	rabbit::Hash newhash = _hashstr(news,len);
 	rabbit::Hash h = newhash&(_numofslots-1);
 	rabbit::String *s;
 	for (s = _strings[h]; s; s = s->_next){
@@ -45,7 +47,7 @@ rabbit::String *rabbit::StringTable::add(const rabbit::Char *news,int64_t len)
 	}
 
 	rabbit::String *t = (rabbit::String *)SQ_MALLOC(sq_rsl(len)+sizeof(rabbit::String));
-	new (t) rabbit::String;
+	new ((char*)t) rabbit::String;
 	t->_sharedstate = _sharedstate;
 	memcpy(t->_val,news,sq_rsl(len));
 	t->_val[len] = _SC('\0');

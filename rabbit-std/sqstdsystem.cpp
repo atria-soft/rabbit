@@ -139,7 +139,7 @@ static const rabbit::RegFunction systemlib_funcs[]={
 };
 #undef _DECL_FUNC
 
-int64_t sqstd_register_systemlib(rabbit::VirtualMachine* v)
+int64_t rabbit::std::register_systemlib(rabbit::VirtualMachine* v)
 {
 	int64_t i=0;
 	while(systemlib_funcs[i].name!=0)

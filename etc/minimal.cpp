@@ -56,17 +56,17 @@ int main(int argc, char* argv[])
 
 	//REGISTRATION OF STDLIB
 	//sq_pushroottable(v); //push the root table where the std function will be registered
-	//sqstd_register_iolib(v);  //registers a library
+	//rabbit::std::register_iolib(v);  //registers a library
 	// ... call here other stdlibs string,math etc...
 	//sq_pop(v,1); //pops the root table
 	//END REGISTRATION OF STDLIB
 
-	sqstd_seterrorhandlers(v); //registers the default error handlers
+	rabbit::std::seterrorhandlers(v); //registers the default error handlers
 
 	sq_setprintfunc(v, printfunc,errorfunc); //sets the print function
 
 	sq_pushroottable(v); //push the root table(were the globals of the script will be stored)
-	if(SQ_SUCCEEDED(sqstd_dofile(v, _SC("test.nut"), SQFalse, SQTrue))) // also prints syntax errors if any
+	if(SQ_SUCCEEDED(rabbit::std::dofile(v, _SC("test.nut"), SQFalse, SQTrue))) // also prints syntax errors if any
 	{
 		call_foo(v,1,2.5,_SC("teststring"));
 	}

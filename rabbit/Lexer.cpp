@@ -6,10 +6,10 @@
  * @license MPL-2 (see license file)
  */
 #include <rabbit/Lexer.hpp>
+#include <rabbit/Table.hpp>
+#include <rabbit/String.hpp>
+#include <rabbit/sqconfig.hpp>
 
-
-#include <rabbit/sqcompiler.hpp>
-#include <rabbit/sqlexer.hpp>
 
 #define CUR_CHAR (_currdata)
 #define RETURN_TOKEN(t) { _prevtoken = _curtoken; _curtoken = t; return t;}

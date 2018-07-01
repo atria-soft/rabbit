@@ -8,6 +8,17 @@
 #include <rabbit/Instance.hpp>
 #include <rabbit/Table.hpp>
 #include <rabbit/SharedState.hpp>
+#include <rabbit/squtils.hpp>
+#include <etk/types.hpp>
+#include <etk/Allocator.hpp>
+#include <rabbit/rabbit.hpp>
+#include <rabbit/squtils.hpp>
+#include <rabbit/Closure.hpp>
+
+#include <rabbit/String.hpp>
+#include <rabbit/Class.hpp>
+#include <rabbit/VirtualMachine.hpp>
+#include <rabbit/WeakRef.hpp>
 
 void rabbit::Instance::init(rabbit::SharedState *ss) {
 	_userpointer = NULL;
@@ -21,7 +32,7 @@ rabbit::Instance::Instance(rabbit::SharedState *ss, rabbit::Class *c, int64_t me
 	_class = c;
 	uint64_t nvalues = _class->_defaultvalues.size();
 	for(uint64_t n = 0; n < nvalues; n++) {
-		new (&_values[n]) rabbit::ObjectPtr(_class->_defaultvalues[n].val);
+		new ((char*)&_values[n]) rabbit::ObjectPtr(_class->_defaultvalues[n].val);
 	}
 	init(ss);
 }
@@ -31,7 +42,7 @@ rabbit::Instance::Instance(rabbit::SharedState *ss, rabbit::Instance *i, int64_t
 	_class = i->_class;
 	uint64_t nvalues = _class->_defaultvalues.size();
 	for(uint64_t n = 0; n < nvalues; n++) {
-		new (&_values[n]) rabbit::ObjectPtr(i->_values[n]);
+		new ((char*)&_values[n]) rabbit::ObjectPtr(i->_values[n]);
 	}
 	init(ss);
 }
@@ -70,7 +81,7 @@ bool rabbit::Instance::instanceOf(rabbit::Class *trg) {
 rabbit::Instance* rabbit::Instance::create(rabbit::SharedState *ss,rabbit::Class *theclass) {
 	int64_t size = calcinstancesize(theclass);
 	Instance *newinst = (Instance *)SQ_MALLOC(size);
-	new (newinst) Instance(ss, theclass,size);
+	new ((char*)newinst) Instance(ss, theclass,size);
 	if(theclass->_udsize) {
 		newinst->_userpointer = ((unsigned char *)newinst) + (size - theclass->_udsize);
 	}
@@ -80,7 +91,7 @@ rabbit::Instance* rabbit::Instance::create(rabbit::SharedState *ss,rabbit::Class
 rabbit::Instance* rabbit::Instance::clone(rabbit::SharedState *ss) {
 	int64_t size = calcinstancesize(_class);
 	Instance *newinst = (Instance *)SQ_MALLOC(size);
-	new (newinst) Instance(ss, this,size);
+	new ((char*)newinst) Instance(ss, this,size);
 	if(_class->_udsize) {
 		newinst->_userpointer = ((unsigned char *)newinst) + (size - _class->_udsize);
 	}

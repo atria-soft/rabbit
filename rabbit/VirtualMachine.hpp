@@ -36,8 +36,7 @@ void sq_base_register(rabbit::VirtualMachine* v);
 #define _INLINE
 
 namespace rabbit {
-	class VirtualMachine : public rabbit::RefCounted
-	{
+	class VirtualMachine : public rabbit::RefCounted {
 		public:
 			struct callInfo{
 				rabbit::Instruction *_ip;
@@ -51,7 +50,6 @@ namespace rabbit {
 				int32_t _ncalls;
 				rabbit::Bool _root;
 			};
-	
 		public:
 			void DebugHookProxy(int64_t type, const rabbit::Char * sourcename, int64_t line, const rabbit::Char * funcname);
 			static void _DebugHookProxy(rabbit::VirtualMachine* v, int64_t type, const rabbit::Char * sourcename, int64_t line, const rabbit::Char * funcname);
@@ -132,10 +130,7 @@ namespace rabbit {
 			}
 			bool enterFrame(int64_t newbase, int64_t newtop, bool tailcall);
 			void leaveFrame();
-			void release() {
-				sq_delete(this,VirtualMachine);
-			}
-		////////////////////////////////////////////////////////////////////////////
+			void release();
 			//stack functions for the api
 			void remove(int64_t n);
 		

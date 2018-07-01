@@ -6,12 +6,13 @@
  * @license MPL-2 (see license file)
  */
 
+#include <etk/types.hpp>
 
 
 #ifndef SQ_EXCLUDE_DEFAULT_MEMFUNCTIONS
 void *sq_vm_malloc(uint64_t size){ return malloc(size); }
 
-void *sq_vm_realloc(void *p, uint64_t SQ_UNUSED_ARG(oldsize), uint64_t size){ return realloc(p, size); }
+void *sq_vm_realloc(void *p, uint64_t oldsize, uint64_t size){ return realloc(p, size); }
 
-void sq_vm_free(void *p, uint64_t SQ_UNUSED_ARG(size)){ free(p); }
+void sq_vm_free(void *p, uint64_t size){ free(p); }
 #endif

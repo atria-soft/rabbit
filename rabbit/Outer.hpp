@@ -7,31 +7,24 @@
  */
 #pragma once
 
+#include <etk/types.hpp>
+#include <rabbit/RefCounted.hpp>
+#include <rabbit/ObjectPtr.hpp>
+
+
 namespace rabbit {
+	class SharedState;
 	class Outer : public rabbit::RefCounted {
 		private:
-			rabbit::Outer(rabbit::SharedState *ss, rabbit::ObjectPtr *outer){
-				_valptr = outer;
-				_next = NULL;
-			}
+			Outer(rabbit::SharedState *ss, rabbit::ObjectPtr *outer);
 		public:
-			static rabbit::Outer *create(rabbit::SharedState *ss, rabbit::ObjectPtr *outer) {
-				rabbit::Outer *nc  = (rabbit::Outer*)SQ_MALLOC(sizeof(rabbit::Outer));
-				new (nc) rabbit::Outer(ss, outer);
-				return nc;
-			}
-			~Outer() {
-				
-			}
-			void release()
-			{
-				this->~Outer();
-				sq_vm_free(this,sizeof(rabbit::Outer));
-			}
-			rabbit::ObjectPtr *_valptr;  /* pointer to value on stack, or _value below */
-			int64_t	_idx;	 /* idx in stack array, for relocation */
-			rabbit::ObjectPtr  _value;   /* value of outer after stack frame is closed */
-			rabbit::Outer	 *_next;	/* pointer to next outer when frame is open   */
+			static rabbit::Outer *create(rabbit::SharedState *ss, rabbit::ObjectPtr *outer);
+			~Outer();
+			void release();
+			rabbit::ObjectPtr *_valptr; /* pointer to value on stack, or _value below */
+			int64_t	_idx; /* idx in stack array, for relocation */
+			rabbit::ObjectPtr _value; /* value of outer after stack frame is closed */
+			rabbit::Outer *_next; /* pointer to next outer when frame is open */
 	};
 
 }

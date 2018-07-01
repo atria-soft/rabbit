@@ -6,11 +6,26 @@
  * @license MPL-2 (see license file)
  */
 #include <rabbit/Closure.hpp>
+#include <rabbit/VirtualMachine.hpp>
+#include <rabbit/rabbit.hpp>
+
+#include <rabbit/ObjectPtr.hpp>
+#include <rabbit/WeakRef.hpp>
+#include <rabbit/FunctionProto.hpp>
+
+#include <rabbit/LocalVarInfo.hpp>
+#include <rabbit/LineInfo.hpp>
+#include <rabbit/OuterVar.hpp>
+#include <rabbit/String.hpp>
+#include <rabbit/SharedState.hpp>
+#include <rabbit/Table.hpp>
+#include <rabbit/Class.hpp>
+#include <rabbit/RefCounted.hpp>
+#include <rabbit/squtils.hpp>
 
 
 
-#define _CHECK_IO(exp)  { if(!exp)return false; }
-bool SafeWrite(rabbit::VirtualMachine* v,SQWRITEFUNC write,rabbit::UserPointer up,rabbit::UserPointer dest,int64_t size)
+bool rabbit::SafeWrite(rabbit::VirtualMachine* v,SQWRITEFUNC write,rabbit::UserPointer up,rabbit::UserPointer dest,int64_t size)
 {
 	if(write(up,dest,size) != size) {
 		v->raise_error(_SC("io error (write function failure)"));
@@ -19,7 +34,7 @@ bool SafeWrite(rabbit::VirtualMachine* v,SQWRITEFUNC write,rabbit::UserPointer u
 	return true;
 }
 
-bool SafeRead(rabbit::VirtualMachine* v,SQWRITEFUNC read,rabbit::UserPointer up,rabbit::UserPointer dest,int64_t size)
+bool rabbit::SafeRead(rabbit::VirtualMachine* v,SQWRITEFUNC read,rabbit::UserPointer up,rabbit::UserPointer dest,int64_t size)
 {
 	if(size && read(up,dest,size) != size) {
 		v->raise_error(_SC("io error, read function failure, the origin stream could be corrupted/trucated"));
@@ -28,12 +43,12 @@ bool SafeRead(rabbit::VirtualMachine* v,SQWRITEFUNC read,rabbit::UserPointer up,
 	return true;
 }
 
-bool WriteTag(rabbit::VirtualMachine* v,SQWRITEFUNC write,rabbit::UserPointer up,uint32_t tag)
+bool rabbit::WriteTag(rabbit::VirtualMachine* v,SQWRITEFUNC write,rabbit::UserPointer up,uint32_t tag)
 {
 	return SafeWrite(v,write,up,&tag,sizeof(tag));
 }
 
-bool CheckTag(rabbit::VirtualMachine* v,SQWRITEFUNC read,rabbit::UserPointer up,uint32_t tag)
+bool rabbit::CheckTag(rabbit::VirtualMachine* v,SQWRITEFUNC read,rabbit::UserPointer up,uint32_t tag)
 {
 	uint32_t t;
 	_CHECK_IO(SafeRead(v,read,up,&t,sizeof(t)));
@@ -44,7 +59,7 @@ bool CheckTag(rabbit::VirtualMachine* v,SQWRITEFUNC read,rabbit::UserPointer up,
 	return true;
 }
 
-bool WriteObject(rabbit::VirtualMachine* v,rabbit::UserPointer up,SQWRITEFUNC write,rabbit::ObjectPtr &o)
+bool rabbit::WriteObject(rabbit::VirtualMachine* v,rabbit::UserPointer up,SQWRITEFUNC write,rabbit::ObjectPtr &o)
 {
 	uint32_t _type = (uint32_t)sq_type(o);
 	_CHECK_IO(SafeWrite(v,write,up,&_type,sizeof(_type)));
@@ -67,7 +82,7 @@ bool WriteObject(rabbit::VirtualMachine* v,rabbit::UserPointer up,SQWRITEFUNC wr
 	return true;
 }
 
-bool ReadObject(rabbit::VirtualMachine* v,rabbit::UserPointer up,SQREADFUNC read,rabbit::ObjectPtr &o)
+bool rabbit::ReadObject(rabbit::VirtualMachine* v,rabbit::UserPointer up,SQREADFUNC read,rabbit::ObjectPtr &o)
 {
 	uint32_t _type;
 	_CHECK_IO(SafeRead(v,read,up,&_type,sizeof(_type)));
@@ -142,7 +157,7 @@ rabbit::Closure::Closure(rabbit::SharedState *ss,rabbit::FunctionProto *func){
 rabbit::Closure *rabbit::Closure::create(rabbit::SharedState *ss,rabbit::FunctionProto *func,rabbit::WeakRef *root){
 	int64_t size = _CALC_CLOSURE_SIZE(func);
 	rabbit::Closure *nc=(rabbit::Closure*)SQ_MALLOC(size);
-	new (nc) rabbit::Closure(ss,func);
+	new ((char*)nc) rabbit::Closure(ss,func);
 	nc->_outervalues = (rabbit::ObjectPtr *)(nc + 1);
 	nc->_defaultparams = &nc->_outervalues[func->_noutervalues];
 	nc->_root = root;
@@ -168,7 +183,7 @@ void rabbit::Closure::setRoot(rabbit::WeakRef *r) {
 	__ObjaddRef(_root);
 }
 
-Closure* rabbit::Closure::clone() {
+rabbit::Closure* rabbit::Closure::clone() {
 	rabbit::FunctionProto *f = _function;
 	rabbit::Closure * ret = rabbit::Closure::create(NULL,f,_root);
 	ret->_env = _env;

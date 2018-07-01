@@ -7,6 +7,12 @@
  */
 #pragma once
 
+#include <etk/Vector.hpp>
+#include <rabbit/LocalVarInfo.hpp>
+#include <rabbit/OuterVar.hpp>
+#include <rabbit/LineInfo.hpp>
+#include <rabbit/Instruction.hpp>
+
 namespace rabbit {
 	class FuncState {
 		public:
@@ -18,7 +24,7 @@ namespace rabbit {
 			void error(const rabbit::Char *err);
 			FuncState *pushChildState(rabbit::SharedState *ss);
 			void popChildState();
-			void addInstruction(SQOpcode _op,int64_t arg0=0,int64_t arg1=0,int64_t arg2=0,int64_t arg3=0){rabbit::Instruction i(_op,arg0,arg1,arg2,arg3);addInstruction(i);}
+			void addInstruction(SQOpcode _op,int64_t arg0=0,int64_t arg1=0,int64_t arg2=0,int64_t arg3=0);
 			void addInstruction(rabbit::Instruction &i);
 			void setIntructionParams(int64_t pos,int64_t arg0,int64_t arg1,int64_t arg2=0,int64_t arg3=0);
 			void setIntructionParam(int64_t pos,int64_t arg,int64_t val);

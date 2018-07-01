@@ -8,47 +8,26 @@
 #pragma once
 
 #include <etk/types.hpp>
+#include <etk/Vector.hpp>
+#include <rabbit/RefCounted.hpp>
+#include <rabbit/ObjectPtr.hpp>
+#include <rabbit/squtils.hpp>
+#include <rabbit/rabbit.hpp>
+#include <rabbit/sqconfig.hpp>
 
 namespace rabbit {
+	class ObjectPtr;
+	class SharedState;
+	class WeakRef;
 	#define _CALC_NATVIVECLOSURE_SIZE(noutervalues) (sizeof(rabbit::NativeClosure) + (noutervalues*sizeof(rabbit::ObjectPtr)))
 	class NativeClosure : public rabbit::RefCounted {
 		private:
-			rabbit::NativeClosure(rabbit::SharedState *ss,SQFUNCTION func){
-				_function=func;
-				_env = NULL;
-			}
+			NativeClosure(rabbit::SharedState *ss,SQFUNCTION func);
 		public:
-			static rabbit::NativeClosure *create(rabbit::SharedState *ss,SQFUNCTION func,int64_t nouters)
-			{
-				int64_t size = _CALC_NATVIVECLOSURE_SIZE(nouters);
-				rabbit::NativeClosure *nc=(rabbit::NativeClosure*)SQ_MALLOC(size);
-				new (nc) rabbit::NativeClosure(ss,func);
-				nc->_outervalues = (rabbit::ObjectPtr *)(nc + 1);
-				nc->_noutervalues = nouters;
-				_CONSTRUCT_VECTOR(rabbit::ObjectPtr,nc->_noutervalues,nc->_outervalues);
-				return nc;
-			}
-			rabbit::NativeClosure *clone()
-			{
-				rabbit::NativeClosure * ret = rabbit::NativeClosure::create(NULL,_function,_noutervalues);
-				ret->_env = _env;
-				if(ret->_env) __ObjaddRef(ret->_env);
-				ret->_name = _name;
-				_COPY_VECTOR(ret->_outervalues,_outervalues,_noutervalues);
-				ret->_typecheck = _typecheck;
-				ret->_nparamscheck = _nparamscheck;
-				return ret;
-			}
-			~NativeClosure()
-			{
-				__Objrelease(_env);
-			}
-			void release(){
-				int64_t size = _CALC_NATVIVECLOSURE_SIZE(_noutervalues);
-				_DESTRUCT_VECTOR(ObjectPtr,_noutervalues,_outervalues);
-				this->~NativeClosure();
-				sq_free(this,size);
-			}
+			static rabbit::NativeClosure *create(rabbit::SharedState *ss,SQFUNCTION func,int64_t nouters);
+			rabbit::NativeClosure *clone();
+			~NativeClosure();
+			void release();
 		
 			int64_t _nparamscheck;
 			etk::Vector<int64_t> _typecheck;

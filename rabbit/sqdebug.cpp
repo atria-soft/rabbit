@@ -9,13 +9,20 @@
 
 #include <stdarg.h>
 #include <rabbit/VirtualMachine.hpp>
-#include <rabbit/sqfuncproto.hpp>
-#include <rabbit/sqclosure.hpp>
 
+
+#include <rabbit/String.hpp>
+#include <rabbit/Table.hpp>
+#include <rabbit/Closure.hpp>
+#include <rabbit/RegFunction.hpp>
+#include <rabbit/NativeClosure.hpp>
+#include <rabbit/FunctionProto.hpp>
+#include <rabbit/Generator.hpp>
+#include <rabbit/SharedState.hpp>
 #include <rabbit/FunctionInfo.hpp>
 #include <rabbit/StackInfos.hpp>
 
-rabbit::Result sq_getfunctioninfo(rabbit::VirtualMachine* v,int64_t level,rabbit::FunctionInfo *fi)
+rabbit::Result rabbit::sq_getfunctioninfo(rabbit::VirtualMachine* v,int64_t level,rabbit::FunctionInfo *fi)
 {
 	int64_t cssize = v->_callsstacksize;
 	if (cssize > level) {
@@ -33,7 +40,7 @@ rabbit::Result sq_getfunctioninfo(rabbit::VirtualMachine* v,int64_t level,rabbit
 	return sq_throwerror(v,_SC("the object is not a closure"));
 }
 
-rabbit::Result sq_stackinfos(rabbit::VirtualMachine* v, int64_t level, rabbit::StackInfos *si)
+rabbit::Result rabbit::sq_stackinfos(rabbit::VirtualMachine* v, int64_t level, rabbit::StackInfos *si)
 {
 	int64_t cssize = v->_callsstacksize;
 	if (cssize > level) {

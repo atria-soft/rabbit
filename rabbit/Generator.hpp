@@ -7,33 +7,26 @@
  */
 #pragma once
 
+#include <rabbit/LocalVarInfo.hpp>
+#include <rabbit/LineInfo.hpp>
+#include <rabbit/OuterVar.hpp>
+#include <rabbit/Instruction.hpp>
+#include <rabbit/RefCounted.hpp>
+#include <rabbit/rabbit.hpp>
+#include <etk/Vector.hpp>
+#include <rabbit/VirtualMachine.hpp>
+
 namespace rabbit {
 	class Generator : public rabbit::RefCounted {
 		public:
-			enum rabbit::GeneratorState{eRunning,eSuspended,eDead};
+			enum GeneratorState{eRunning,eSuspended,eDead};
 		private:
-			Generator(rabbit::SharedState *ss,rabbit::Closure *closure){
-				_closure = closure;
-				_state = eRunning;
-				_ci._generator = NULL;
-			}
+			Generator(rabbit::SharedState *ss,rabbit::Closure *closure);
 		public:
-			static Generator *create(rabbit::SharedState *ss,rabbit::Closure *closure){
-				rabbit::Generator *nc=(rabbit::Generator*)SQ_MALLOC(sizeof(rabbit::Generator));
-				new ((char*)nc) rabbit::Generator(ss,closure);
-				return nc;
-			}
-			~Generator()
-			{
-				
-			}
-			void kill(){
-				_state=eDead;
-				_stack.resize(0);
-				_closure.Null();}
-			void release(){
-				sq_delete(this,rabbit::Generator);
-			}
+			static Generator *create(rabbit::SharedState *ss,rabbit::Closure *closure);
+			~Generator();
+			void kill();
+			void release();
 		
 			bool yield(rabbit::VirtualMachine *v,int64_t target);
 			bool resume(rabbit::VirtualMachine *v,rabbit::ObjectPtr &dest);
@@ -41,7 +34,7 @@ namespace rabbit {
 			etk::Vector<rabbit::ObjectPtr> _stack;
 			rabbit::VirtualMachine::callInfo _ci;
 			etk::Vector<rabbit::ExceptionTrap> _etraps;
-			rabbit::GeneratorState _state;
+			GeneratorState _state;
 	};
 
 }

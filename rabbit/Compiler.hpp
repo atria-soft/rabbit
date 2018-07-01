@@ -7,6 +7,10 @@
  */
 #pragma once
 
+#include <rabbit/sqconfig.hpp>
+#include <rabbit/rabbit.hpp>
+#include <rabbit/ObjectPtr.hpp>
+
 namespace rabbit {
 	#define TK_IDENTIFIER   258
 	#define TK_STRING_LITERAL   259

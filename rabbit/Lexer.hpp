@@ -7,6 +7,12 @@
  */
 #pragma once
 
+#include <etk/Vector.hpp>
+#include <rabbit/squtils.hpp>
+#include <rabbit/rabbit.hpp>
+#include <rabbit/sqconfig.hpp>
+#include <rabbit/Compiler.hpp>
+
 namespace rabbit {
 	
 	#ifdef SQUNICODE

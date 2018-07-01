@@ -10,13 +10,24 @@
 #include <stdlib.h>
 #include <rabbit/sqopcodes.hpp>
 #include <rabbit/VirtualMachine.hpp>
-#include <rabbit/sqfuncproto.hpp>
-#include <rabbit/sqclosure.hpp>
+
+
+#include <rabbit/squtils.hpp>
 
 
 #include <rabbit/UserData.hpp>
 #include <rabbit/Array.hpp>
 #include <rabbit/Instance.hpp>
+#include <rabbit/Closure.hpp>
+#include <rabbit/String.hpp>
+#include <rabbit/Table.hpp>
+#include <rabbit/Generator.hpp>
+#include <rabbit/Class.hpp>
+#include <rabbit/FunctionProto.hpp>
+#include <rabbit/NativeClosure.hpp>
+#include <rabbit/WeakRef.hpp>
+#include <rabbit/SharedState.hpp>
+#include <rabbit/Outer.hpp>
 
 
 #define TOP() (_stack[_top-1])
@@ -42,6 +53,10 @@ bool rabbit::VirtualMachine::BW_OP(uint64_t op,rabbit::ObjectPtr &trg,const rabb
 	else { raise_error(_SC("bitwise op between '%s' and '%s'"),getTypeName(o1),getTypeName(o2)); return false;}
 	trg = res;
 	return true;
+}
+
+void rabbit::VirtualMachine::release() {
+	sq_delete(this,VirtualMachine);
 }
 
 #define _ARITH_(op,trg,o1,o2) \
@@ -76,12 +91,12 @@ bool rabbit::VirtualMachine::ARITH_OP(uint64_t op,rabbit::ObjectPtr &trg,const r
 			case '+': res = i1 + i2; break;
 			case '-': res = i1 - i2; break;
 			case '/': if (i2 == 0) { raise_error(_SC("division by zero")); return false; }
-					else if (i2 == -1 && i1 == INT_MIN) { raise_error(_SC("integer overflow")); return false; }
+					else if (i2 == -1 && i1 == INT64_MIN) { raise_error(_SC("integer overflow")); return false; }
 					res = i1 / i2;
 					break;
 			case '*': res = i1 * i2; break;
 			case '%': if (i2 == 0) { raise_error(_SC("modulo by zero")); return false; }
-					else if (i2 == -1 && i1 == INT_MIN) { res = 0; break; }
+					else if (i2 == -1 && i1 == INT64_MAX) { res = 0; break; }
 					res = i1 % i2;
 					break;
 			default: res = 0xDEADBEEF;

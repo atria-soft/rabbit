@@ -8,6 +8,7 @@
 #pragma once
 
 #include <etk/types.hpp>
+#include <rabbit/String.hpp>
 
 namespace rabbit {
 	

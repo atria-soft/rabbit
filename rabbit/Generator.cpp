@@ -6,6 +6,8 @@
  * @license MPL-2 (see license file)
  */
 #include <rabbit/Generator.hpp>
+#include <rabbit/WeakRef.hpp>
+#include <rabbit/squtils.hpp>
 
 
 
@@ -85,3 +87,30 @@ bool rabbit::Generator::resume(rabbit::VirtualMachine *v,rabbit::ObjectPtr &dest
 
 	return true;
 }
+
+rabbit::Generator::Generator(rabbit::SharedState *ss,rabbit::Closure *closure) {
+	_closure = closure;
+	_state = eRunning;
+	_ci._generator = NULL;
+}
+
+rabbit::Generator *rabbit::Generator::create(rabbit::SharedState *ss,rabbit::Closure *closure) {
+	rabbit::Generator *nc=(rabbit::Generator*)SQ_MALLOC(sizeof(rabbit::Generator));
+	new ((char*)nc) rabbit::Generator(ss,closure);
+	return nc;
+}
+
+rabbit::Generator::~Generator() {
+	
+}
+
+void rabbit::Generator::kill() {
+	_state=eDead;
+	_stack.resize(0);
+	_closure.Null();
+}
+
+void rabbit::Generator::release() {
+	sq_delete(this,Generator);
+}
+

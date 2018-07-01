@@ -9,23 +9,27 @@
 
 #include <rabbit/RegFunction.hpp>
 
-typedef unsigned int SQRexBool;
-typedef struct SQRex SQRex;
+namespace rabbit {
+	namespace std {
+		using SQRexBool = unsigned int;
+		using SQRex = struct SQRex;
+		
+		typedef struct {
+			const rabbit::Char *begin;
+			int64_t len;
+		} SQRexMatch;
+		
+		SQRex *rex_compile(const rabbit::Char *pattern,const rabbit::Char **error);
+		void rex_free(SQRex *exp);
+		rabbit::Bool rex_match(SQRex* exp,const rabbit::Char* text);
+		rabbit::Bool rex_search(SQRex* exp,const rabbit::Char* text, const rabbit::Char** out_begin, const rabbit::Char** out_end);
+		rabbit::Bool rex_searchrange(SQRex* exp,const rabbit::Char* text_begin,const rabbit::Char* text_end,const rabbit::Char** out_begin, const rabbit::Char** out_end);
+		int64_t rex_getsubexpcount(SQRex* exp);
+		rabbit::Bool rex_getsubexp(SQRex* exp, int64_t n, SQRexMatch *subexp);
+		
+		rabbit::Result format(rabbit::VirtualMachine* v,int64_t nformatstringidx,int64_t *outlen,rabbit::Char **output);
+		
+		rabbit::Result register_stringlib(rabbit::VirtualMachine* v);
 
-typedef struct {
-	const rabbit::Char *begin;
-	int64_t len;
-} SQRexMatch;
-
-RABBIT_API SQRex *sqstd_rex_compile(const rabbit::Char *pattern,const rabbit::Char **error);
-RABBIT_API void sqstd_rex_free(SQRex *exp);
-RABBIT_API rabbit::Bool sqstd_rex_match(SQRex* exp,const rabbit::Char* text);
-RABBIT_API rabbit::Bool sqstd_rex_search(SQRex* exp,const rabbit::Char* text, const rabbit::Char** out_begin, const rabbit::Char** out_end);
-RABBIT_API rabbit::Bool sqstd_rex_searchrange(SQRex* exp,const rabbit::Char* text_begin,const rabbit::Char* text_end,const rabbit::Char** out_begin, const rabbit::Char** out_end);
-RABBIT_API int64_t sqstd_rex_getsubexpcount(SQRex* exp);
-RABBIT_API rabbit::Bool sqstd_rex_getsubexp(SQRex* exp, int64_t n, SQRexMatch *subexp);
-
-RABBIT_API rabbit::Result sqstd_format(rabbit::VirtualMachine* v,int64_t nformatstringidx,int64_t *outlen,rabbit::Char **output);
-
-RABBIT_API rabbit::Result sqstd_register_stringlib(rabbit::VirtualMachine* v);
-
+	}
+}

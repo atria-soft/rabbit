@@ -14,27 +14,27 @@
 
 #define SQSTD_FILE_TYPE_TAG ((uint64_t)(SQSTD_STREAM_TYPE_TAG | 0x00000001))
 //basic API
-SQFILE sqstd_fopen(const rabbit::Char *filename ,const rabbit::Char *mode)
+rabbit::std::SQFILE rabbit::std::fopen(const rabbit::Char *filename ,const rabbit::Char *mode)
 {
 #ifndef SQUNICODE
-	return (SQFILE)fopen(filename,mode);
+	return (SQFILE)::fopen(filename,mode);
 #else
-	return (SQFILE)_wfopen(filename,mode);
+	return (SQFILE)::_wfopen(filename,mode);
 #endif
 }
 
-int64_t sqstd_fread(void* buffer, int64_t size, int64_t count, SQFILE file)
+int64_t rabbit::std::fread(void* buffer, int64_t size, int64_t count, SQFILE file)
 {
-	int64_t ret = (int64_t)fread(buffer,size,count,(FILE *)file);
+	int64_t ret = (int64_t)::fread(buffer,size,count,(FILE *)file);
 	return ret;
 }
 
-int64_t sqstd_fwrite(const rabbit::UserPointer buffer, int64_t size, int64_t count, SQFILE file)
+int64_t rabbit::std::fwrite(const rabbit::UserPointer buffer, int64_t size, int64_t count, SQFILE file)
 {
-	return (int64_t)fwrite(buffer,size,count,(FILE *)file);
+	return (int64_t)::fwrite(buffer,size,count,(FILE *)file);
 }
 
-int64_t sqstd_fseek(SQFILE file, int64_t offset, int64_t origin)
+int64_t rabbit::std::fseek(SQFILE file, int64_t offset, int64_t origin)
 {
 	int64_t realorigin;
 	switch(origin) {
@@ -43,79 +43,82 @@ int64_t sqstd_fseek(SQFILE file, int64_t offset, int64_t origin)
 		case SQ_SEEK_SET: realorigin = SEEK_SET; break;
 		default: return -1; //failed
 	}
-	return fseek((FILE *)file,(long)offset,(int)realorigin);
+	return ::fseek((FILE *)file,(long)offset,(int)realorigin);
 }
 
-int64_t sqstd_ftell(SQFILE file)
+int64_t rabbit::std::ftell(SQFILE file)
 {
-	return ftell((FILE *)file);
+	return ::ftell((FILE *)file);
 }
 
-int64_t sqstd_fflush(SQFILE file)
+int64_t rabbit::std::fflush(SQFILE file)
 {
-	return fflush((FILE *)file);
+	return ::fflush((FILE *)file);
 }
 
-int64_t sqstd_fclose(SQFILE file)
+int64_t rabbit::std::fclose(SQFILE file)
 {
-	return fclose((FILE *)file);
+	return ::fclose((FILE *)file);
 }
 
-int64_t sqstd_feof(SQFILE file)
+int64_t rabbit::std::feof(SQFILE file)
 {
-	return feof((FILE *)file);
+	return ::feof((FILE *)file);
 }
+namespace rabbit {
 
-//File
-struct SQFile : public SQStream {
-	SQFile() { _handle = NULL; _owns = false;}
-	SQFile(SQFILE file, bool owns) { _handle = file; _owns = owns;}
-	virtual ~SQFile() { close(); }
-	bool Open(const rabbit::Char *filename ,const rabbit::Char *mode) {
-		close();
-		if( (_handle = sqstd_fopen(filename,mode)) ) {
-			_owns = true;
-			return true;
-		}
-		return false;
+	namespace std {
+		//File
+		struct File : public rabbit::std::SQStream {
+			File() { _handle = NULL; _owns = false;}
+			File(SQFILE file, bool owns) { _handle = file; _owns = owns;}
+			virtual ~File() { close(); }
+			bool Open(const rabbit::Char *filename ,const rabbit::Char *mode) {
+				close();
+				if( (_handle = rabbit::std::fopen(filename,mode)) ) {
+					_owns = true;
+					return true;
+				}
+				return false;
+			}
+			void close() {
+				if(_handle && _owns) {
+					rabbit::std::fclose(_handle);
+					_handle = NULL;
+					_owns = false;
+				}
+			}
+			int64_t Read(void *buffer,int64_t size) {
+				return rabbit::std::fread(buffer,1,size,_handle);
+			}
+			int64_t Write(void *buffer,int64_t size) {
+				return rabbit::std::fwrite(buffer,1,size,_handle);
+			}
+			int64_t Flush() {
+				return rabbit::std::fflush(_handle);
+			}
+			int64_t Tell() {
+				return rabbit::std::ftell(_handle);
+			}
+			int64_t Len() {
+				int64_t prevpos=Tell();
+				Seek(0,SQ_SEEK_END);
+				int64_t size=Tell();
+				Seek(prevpos,SQ_SEEK_SET);
+				return size;
+			}
+			int64_t Seek(int64_t offset, int64_t origin)  {
+				return rabbit::std::fseek(_handle,offset,origin);
+			}
+			bool IsValid() { return _handle?true:false; }
+			bool EOS() { return Tell()==Len()?true:false;}
+			SQFILE getHandle() {return _handle;}
+		private:
+			SQFILE _handle;
+			bool _owns;
+		};
 	}
-	void close() {
-		if(_handle && _owns) {
-			sqstd_fclose(_handle);
-			_handle = NULL;
-			_owns = false;
-		}
-	}
-	int64_t Read(void *buffer,int64_t size) {
-		return sqstd_fread(buffer,1,size,_handle);
-	}
-	int64_t Write(void *buffer,int64_t size) {
-		return sqstd_fwrite(buffer,1,size,_handle);
-	}
-	int64_t Flush() {
-		return sqstd_fflush(_handle);
-	}
-	int64_t Tell() {
-		return sqstd_ftell(_handle);
-	}
-	int64_t Len() {
-		int64_t prevpos=Tell();
-		Seek(0,SQ_SEEK_END);
-		int64_t size=Tell();
-		Seek(prevpos,SQ_SEEK_SET);
-		return size;
-	}
-	int64_t Seek(int64_t offset, int64_t origin)  {
-		return sqstd_fseek(_handle,offset,origin);
-	}
-	bool IsValid() { return _handle?true:false; }
-	bool EOS() { return Tell()==Len()?true:false;}
-	SQFILE getHandle() {return _handle;}
-private:
-	SQFILE _handle;
-	bool _owns;
-};
-
+}
 static int64_t _file__typeof(rabbit::VirtualMachine* v)
 {
 	sq_pushstring(v,_SC("file"),-1);
@@ -124,9 +127,9 @@ static int64_t _file__typeof(rabbit::VirtualMachine* v)
 
 static int64_t _file_releasehook(rabbit::UserPointer p, int64_t SQ_UNUSED_ARG(size))
 {
-	SQFile *self = (SQFile*)p;
-	self->~SQFile();
-	sq_free(self,sizeof(SQFile));
+	rabbit::std::File *self = (rabbit::std::File*)p;
+	self->~File();
+	rabbit::sq_free(self,sizeof(rabbit::std::File));
 	return 1;
 }
 
@@ -134,34 +137,34 @@ static int64_t _file_constructor(rabbit::VirtualMachine* v)
 {
 	const rabbit::Char *filename,*mode;
 	bool owns = true;
-	SQFile *f;
-	SQFILE newf;
-	if(sq_gettype(v,2) == rabbit::OT_STRING && sq_gettype(v,3) == rabbit::OT_STRING) {
-		sq_getstring(v, 2, &filename);
-		sq_getstring(v, 3, &mode);
-		newf = sqstd_fopen(filename, mode);
-		if(!newf) return sq_throwerror(v, _SC("cannot open file"));
-	} else if(sq_gettype(v,2) == rabbit::OT_USERPOINTER) {
-		owns = !(sq_gettype(v,3) == rabbit::OT_NULL);
-		sq_getuserpointer(v,2,&newf);
+	rabbit::std::File *f;
+	rabbit::std::SQFILE newf;
+	if(rabbit::sq_gettype(v,2) == rabbit::OT_STRING && sq_gettype(v,3) == rabbit::OT_STRING) {
+		rabbit::sq_getstring(v, 2, &filename);
+		rabbit::sq_getstring(v, 3, &mode);
+		newf = rabbit::std::fopen(filename, mode);
+		if(!newf) return rabbit::sq_throwerror(v, _SC("cannot open file"));
+	} else if(rabbit::sq_gettype(v,2) == rabbit::OT_USERPOINTER) {
+		owns = !(rabbit::sq_gettype(v,3) == rabbit::OT_NULL);
+		rabbit::sq_getuserpointer(v,2,&newf);
 	} else {
-		return sq_throwerror(v,_SC("wrong parameter"));
+		return rabbit::sq_throwerror(v,_SC("wrong parameter"));
 	}
 
-	f = new (sq_malloc(sizeof(SQFile)))SQFile(newf,owns);
-	if(SQ_FAILED(sq_setinstanceup(v,1,f))) {
-		f->~SQFile();
-		sq_free(f,sizeof(SQFile));
-		return sq_throwerror(v, _SC("cannot create blob with negative size"));
+	f = new (rabbit::sq_malloc(sizeof(rabbit::std::File)))rabbit::std::File(newf,owns);
+	if(SQ_FAILED(rabbit::sq_setinstanceup(v,1,f))) {
+		f->~File();
+		rabbit::sq_free(f,sizeof(rabbit::std::File));
+		return rabbit::sq_throwerror(v, _SC("cannot create blob with negative size"));
 	}
-	sq_setreleasehook(v,1,_file_releasehook);
+	rabbit::sq_setreleasehook(v,1,_file_releasehook);
 	return 0;
 }
 
 static int64_t _file_close(rabbit::VirtualMachine* v)
 {
-	SQFile *self = NULL;
-	if(SQ_SUCCEEDED(sq_getinstanceup(v,1,(rabbit::UserPointer*)&self,(rabbit::UserPointer)SQSTD_FILE_TYPE_TAG))
+	rabbit::std::File *self = NULL;
+	if(SQ_SUCCEEDED(rabbit::sq_getinstanceup(v,1,(rabbit::UserPointer*)&self,(rabbit::UserPointer)SQSTD_FILE_TYPE_TAG))
 		&& self != NULL)
 	{
 		self->close();
@@ -180,7 +183,7 @@ static const rabbit::RegFunction _file_methods[] = {
 
 
 
-rabbit::Result sqstd_createfile(rabbit::VirtualMachine* v, SQFILE file,rabbit::Bool own)
+rabbit::Result rabbit::std::createfile(rabbit::VirtualMachine* v, SQFILE file,rabbit::Bool own)
 {
 	int64_t top = sq_gettop(v);
 	sq_pushregistrytable(v);
@@ -204,9 +207,9 @@ rabbit::Result sqstd_createfile(rabbit::VirtualMachine* v, SQFILE file,rabbit::B
 	return SQ_ERROR;
 }
 
-rabbit::Result sqstd_getfile(rabbit::VirtualMachine* v, int64_t idx, SQFILE *file)
+rabbit::Result rabbit::std::getfile(rabbit::VirtualMachine* v, int64_t idx, SQFILE *file)
 {
-	SQFile *fileobj = NULL;
+	rabbit::std::File *fileobj = NULL;
 	if(SQ_SUCCEEDED(sq_getinstanceup(v,idx,(rabbit::UserPointer*)&fileobj,(rabbit::UserPointer)SQSTD_FILE_TYPE_TAG))) {
 		*file = fileobj->getHandle();
 		return SQ_OK;
@@ -221,7 +224,7 @@ struct IOBuffer {
 	unsigned char buffer[IO_BUFFER_SIZE];
 	int64_t size;
 	int64_t ptr;
-	SQFILE file;
+	rabbit::std::SQFILE file;
 };
 
 int64_t _read_byte(IOBuffer *iobuffer)
@@ -233,7 +236,7 @@ int64_t _read_byte(IOBuffer *iobuffer)
 		return ret;
 	}
 	else {
-		if( (iobuffer->size = sqstd_fread(iobuffer->buffer,1,IO_BUFFER_SIZE,iobuffer->file )) > 0 )
+		if( (iobuffer->size = rabbit::std::fread(iobuffer->buffer,1,IO_BUFFER_SIZE,iobuffer->file )) > 0 )
 		{
 			int64_t ret = iobuffer->buffer[0];
 			iobuffer->ptr = 1;
@@ -253,7 +256,7 @@ int64_t _read_two_bytes(IOBuffer *iobuffer)
 		return ret;
 	}
 	else {
-		if( (iobuffer->size = sqstd_fread(iobuffer->buffer,1,IO_BUFFER_SIZE,iobuffer->file )) > 0 )
+		if( (iobuffer->size = rabbit::std::fread(iobuffer->buffer,1,IO_BUFFER_SIZE,iobuffer->file )) > 0 )
 		{
 			if(iobuffer->size < 2) return 0;
 			int64_t ret = *((const wchar_t*)&iobuffer->buffer[0]);
@@ -335,33 +338,33 @@ static int64_t _io_file_lexfeed_UCS2_BE(rabbit::UserPointer iobuf)
 int64_t file_read(rabbit::UserPointer file,rabbit::UserPointer buf,int64_t size)
 {
 	int64_t ret;
-	if( ( ret = sqstd_fread(buf,1,size,(SQFILE)file ))!=0 )return ret;
+	if( ( ret = rabbit::std::fread(buf,1,size,(rabbit::std::SQFILE)file ))!=0 )return ret;
 	return -1;
 }
 
 int64_t file_write(rabbit::UserPointer file,rabbit::UserPointer p,int64_t size)
 {
-	return sqstd_fwrite(p,1,size,(SQFILE)file);
+	return rabbit::std::fwrite(p,1,size,(rabbit::std::SQFILE)file);
 }
 
-rabbit::Result sqstd_loadfile(rabbit::VirtualMachine* v,const rabbit::Char *filename,rabbit::Bool printerror)
+rabbit::Result rabbit::std::loadfile(rabbit::VirtualMachine* v,const rabbit::Char *filename,rabbit::Bool printerror)
 {
-	SQFILE file = sqstd_fopen(filename,_SC("rb"));
+	SQFILE file = rabbit::std::fopen(filename,_SC("rb"));
 
 	int64_t ret;
 	unsigned short us;
 	unsigned char uc;
 	SQLEXREADFUNC func = _io_file_lexfeed_PLAIN;
 	if(file){
-		ret = sqstd_fread(&us,1,2,file);
+		ret = rabbit::std::fread(&us,1,2,file);
 		if(ret != 2) {
 			//probably an empty file
 			us = 0;
 		}
 		if(us == SQ_BYTECODE_STREAM_TAG) { //BYTECODE
-			sqstd_fseek(file,0,SQ_SEEK_SET);
+			rabbit::std::fseek(file,0,SQ_SEEK_SET);
 			if(SQ_SUCCEEDED(sq_readclosure(v,file_read,file))) {
-				sqstd_fclose(file);
+				rabbit::std::fclose(file);
 				return SQ_OK;
 			}
 		}
@@ -373,12 +376,12 @@ rabbit::Result sqstd_loadfile(rabbit::VirtualMachine* v,const rabbit::Char *file
 				case 0xFFFE: func = _io_file_lexfeed_UCS2_BE; break;//UTF-16 little endian;
 				case 0xFEFF: func = _io_file_lexfeed_UCS2_LE; break;//UTF-16 big endian;
 				case 0xBBEF:
-					if(sqstd_fread(&uc,1,sizeof(uc),file) == 0) {
-						sqstd_fclose(file);
+					if(rabbit::std::fread(&uc,1,sizeof(uc),file) == 0) {
+						rabbit::std::fclose(file);
 						return sq_throwerror(v,_SC("io error"));
 					}
 					if(uc != 0xBF) {
-						sqstd_fclose(file);
+						rabbit::std::fclose(file);
 						return sq_throwerror(v,_SC("Unrecognized encoding"));
 					}
 #ifdef SQUNICODE
@@ -387,30 +390,30 @@ rabbit::Result sqstd_loadfile(rabbit::VirtualMachine* v,const rabbit::Char *file
 					func = _io_file_lexfeed_PLAIN;
 #endif
 					break;//UTF-8 ;
-				default: sqstd_fseek(file,0,SQ_SEEK_SET); break; // ascii
+				default: rabbit::std::fseek(file,0,SQ_SEEK_SET); break; // ascii
 			}
 			IOBuffer buffer;
 			buffer.ptr = 0;
 			buffer.size = 0;
 			buffer.file = file;
 			if(SQ_SUCCEEDED(sq_compile(v,func,&buffer,filename,printerror))){
-				sqstd_fclose(file);
+				rabbit::std::fclose(file);
 				return SQ_OK;
 			}
 		}
-		sqstd_fclose(file);
+		rabbit::std::fclose(file);
 		return SQ_ERROR;
 	}
 	return sq_throwerror(v,_SC("cannot open the file"));
 }
 
-rabbit::Result sqstd_dofile(rabbit::VirtualMachine* v,const rabbit::Char *filename,rabbit::Bool retval,rabbit::Bool printerror)
+rabbit::Result rabbit::std::dofile(rabbit::VirtualMachine* v,const rabbit::Char *filename,rabbit::Bool retval,rabbit::Bool printerror)
 {
 	//at least one entry must exist in order for us to push it as the environment
 	if(sq_gettop(v) == 0)
 		return sq_throwerror(v,_SC("environment table expected"));
 
-	if(SQ_SUCCEEDED(sqstd_loadfile(v,filename,printerror))) {
+	if(SQ_SUCCEEDED(rabbit::std::loadfile(v,filename,printerror))) {
 		sq_push(v,-2);
 		if(SQ_SUCCEEDED(sq_call(v,1,retval,SQTrue))) {
 			sq_remove(v,retval?-2:-1); //removes the closure
@@ -421,15 +424,15 @@ rabbit::Result sqstd_dofile(rabbit::VirtualMachine* v,const rabbit::Char *filena
 	return SQ_ERROR;
 }
 
-rabbit::Result sqstd_writeclosuretofile(rabbit::VirtualMachine* v,const rabbit::Char *filename)
+rabbit::Result rabbit::std::writeclosuretofile(rabbit::VirtualMachine* v,const rabbit::Char *filename)
 {
-	SQFILE file = sqstd_fopen(filename,_SC("wb+"));
+	SQFILE file = rabbit::std::fopen(filename,_SC("wb+"));
 	if(!file) return sq_throwerror(v,_SC("cannot open the file"));
 	if(SQ_SUCCEEDED(sq_writeclosure(v,file_write,file))) {
-		sqstd_fclose(file);
+		rabbit::std::fclose(file);
 		return SQ_OK;
 	}
-	sqstd_fclose(file);
+	rabbit::std::fclose(file);
 	return SQ_ERROR; //forward the error
 }
 
@@ -441,7 +444,7 @@ int64_t _g_io_loadfile(rabbit::VirtualMachine* v)
 	if(sq_gettop(v) >= 3) {
 		sq_getbool(v,3,&printerror);
 	}
-	if(SQ_SUCCEEDED(sqstd_loadfile(v,filename,printerror)))
+	if(SQ_SUCCEEDED(rabbit::std::loadfile(v,filename,printerror)))
 		return 1;
 	return SQ_ERROR; //propagates the error
 }
@@ -450,7 +453,7 @@ int64_t _g_io_writeclosuretofile(rabbit::VirtualMachine* v)
 {
 	const rabbit::Char *filename;
 	sq_getstring(v,2,&filename);
-	if(SQ_SUCCEEDED(sqstd_writeclosuretofile(v,filename)))
+	if(SQ_SUCCEEDED(rabbit::std::writeclosuretofile(v,filename)))
 		return 1;
 	return SQ_ERROR; //propagates the error
 }
@@ -464,7 +467,7 @@ int64_t _g_io_dofile(rabbit::VirtualMachine* v)
 		sq_getbool(v,3,&printerror);
 	}
 	sq_push(v,1); //repush the this
-	if(SQ_SUCCEEDED(sqstd_dofile(v,filename,SQTrue,printerror)))
+	if(SQ_SUCCEEDED(rabbit::std::dofile(v,filename,SQTrue,printerror)))
 		return 1;
 	return SQ_ERROR; //propagates the error
 }
@@ -477,19 +480,19 @@ static const rabbit::RegFunction iolib_funcs[]={
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 
-rabbit::Result sqstd_register_iolib(rabbit::VirtualMachine* v)
+rabbit::Result rabbit::std::register_iolib(rabbit::VirtualMachine* v)
 {
 	int64_t top = sq_gettop(v);
 	//create delegate
 	declare_stream(v,_SC("file"),(rabbit::UserPointer)SQSTD_FILE_TYPE_TAG,_SC("std_file"),_file_methods,iolib_funcs);
 	sq_pushstring(v,_SC("stdout"),-1);
-	sqstd_createfile(v,stdout,SQFalse);
+	rabbit::std::createfile(v,stdout,SQFalse);
 	sq_newslot(v,-3,SQFalse);
 	sq_pushstring(v,_SC("stdin"),-1);
-	sqstd_createfile(v,stdin,SQFalse);
+	rabbit::std::createfile(v,stdin,SQFalse);
 	sq_newslot(v,-3,SQFalse);
 	sq_pushstring(v,_SC("stderr"),-1);
-	sqstd_createfile(v,stderr,SQFalse);
+	rabbit::std::createfile(v,stderr,SQFalse);
 	sq_newslot(v,-3,SQFalse);
 	sq_settop(v,top);
 	return SQ_OK;

@@ -8,7 +8,10 @@
 #include <rabbit/SharedState.hpp>
 #include <rabbit/Table.hpp>
 #include <rabbit/String.hpp>
+#include <rabbit/StringTable.hpp>
 #include <rabbit/RegFunction.hpp>
+#include <rabbit/NativeClosure.hpp>
+#include <rabbit/VirtualMachine.hpp>
 
 static rabbit::Table *createDefaultDelegate(rabbit::SharedState *ss,const rabbit::RegFunction *funcz)
 {
@@ -18,7 +21,7 @@ static rabbit::Table *createDefaultDelegate(rabbit::SharedState *ss,const rabbit
 		rabbit::NativeClosure *nc = rabbit::NativeClosure::create(ss,funcz[i].f,0);
 		nc->_nparamscheck = funcz[i].nparamscheck;
 		nc->_name = rabbit::String::create(ss,funcz[i].name);
-		if(funcz[i].typemask && !compileTypemask(nc->_typecheck,funcz[i].typemask))
+		if(funcz[i].typemask && !rabbit::compileTypemask(nc->_typecheck,funcz[i].typemask))
 			return NULL;
 		t->newSlot(rabbit::String::create(ss,funcz[i].name),nc);
 		i++;
@@ -95,7 +98,7 @@ void rabbit::SharedState::init()
 	_scratchpad=NULL;
 	_scratchpadsize=0;
 	_stringtable = (rabbit::StringTable*)SQ_MALLOC(sizeof(rabbit::StringTable));
-	new (_stringtable) rabbit::StringTable(this);
+	new ((char*)_stringtable) rabbit::StringTable(this);
 	sq_new(_metamethods,etk::Vector<rabbit::ObjectPtr>);
 	sq_new(_systemstrings,etk::Vector<rabbit::ObjectPtr>);
 	sq_new(_types,etk::Vector<rabbit::ObjectPtr>);
@@ -186,7 +189,7 @@ rabbit::SharedState::~SharedState()
 	sq_delete(_types, tmpType);
 	sq_delete(_systemstrings, tmpType);
 	sq_delete(_metamethods, tmpType);
-	sq_delete(_stringtable, rabbit::StringTable);
+	sq_delete(_stringtable, StringTable);
 	if(_scratchpad)SQ_FREE(_scratchpad,_scratchpadsize);
 }
 

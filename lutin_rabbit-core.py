@@ -62,6 +62,7 @@ def configure(target, my_module):
 	    'rabbit/String.cpp',
 	    'rabbit/StringTable.cpp',
 	    'rabbit/Table.cpp',
+	    'rabbit/UserData.cpp',
 	    'rabbit/VirtualMachine.cpp',
 	    'rabbit/WeakRef.cpp',
 	    'rabbit/sqapi.cpp',

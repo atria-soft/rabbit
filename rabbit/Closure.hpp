@@ -10,6 +10,7 @@
 #include <rabbit/RefCounted.hpp>
 #include <rabbit/sqconfig.hpp>
 #include <rabbit/rabbit.hpp>
+#include <rabbit/squtils.hpp>
 
 namespace rabbit {
 	class SharedState;
@@ -41,9 +42,15 @@ namespace rabbit {
 			rabbit::ObjectPtr *_outervalues;
 			rabbit::ObjectPtr *_defaultparams;
 	};
+	bool SafeWrite(rabbit::VirtualMachine* v,SQWRITEFUNC write,rabbit::UserPointer up,rabbit::UserPointer dest,int64_t size);
+	bool SafeRead(rabbit::VirtualMachine* v,SQWRITEFUNC read,rabbit::UserPointer up,rabbit::UserPointer dest,int64_t size);
+	bool WriteTag(rabbit::VirtualMachine* v,SQWRITEFUNC write,rabbit::UserPointer up,uint32_t tag);
+	bool CheckTag(rabbit::VirtualMachine* v,SQWRITEFUNC read,rabbit::UserPointer up,uint32_t tag);
+	bool WriteObject(rabbit::VirtualMachine* v,rabbit::UserPointer up,SQWRITEFUNC write,rabbit::ObjectPtr &o);
+	bool ReadObject(rabbit::VirtualMachine* v,rabbit::UserPointer up,SQREADFUNC read,rabbit::ObjectPtr &o);
 
 }
-
+#define _CHECK_IO(exp)  { if(!exp)return false; }
 #define SQ_CLOSURESTREAM_HEAD (('S'<<24)|('Q'<<16)|('I'<<8)|('R'))
 #define SQ_CLOSURESTREAM_PART (('P'<<24)|('A'<<16)|('R'<<8)|('T'))
 #define SQ_CLOSURESTREAM_TAIL (('T'<<24)|('A'<<16)|('I'<<8)|('L'))
