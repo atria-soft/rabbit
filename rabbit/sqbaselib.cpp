@@ -33,9 +33,9 @@ static bool str2num(const char *s,rabbit::ObjectPtr &res,int64_t base)
 	bool iseintbase = base > 13; //to fix error converting hexadecimals with e like 56f0791e
 	bool isfloat = false;
 	char c;
-	while((c = *e) != _SC('\0'))
+	while((c = *e) != '\0')
 	{
-		if (c == _SC('.') || (!iseintbase && (c == _SC('E') || c == _SC('e')))) { //e and E is for scientific notation
+		if (c == '.' || (!iseintbase && (c == 'E' || c == 'e'))) { //e and E is for scientific notation
 			isfloat = true;
 			break;
 		}
@@ -116,21 +116,21 @@ static int64_t __getcallstackinfos(rabbit::VirtualMachine* v,int64_t level)
 
 	if (SQ_SUCCEEDED(sq_stackinfos(v, level, &si)))
 	{
-		const char *fn = _SC("unknown");
-		const char *src = _SC("unknown");
+		const char *fn = "unknown";
+		const char *src = "unknown";
 		if(si.funcname)fn = si.funcname;
 		if(si.source)src = si.source;
 		sq_newtable(v);
-		sq_pushstring(v, _SC("func"), -1);
+		sq_pushstring(v, "func", -1);
 		sq_pushstring(v, fn, -1);
 		sq_newslot(v, -3, SQFalse);
-		sq_pushstring(v, _SC("src"), -1);
+		sq_pushstring(v, "src", -1);
 		sq_pushstring(v, src, -1);
 		sq_newslot(v, -3, SQFalse);
-		sq_pushstring(v, _SC("line"), -1);
+		sq_pushstring(v, "line", -1);
 		sq_pushinteger(v, si.line);
 		sq_newslot(v, -3, SQFalse);
-		sq_pushstring(v, _SC("locals"), -1);
+		sq_pushstring(v, "locals", -1);
 		sq_newtable(v);
 		seq=0;
 		while ((name = sq_getlocal(v, level, seq))) {
@@ -163,7 +163,7 @@ static int64_t base_assert(rabbit::VirtualMachine* v)
 				return sq_throwerror(v, str);
 			}
 		}
-		return sq_throwerror(v, _SC("assertion failed"));
+		return sq_throwerror(v, "assertion failed");
 	}
 	return 0;
 }
@@ -198,7 +198,7 @@ static int64_t base_print(rabbit::VirtualMachine* v)
 	if(SQ_SUCCEEDED(sq_tostring(v,2)))
 	{
 		if(SQ_SUCCEEDED(sq_getstring(v,-1,&str))) {
-			if(_get_shared_state(v)->_printfunc) _get_shared_state(v)->_printfunc(v,_SC("%s"),str);
+			if(_get_shared_state(v)->_printfunc) _get_shared_state(v)->_printfunc(v,"%s",str);
 			return 0;
 		}
 	}
@@ -211,7 +211,7 @@ static int64_t base_error(rabbit::VirtualMachine* v)
 	if(SQ_SUCCEEDED(sq_tostring(v,2)))
 	{
 		if(SQ_SUCCEEDED(sq_getstring(v,-1,&str))) {
-			if(_get_shared_state(v)->_errorfunc) _get_shared_state(v)->_errorfunc(v,_SC("%s"),str);
+			if(_get_shared_state(v)->_errorfunc) _get_shared_state(v)->_errorfunc(v,"%s",str);
 			return 0;
 		}
 	}
@@ -221,7 +221,7 @@ static int64_t base_error(rabbit::VirtualMachine* v)
 static int64_t base_compilestring(rabbit::VirtualMachine* v)
 {
 	int64_t nargs=sq_gettop(v);
-	const char *src=NULL,*name=_SC("unnamedbuffer");
+	const char *src=NULL,*name="unnamedbuffer";
 	int64_t size;
 	sq_getstring(v,2,&src);
 	size=sq_getsize(v,2);
@@ -277,29 +277,29 @@ static int64_t base_callee(rabbit::VirtualMachine* v)
 		v->push(v->_callsstack[v->_callsstacksize - 2]._closure);
 		return 1;
 	}
-	return sq_throwerror(v,_SC("no closure in the calls stack"));
+	return sq_throwerror(v,"no closure in the calls stack");
 }
 
 static const rabbit::RegFunction base_funcs[]={
 	//generic
-	{_SC("seterrorhandler"),base_seterrorhandler,2, NULL},
-	{_SC("setdebughook"),base_setdebughook,2, NULL},
-	{_SC("enabledebuginfo"),base_enabledebuginfo,2, NULL},
-	{_SC("getstackinfos"),base_getstackinfos,2, _SC(".n")},
-	{_SC("getroottable"),base_getroottable,1, NULL},
-	{_SC("setroottable"),base_setroottable,2, NULL},
-	{_SC("getconsttable"),base_getconsttable,1, NULL},
-	{_SC("setconsttable"),base_setconsttable,2, NULL},
-	{_SC("assert"),base_assert,-2, NULL},
-	{_SC("print"),base_print,2, NULL},
-	{_SC("error"),base_error,2, NULL},
-	{_SC("compilestring"),base_compilestring,-2, _SC(".ss")},
-	{_SC("newthread"),base_newthread,2, _SC(".c")},
-	{_SC("suspend"),base_suspend,-1, NULL},
-	{_SC("array"),base_array,-2, _SC(".n")},
-	{_SC("type"),base_type,2, NULL},
-	{_SC("callee"),base_callee,0,NULL},
-	{_SC("dummy"),base_dummy,0,NULL},
+	{"seterrorhandler",base_seterrorhandler,2, NULL},
+	{"setdebughook",base_setdebughook,2, NULL},
+	{"enabledebuginfo",base_enabledebuginfo,2, NULL},
+	{"getstackinfos",base_getstackinfos,2, ".n"},
+	{"getroottable",base_getroottable,1, NULL},
+	{"setroottable",base_setroottable,2, NULL},
+	{"getconsttable",base_getconsttable,1, NULL},
+	{"setconsttable",base_setconsttable,2, NULL},
+	{"assert",base_assert,-2, NULL},
+	{"print",base_print,2, NULL},
+	{"error",base_error,2, NULL},
+	{"compilestring",base_compilestring,-2, ".ss"},
+	{"newthread",base_newthread,2, ".c"},
+	{"suspend",base_suspend,-1, NULL},
+	{"array",base_array,-2, ".n"},
+	{"type",base_type,2, NULL},
+	{"callee",base_callee,0,NULL},
+	{"dummy",base_dummy,0,NULL},
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 
@@ -316,19 +316,19 @@ void sq_base_register(rabbit::VirtualMachine* v)
 		i++;
 	}
 
-	sq_pushstring(v,_SC("_versionnumber_"),-1);
+	sq_pushstring(v,"_versionnumber_",-1);
 	sq_pushinteger(v,RABBIT_VERSION_NUMBER);
 	sq_newslot(v,-3, SQFalse);
-	sq_pushstring(v,_SC("_version_"),-1);
+	sq_pushstring(v,"_version_",-1);
 	sq_pushstring(v,RABBIT_VERSION,-1);
 	sq_newslot(v,-3, SQFalse);
-	sq_pushstring(v,_SC("_charsize_"),-1);
+	sq_pushstring(v,"_charsize_",-1);
 	sq_pushinteger(v,sizeof(char));
 	sq_newslot(v,-3, SQFalse);
-	sq_pushstring(v,_SC("_intsize_"),-1);
+	sq_pushstring(v,"_intsize_",-1);
 	sq_pushinteger(v,sizeof(int64_t));
 	sq_newslot(v,-3, SQFalse);
-	sq_pushstring(v,_SC("_floatsize_"),-1);
+	sq_pushstring(v,"_floatsize_",-1);
 	sq_pushinteger(v,sizeof(float_t));
 	sq_newslot(v,-3, SQFalse);
 	sq_pop(v,1);
@@ -350,7 +350,7 @@ static int64_t default_delegate_tofloat(rabbit::VirtualMachine* v)
 			v->push(rabbit::ObjectPtr(tofloat(res)));
 			break;
 		}}
-		return sq_throwerror(v, _SC("cannot convert the string"));
+		return sq_throwerror(v, "cannot convert the string");
 		break;
 	case rabbit::OT_INTEGER:
 	case rabbit::OT_FLOAT:
@@ -380,7 +380,7 @@ static int64_t default_delegate_tointeger(rabbit::VirtualMachine* v)
 			v->push(rabbit::ObjectPtr(tointeger(res)));
 			break;
 		}}
-		return sq_throwerror(v, _SC("cannot convert the string"));
+		return sq_throwerror(v, "cannot convert the string");
 		break;
 	case rabbit::OT_INTEGER:
 	case rabbit::OT_FLOAT:
@@ -499,17 +499,17 @@ static int64_t table_filter(rabbit::VirtualMachine* v)
 
 
 const rabbit::RegFunction rabbit::SharedState::_table_default_delegate_funcz[]={
-	{_SC("len"),default_delegate_len,1, _SC("t")},
-	{_SC("rawget"),container_rawget,2, _SC("t")},
-	{_SC("rawset"),container_rawset,3, _SC("t")},
-	{_SC("rawdelete"),table_rawdelete,2, _SC("t")},
-	{_SC("rawin"),container_rawexists,2, _SC("t")},
-	{_SC("weakref"),obj_delegate_weakref,1, NULL },
-	{_SC("tostring"),default_delegate_tostring,1, _SC(".")},
-	{_SC("clear"),obj_clear,1, _SC(".")},
-	{_SC("setdelegate"),table_setdelegate,2, _SC(".t|o")},
-	{_SC("getdelegate"),table_getdelegate,1, _SC(".")},
-	{_SC("filter"),table_filter,2, _SC("tc")},
+	{"len",default_delegate_len,1, "t"},
+	{"rawget",container_rawget,2, "t"},
+	{"rawset",container_rawset,3, "t"},
+	{"rawdelete",table_rawdelete,2, "t"},
+	{"rawin",container_rawexists,2, "t"},
+	{"weakref",obj_delegate_weakref,1, NULL },
+	{"tostring",default_delegate_tostring,1, "."},
+	{"clear",obj_clear,1, "."},
+	{"setdelegate",table_setdelegate,2, ".t|o"},
+	{"getdelegate",table_getdelegate,1, "."},
+	{"filter",table_filter,2, "tc"},
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 
@@ -544,7 +544,7 @@ static int64_t array_top(rabbit::VirtualMachine* v)
 		v->push(_array(o)->top());
 		return 1;
 	}
-	else return sq_throwerror(v,_SC("top() on a empty array"));
+	else return sq_throwerror(v,"top() on a empty array");
 }
 
 static int64_t array_insert(rabbit::VirtualMachine* v)
@@ -553,7 +553,7 @@ static int64_t array_insert(rabbit::VirtualMachine* v)
 	rabbit::Object &idx=stack_get(v,2);
 	rabbit::Object &val=stack_get(v,3);
 	if(!_array(o)->insert(tointeger(idx),val))
-		return sq_throwerror(v,_SC("index out of range"));
+		return sq_throwerror(v,"index out of range");
 	sq_pop(v,2);
 	return 1;
 }
@@ -562,14 +562,14 @@ static int64_t array_remove(rabbit::VirtualMachine* v)
 {
 	rabbit::Object &o = stack_get(v, 1);
 	rabbit::Object &idx = stack_get(v, 2);
-	if(!sq_isnumeric(idx)) return sq_throwerror(v, _SC("wrong type"));
+	if(!sq_isnumeric(idx)) return sq_throwerror(v, "wrong type");
 	rabbit::ObjectPtr val;
 	if(_array(o)->get(tointeger(idx), val)) {
 		_array(o)->remove(tointeger(idx));
 		v->push(val);
 		return 1;
 	}
-	return sq_throwerror(v, _SC("idx out of range"));
+	return sq_throwerror(v, "idx out of range");
 }
 
 static int64_t array_resize(rabbit::VirtualMachine* v)
@@ -580,7 +580,7 @@ static int64_t array_resize(rabbit::VirtualMachine* v)
 	if(sq_isnumeric(nsize)) {
 		int64_t sz = tointeger(nsize);
 		if (sz<0)
-		  return sq_throwerror(v, _SC("resizing to negative length"));
+		  return sq_throwerror(v, "resizing to negative length");
 
 		if(sq_gettop(v) > 2)
 			fill = stack_get(v, 3);
@@ -588,7 +588,7 @@ static int64_t array_resize(rabbit::VirtualMachine* v)
 		sq_settop(v, 1);
 		return 1;
 	}
-	return sq_throwerror(v, _SC("size must be a number"));
+	return sq_throwerror(v, "size must be a number");
 }
 
 static int64_t __map_array(rabbit::Array *dest,rabbit::Array *src,rabbit::VirtualMachine* v) {
@@ -711,11 +711,11 @@ static bool _sort_compare(rabbit::VirtualMachine* v,rabbit::ObjectPtr &a,rabbit:
 		v->push(b);
 		if(SQ_FAILED(sq_call(v, 3, SQTrue, SQFalse))) {
 			if(!sq_isstring( v->_lasterror))
-				v->raise_error(_SC("compare func failed"));
+				v->raise_error("compare func failed");
 			return false;
 		}
 		if(SQ_FAILED(sq_getinteger(v, -1, &ret))) {
-			v->raise_error(_SC("numeric value expected as return value of the compare function"));
+			v->raise_error("numeric value expected as return value of the compare function");
 			return false;
 		}
 		sq_settop(v, top);
@@ -750,7 +750,7 @@ static bool _hsort_sift_down(rabbit::VirtualMachine* v,rabbit::Array *arr, int64
 			return false;
 		if (ret < 0) {
 			if (root == maxChild) {
-				v->raise_error(_SC("inconsistent compare function"));
+				v->raise_error("inconsistent compare function");
 				return false; // We'd be swapping ourselve. The compare function is incorrect
 			}
 
@@ -803,8 +803,8 @@ static int64_t array_slice(rabbit::VirtualMachine* v)
 	int64_t alen = _array(o)->size();
 	if(sidx < 0)sidx = alen + sidx;
 	if(eidx < 0)eidx = alen + eidx;
-	if(eidx < sidx)return sq_throwerror(v,_SC("wrong indexes"));
-	if(eidx > alen || sidx < 0)return sq_throwerror(v, _SC("slice out of range"));
+	if(eidx < sidx)return sq_throwerror(v,"wrong indexes");
+	if(eidx > alen || sidx < 0)return sq_throwerror(v, "slice out of range");
 	rabbit::Array *arr=rabbit::Array::create(_get_shared_state(v),eidx-sidx);
 	rabbit::ObjectPtr t;
 	int64_t count=0;
@@ -818,26 +818,26 @@ static int64_t array_slice(rabbit::VirtualMachine* v)
 }
 
 const rabbit::RegFunction rabbit::SharedState::_array_default_delegate_funcz[]={
-	{_SC("len"),default_delegate_len,1, _SC("a")},
-	{_SC("append"),array_append,2, _SC("a")},
-	{_SC("extend"),array_extend,2, _SC("aa")},
-	{_SC("push"),array_append,2, _SC("a")},
-	{_SC("pop"),array_pop,1, _SC("a")},
-	{_SC("top"),array_top,1, _SC("a")},
-	{_SC("insert"),array_insert,3, _SC("an")},
-	{_SC("remove"),array_remove,2, _SC("an")},
-	{_SC("resize"),array_resize,-2, _SC("an")},
-	{_SC("reverse"),array_reverse,1, _SC("a")},
-	{_SC("sort"),array_sort,-1, _SC("ac")},
-	{_SC("slice"),array_slice,-1, _SC("ann")},
-	{_SC("weakref"),obj_delegate_weakref,1, NULL },
-	{_SC("tostring"),default_delegate_tostring,1, _SC(".")},
-	{_SC("clear"),obj_clear,1, _SC(".")},
-	{_SC("map"),array_map,2, _SC("ac")},
-	{_SC("apply"),array_apply,2, _SC("ac")},
-	{_SC("reduce"),array_reduce,2, _SC("ac")},
-	{_SC("filter"),array_filter,2, _SC("ac")},
-	{_SC("find"),array_find,2, _SC("a.")},
+	{"len",default_delegate_len,1, "a"},
+	{"append",array_append,2, "a"},
+	{"extend",array_extend,2, "aa"},
+	{"push",array_append,2, "a"},
+	{"pop",array_pop,1, "a"},
+	{"top",array_top,1, "a"},
+	{"insert",array_insert,3, "an"},
+	{"remove",array_remove,2, "an"},
+	{"resize",array_resize,-2, "an"},
+	{"reverse",array_reverse,1, "a"},
+	{"sort",array_sort,-1, "ac"},
+	{"slice",array_slice,-1, "ann"},
+	{"weakref",obj_delegate_weakref,1, NULL },
+	{"tostring",default_delegate_tostring,1, "."},
+	{"clear",obj_clear,1, "."},
+	{"map",array_map,2, "ac"},
+	{"apply",array_apply,2, "ac"},
+	{"reduce",array_reduce,2, "ac"},
+	{"filter",array_filter,2, "ac"},
+	{"find",array_find,2, "a."},
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 
@@ -850,8 +850,8 @@ static int64_t string_slice(rabbit::VirtualMachine* v)
 	int64_t slen = _string(o)->_len;
 	if(sidx < 0)sidx = slen + sidx;
 	if(eidx < 0)eidx = slen + eidx;
-	if(eidx < sidx) return sq_throwerror(v,_SC("wrong indexes"));
-	if(eidx > slen || sidx < 0) return sq_throwerror(v, _SC("slice out of range"));
+	if(eidx < sidx) return sq_throwerror(v,"wrong indexes");
+	if(eidx > slen || sidx < 0) return sq_throwerror(v, "slice out of range");
 	v->push(rabbit::String::create(_get_shared_state(v),&_stringval(o)[sidx],eidx-sidx));
 	return 1;
 }
@@ -871,7 +871,7 @@ static int64_t string_find(rabbit::VirtualMachine* v)
 		}
 		return 0;
 	}
-	return sq_throwerror(v,_SC("invalid param"));
+	return sq_throwerror(v,"invalid param");
 }
 
 #define STRING_TOFUNCZ(func) static int64_t string_##func(rabbit::VirtualMachine* v) \
@@ -882,8 +882,8 @@ static int64_t string_find(rabbit::VirtualMachine* v)
 	int64_t slen = _string(str)->_len; \
 	if(sidx < 0)sidx = slen + sidx; \
 	if(eidx < 0)eidx = slen + eidx; \
-	if(eidx < sidx) return sq_throwerror(v,_SC("wrong indexes")); \
-	if(eidx > slen || sidx < 0) return sq_throwerror(v,_SC("slice out of range")); \
+	if(eidx < sidx) return sq_throwerror(v,"wrong indexes"); \
+	if(eidx > slen || sidx < 0) return sq_throwerror(v,"slice out of range"); \
 	int64_t len=_string(str)->_len; \
 	const char *sthis=_stringval(str); \
 	char *snew=(_get_shared_state(v)->getScratchPad(sq_rsl(len))); \
@@ -898,25 +898,25 @@ STRING_TOFUNCZ(tolower)
 STRING_TOFUNCZ(toupper)
 
 const rabbit::RegFunction rabbit::SharedState::_string_default_delegate_funcz[]={
-	{_SC("len"),default_delegate_len,1, _SC("s")},
-	{_SC("tointeger"),default_delegate_tointeger,-1, _SC("sn")},
-	{_SC("tofloat"),default_delegate_tofloat,1, _SC("s")},
-	{_SC("tostring"),default_delegate_tostring,1, _SC(".")},
-	{_SC("slice"),string_slice,-1, _SC("s n  n")},
-	{_SC("find"),string_find,-2, _SC("s s n")},
-	{_SC("tolower"),string_tolower,-1, _SC("s n n")},
-	{_SC("toupper"),string_toupper,-1, _SC("s n n")},
-	{_SC("weakref"),obj_delegate_weakref,1, NULL },
+	{"len",default_delegate_len,1, "s"},
+	{"tointeger",default_delegate_tointeger,-1, "sn"},
+	{"tofloat",default_delegate_tofloat,1, "s"},
+	{"tostring",default_delegate_tostring,1, "."},
+	{"slice",string_slice,-1, "s n  n"},
+	{"find",string_find,-2, "s s n"},
+	{"tolower",string_tolower,-1, "s n n"},
+	{"toupper",string_toupper,-1, "s n n"},
+	{"weakref",obj_delegate_weakref,1, NULL },
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 
 //INTEGER DEFAULT DELEGATE//////////////////////////
 const rabbit::RegFunction rabbit::SharedState::_number_default_delegate_funcz[]={
-	{_SC("tointeger"),default_delegate_tointeger,1, _SC("n|b")},
-	{_SC("tofloat"),default_delegate_tofloat,1, _SC("n|b")},
-	{_SC("tostring"),default_delegate_tostring,1, _SC(".")},
-	{_SC("tochar"),number_delegate_tochar,1, _SC("n|b")},
-	{_SC("weakref"),obj_delegate_weakref,1, NULL },
+	{"tointeger",default_delegate_tointeger,1, "n|b"},
+	{"tofloat",default_delegate_tofloat,1, "n|b"},
+	{"tostring",default_delegate_tostring,1, "."},
+	{"tochar",number_delegate_tochar,1, "n|b"},
+	{"weakref",obj_delegate_weakref,1, NULL },
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 
@@ -991,20 +991,20 @@ static int64_t closure_getinfos(rabbit::VirtualMachine* v) {
 			_array(defparams)->set((int64_t)j,_closure(o)->_defaultparams[j]);
 		}
 		if(f->_varparams) {
-			_array(params)->set(nparams-1,rabbit::String::create(_get_shared_state(v),_SC("..."),-1));
+			_array(params)->set(nparams-1,rabbit::String::create(_get_shared_state(v),"...",-1));
 		}
-		res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("native"),-1),false);
-		res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("name"),-1),f->_name);
-		res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("src"),-1),f->_sourcename);
-		res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("parameters"),-1),params);
-		res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("varargs"),-1),f->_varparams);
-	res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("defparams"),-1),defparams);
+		res->newSlot(rabbit::String::create(_get_shared_state(v),"native",-1),false);
+		res->newSlot(rabbit::String::create(_get_shared_state(v),"name",-1),f->_name);
+		res->newSlot(rabbit::String::create(_get_shared_state(v),"src",-1),f->_sourcename);
+		res->newSlot(rabbit::String::create(_get_shared_state(v),"parameters",-1),params);
+		res->newSlot(rabbit::String::create(_get_shared_state(v),"varargs",-1),f->_varparams);
+	res->newSlot(rabbit::String::create(_get_shared_state(v),"defparams",-1),defparams);
 	}
 	else { //rabbit::OT_NATIVECLOSURE
 		rabbit::NativeClosure *nc = _nativeclosure(o);
-		res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("native"),-1),true);
-		res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("name"),-1),nc->_name);
-		res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("paramscheck"),-1),nc->_nparamscheck);
+		res->newSlot(rabbit::String::create(_get_shared_state(v),"native",-1),true);
+		res->newSlot(rabbit::String::create(_get_shared_state(v),"name",-1),nc->_name);
+		res->newSlot(rabbit::String::create(_get_shared_state(v),"paramscheck",-1),nc->_nparamscheck);
 		rabbit::ObjectPtr typecheck;
 		if(nc->_typecheck.size() > 0) {
 			typecheck =
@@ -1013,7 +1013,7 @@ static int64_t closure_getinfos(rabbit::VirtualMachine* v) {
 					_array(typecheck)->set((int64_t)n,nc->_typecheck[n]);
 			}
 		}
-		res->newSlot(rabbit::String::create(_get_shared_state(v),_SC("typecheck"),-1),typecheck);
+		res->newSlot(rabbit::String::create(_get_shared_state(v),"typecheck",-1),typecheck);
 	}
 	v->push(res);
 	return 1;
@@ -1022,16 +1022,16 @@ static int64_t closure_getinfos(rabbit::VirtualMachine* v) {
 
 
 const rabbit::RegFunction rabbit::SharedState::_closure_default_delegate_funcz[]={
-	{_SC("call"),closure_call,-1, _SC("c")},
-	{_SC("pcall"),closure_pcall,-1, _SC("c")},
-	{_SC("acall"),closure_acall,2, _SC("ca")},
-	{_SC("pacall"),closure_pacall,2, _SC("ca")},
-	{_SC("weakref"),obj_delegate_weakref,1, NULL },
-	{_SC("tostring"),default_delegate_tostring,1, _SC(".")},
-	{_SC("bindenv"),closure_bindenv,2, _SC("c x|y|t")},
-	{_SC("getinfos"),closure_getinfos,1, _SC("c")},
-	{_SC("getroot"),closure_getroot,1, _SC("c")},
-	{_SC("setroot"),closure_setroot,2, _SC("ct")},
+	{"call",closure_call,-1, "c"},
+	{"pcall",closure_pcall,-1, "c"},
+	{"acall",closure_acall,2, "ca"},
+	{"pacall",closure_pacall,2, "ca"},
+	{"weakref",obj_delegate_weakref,1, NULL },
+	{"tostring",default_delegate_tostring,1, "."},
+	{"bindenv",closure_bindenv,2, "c x|y|t"},
+	{"getinfos",closure_getinfos,1, "c"},
+	{"getroot",closure_getroot,1, "c"},
+	{"setroot",closure_setroot,2, "ct"},
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 
@@ -1040,17 +1040,17 @@ static int64_t generator_getstatus(rabbit::VirtualMachine* v)
 {
 	rabbit::Object &o=stack_get(v,1);
 	switch(_generator(o)->_state){
-		case rabbit::Generator::eSuspended:v->push(rabbit::String::create(_get_shared_state(v),_SC("suspended")));break;
-		case rabbit::Generator::eRunning:v->push(rabbit::String::create(_get_shared_state(v),_SC("running")));break;
-		case rabbit::Generator::eDead:v->push(rabbit::String::create(_get_shared_state(v),_SC("dead")));break;
+		case rabbit::Generator::eSuspended:v->push(rabbit::String::create(_get_shared_state(v),"suspended"));break;
+		case rabbit::Generator::eRunning:v->push(rabbit::String::create(_get_shared_state(v),"running"));break;
+		case rabbit::Generator::eDead:v->push(rabbit::String::create(_get_shared_state(v),"dead"));break;
 	}
 	return 1;
 }
 
 const rabbit::RegFunction rabbit::SharedState::_generator_default_delegate_funcz[]={
-	{_SC("getstatus"),generator_getstatus,1, _SC("g")},
-	{_SC("weakref"),obj_delegate_weakref,1, NULL },
-	{_SC("tostring"),default_delegate_tostring,1, _SC(".")},
+	{"getstatus",generator_getstatus,1, "g"},
+	{"weakref",obj_delegate_weakref,1, NULL },
+	{"tostring",default_delegate_tostring,1, "."},
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 
@@ -1071,7 +1071,7 @@ static int64_t thread_call(rabbit::VirtualMachine* v)
 		v->_lasterror = _thread(o)->_lasterror;
 		return SQ_ERROR;
 	}
-	return sq_throwerror(v,_SC("wrong parameter"));
+	return sq_throwerror(v,"wrong parameter");
 }
 
 static int64_t thread_wakeup(rabbit::VirtualMachine* v)
@@ -1083,10 +1083,10 @@ static int64_t thread_wakeup(rabbit::VirtualMachine* v)
 		if(state != SQ_VMSTATE_SUSPENDED) {
 			switch(state) {
 				case SQ_VMSTATE_IDLE:
-					return sq_throwerror(v,_SC("cannot wakeup a idle thread"));
+					return sq_throwerror(v,"cannot wakeup a idle thread");
 				break;
 				case SQ_VMSTATE_RUNNING:
-					return sq_throwerror(v,_SC("cannot wakeup a running thread"));
+					return sq_throwerror(v,"cannot wakeup a running thread");
 				break;
 			}
 		}
@@ -1107,7 +1107,7 @@ static int64_t thread_wakeup(rabbit::VirtualMachine* v)
 		v->_lasterror = thread->_lasterror;
 		return SQ_ERROR;
 	}
-	return sq_throwerror(v,_SC("wrong parameter"));
+	return sq_throwerror(v,"wrong parameter");
 }
 
 static int64_t thread_wakeupthrow(rabbit::VirtualMachine* v)
@@ -1119,10 +1119,10 @@ static int64_t thread_wakeupthrow(rabbit::VirtualMachine* v)
 		if(state != SQ_VMSTATE_SUSPENDED) {
 			switch(state) {
 				case SQ_VMSTATE_IDLE:
-					return sq_throwerror(v,_SC("cannot wakeup a idle thread"));
+					return sq_throwerror(v,"cannot wakeup a idle thread");
 				break;
 				case SQ_VMSTATE_RUNNING:
-					return sq_throwerror(v,_SC("cannot wakeup a running thread"));
+					return sq_throwerror(v,"cannot wakeup a running thread");
 				break;
 			}
 		}
@@ -1148,7 +1148,7 @@ static int64_t thread_wakeupthrow(rabbit::VirtualMachine* v)
 		}
 		return SQ_OK;
 	}
-	return sq_throwerror(v,_SC("wrong parameter"));
+	return sq_throwerror(v,"wrong parameter");
 }
 
 static int64_t thread_getstatus(rabbit::VirtualMachine* v)
@@ -1156,16 +1156,16 @@ static int64_t thread_getstatus(rabbit::VirtualMachine* v)
 	rabbit::ObjectPtr &o = stack_get(v,1);
 	switch(sq_getvmstate(_thread(o))) {
 		case SQ_VMSTATE_IDLE:
-			sq_pushstring(v,_SC("idle"),-1);
+			sq_pushstring(v,"idle",-1);
 		break;
 		case SQ_VMSTATE_RUNNING:
-			sq_pushstring(v,_SC("running"),-1);
+			sq_pushstring(v,"running",-1);
 		break;
 		case SQ_VMSTATE_SUSPENDED:
-			sq_pushstring(v,_SC("suspended"),-1);
+			sq_pushstring(v,"suspended",-1);
 		break;
 		default:
-			return sq_throwerror(v,_SC("internal VM error"));
+			return sq_throwerror(v,"internal VM error");
 	}
 	return 1;
 }
@@ -1186,7 +1186,7 @@ static int64_t thread_getstackinfos(rabbit::VirtualMachine* v)
 				sq_throwerror(v,_stringval(thread->_lasterror));
 			}
 			else {
-				sq_throwerror(v,_SC("unknown error"));
+				sq_throwerror(v,"unknown error");
 			}
 		}
 		if(res > 0) {
@@ -1200,17 +1200,17 @@ static int64_t thread_getstackinfos(rabbit::VirtualMachine* v)
 		return 0;
 
 	}
-	return sq_throwerror(v,_SC("wrong parameter"));
+	return sq_throwerror(v,"wrong parameter");
 }
 
 const rabbit::RegFunction rabbit::SharedState::_thread_default_delegate_funcz[] = {
-	{_SC("call"), thread_call, -1, _SC("v")},
-	{_SC("wakeup"), thread_wakeup, -1, _SC("v")},
-	{_SC("wakeupthrow"), thread_wakeupthrow, -2, _SC("v.b")},
-	{_SC("getstatus"), thread_getstatus, 1, _SC("v")},
-	{_SC("weakref"),obj_delegate_weakref,1, NULL },
-	{_SC("getstackinfos"),thread_getstackinfos,2, _SC("vn")},
-	{_SC("tostring"),default_delegate_tostring,1, _SC(".")},
+	{"call", thread_call, -1, "v"},
+	{"wakeup", thread_wakeup, -1, "v"},
+	{"wakeupthrow", thread_wakeupthrow, -2, "v.b"},
+	{"getstatus", thread_getstatus, 1, "v"},
+	{"weakref",obj_delegate_weakref,1, NULL },
+	{"getstackinfos",thread_getstackinfos,2, "vn"},
+	{"tostring",default_delegate_tostring,1, "."},
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 
@@ -1267,17 +1267,17 @@ static int64_t class_rawnewmember(rabbit::VirtualMachine* v)
 }
 
 const rabbit::RegFunction rabbit::SharedState::_class_default_delegate_funcz[] = {
-	{_SC("getattributes"), class_getattributes, 2, _SC("y.")},
-	{_SC("setattributes"), class_setattributes, 3, _SC("y..")},
-	{_SC("rawget"),container_rawget,2, _SC("y")},
-	{_SC("rawset"),container_rawset,3, _SC("y")},
-	{_SC("rawin"),container_rawexists,2, _SC("y")},
-	{_SC("weakref"),obj_delegate_weakref,1, NULL },
-	{_SC("tostring"),default_delegate_tostring,1, _SC(".")},
-	{_SC("instance"),class_instance,1, _SC("y")},
-	{_SC("getbase"),class_getbase,1, _SC("y")},
-	{_SC("newmember"),class_newmember,-3, _SC("y")},
-	{_SC("rawnewmember"),class_rawnewmember,-3, _SC("y")},
+	{"getattributes", class_getattributes, 2, "y."},
+	{"setattributes", class_setattributes, 3, "y.."},
+	{"rawget",container_rawget,2, "y"},
+	{"rawset",container_rawset,3, "y"},
+	{"rawin",container_rawexists,2, "y"},
+	{"weakref",obj_delegate_weakref,1, NULL },
+	{"tostring",default_delegate_tostring,1, "."},
+	{"instance",class_instance,1, "y"},
+	{"getbase",class_getbase,1, "y"},
+	{"newmember",class_newmember,-3, "y"},
+	{"rawnewmember",class_rawnewmember,-3, "y"},
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 
@@ -1290,12 +1290,12 @@ static int64_t instance_getclass(rabbit::VirtualMachine* v)
 }
 
 const rabbit::RegFunction rabbit::SharedState::_instance_default_delegate_funcz[] = {
-	{_SC("getclass"), instance_getclass, 1, _SC("x")},
-	{_SC("rawget"),container_rawget,2, _SC("x")},
-	{_SC("rawset"),container_rawset,3, _SC("x")},
-	{_SC("rawin"),container_rawexists,2, _SC("x")},
-	{_SC("weakref"),obj_delegate_weakref,1, NULL },
-	{_SC("tostring"),default_delegate_tostring,1, _SC(".")},
+	{"getclass", instance_getclass, 1, "x"},
+	{"rawget",container_rawget,2, "x"},
+	{"rawset",container_rawset,3, "x"},
+	{"rawin",container_rawexists,2, "x"},
+	{"weakref",obj_delegate_weakref,1, NULL },
+	{"tostring",default_delegate_tostring,1, "."},
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 
@@ -1307,8 +1307,8 @@ static int64_t weakref_ref(rabbit::VirtualMachine* v)
 }
 
 const rabbit::RegFunction rabbit::SharedState::_weakref_default_delegate_funcz[] = {
-	{_SC("ref"),weakref_ref,1, _SC("r")},
-	{_SC("weakref"),obj_delegate_weakref,1, NULL },
-	{_SC("tostring"),default_delegate_tostring,1, _SC(".")},
+	{"ref",weakref_ref,1, "r"},
+	{"weakref",obj_delegate_weakref,1, NULL },
+	{"tostring",default_delegate_tostring,1, "."},
 	{NULL,(SQFUNCTION)0,0,NULL}
 };

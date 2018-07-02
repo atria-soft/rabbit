@@ -65,19 +65,19 @@ void errorfunc(rabbit::VirtualMachine* SQ_UNUSED_ARG(v),const char *s,...)
 
 void PrintVersionInfos()
 {
-	fprintf(stdout,_SC("%s %s (%d bits)\n"),RABBIT_VERSION,RABBIT_COPYRIGHT,((int)(sizeof(int64_t)*8)));
+	fprintf(stdout,"%s %s (%d bits)\n",RABBIT_VERSION,RABBIT_COPYRIGHT,((int)(sizeof(int64_t)*8)));
 }
 
 void PrintUsage()
 {
-	fprintf(stderr,_SC("usage: sq <options> <scriptpath [args]>.\n")
-		_SC("Available options are:\n")
-		_SC("   -c			  compiles the file to bytecode(default output 'out.karrot')\n")
-		_SC("   -o			  specifies output file for the -c option\n")
-		_SC("   -c			  compiles only\n")
-		_SC("   -d			  generates debug infos\n")
-		_SC("   -v			  displays version infos\n")
-		_SC("   -h			  prints help\n"));
+	fprintf(stderr,"usage: sq <options> <scriptpath [args]>.\n"
+		"Available options are:\n"
+		"   -c			  compiles the file to bytecode(default output 'out.karrot')\n"
+		"   -o			  specifies output file for the -c option\n"
+		"   -c			  compiles only\n"
+		"   -d			  generates debug infos\n"
+		"   -v			  displays version infos\n"
+		"   -h			  prints help\n");
 }
 
 #define _INTERACTIVE 0
@@ -123,7 +123,7 @@ int getargs(rabbit::VirtualMachine* v,int argc, char* argv[],int64_t *retval)
 					return _DONE;
 				default:
 					PrintVersionInfos();
-					printf(_SC("unknown prameter '-%c'\n"),argv[arg][1]);
+					printf("unknown prameter '-%c'\n",argv[arg][1]);
 					PrintUsage();
 					*retval = -1;
 					return _ERROR;
@@ -140,14 +140,14 @@ int getargs(rabbit::VirtualMachine* v,int argc, char* argv[],int64_t *retval)
 
 			arg++;
 
-			//sq_pushstring(v,_SC("ARGS"),-1);
+			//sq_pushstring(v,"ARGS",-1);
 			//sq_newarray(v,0);
 
 			//sq_createslot(v,-3);
 			//sq_pop(v,1);
 			if(compiles_only) {
 				if(SQ_SUCCEEDED(rabbit::std::loadfile(v,filename,SQTrue))){
-					const char *outfile = _SC("out.karrot");
+					const char *outfile = "out.karrot";
 					if(output) {
 						outfile = output;
 					}
@@ -189,7 +189,7 @@ int getargs(rabbit::VirtualMachine* v,int argc, char* argv[],int64_t *retval)
 				const char *err;
 				sq_getlasterror(v);
 				if(SQ_SUCCEEDED(sq_getstring(v,-1,&err))) {
-					printf(_SC("error [%s]\n"),err);
+					printf("error [%s]\n",err);
 					*retval = -2;
 					return _ERROR;
 				}
@@ -213,7 +213,7 @@ void Interactive(rabbit::VirtualMachine* v)
 	PrintVersionInfos();
 
 	sq_pushroottable(v);
-	sq_pushstring(v,_SC("quit"),-1);
+	sq_pushstring(v,"quit",-1);
 	sq_pushuserpointer(v,&done);
 	sq_newclosure(v,quit,1);
 	sq_setparamscheck(v,1,NULL);
@@ -223,58 +223,58 @@ void Interactive(rabbit::VirtualMachine* v)
 	while (!done)
 	{
 		int64_t i = 0;
-		printf(_SC("\nrabbit> "));
+		printf("\nrabbit> ");
 		for(;;) {
 			int c;
 			if(done)return;
 			c = getchar();
-			if (c == _SC('\n')) {
-				if (i>0 && buffer[i-1] == _SC('\\'))
+			if (c == '\n') {
+				if (i>0 && buffer[i-1] == '\\')
 				{
-					buffer[i-1] = _SC('\n');
+					buffer[i-1] = '\n';
 				}
 				else if(blocks==0)break;
-				buffer[i++] = _SC('\n');
+				buffer[i++] = '\n';
 			}
-			else if (c==_SC('}')) {blocks--; buffer[i++] = (char)c;}
-			else if(c==_SC('{') && !string){
+			else if (c=='}') {blocks--; buffer[i++] = (char)c;}
+			else if(c=='{' && !string){
 					blocks++;
 					buffer[i++] = (char)c;
 			}
-			else if(c==_SC('"') || c==_SC('\'')){
+			else if(c=='"' || c=='\''){
 					string=!string;
 					buffer[i++] = (char)c;
 			}
 			else if (i >= MAXINPUT-1) {
-				fprintf(stderr, _SC("sq : input line too long\n"));
+				fprintf(stderr, "rabbit: input line too long\n");
 				break;
 			}
 			else{
 				buffer[i++] = (char)c;
 			}
 		}
-		buffer[i] = _SC('\0');
+		buffer[i] = '\0';
 
-		if(buffer[0]==_SC('=')){
-			snprintf(sq_getscratchpad(v,MAXINPUT),(size_t)MAXINPUT,_SC("return (%s)"),&buffer[1]);
+		if(buffer[0]=='='){
+			snprintf(sq_getscratchpad(v,MAXINPUT),(size_t)MAXINPUT,"return (%s)",&buffer[1]);
 			memcpy(buffer,sq_getscratchpad(v,-1),(strlen(sq_getscratchpad(v,-1))+1)*sizeof(char));
 			retval=1;
 		}
 		i=strlen(buffer);
 		if(i>0){
 			int64_t oldtop=sq_gettop(v);
-			if(SQ_SUCCEEDED(sq_compilebuffer(v,buffer,i,_SC("interactive console"),SQTrue))){
+			if(SQ_SUCCEEDED(sq_compilebuffer(v,buffer,i,"interactive console",SQTrue))){
 				sq_pushroottable(v);
 				if(SQ_SUCCEEDED(sq_call(v,1,retval,SQTrue)) &&  retval){
-					printf(_SC("\n"));
+					printf("\n");
 					sq_pushroottable(v);
-					sq_pushstring(v,_SC("print"),-1);
+					sq_pushstring(v,"print",-1);
 					sq_get(v,-2);
 					sq_pushroottable(v);
 					sq_push(v,-4);
 					sq_call(v,2,SQFalse,SQTrue);
 					retval=0;
-					printf(_SC("\n"));
+					printf("\n");
 				}
 			}
 

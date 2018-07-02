@@ -16,8 +16,8 @@
 
 bool rabbit::Generator::yield(rabbit::VirtualMachine *v,int64_t target)
 {
-	if(_state==eSuspended) { v->raise_error(_SC("internal vm error, yielding dead generator"));  return false;}
-	if(_state==eDead) { v->raise_error(_SC("internal vm error, yielding a dead generator")); return false; }
+	if(_state==eSuspended) { v->raise_error("internal vm error, yielding dead generator");  return false;}
+	if(_state==eDead) { v->raise_error("internal vm error, yielding a dead generator"); return false; }
 	int64_t size = v->_top-v->_stackbase;
 
 	_stack.resize(size);
@@ -47,8 +47,8 @@ bool rabbit::Generator::yield(rabbit::VirtualMachine *v,int64_t target)
 
 bool rabbit::Generator::resume(rabbit::VirtualMachine *v,rabbit::ObjectPtr &dest)
 {
-	if(_state==eDead){ v->raise_error(_SC("resuming dead generator")); return false; }
-	if(_state==eRunning){ v->raise_error(_SC("resuming active generator")); return false; }
+	if(_state==eDead){ v->raise_error("resuming dead generator"); return false; }
+	if(_state==eRunning){ v->raise_error("resuming active generator"); return false; }
 	int64_t size = _stack.size();
 	int64_t target = &dest - &(v->_stack[v->_stackbase]);
 	assert(target>=0 && target<=255);
@@ -83,7 +83,7 @@ bool rabbit::Generator::resume(rabbit::VirtualMachine *v,rabbit::ObjectPtr &dest
 
 	_state=eRunning;
 	if (v->_debughook)
-		v->callDebugHook(_SC('c'));
+		v->callDebugHook('c');
 
 	return true;
 }

@@ -22,7 +22,7 @@ namespace rabbit {
 		int64_t _stream_eos(rabbit::VirtualMachine* v);
 		int64_t _stream_flush(rabbit::VirtualMachine* v);
 		
-		#define _DECL_STREAM_FUNC(name,nparams,typecheck) {_SC(#name),_stream_##name,nparams,typecheck}
+		#define _DECL_STREAM_FUNC(name,nparams,typecheck) {#name,_stream_##name,nparams,typecheck}
 		rabbit::Result declare_stream(rabbit::VirtualMachine* v,const char* name,rabbit::UserPointer typetag,const char* reg_name,const rabbit::RegFunction *methods,const rabbit::RegFunction *globals);
 	}
 }

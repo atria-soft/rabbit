@@ -105,21 +105,21 @@ void rabbit::SharedState::init()
 	_metamethodsmap = rabbit::Table::create(this,rabbit::MT_LAST-1);
 	//adding type strings to avoid memory trashing
 	//types names
-	newsysstring(_SC("null"));
-	newsysstring(_SC("table"));
-	newsysstring(_SC("array"));
-	newsysstring(_SC("closure"));
-	newsysstring(_SC("string"));
-	newsysstring(_SC("userdata"));
-	newsysstring(_SC("integer"));
-	newsysstring(_SC("float"));
-	newsysstring(_SC("userpointer"));
-	newsysstring(_SC("function"));
-	newsysstring(_SC("generator"));
-	newsysstring(_SC("thread"));
-	newsysstring(_SC("class"));
-	newsysstring(_SC("instance"));
-	newsysstring(_SC("bool"));
+	newsysstring("null");
+	newsysstring("table");
+	newsysstring("array");
+	newsysstring("closure");
+	newsysstring("string");
+	newsysstring("userdata");
+	newsysstring("integer");
+	newsysstring("float");
+	newsysstring("userpointer");
+	newsysstring("function");
+	newsysstring("generator");
+	newsysstring("thread");
+	newsysstring("class");
+	newsysstring("instance");
+	newsysstring("bool");
 	//meta methods
 	newmetamethod(MM_ADD);
 	newmetamethod(MM_SUB);
@@ -140,7 +140,7 @@ void rabbit::SharedState::init()
 	newmetamethod(MM_NEWMEMBER);
 	newmetamethod(MM_INHERITED);
 
-	_constructoridx = rabbit::String::create(this,_SC("constructor"));
+	_constructoridx = rabbit::String::create(this,"constructor");
 	_registry = rabbit::Table::create(this,0);
 	_consts = rabbit::Table::create(this,0);
 	_table_default_delegate = createDefaultDelegate(this,_table_default_delegate_funcz);

@@ -50,7 +50,7 @@ rabbit::String *rabbit::StringTable::add(const char *news,int64_t len)
 	new ((char*)t) rabbit::String;
 	t->_sharedstate = _sharedstate;
 	memcpy(t->_val,news,sq_rsl(len));
-	t->_val[len] = _SC('\0');
+	t->_val[len] = '\0';
 	t->_len = len;
 	t->_hash = newhash;
 	t->_next = _strings[h];

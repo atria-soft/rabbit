@@ -15,9 +15,9 @@
 #define SETUP_BLOB(v) \
 	rabbit::std::Blob *self = NULL; \
 	{ if(SQ_FAILED(rabbit::sq_getinstanceup(v,1,(rabbit::UserPointer*)&self,(rabbit::UserPointer)SQSTD_BLOB_TYPE_TAG))) \
-		return rabbit::sq_throwerror(v,_SC("invalid type tag"));  } \
+		return rabbit::sq_throwerror(v,"invalid type tag");  } \
 	if(!self || !self->IsValid())  \
-		return rabbit::sq_throwerror(v,_SC("the blob is invalid"));
+		return rabbit::sq_throwerror(v,"the blob is invalid");
 
 
 static int64_t _blob_resize(rabbit::VirtualMachine* v)
@@ -26,7 +26,7 @@ static int64_t _blob_resize(rabbit::VirtualMachine* v)
 	int64_t size;
 	rabbit::sq_getinteger(v,2,&size);
 	if(!self->resize(size))
-		return rabbit::sq_throwerror(v,_SC("resize failed"));
+		return rabbit::sq_throwerror(v,"resize failed");
 	return 0;
 }
 
@@ -72,7 +72,7 @@ static int64_t _blob__set(rabbit::VirtualMachine* v)
 	rabbit::sq_getinteger(v,2,&idx);
 	rabbit::sq_getinteger(v,3,&val);
 	if(idx < 0 || idx >= self->Len())
-		return rabbit::sq_throwerror(v,_SC("index out of range"));
+		return rabbit::sq_throwerror(v,"index out of range");
 	((unsigned char *)self->getBuf())[idx] = (unsigned char) val;
 	rabbit::sq_push(v,3);
 	return 1;
@@ -90,7 +90,7 @@ static int64_t _blob__get(rabbit::VirtualMachine* v)
 	}
 	rabbit::sq_getinteger(v,2,&idx);
 	if(idx < 0 || idx >= self->Len())
-		return rabbit::sq_throwerror(v,_SC("index out of range"));
+		return rabbit::sq_throwerror(v,"index out of range");
 	rabbit::sq_pushinteger(v,((unsigned char *)self->getBuf())[idx]);
 	return 1;
 }
@@ -111,12 +111,12 @@ static int64_t _blob__nexti(rabbit::VirtualMachine* v)
 		rabbit::sq_pushnull(v);
 		return 1;
 	}
-	return rabbit::sq_throwerror(v,_SC("internal error (_nexti) wrong argument type"));
+	return rabbit::sq_throwerror(v,"internal error (_nexti) wrong argument type");
 }
 
 static int64_t _blob__typeof(rabbit::VirtualMachine* v)
 {
-	rabbit::sq_pushstring(v,_SC("blob"),-1);
+	rabbit::sq_pushstring(v,"blob",-1);
 	return 1;
 }
 
@@ -135,14 +135,14 @@ static int64_t _blob_constructor(rabbit::VirtualMachine* v)
 	if(nparam == 2) {
 		rabbit::sq_getinteger(v, 2, &size);
 	}
-	if(size < 0) return rabbit::sq_throwerror(v, _SC("cannot create blob with negative size"));
+	if(size < 0) return rabbit::sq_throwerror(v, "cannot create blob with negative size");
 	//rabbit::std::Blob *b = new rabbit::std::Blob(size);
 
 	rabbit::std::Blob *b = new (rabbit::sq_malloc(sizeof(rabbit::std::Blob)))rabbit::std::Blob(size);
 	if(SQ_FAILED(rabbit::sq_setinstanceup(v,1,b))) {
 		b->~Blob();
 		rabbit::sq_free(b,sizeof(rabbit::std::Blob));
-		return rabbit::sq_throwerror(v, _SC("cannot create blob"));
+		return rabbit::sq_throwerror(v, "cannot create blob");
 	}
 	rabbit::sq_setreleasehook(v,1,_blob_releasehook);
 	return 0;
@@ -161,23 +161,23 @@ static int64_t _blob__cloned(rabbit::VirtualMachine* v)
 	if(SQ_FAILED(rabbit::sq_setinstanceup(v,1,thisone))) {
 		thisone->~Blob();
 		rabbit::sq_free(thisone,sizeof(rabbit::std::Blob));
-		return rabbit::sq_throwerror(v, _SC("cannot clone blob"));
+		return rabbit::sq_throwerror(v, "cannot clone blob");
 	}
 	rabbit::sq_setreleasehook(v,1,_blob_releasehook);
 	return 0;
 }
 
-#define _DECL_BLOB_FUNC(name,nparams,typecheck) {_SC(#name),_blob_##name,nparams,typecheck}
+#define _DECL_BLOB_FUNC(name,nparams,typecheck) {#name,_blob_##name,nparams,typecheck}
 static const rabbit::RegFunction _blob_methods[] = {
-	_DECL_BLOB_FUNC(constructor,-1,_SC("xn")),
-	_DECL_BLOB_FUNC(resize,2,_SC("xn")),
-	_DECL_BLOB_FUNC(swap2,1,_SC("x")),
-	_DECL_BLOB_FUNC(swap4,1,_SC("x")),
-	_DECL_BLOB_FUNC(_set,3,_SC("xnn")),
-	_DECL_BLOB_FUNC(_get,2,_SC("x.")),
-	_DECL_BLOB_FUNC(_typeof,1,_SC("x")),
-	_DECL_BLOB_FUNC(_nexti,2,_SC("x")),
-	_DECL_BLOB_FUNC(_cloned,2,_SC("xx")),
+	_DECL_BLOB_FUNC(constructor,-1,"xn"),
+	_DECL_BLOB_FUNC(resize,2,"xn"),
+	_DECL_BLOB_FUNC(swap2,1,"x"),
+	_DECL_BLOB_FUNC(swap4,1,"x"),
+	_DECL_BLOB_FUNC(_set,3,"xnn"),
+	_DECL_BLOB_FUNC(_get,2,"x."),
+	_DECL_BLOB_FUNC(_typeof,1,"x"),
+	_DECL_BLOB_FUNC(_nexti,2,"x"),
+	_DECL_BLOB_FUNC(_cloned,2,"xx"),
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 
@@ -229,13 +229,13 @@ static int64_t _g_blob_swapfloat(rabbit::VirtualMachine* v)
 	return 1;
 }
 
-#define _DECL_GLOBALBLOB_FUNC(name,nparams,typecheck) {_SC(#name),_g_blob_##name,nparams,typecheck}
+#define _DECL_GLOBALBLOB_FUNC(name,nparams,typecheck) {#name,_g_blob_##name,nparams,typecheck}
 static const rabbit::RegFunction bloblib_funcs[]={
-	_DECL_GLOBALBLOB_FUNC(casti2f,2,_SC(".n")),
-	_DECL_GLOBALBLOB_FUNC(castf2i,2,_SC(".n")),
-	_DECL_GLOBALBLOB_FUNC(swap2,2,_SC(".n")),
-	_DECL_GLOBALBLOB_FUNC(swap4,2,_SC(".n")),
-	_DECL_GLOBALBLOB_FUNC(swapfloat,2,_SC(".n")),
+	_DECL_GLOBALBLOB_FUNC(casti2f,2,".n"),
+	_DECL_GLOBALBLOB_FUNC(castf2i,2,".n"),
+	_DECL_GLOBALBLOB_FUNC(swap2,2,".n"),
+	_DECL_GLOBALBLOB_FUNC(swap4,2,".n"),
+	_DECL_GLOBALBLOB_FUNC(swapfloat,2,".n"),
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 
@@ -260,7 +260,7 @@ rabbit::UserPointer rabbit::std::createblob(rabbit::VirtualMachine* v, int64_t s
 {
 	int64_t top = rabbit::sq_gettop(v);
 	rabbit::sq_pushregistrytable(v);
-	rabbit::sq_pushstring(v,_SC("std_blob"),-1);
+	rabbit::sq_pushstring(v,"std_blob",-1);
 	if(SQ_SUCCEEDED(rabbit::sq_get(v,-2))) {
 		rabbit::sq_remove(v,-2); //removes the registry
 		rabbit::sq_push(v,1); // push the this
@@ -278,6 +278,6 @@ rabbit::UserPointer rabbit::std::createblob(rabbit::VirtualMachine* v, int64_t s
 
 rabbit::Result rabbit::std::register_bloblib(rabbit::VirtualMachine* v)
 {
-	return declare_stream(v,_SC("blob"),(rabbit::UserPointer)SQSTD_BLOB_TYPE_TAG,_SC("std_blob"),_blob_methods,bloblib_funcs);
+	return declare_stream(v,"blob",(rabbit::UserPointer)SQSTD_BLOB_TYPE_TAG,"std_blob",_blob_methods,bloblib_funcs);
 }
 

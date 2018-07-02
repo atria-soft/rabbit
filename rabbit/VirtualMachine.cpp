@@ -47,10 +47,10 @@ bool rabbit::VirtualMachine::BW_OP(uint64_t op,rabbit::ObjectPtr &trg,const rabb
 			case BW_SHIFTL: res = i1 << i2; break;
 			case BW_SHIFTR: res = i1 >> i2; break;
 			case BW_USHIFTR:res = (int64_t)(*((uint64_t*)&i1) >> i2); break;
-			default: { raise_error(_SC("internal vm error bitwise op failed")); return false; }
+			default: { raise_error("internal vm error bitwise op failed"); return false; }
 		}
 	}
-	else { raise_error(_SC("bitwise op between '%s' and '%s'"),getTypeName(o1),getTypeName(o2)); return false;}
+	else { raise_error("bitwise op between '%s' and '%s'",getTypeName(o1),getTypeName(o2)); return false;}
 	trg = res;
 	return true;
 }
@@ -90,12 +90,12 @@ bool rabbit::VirtualMachine::ARITH_OP(uint64_t op,rabbit::ObjectPtr &trg,const r
 			switch(op) {
 			case '+': res = i1 + i2; break;
 			case '-': res = i1 - i2; break;
-			case '/': if (i2 == 0) { raise_error(_SC("division by zero")); return false; }
-					else if (i2 == -1 && i1 == INT64_MIN) { raise_error(_SC("integer overflow")); return false; }
+			case '/': if (i2 == 0) { raise_error("division by zero"); return false; }
+					else if (i2 == -1 && i1 == INT64_MIN) { raise_error("integer overflow"); return false; }
 					res = i1 / i2;
 					break;
 			case '*': res = i1 * i2; break;
-			case '%': if (i2 == 0) { raise_error(_SC("modulo by zero")); return false; }
+			case '%': if (i2 == 0) { raise_error("modulo by zero"); return false; }
 					else if (i2 == -1 && i1 == INT64_MAX) { res = 0; break; }
 					res = i1 % i2;
 					break;
@@ -173,11 +173,11 @@ bool rabbit::VirtualMachine::arithMetaMethod(int64_t op,const rabbit::ObjectPtr 
 {
 	rabbit::MetaMethod mm;
 	switch(op){
-		case _SC('+'): mm=MT_ADD; break;
-		case _SC('-'): mm=MT_SUB; break;
-		case _SC('/'): mm=MT_DIV; break;
-		case _SC('*'): mm=MT_MUL; break;
-		case _SC('%'): mm=MT_MODULO; break;
+		case '+': mm=MT_ADD; break;
+		case '-': mm=MT_SUB; break;
+		case '/': mm=MT_DIV; break;
+		case '*': mm=MT_MUL; break;
+		case '%': mm=MT_MODULO; break;
 		default: mm = MT_ADD; assert(0); break; //shutup compiler
 	}
 	if(is_delegable(o1) && _delegable(o1)->_delegate) {
@@ -189,7 +189,7 @@ bool rabbit::VirtualMachine::arithMetaMethod(int64_t op,const rabbit::ObjectPtr 
 			return callMetaMethod(closure,mm,2,dest);
 		}
 	}
-	raise_error(_SC("arith op %c on between '%s' and '%s'"),op,getTypeName(o1),getTypeName(o2));
+	raise_error("arith op %c on between '%s' and '%s'",op,getTypeName(o1),getTypeName(o2));
 	return false;
 }
 
@@ -218,7 +218,7 @@ bool rabbit::VirtualMachine::NEG_OP(rabbit::ObjectPtr &trg,const rabbit::ObjectP
 		}
 	default:break; //shutup compiler
 	}
-	raise_error(_SC("attempt to negate a %s"), getTypeName(o));
+	raise_error("attempt to negate a %s", getTypeName(o));
 	return false;
 }
 
@@ -245,7 +245,7 @@ bool rabbit::VirtualMachine::objCmp(const rabbit::ObjectPtr &o1,const rabbit::Ob
 					push(o1);push(o2);
 					if(callMetaMethod(closure,MT_CMP,2,res)) {
 						if(sq_type(res) != rabbit::OT_INTEGER) {
-							raise_error(_SC("_cmp must return an integer"));
+							raise_error("_cmp must return an integer");
 							return false;
 						}
 						_RET_SUCCEED(_integer(res))
@@ -307,13 +307,13 @@ bool rabbit::VirtualMachine::toString(const rabbit::ObjectPtr &o,rabbit::ObjectP
 		res = o;
 		return true;
 	case rabbit::OT_FLOAT:
-		snprintf(_sp(sq_rsl(NUMBER_UINT8_MAX+1)),sq_rsl(NUMBER_UINT8_MAX),_SC("%g"),_float(o));
+		snprintf(_sp(sq_rsl(NUMBER_UINT8_MAX+1)),sq_rsl(NUMBER_UINT8_MAX),"%g",_float(o));
 		break;
 	case rabbit::OT_INTEGER:
 		snprintf(_sp(sq_rsl(NUMBER_UINT8_MAX+1)),sq_rsl(NUMBER_UINT8_MAX),_PRINT_INT_FMT,_integer(o));
 		break;
 	case rabbit::OT_BOOL:
-		snprintf(_sp(sq_rsl(6)),sq_rsl(6),_integer(o)?_SC("true"):_SC("false"));
+		snprintf(_sp(sq_rsl(6)),sq_rsl(6),_integer(o)?"true":"false");
 		break;
 	case rabbit::OT_TABLE:
 	case rabbit::OT_USERDATA:
@@ -332,7 +332,7 @@ bool rabbit::VirtualMachine::toString(const rabbit::ObjectPtr &o,rabbit::ObjectP
 			}
 		}
 	default:
-		snprintf(_sp(sq_rsl((sizeof(void*)*2)+NUMBER_UINT8_MAX)),sq_rsl((sizeof(void*)*2)+NUMBER_UINT8_MAX),_SC("(%s : 0x%p)"),getTypeName(o),(void*)_rawval(o));
+		snprintf(_sp(sq_rsl((sizeof(void*)*2)+NUMBER_UINT8_MAX)),sq_rsl((sizeof(void*)*2)+NUMBER_UINT8_MAX),"(%s : 0x%p)",getTypeName(o),(void*)_rawval(o));
 	}
 	res = rabbit::String::create(_get_shared_state(this),_spval);
 	return true;
@@ -402,7 +402,7 @@ bool rabbit::VirtualMachine::startcall(rabbit::Closure *closure,int64_t target,i
 	{
 		paramssize--;
 		if (nargs < paramssize) {
-			raise_error(_SC("wrong number of parameters"));
+			raise_error("wrong number of parameters");
 			return false;
 		}
 
@@ -428,7 +428,7 @@ bool rabbit::VirtualMachine::startcall(rabbit::Closure *closure,int64_t target,i
 			}
 		}
 		else {
-			raise_error(_SC("wrong number of parameters"));
+			raise_error("wrong number of parameters");
 			return false;
 		}
 	}
@@ -445,7 +445,7 @@ bool rabbit::VirtualMachine::startcall(rabbit::Closure *closure,int64_t target,i
 	ci->_target   = (int32_t)target;
 
 	if (_debughook) {
-		callDebugHook(_SC('c'));
+		callDebugHook('c');
 	}
 
 	if (closure->_function->_bgenerator) {
@@ -469,7 +469,7 @@ bool rabbit::VirtualMachine::Return(int64_t _arg0, int64_t _arg1, rabbit::Object
 
 	if (_debughook) {
 		for(int64_t i=0; i<ci->_ncalls; i++) {
-			callDebugHook(_SC('r'));
+			callDebugHook('r');
 		}
 	}
 
@@ -526,9 +526,9 @@ bool rabbit::VirtualMachine::derefInc(int64_t op,rabbit::ObjectPtr &target, rabb
 rabbit::Result rabbit::VirtualMachine::Suspend()
 {
 	if (_suspended)
-		return sq_throwerror(this, _SC("cannot suspend an already suspended vm"));
+		return sq_throwerror(this, "cannot suspend an already suspended vm");
 	if (_nnativecalls!=2)
-		return sq_throwerror(this, _SC("cannot suspend through native calls/metamethods"));
+		return sq_throwerror(this, "cannot suspend through native calls/metamethods");
 	return SQ_SUSPEND_FLAG;
 }
 
@@ -563,7 +563,7 @@ bool rabbit::VirtualMachine::FOREACH_OP(rabbit::ObjectPtr &o1,rabbit::ObjectPtr 
 					o4 = o2 = itr;
 					if(sq_type(itr) == rabbit::OT_NULL) _FINISH(exitpos);
 					if(!get(o1, itr, o3, 0, DONT_FALL_BACK)) {
-						raise_error(_SC("_nexti returned an invalid idx")); // cloud be changed
+						raise_error("_nexti returned an invalid idx"); // cloud be changed
 						return false;
 					}
 					_FINISH(1);
@@ -572,7 +572,7 @@ bool rabbit::VirtualMachine::FOREACH_OP(rabbit::ObjectPtr &o1,rabbit::ObjectPtr 
 					return false;
 				}
 			}
-			raise_error(_SC("_nexti failed"));
+			raise_error("_nexti failed");
 			return false;
 		}
 		break;
@@ -589,7 +589,7 @@ bool rabbit::VirtualMachine::FOREACH_OP(rabbit::ObjectPtr &o1,rabbit::ObjectPtr 
 			_FINISH(0);
 		}
 	default:
-		raise_error(_SC("cannot iterate %s"), getTypeName(o1));
+		raise_error("cannot iterate %s", getTypeName(o1));
 	}
 	return false; //cannot be hit(just to avoid warnings)
 }
@@ -635,7 +635,7 @@ bool rabbit::VirtualMachine::CLASS_OP(rabbit::ObjectPtr &target,int64_t baseclas
 	rabbit::Class *base = NULL;
 	rabbit::ObjectPtr attrs;
 	if(baseclass != -1) {
-		if(sq_type(_stack[_stackbase+baseclass]) != rabbit::OT_CLASS) { raise_error(_SC("trying to inherit from a %s"),getTypeName(_stack[_stackbase+baseclass])); return false; }
+		if(sq_type(_stack[_stackbase+baseclass]) != rabbit::OT_CLASS) { raise_error("trying to inherit from a %s",getTypeName(_stack[_stackbase+baseclass])); return false; }
 		base = _class(_stack[_stackbase + baseclass]);
 	}
 	if(attributes != MAX_FUNC_STACKSIZE) {
@@ -689,7 +689,7 @@ bool rabbit::VirtualMachine::IsFalse(rabbit::ObjectPtr &o)
 extern rabbit::InstructionDesc g_InstrDesc[];
 bool rabbit::VirtualMachine::execute(rabbit::ObjectPtr &closure, int64_t nargs, int64_t stackbase,rabbit::ObjectPtr &outres, rabbit::Bool raiseerror,ExecutionType et)
 {
-	if ((_nnativecalls + 1) > MAX_NATIVE_CALLS) { raise_error(_SC("Native stack overflow")); return false; }
+	if ((_nnativecalls + 1) > MAX_NATIVE_CALLS) { raise_error("Native stack overflow"); return false; }
 	_nnativecalls++;
 	AutoDec ad(&_nnativecalls);
 	int64_t traps = 0;
@@ -730,7 +730,7 @@ exception_restore:
 			//printf("\n[%d] %s %d %d %d %d\n",ci->_ip-_closure(ci->_closure)->_function->_instructions,g_InstrDesc[_i_.op].name,arg0,arg1,arg2,arg3);
 			switch(_i_.op)
 			{
-			case _OP_LINE: if (_debughook) callDebugHook(_SC('l'),arg1); continue;
+			case _OP_LINE: if (_debughook) callDebugHook('l',arg1); continue;
 			case _OP_LOAD: TARGET = ci->_literals[arg1]; continue;
 			case _OP_LOADINT:
 #ifndef _SQ64
@@ -815,11 +815,11 @@ exception_restore:
 							break;
 						}
 
-						//raise_error(_SC("attempt to call '%s'"), getTypeName(clo));
+						//raise_error("attempt to call '%s'", getTypeName(clo));
 						//SQ_THROW();
 					  }
 					default:
-						raise_error(_SC("attempt to call '%s'"), getTypeName(clo));
+						raise_error("attempt to call '%s'", getTypeName(clo));
 						SQ_THROW();
 					}
 				}
@@ -866,7 +866,7 @@ exception_restore:
 			case _OP_ADD: _ARITH_(+,TARGET,STK(arg2),STK(arg1)); continue;
 			case _OP_SUB: _ARITH_(-,TARGET,STK(arg2),STK(arg1)); continue;
 			case _OP_MUL: _ARITH_(*,TARGET,STK(arg2),STK(arg1)); continue;
-			case _OP_DIV: _ARITH_NOZERO(/,TARGET,STK(arg2),STK(arg1),_SC("division by zero")); continue;
+			case _OP_DIV: _ARITH_NOZERO(/,TARGET,STK(arg2),STK(arg1),"division by zero"); continue;
 			case _OP_MOD: ARITH_OP('%',TARGET,STK(arg2),STK(arg1)); continue;
 			case _OP_BITW:  _GUARD(BW_OP( arg3,TARGET,STK(arg2),STK(arg1))); continue;
 			case _OP_RETURN:
@@ -983,7 +983,7 @@ exception_restore:
 			case _OP_EXISTS: TARGET = get(STK(arg1), STK(arg2), temp_reg, GET_FLAG_DO_NOT_RAISE_ERROR | GET_FLAG_RAW, DONT_FALL_BACK) ? true : false; continue;
 			case _OP_INSTANCEOF:
 				if(sq_type(STK(arg1)) != rabbit::OT_CLASS)
-				{raise_error(_SC("cannot apply instanceof between a %s and a %s"),getTypeName(STK(arg1)),getTypeName(STK(arg2))); SQ_THROW();}
+				{raise_error("cannot apply instanceof between a %s and a %s",getTypeName(STK(arg1)),getTypeName(STK(arg2))); SQ_THROW();}
 				TARGET = (sq_type(STK(arg2)) == rabbit::OT_INSTANCE) ? (_instance(STK(arg2))->instanceOf(_class(STK(arg1)))?true:false) : false;
 				continue;
 			case _OP_AND:
@@ -1006,7 +1006,7 @@ exception_restore:
 					TARGET = int64_t(~t);
 					continue;
 				}
-				raise_error(_SC("attempt to perform a bitwise op on a %s"), getTypeName(STK(arg1)));
+				raise_error("attempt to perform a bitwise op on a %s", getTypeName(STK(arg1)));
 				SQ_THROW();
 			case _OP_CLOSURE: {
 				rabbit::Closure *c = ci->_closure._unVal.pClosure;
@@ -1021,7 +1021,7 @@ exception_restore:
 					traps -= ci->_etraps;
 					if(sarg1 != MAX_FUNC_STACKSIZE) _Swap(STK(arg1),temp_reg);//STK(arg1) = temp_reg;
 				}
-				else { raise_error(_SC("trying to yield a '%s',only genenerator can be yielded"), getTypeName(ci->_generator)); SQ_THROW();}
+				else { raise_error("trying to yield a '%s',only genenerator can be yielded", getTypeName(ci->_generator)); SQ_THROW();}
 				if(Return(arg0, arg1, temp_reg)){
 					assert(traps == 0);
 					outres = temp_reg;
@@ -1031,7 +1031,7 @@ exception_restore:
 				}
 				continue;
 			case _OP_RESUME:
-				if(sq_type(STK(arg1)) != rabbit::OT_GENERATOR){ raise_error(_SC("trying to resume a '%s',only genenerator can be resumed"), getTypeName(STK(arg1))); SQ_THROW();}
+				if(sq_type(STK(arg1)) != rabbit::OT_GENERATOR){ raise_error("trying to resume a '%s',only genenerator can be resumed", getTypeName(STK(arg1))); SQ_THROW();}
 				_GUARD(_generator(STK(arg1))->resume(this, TARGET));
 				traps += ci->_etraps;
 				continue;
@@ -1104,7 +1104,7 @@ exception_trap:
 					//notify debugger of a "return"
 					//even if it really an exception unwinding the stack
 					for(int64_t i = 0; i < ci->_ncalls; i++) {
-						callDebugHook(_SC('r'));
+						callDebugHook('r');
 					}
 			}
 			if(ci->_generator) ci->_generator->kill();
@@ -1169,14 +1169,14 @@ bool rabbit::VirtualMachine::callNative(rabbit::NativeClosure *nclosure, int64_t
 	int64_t newtop = newbase + nargs + nclosure->_noutervalues;
 
 	if (_nnativecalls + 1 > MAX_NATIVE_CALLS) {
-		raise_error(_SC("Native stack overflow"));
+		raise_error("Native stack overflow");
 		return false;
 	}
 
 	if(nparamscheck && (((nparamscheck > 0) && (nparamscheck != nargs)) ||
 		((nparamscheck < 0) && (nargs < (-nparamscheck)))))
 	{
-		raise_error(_SC("wrong number of parameters"));
+		raise_error("wrong number of parameters");
 		return false;
 	}
 
@@ -1375,7 +1375,7 @@ bool rabbit::VirtualMachine::set(const rabbit::ObjectPtr &self,const rabbit::Obj
 		if(_instance(self)->set(key,val)) return true;
 		break;
 	case rabbit::OT_ARRAY:
-		if(!sq_isnumeric(key)) { raise_error(_SC("indexing %s with %s"),getTypeName(self),getTypeName(key)); return false; }
+		if(!sq_isnumeric(key)) { raise_error("indexing %s with %s",getTypeName(self),getTypeName(key)); return false; }
 		if(!_array(self)->set(tointeger(key),val)) {
 			raise_Idxerror(key);
 			return false;
@@ -1383,7 +1383,7 @@ bool rabbit::VirtualMachine::set(const rabbit::ObjectPtr &self,const rabbit::Obj
 		return true;
 	case rabbit::OT_USERDATA: break; // must fall back
 	default:
-		raise_error(_SC("trying to set '%s'"),getTypeName(self));
+		raise_error("trying to set '%s'",getTypeName(self));
 		return false;
 	}
 
@@ -1460,7 +1460,7 @@ cloned_mt:
 		target = _array(self)->clone();
 		return true;
 	default:
-		raise_error(_SC("cloning a %s"), getTypeName(self));
+		raise_error("cloning a %s", getTypeName(self));
 		return false;
 	}
 }
@@ -1468,7 +1468,7 @@ cloned_mt:
 bool rabbit::VirtualMachine::newSlotA(const rabbit::ObjectPtr &self,const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val,const rabbit::ObjectPtr &attrs,bool bstatic,bool raw)
 {
 	if(sq_type(self) != rabbit::OT_CLASS) {
-		raise_error(_SC("object must be a class"));
+		raise_error("object must be a class");
 		return false;
 	}
 	rabbit::Class *c = _class(self);
@@ -1491,7 +1491,7 @@ bool rabbit::VirtualMachine::newSlotA(const rabbit::ObjectPtr &self,const rabbit
 
 bool rabbit::VirtualMachine::newSlot(const rabbit::ObjectPtr &self,const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val,bool bstatic)
 {
-	if(sq_type(key) == rabbit::OT_NULL) { raise_error(_SC("null cannot be used as index")); return false; }
+	if(sq_type(key) == rabbit::OT_NULL) { raise_error("null cannot be used as index"); return false; }
 	switch(sq_type(self)) {
 	case rabbit::OT_TABLE: {
 		bool rawcall = true;
@@ -1524,24 +1524,24 @@ bool rabbit::VirtualMachine::newSlot(const rabbit::ObjectPtr &self,const rabbit:
 			}
 			break;
 		}
-		raise_error(_SC("class instances do not support the new slot operator"));
+		raise_error("class instances do not support the new slot operator");
 		return false;
 		break;}
 	case rabbit::OT_CLASS:
 		if(!_class(self)->newSlot(_get_shared_state(this),key,val,bstatic)) {
 			if(_class(self)->_locked) {
-				raise_error(_SC("trying to modify a class that has already been instantiated"));
+				raise_error("trying to modify a class that has already been instantiated");
 				return false;
 			}
 			else {
 				rabbit::ObjectPtr oval = printObjVal(key);
-				raise_error(_SC("the property '%s' already exists"),_stringval(oval));
+				raise_error("the property '%s' already exists",_stringval(oval));
 				return false;
 			}
 		}
 		break;
 	default:
-		raise_error(_SC("indexing %s with %s"),getTypeName(self),getTypeName(key));
+		raise_error("indexing %s with %s",getTypeName(self),getTypeName(key));
 		return false;
 		break;
 	}
@@ -1574,7 +1574,7 @@ bool rabbit::VirtualMachine::deleteSlot(const rabbit::ObjectPtr &self,const rabb
 				}
 			}
 			else {
-				raise_error(_SC("cannot delete a slot from %s"),getTypeName(self));
+				raise_error("cannot delete a slot from %s",getTypeName(self));
 				return false;
 			}
 		}
@@ -1582,7 +1582,7 @@ bool rabbit::VirtualMachine::deleteSlot(const rabbit::ObjectPtr &self,const rabb
 				}
 		break;
 	default:
-		raise_error(_SC("attempt to delete a slot from a %s"),getTypeName(self));
+		raise_error("attempt to delete a slot from a %s",getTypeName(self));
 		return false;
 	}
 	return true;
@@ -1686,7 +1686,7 @@ bool rabbit::VirtualMachine::enterFrame(int64_t newbase, int64_t newtop, bool ta
 	_top = newtop;
 	if(newtop + MIN_STACK_OVERHEAD > (int64_t)_stack.size()) {
 		if(_nmetamethodscall) {
-			raise_error(_SC("stack overflow, cannot resize stack while in a metamethod"));
+			raise_error("stack overflow, cannot resize stack while in a metamethod");
 			return false;
 		}
 		_stack.resize(newtop + (MIN_STACK_OVERHEAD << 2));
@@ -1762,37 +1762,41 @@ void rabbit::VirtualMachine::dumpstack(int64_t stackbase,bool dumpall)
 {
 	int64_t size=dumpall?_stack.size():_top;
 	int64_t n=0;
-	printf(_SC("\n>>>>stack dump<<<<\n"));
+	printf("\n>>>>stack dump<<<<\n");
 	callInfo &ci=_callsstack[_callsstacksize-1];
-	printf(_SC("IP: %p\n"),ci._ip);
-	printf(_SC("prev stack base: %d\n"),ci._prevstkbase);
-	printf(_SC("prev top: %d\n"),ci._prevtop);
+	printf("IP: %p\n",ci._ip);
+	printf("prev stack base: %d\n",ci._prevstkbase);
+	printf("prev top: %d\n",ci._prevtop);
 	for(int64_t i=0;i<size;i++){
 		rabbit::ObjectPtr &obj=_stack[i];
-		if(stackbase==i)printf(_SC(">"));else printf(_SC(" "));
-		printf(_SC("[" _PRINT_INT_FMT "]:"),n);
+		if(stackbase==i) {
+			printf(">");
+		} else {
+			printf(" ");
+		}
+		printf("[" _PRINT_INT_FMT "]:",n);
 		switch(sq_type(obj)){
-		case rabbit::OT_FLOAT:		  printf(_SC("FLOAT %.3f"),_float(obj));break;
-		case rabbit::OT_INTEGER:		printf(_SC("INTEGER " _PRINT_INT_FMT),_integer(obj));break;
-		case rabbit::OT_BOOL:		   printf(_SC("BOOL %s"),_integer(obj)?"true":"false");break;
-		case rabbit::OT_STRING:		 printf(_SC("STRING %s"),_stringval(obj));break;
-		case rabbit::OT_NULL:		   printf(_SC("NULL"));  break;
-		case rabbit::OT_TABLE:		  printf(_SC("TABLE %p[%p]"),_table(obj),_table(obj)->_delegate);break;
-		case rabbit::OT_ARRAY:		  printf(_SC("ARRAY %p"),_array(obj));break;
-		case rabbit::OT_CLOSURE:		printf(_SC("CLOSURE [%p]"),_closure(obj));break;
-		case rabbit::OT_NATIVECLOSURE:  printf(_SC("NATIVECLOSURE"));break;
-		case rabbit::OT_USERDATA:	   printf(_SC("USERDATA %p[%p]"),_userdataval(obj),_userdata(obj)->_delegate);break;
-		case rabbit::OT_GENERATOR:	  printf(_SC("GENERATOR %p"),_generator(obj));break;
-		case rabbit::OT_THREAD:		 printf(_SC("THREAD [%p]"),_thread(obj));break;
-		case rabbit::OT_USERPOINTER:	printf(_SC("USERPOINTER %p"),_userpointer(obj));break;
-		case rabbit::OT_CLASS:		  printf(_SC("CLASS %p"),_class(obj));break;
-		case rabbit::OT_INSTANCE:	   printf(_SC("INSTANCE %p"),_instance(obj));break;
-		case rabbit::OT_WEAKREF:		printf(_SC("WEAKERF %p"),_weakref(obj));break;
+		case rabbit::OT_FLOAT:		  printf("FLOAT %.3f",_float(obj));break;
+		case rabbit::OT_INTEGER:		printf("INTEGER " _PRINT_INT_FMT,_integer(obj));break;
+		case rabbit::OT_BOOL:		   printf("BOOL %s",_integer(obj)?"true":"false");break;
+		case rabbit::OT_STRING:		 printf("STRING %s",_stringval(obj));break;
+		case rabbit::OT_NULL:		   printf("NULL");  break;
+		case rabbit::OT_TABLE:		  printf("TABLE %p[%p]",_table(obj),_table(obj)->_delegate);break;
+		case rabbit::OT_ARRAY:		  printf("ARRAY %p",_array(obj));break;
+		case rabbit::OT_CLOSURE:		printf("CLOSURE [%p]",_closure(obj));break;
+		case rabbit::OT_NATIVECLOSURE:  printf("NATIVECLOSURE");break;
+		case rabbit::OT_USERDATA:	   printf("USERDATA %p[%p]",_userdataval(obj),_userdata(obj)->_delegate);break;
+		case rabbit::OT_GENERATOR:	  printf("GENERATOR %p",_generator(obj));break;
+		case rabbit::OT_THREAD:		 printf("THREAD [%p]",_thread(obj));break;
+		case rabbit::OT_USERPOINTER:	printf("USERPOINTER %p",_userpointer(obj));break;
+		case rabbit::OT_CLASS:		  printf("CLASS %p",_class(obj));break;
+		case rabbit::OT_INSTANCE:	   printf("INSTANCE %p",_instance(obj));break;
+		case rabbit::OT_WEAKREF:		printf("WEAKERF %p",_weakref(obj));break;
 		default:
 			assert(0);
 			break;
 		};
-		printf(_SC("\n"));
+		printf("\n");
 		++n;
 	}
 }

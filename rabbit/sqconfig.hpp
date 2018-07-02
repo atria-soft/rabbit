@@ -41,8 +41,8 @@ namespace rabbit {
 
 #define sq_rsl(l) (l)
 
-#define _PRINT_INT_PREC _SC("ll")
-#define _PRINT_INT_FMT _SC("%ld")
+#define _PRINT_INT_PREC "ll"
+#define _PRINT_INT_FMT "%ld"
 
 #define SQTrue  (1)
 #define SQFalse (0)
@@ -53,9 +53,6 @@ namespace rabbit {
 #else
 #define UINT_MINUS_ONE (0xFFFFFFFF)
 #endif
-
-#define _SC(a) a
-
 
 namespace rabbit {
 	class UserData;

@@ -157,39 +157,39 @@ const char* rabbit::IdType2Name(rabbit::ObjectType type)
 	switch(_RAW_TYPE(type))
 	{
 		case _RT_NULL:
-			return _SC("null");
+			return "null";
 		case _RT_INTEGER:
-			return _SC("integer");
+			return "integer";
 		case _RT_FLOAT:
-			return _SC("float");
+			return "float";
 		case _RT_BOOL:
-			return _SC("bool");
+			return "bool";
 		case _RT_STRING:
-			return _SC("string");
+			return "string";
 		case _RT_TABLE:
-			return _SC("table");
+			return "table";
 		case _RT_ARRAY:
-			return _SC("array");
+			return "array";
 		case _RT_GENERATOR:
-			return _SC("generator");
+			return "generator";
 		case _RT_CLOSURE:
 		case _RT_NATIVECLOSURE:
-			return _SC("function");
+			return "function";
 		case _RT_USERDATA:
 		case _RT_USERPOINTER:
-			return _SC("userdata");
+			return "userdata";
 		case _RT_THREAD:
-			return _SC("thread");
+			return "thread";
 		case _RT_FUNCPROTO:
-			return _SC("function");
+			return "function";
 		case _RT_CLASS:
-			return _SC("class");
+			return "class";
 		case _RT_INSTANCE:
-			return _SC("instance");
+			return "instance";
 		case _RT_WEAKREF:
-			return _SC("weakref");
+			return "weakref";
 		case _RT_OUTER:
-			return _SC("outer");
+			return "outer";
 		default:
 			return NULL;
 	}

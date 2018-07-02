@@ -19,9 +19,9 @@
 #define SETUP_STREAM(v) \
 	rabbit::std::SQStream *self = NULL; \
 	if(SQ_FAILED(sq_getinstanceup(v,1,(rabbit::UserPointer*)&self,(rabbit::UserPointer)((uint64_t)SQSTD_STREAM_TYPE_TAG)))) \
-		return rabbit::sq_throwerror(v,_SC("invalid type tag")); \
+		return rabbit::sq_throwerror(v,"invalid type tag"); \
 	if(!self || !self->IsValid())  \
-		return rabbit::sq_throwerror(v,_SC("the stream is invalid"));
+		return rabbit::sq_throwerror(v,"the stream is invalid");
 
 int64_t _stream_readblob(rabbit::VirtualMachine* v)
 {
@@ -35,14 +35,14 @@ int64_t _stream_readblob(rabbit::VirtualMachine* v)
 	data = sq_getscratchpad(v,size);
 	res = self->Read(data,size);
 	if(res <= 0)
-		return sq_throwerror(v,_SC("no data left to read"));
+		return sq_throwerror(v,"no data left to read");
 	blobp = rabbit::std::createblob(v,res);
 	memcpy(blobp,data,res);
 	return 1;
 }
 
 #define SAFE_READN(ptr,len) { \
-	if(self->Read(ptr,len) != len) return sq_throwerror(v,_SC("io error")); \
+	if(self->Read(ptr,len) != len) return sq_throwerror(v,"io error"); \
 	}
 int64_t _stream_readn(rabbit::VirtualMachine* v)
 {
@@ -99,7 +99,7 @@ int64_t _stream_readn(rabbit::VirtualMachine* v)
 			  }
 		break;
 	default:
-		return sq_throwerror(v, _SC("invalid format"));
+		return sq_throwerror(v, "invalid format");
 	}
 	return 1;
 }
@@ -110,10 +110,10 @@ int64_t _stream_writeblob(rabbit::VirtualMachine* v)
 	int64_t size;
 	SETUP_STREAM(v);
 	if(SQ_FAILED(rabbit::std::getblob(v,2,&data)))
-		return sq_throwerror(v,_SC("invalid parameter"));
+		return sq_throwerror(v,"invalid parameter");
 	size = rabbit::std::getblobsize(v,2);
 	if(self->Write(data,size) != size)
-		return sq_throwerror(v,_SC("io error"));
+		return sq_throwerror(v,"io error");
 	sq_pushinteger(v,size);
 	return 1;
 }
@@ -182,7 +182,7 @@ int64_t _stream_writen(rabbit::VirtualMachine* v)
 			  }
 		break;
 	default:
-		return sq_throwerror(v, _SC("invalid format"));
+		return sq_throwerror(v, "invalid format");
 	}
 	return 0;
 }
@@ -199,7 +199,7 @@ int64_t _stream_seek(rabbit::VirtualMachine* v)
 			case 'b': origin = SQ_SEEK_SET; break;
 			case 'c': origin = SQ_SEEK_CUR; break;
 			case 'e': origin = SQ_SEEK_END; break;
-			default: return sq_throwerror(v,_SC("invalid origin"));
+			default: return sq_throwerror(v,"invalid origin");
 		}
 	}
 	sq_pushinteger(v, self->Seek(offset, origin));
@@ -242,19 +242,19 @@ int64_t _stream_eos(rabbit::VirtualMachine* v)
 
  int64_t _stream__cloned(rabbit::VirtualMachine* v)
  {
-	 return sq_throwerror(v,_SC("this object cannot be cloned"));
+	 return sq_throwerror(v,"this object cannot be cloned");
  }
 
 static const rabbit::RegFunction _stream_methods[] = {
-	_DECL_STREAM_FUNC(readblob,2,_SC("xn")),
-	_DECL_STREAM_FUNC(readn,2,_SC("xn")),
-	_DECL_STREAM_FUNC(writeblob,-2,_SC("xx")),
-	_DECL_STREAM_FUNC(writen,3,_SC("xnn")),
-	_DECL_STREAM_FUNC(seek,-2,_SC("xnn")),
-	_DECL_STREAM_FUNC(tell,1,_SC("x")),
-	_DECL_STREAM_FUNC(len,1,_SC("x")),
-	_DECL_STREAM_FUNC(eos,1,_SC("x")),
-	_DECL_STREAM_FUNC(flush,1,_SC("x")),
+	_DECL_STREAM_FUNC(readblob,2,"xn"),
+	_DECL_STREAM_FUNC(readn,2,"xn"),
+	_DECL_STREAM_FUNC(writeblob,-2,"xx"),
+	_DECL_STREAM_FUNC(writen,3,"xnn"),
+	_DECL_STREAM_FUNC(seek,-2,"xnn"),
+	_DECL_STREAM_FUNC(tell,1,"x"),
+	_DECL_STREAM_FUNC(len,1,"x"),
+	_DECL_STREAM_FUNC(eos,1,"x"),
+	_DECL_STREAM_FUNC(flush,1,"x"),
 	_DECL_STREAM_FUNC(_cloned,0,NULL),
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
@@ -262,9 +262,9 @@ static const rabbit::RegFunction _stream_methods[] = {
 void init_streamclass(rabbit::VirtualMachine* v)
 {
 	sq_pushregistrytable(v);
-	sq_pushstring(v,_SC("std_stream"),-1);
+	sq_pushstring(v,"std_stream",-1);
 	if(SQ_FAILED(sq_get(v,-2))) {
-		sq_pushstring(v,_SC("std_stream"),-1);
+		sq_pushstring(v,"std_stream",-1);
 		sq_newclass(v,SQFalse);
 		sq_settypetag(v,-1,(rabbit::UserPointer)((uint64_t)SQSTD_STREAM_TYPE_TAG));
 		int64_t i = 0;
@@ -278,8 +278,8 @@ void init_streamclass(rabbit::VirtualMachine* v)
 		}
 		sq_newslot(v,-3,SQFalse);
 		sq_pushroottable(v);
-		sq_pushstring(v,_SC("stream"),-1);
-		sq_pushstring(v,_SC("std_stream"),-1);
+		sq_pushstring(v,"stream",-1);
+		sq_pushstring(v,"std_stream",-1);
 		sq_get(v,-4);
 		sq_newslot(v,-3,SQFalse);
 		sq_pop(v,1);
@@ -293,13 +293,13 @@ void init_streamclass(rabbit::VirtualMachine* v)
 rabbit::Result rabbit::std::declare_stream(rabbit::VirtualMachine* v,const char* name,rabbit::UserPointer typetag,const char* reg_name,const rabbit::RegFunction *methods,const rabbit::RegFunction *globals)
 {
 	if(sq_gettype(v,-1) != rabbit::OT_TABLE)
-		return sq_throwerror(v,_SC("table expected"));
+		return sq_throwerror(v,"table expected");
 	int64_t top = sq_gettop(v);
 	//create delegate
 	init_streamclass(v);
 	sq_pushregistrytable(v);
 	sq_pushstring(v,reg_name,-1);
-	sq_pushstring(v,_SC("std_stream"),-1);
+	sq_pushstring(v,"std_stream",-1);
 	if(SQ_SUCCEEDED(sq_get(v,-3))) {
 		sq_newclass(v,SQTrue);
 		sq_settypetag(v,-1,typetag);

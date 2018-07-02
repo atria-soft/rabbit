@@ -28,7 +28,7 @@
 bool rabbit::SafeWrite(rabbit::VirtualMachine* v,SQWRITEFUNC write,rabbit::UserPointer up,rabbit::UserPointer dest,int64_t size)
 {
 	if(write(up,dest,size) != size) {
-		v->raise_error(_SC("io error (write function failure)"));
+		v->raise_error("io error (write function failure)");
 		return false;
 	}
 	return true;
@@ -37,7 +37,7 @@ bool rabbit::SafeWrite(rabbit::VirtualMachine* v,SQWRITEFUNC write,rabbit::UserP
 bool rabbit::SafeRead(rabbit::VirtualMachine* v,SQWRITEFUNC read,rabbit::UserPointer up,rabbit::UserPointer dest,int64_t size)
 {
 	if(size && read(up,dest,size) != size) {
-		v->raise_error(_SC("io error, read function failure, the origin stream could be corrupted/trucated"));
+		v->raise_error("io error, read function failure, the origin stream could be corrupted/trucated");
 		return false;
 	}
 	return true;
@@ -53,7 +53,7 @@ bool rabbit::CheckTag(rabbit::VirtualMachine* v,SQWRITEFUNC read,rabbit::UserPoi
 	uint32_t t;
 	_CHECK_IO(SafeRead(v,read,up,&t,sizeof(t)));
 	if(t != tag){
-		v->raise_error(_SC("invalid or corrupted closure stream"));
+		v->raise_error("invalid or corrupted closure stream");
 		return false;
 	}
 	return true;
@@ -76,7 +76,7 @@ bool rabbit::WriteObject(rabbit::VirtualMachine* v,rabbit::UserPointer up,SQWRIT
 	case rabbit::OT_NULL:
 		break;
 	default:
-		v->raise_error(_SC("cannot serialize a %s"),getTypeName(o));
+		v->raise_error("cannot serialize a %s",getTypeName(o));
 		return false;
 	}
 	return true;
@@ -111,7 +111,7 @@ bool rabbit::ReadObject(rabbit::VirtualMachine* v,rabbit::UserPointer up,SQREADF
 		o.Null();
 		break;
 	default:
-		v->raise_error(_SC("cannot serialize a %s"),IdType2Name(t));
+		v->raise_error("cannot serialize a %s",IdType2Name(t));
 		return false;
 	}
 	return true;

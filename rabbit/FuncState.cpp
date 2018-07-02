@@ -25,67 +25,67 @@
 
 #ifdef _DEBUG_DUMP
 rabbit::InstructionDesc g_InstrDesc[]={
-	{_SC("_OP_LINE")},
-	{_SC("_OP_LOAD")},
-	{_SC("_OP_LOADINT")},
-	{_SC("_OP_LOADFLOAT")},
-	{_SC("_OP_DLOAD")},
-	{_SC("_OP_TAILCALL")},
-	{_SC("_OP_CALL")},
-	{_SC("_OP_PREPCALL")},
-	{_SC("_OP_PREPCALLK")},
-	{_SC("_OP_GETK")},
-	{_SC("_OP_MOVE")},
-	{_SC("_OP_NEWSLOT")},
-	{_SC("_OP_DELETE")},
-	{_SC("_OP_SET")},
-	{_SC("_OP_GET")},
-	{_SC("_OP_EQ")},
-	{_SC("_OP_NE")},
-	{_SC("_OP_ADD")},
-	{_SC("_OP_SUB")},
-	{_SC("_OP_MUL")},
-	{_SC("_OP_DIV")},
-	{_SC("_OP_MOD")},
-	{_SC("_OP_BITW")},
-	{_SC("_OP_RETURN")},
-	{_SC("_OP_LOADNULLS")},
-	{_SC("_OP_LOADROOT")},
-	{_SC("_OP_LOADBOOL")},
-	{_SC("_OP_DMOVE")},
-	{_SC("_OP_JMP")},
-	{_SC("_OP_JCMP")},
-	{_SC("_OP_JZ")},
-	{_SC("_OP_SETOUTER")},
-	{_SC("_OP_GETOUTER")},
-	{_SC("_OP_NEWOBJ")},
-	{_SC("_OP_APPENDARRAY")},
-	{_SC("_OP_COMPARITH")},
-	{_SC("_OP_INC")},
-	{_SC("_OP_INCL")},
-	{_SC("_OP_PINC")},
-	{_SC("_OP_PINCL")},
-	{_SC("_OP_CMP")},
-	{_SC("_OP_EXISTS")},
-	{_SC("_OP_INSTANCEOF")},
-	{_SC("_OP_AND")},
-	{_SC("_OP_OR")},
-	{_SC("_OP_NEG")},
-	{_SC("_OP_NOT")},
-	{_SC("_OP_BWNOT")},
-	{_SC("_OP_CLOSURE")},
-	{_SC("_OP_YIELD")},
-	{_SC("_OP_RESUME")},
-	{_SC("_OP_FOREACH")},
-	{_SC("_OP_POSTFOREACH")},
-	{_SC("_OP_CLONE")},
-	{_SC("_OP_TYPEOF")},
-	{_SC("_OP_PUSHTRAP")},
-	{_SC("_OP_POPTRAP")},
-	{_SC("_OP_THROW")},
-	{_SC("_OP_NEWSLOTA")},
-	{_SC("_OP_GETBASE")},
-	{_SC("_OP_CLOSE")},
+	{"_OP_LINE"},
+	{"_OP_LOAD"},
+	{"_OP_LOADINT"},
+	{"_OP_LOADFLOAT"},
+	{"_OP_DLOAD"},
+	{"_OP_TAILCALL"},
+	{"_OP_CALL"},
+	{"_OP_PREPCALL"},
+	{"_OP_PREPCALLK"},
+	{"_OP_GETK"},
+	{"_OP_MOVE"},
+	{"_OP_NEWSLOT"},
+	{"_OP_DELETE"},
+	{"_OP_SET"},
+	{"_OP_GET"},
+	{"_OP_EQ"},
+	{"_OP_NE"},
+	{"_OP_ADD"},
+	{"_OP_SUB"},
+	{"_OP_MUL"},
+	{"_OP_DIV"},
+	{"_OP_MOD"},
+	{"_OP_BITW"},
+	{"_OP_RETURN"},
+	{"_OP_LOADNULLS"},
+	{"_OP_LOADROOT"},
+	{"_OP_LOADBOOL"},
+	{"_OP_DMOVE"},
+	{"_OP_JMP"},
+	{"_OP_JCMP"},
+	{"_OP_JZ"},
+	{"_OP_SETOUTER"},
+	{"_OP_GETOUTER"},
+	{"_OP_NEWOBJ"},
+	{"_OP_APPENDARRAY"},
+	{"_OP_COMPARITH"},
+	{"_OP_INC"},
+	{"_OP_INCL"},
+	{"_OP_PINC"},
+	{"_OP_PINCL"},
+	{"_OP_CMP"},
+	{"_OP_EXISTS"},
+	{"_OP_INSTANCEOF"},
+	{"_OP_AND"},
+	{"_OP_OR"},
+	{"_OP_NEG"},
+	{"_OP_NOT"},
+	{"_OP_BWNOT"},
+	{"_OP_CLOSURE"},
+	{"_OP_YIELD"},
+	{"_OP_RESUME"},
+	{"_OP_FOREACH"},
+	{"_OP_POSTFOREACH"},
+	{"_OP_CLONE"},
+	{"_OP_TYPEOF"},
+	{"_OP_PUSHTRAP"},
+	{"_OP_POPTRAP"},
+	{"_OP_THROW"},
+	{"_OP_NEWSLOTA"},
+	{"_OP_GETBASE"},
+	{"_OP_CLOSE"},
 };
 #endif
 
@@ -97,11 +97,11 @@ void rabbit::FuncState::addInstruction(SQOpcode _op,int64_t arg0,int64_t arg1,in
 
 static void dumpLiteral(rabbit::ObjectPtr &o) {
 	switch(sq_type(o)){
-		case rabbit::OT_STRING: printf(_SC("\"%s\""),_stringval(o));break;
-		case rabbit::OT_FLOAT: printf(_SC("{%f}"),_float(o));break;
-		case rabbit::OT_INTEGER: printf(_SC("{") _PRINT_INT_FMT _SC("}"),_integer(o));break;
-		case rabbit::OT_BOOL: printf(_SC("%s"),_integer(o)?_SC("true"):_SC("false"));break;
-		default: printf(_SC("(%s %p)"),getTypeName(o),(void*)_rawval(o));break; break; //shut up compiler
+		case rabbit::OT_STRING: printf("\"%s\"",_stringval(o));break;
+		case rabbit::OT_FLOAT: printf("{%f}",_float(o));break;
+		case rabbit::OT_INTEGER: printf("{" _PRINT_INT_FMT "}",_integer(o));break;
+		case rabbit::OT_BOOL: printf("%s",_integer(o)?"true":"false");break;
+		default: printf("(%s %p)",getTypeName(o),(void*)_rawval(o));break; break; //shut up compiler
 	}
 }
 
@@ -136,11 +136,11 @@ void rabbit::FuncState::dump(rabbit::FunctionProto *func)
 {
 	uint64_t n=0,i;
 	int64_t si;
-	printf(_SC("rabbit::Instruction sizeof %d\n"),(int32_t)sizeof(rabbit::Instruction));
-	printf(_SC("rabbit::Object sizeof %d\n"), (int32_t)sizeof(rabbit::Object));
-	printf(_SC("--------------------------------------------------------------------\n"));
-	printf(_SC("*****FUNCTION [%s]\n"),sq_type(func->_name)==rabbit::OT_STRING?_stringval(func->_name):_SC("unknown"));
-	printf(_SC("-----LITERALS\n"));
+	printf("rabbit::Instruction sizeof %d\n",(int32_t)sizeof(rabbit::Instruction));
+	printf("rabbit::Object sizeof %d\n", (int32_t)sizeof(rabbit::Object));
+	printf("--------------------------------------------------------------------\n");
+	printf("*****FUNCTION [%s]\n",sq_type(func->_name)==rabbit::OT_STRING?_stringval(func->_name):"unknown");
+	printf("-----LITERALS\n");
 	rabbit::ObjectPtr refidx,key,val;
 	int64_t idx;
 	etk::Vector<rabbit::ObjectPtr> templiterals;
@@ -150,43 +150,43 @@ void rabbit::FuncState::dump(rabbit::FunctionProto *func)
 		templiterals[_integer(val)]=key;
 	}
 	for(i=0;i<templiterals.size();i++){
-		printf(_SC("[%d] "), (int32_t)n);
+		printf("[%d] ", (int32_t)n);
 		dumpLiteral(templiterals[i]);
-		printf(_SC("\n"));
+		printf("\n");
 		n++;
 	}
-	printf(_SC("-----PARAMS\n"));
+	printf("-----PARAMS\n");
 	if(_varparams)
-		printf(_SC("<<VARPARAMS>>\n"));
+		printf("<<VARPARAMS>>\n");
 	n=0;
 	for(i=0;i<_parameters.size();i++){
-		printf(_SC("[%d] "), (int32_t)n);
+		printf("[%d] ", (int32_t)n);
 		dumpLiteral(_parameters[i]);
-		printf(_SC("\n"));
+		printf("\n");
 		n++;
 	}
-	printf(_SC("-----LOCALS\n"));
+	printf("-----LOCALS\n");
 	for(si=0;si<func->_nlocalvarinfos;si++){
 		rabbit::LocalVarInfo lvi=func->_localvarinfos[si];
-		printf(_SC("[%d] %s \t%d %d\n"), (int32_t)lvi._pos,_stringval(lvi._name), (int32_t)lvi._start_op, (int32_t)lvi._end_op);
+		printf("[%d] %s \t%d %d\n", (int32_t)lvi._pos,_stringval(lvi._name), (int32_t)lvi._start_op, (int32_t)lvi._end_op);
 		n++;
 	}
-	printf(_SC("-----LINE INFO\n"));
+	printf("-----LINE INFO\n");
 	for(i=0;i<_lineinfos.size();i++){
 		rabbit::LineInfo li=_lineinfos[i];
-		printf(_SC("op [%d] line [%d] \n"), (int32_t)li._op, (int32_t)li._line);
+		printf("op [%d] line [%d] \n", (int32_t)li._op, (int32_t)li._line);
 		n++;
 	}
-	printf(_SC("-----dump\n"));
+	printf("-----dump\n");
 	n=0;
 	for(i=0;i<_instructions.size();i++){
 		rabbit::Instruction &inst=_instructions[i];
 		if(inst.op==_OP_LOAD || inst.op==_OP_DLOAD || inst.op==_OP_PREPCALLK || inst.op==_OP_GETK ){
 
 			int64_t lidx = inst._arg1;
-			printf(_SC("[%03d] %15s %d "), (int32_t)n,g_InstrDesc[inst.op].name,inst._arg0);
+			printf("[%03d] %15s %d ", (int32_t)n,g_InstrDesc[inst.op].name,inst._arg0);
 			if(lidx >= 0xFFFFFFFF)
-				printf(_SC("null"));
+				printf("null");
 			else {
 				int64_t refidx;
 				rabbit::ObjectPtr val,key,refo;
@@ -196,13 +196,13 @@ void rabbit::FuncState::dump(rabbit::FunctionProto *func)
 				dumpLiteral(key);
 			}
 			if(inst.op != _OP_DLOAD) {
-				printf(_SC(" %d %d \n"),inst._arg2,inst._arg3);
+				printf(" %d %d \n",inst._arg2,inst._arg3);
 			}
 			else {
-				printf(_SC(" %d "),inst._arg2);
+				printf(" %d ",inst._arg2);
 				lidx = inst._arg3;
 				if(lidx >= 0xFFFFFFFF)
-					printf(_SC("null"));
+					printf("null");
 				else {
 					int64_t refidx;
 					rabbit::ObjectPtr val,key,refo;
@@ -210,24 +210,24 @@ void rabbit::FuncState::dump(rabbit::FunctionProto *func)
 						refo = refidx;
 				}
 				dumpLiteral(key);
-				printf(_SC("\n"));
+				printf("\n");
 			}
 			}
 		}
 		else if(inst.op==_OP_LOADFLOAT) {
-			printf(_SC("[%03d] %15s %d %f %d %d\n"), (int32_t)n,g_InstrDesc[inst.op].name,inst._arg0,*((float_t*)&inst._arg1),inst._arg2,inst._arg3);
+			printf("[%03d] %15s %d %f %d %d\n", (int32_t)n,g_InstrDesc[inst.op].name,inst._arg0,*((float_t*)&inst._arg1),inst._arg2,inst._arg3);
 		}
 	/*  else if(inst.op==_OP_ARITH){
-			printf(_SC("[%03d] %15s %d %d %d %c\n"),n,g_InstrDesc[inst.op].name,inst._arg0,inst._arg1,inst._arg2,inst._arg3);
+			printf("[%03d] %15s %d %d %d %c\n",n,g_InstrDesc[inst.op].name,inst._arg0,inst._arg1,inst._arg2,inst._arg3);
 		}*/
 		else {
-			printf(_SC("[%03d] %15s %d %d %d %d\n"), (int32_t)n,g_InstrDesc[inst.op].name,inst._arg0,inst._arg1,inst._arg2,inst._arg3);
+			printf("[%03d] %15s %d %d %d %d\n", (int32_t)n,g_InstrDesc[inst.op].name,inst._arg0,inst._arg1,inst._arg2,inst._arg3);
 		}
 		n++;
 	}
-	printf(_SC("-----\n"));
-	printf(_SC("stack size[%d]\n"), (int32_t)func->_stacksize);
-	printf(_SC("--------------------------------------------------------------------\n\n"));
+	printf("-----\n");
+	printf("stack size[%d]\n", (int32_t)func->_stacksize);
+	printf("--------------------------------------------------------------------\n\n");
 }
 #endif
 
@@ -251,7 +251,7 @@ int64_t rabbit::FuncState::getConstant(const rabbit::Object &cons)
 		_nliterals++;
 		if(_nliterals > MAX_LITERALS) {
 			val.Null();
-			error(_SC("internal compiler error: too many literals"));
+			error("internal compiler error: too many literals");
 		}
 	}
 	return _integer(val);
@@ -280,7 +280,7 @@ int64_t rabbit::FuncState::allocStackPos()
 	int64_t npos=_vlocals.size();
 	_vlocals.pushBack(rabbit::LocalVarInfo());
 	if(_vlocals.size()>((uint64_t)_stacksize)) {
-		if(_stacksize>MAX_FUNC_STACKSIZE) error(_SC("internal compiler error: too many locals"));
+		if(_stacksize>MAX_FUNC_STACKSIZE) error("internal compiler error: too many locals");
 		_stacksize=_vlocals.size();
 	}
 	return npos;

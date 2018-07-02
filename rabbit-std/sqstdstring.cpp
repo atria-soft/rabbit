@@ -44,7 +44,7 @@ static int64_t validate_format(rabbit::VirtualMachine* v, char *fmt, const char 
 		n++;
 		wc++;
 		if(wc>=MAX_WFORMAT_LEN)
-			return sq_throwerror(v,_SC("width format too long"));
+			return sq_throwerror(v,"width format too long");
 	}
 	swidth[wc] = '\0';
 	if(wc > 0) {
@@ -61,7 +61,7 @@ static int64_t validate_format(rabbit::VirtualMachine* v, char *fmt, const char 
 			n++;
 			wc++;
 			if(wc>=MAX_WFORMAT_LEN)
-				return sq_throwerror(v,_SC("precision format too long"));
+				return sq_throwerror(v,"precision format too long");
 		}
 		swidth[wc] = '\0';
 		if(wc > 0) {
@@ -70,7 +70,7 @@ static int64_t validate_format(rabbit::VirtualMachine* v, char *fmt, const char 
 		}
 	}
 	if (n-start > MAX_FORMAT_LEN )
-		return sq_throwerror(v,_SC("format too long"));
+		return sq_throwerror(v,"format too long");
 	memcpy(&fmt[1],&src[start],((n-start)+1)*sizeof(char));
 	fmt[(n-start)+2] = '\0';
 	return n;
@@ -104,7 +104,7 @@ rabbit::Result rabbit::std::format(rabbit::VirtualMachine* v,int64_t nformatstri
 		else {
 			n++;
 			if( nparam > sq_gettop(v) )
-				return sq_throwerror(v,_SC("not enough parameters for the given format string"));
+				return sq_throwerror(v,"not enough parameters for the given format string");
 			n = validate_format(v,fmt,format,n,w);
 			if(n < 0) return -1;
 			int64_t addlen = 0;
@@ -115,7 +115,7 @@ rabbit::Result rabbit::std::format(rabbit::VirtualMachine* v,int64_t nformatstri
 			switch(format[n]) {
 			case 's':
 				if(SQ_FAILED(sq_getstring(v,nparam,&ts)))
-					return sq_throwerror(v,_SC("string expected for the specified format"));
+					return sq_throwerror(v,"string expected for the specified format");
 				addlen = (sq_getsize(v,nparam)*sizeof(char))+((w+1)*sizeof(char));
 				valtype = 's';
 				break;
@@ -126,27 +126,27 @@ rabbit::Result rabbit::std::format(rabbit::VirtualMachine* v,int64_t nformatstri
 				int64_t fpos = flen - 1;
 				char f = fmt[fpos];
 				const char *prec = (const char *)_PRINT_INT_PREC;
-				while(*prec != _SC('\0')) {
+				while(*prec != '\0') {
 					fmt[fpos++] = *prec++;
 				}
 				fmt[fpos++] = f;
-				fmt[fpos++] = _SC('\0');
+				fmt[fpos++] = '\0';
 				}
 #endif
 			case 'c':
 				if(SQ_FAILED(sq_getinteger(v,nparam,&ti)))
-					return sq_throwerror(v,_SC("integer expected for the specified format"));
+					return sq_throwerror(v,"integer expected for the specified format");
 				addlen = (ADDITIONAL_FORMAT_SPACE)+((w+1)*sizeof(char));
 				valtype = 'i';
 				break;
 			case 'f': case 'g': case 'G': case 'e':  case 'E':
 				if(SQ_FAILED(sq_getfloat(v,nparam,&tf)))
-					return sq_throwerror(v,_SC("float expected for the specified format"));
+					return sq_throwerror(v,"float expected for the specified format");
 				addlen = (ADDITIONAL_FORMAT_SPACE)+((w+1)*sizeof(char));
 				valtype = 'f';
 				break;
 			default:
-				return sq_throwerror(v,_SC("invalid format"));
+				return sq_throwerror(v,"invalid format");
 			}
 			n++;
 			allocated += addlen + sizeof(char);
@@ -243,7 +243,7 @@ static int64_t _string_split(rabbit::VirtualMachine* v)
 	sq_getstring(v,2,&str);
 	sq_getstring(v,3,&seps);
 	int64_t sepsize = sq_getsize(v,3);
-	if(sepsize == 0) return sq_throwerror(v,_SC("empty separators string"));
+	if(sepsize == 0) return sq_throwerror(v,"empty separators string");
 	int64_t memsize = (sq_getsize(v,2)+1)*sizeof(char);
 	stemp = sq_getscratchpad(v,memsize);
 	memcpy(stemp,str,memsize);
@@ -285,7 +285,7 @@ static int64_t _string_escape(rabbit::VirtualMachine* v)
 		sq_push(v,2);
 		return 1;
 	}
-	const char *escpat = _SC("\\x%02x");
+	const char *escpat = "\\x%02x";
 	const int64_t maxescsize = 4;
 	int64_t destcharsize = (size * maxescsize); //assumes every char could be escaped
 	resstr = dest = (char *)sq_getscratchpad(v,destcharsize * sizeof(char));
@@ -392,10 +392,10 @@ static int64_t _regexp_match(rabbit::VirtualMachine* v)
 static void _addrexmatch(rabbit::VirtualMachine* v,const char *str,const char *begin,const char *end)
 {
 	sq_newtable(v);
-	sq_pushstring(v,_SC("begin"),-1);
+	sq_pushstring(v,"begin",-1);
 	sq_pushinteger(v,begin - str);
 	sq_rawset(v,-3);
-	sq_pushstring(v,_SC("end"),-1);
+	sq_pushstring(v,"end",-1);
 	sq_pushinteger(v,end - str);
 	sq_rawset(v,-3);
 }
@@ -458,33 +458,33 @@ static int64_t _regexp_constructor(rabbit::VirtualMachine* v)
 
 static int64_t _regexp__typeof(rabbit::VirtualMachine* v)
 {
-	sq_pushstring(v,_SC("regexp"),-1);
+	sq_pushstring(v,"regexp",-1);
 	return 1;
 }
 
-#define _DECL_REX_FUNC(name,nparams,pmask) {_SC(#name),_regexp_##name,nparams,pmask}
+#define _DECL_REX_FUNC(name,nparams,pmask) {#name,_regexp_##name,nparams,pmask}
 static const rabbit::RegFunction rexobj_funcs[]={
-	_DECL_REX_FUNC(constructor,2,_SC(".s")),
-	_DECL_REX_FUNC(search,-2,_SC("xsn")),
-	_DECL_REX_FUNC(match,2,_SC("xs")),
-	_DECL_REX_FUNC(capture,-2,_SC("xsn")),
-	_DECL_REX_FUNC(subexpcount,1,_SC("x")),
-	_DECL_REX_FUNC(_typeof,1,_SC("x")),
+	_DECL_REX_FUNC(constructor,2,".s"),
+	_DECL_REX_FUNC(search,-2,"xsn"),
+	_DECL_REX_FUNC(match,2,"xs"),
+	_DECL_REX_FUNC(capture,-2,"xsn"),
+	_DECL_REX_FUNC(subexpcount,1,"x"),
+	_DECL_REX_FUNC(_typeof,1,"x"),
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 #undef _DECL_REX_FUNC
 
-#define _DECL_FUNC(name,nparams,pmask) {_SC(#name),_string_##name,nparams,pmask}
+#define _DECL_FUNC(name,nparams,pmask) {#name,_string_##name,nparams,pmask}
 static const rabbit::RegFunction stringlib_funcs[]={
-	_DECL_FUNC(format,-2,_SC(".s")),
-	_DECL_FUNC(printf,-2,_SC(".s")),
-	_DECL_FUNC(strip,2,_SC(".s")),
-	_DECL_FUNC(lstrip,2,_SC(".s")),
-	_DECL_FUNC(rstrip,2,_SC(".s")),
-	_DECL_FUNC(split,3,_SC(".ss")),
-	_DECL_FUNC(escape,2,_SC(".s")),
-	_DECL_FUNC(startswith,3,_SC(".ss")),
-	_DECL_FUNC(endswith,3,_SC(".ss")),
+	_DECL_FUNC(format,-2,".s"),
+	_DECL_FUNC(printf,-2,".s"),
+	_DECL_FUNC(strip,2,".s"),
+	_DECL_FUNC(lstrip,2,".s"),
+	_DECL_FUNC(rstrip,2,".s"),
+	_DECL_FUNC(split,3,".ss"),
+	_DECL_FUNC(escape,2,".s"),
+	_DECL_FUNC(startswith,3,".ss"),
+	_DECL_FUNC(endswith,3,".ss"),
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 #undef _DECL_FUNC
@@ -492,7 +492,7 @@ static const rabbit::RegFunction stringlib_funcs[]={
 
 int64_t rabbit::std::register_stringlib(rabbit::VirtualMachine* v)
 {
-	sq_pushstring(v,_SC("regexp"),-1);
+	sq_pushstring(v,"regexp",-1);
 	sq_newclass(v,SQFalse);
 	int64_t i = 0;
 	while(rexobj_funcs[i].name != 0) {

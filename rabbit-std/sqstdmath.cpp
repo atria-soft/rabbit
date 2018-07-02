@@ -30,7 +30,7 @@ static int64_t math_srand(rabbit::VirtualMachine* v)
 {
 	int64_t i;
 	if(SQ_FAILED(sq_getinteger(v,2,&i)))
-		return sq_throwerror(v,_SC("invalid param"));
+		return sq_throwerror(v,"invalid param");
 	srand((unsigned int)i);
 	return 0;
 }
@@ -65,26 +65,26 @@ SINGLE_ARG_FUNC(floor)
 SINGLE_ARG_FUNC(ceil)
 SINGLE_ARG_FUNC(exp)
 
-#define _DECL_FUNC(name,nparams,tycheck) {_SC(#name),math_##name,nparams,tycheck}
+#define _DECL_FUNC(name,nparams,tycheck) {#name,math_##name,nparams,tycheck}
 static const rabbit::RegFunction mathlib_funcs[] = {
-	_DECL_FUNC(sqrt,2,_SC(".n")),
-	_DECL_FUNC(sin,2,_SC(".n")),
-	_DECL_FUNC(cos,2,_SC(".n")),
-	_DECL_FUNC(asin,2,_SC(".n")),
-	_DECL_FUNC(acos,2,_SC(".n")),
-	_DECL_FUNC(log,2,_SC(".n")),
-	_DECL_FUNC(log10,2,_SC(".n")),
-	_DECL_FUNC(tan,2,_SC(".n")),
-	_DECL_FUNC(atan,2,_SC(".n")),
-	_DECL_FUNC(atan2,3,_SC(".nn")),
-	_DECL_FUNC(pow,3,_SC(".nn")),
-	_DECL_FUNC(floor,2,_SC(".n")),
-	_DECL_FUNC(ceil,2,_SC(".n")),
-	_DECL_FUNC(exp,2,_SC(".n")),
-	_DECL_FUNC(srand,2,_SC(".n")),
+	_DECL_FUNC(sqrt,2,".n"),
+	_DECL_FUNC(sin,2,".n"),
+	_DECL_FUNC(cos,2,".n"),
+	_DECL_FUNC(asin,2,".n"),
+	_DECL_FUNC(acos,2,".n"),
+	_DECL_FUNC(log,2,".n"),
+	_DECL_FUNC(log10,2,".n"),
+	_DECL_FUNC(tan,2,".n"),
+	_DECL_FUNC(atan,2,".n"),
+	_DECL_FUNC(atan2,3,".nn"),
+	_DECL_FUNC(pow,3,".nn"),
+	_DECL_FUNC(floor,2,".n"),
+	_DECL_FUNC(ceil,2,".n"),
+	_DECL_FUNC(exp,2,".n"),
+	_DECL_FUNC(srand,2,".n"),
 	_DECL_FUNC(rand,1,NULL),
-	_DECL_FUNC(fabs,2,_SC(".n")),
-	_DECL_FUNC(abs,2,_SC(".n")),
+	_DECL_FUNC(fabs,2,".n"),
+	_DECL_FUNC(abs,2,".n"),
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 #undef _DECL_FUNC
@@ -104,10 +104,10 @@ rabbit::Result rabbit::std::register_mathlib(rabbit::VirtualMachine* v)
 		sq_newslot(v,-3,SQFalse);
 		i++;
 	}
-	sq_pushstring(v,_SC("RAND_MAX"),-1);
+	sq_pushstring(v,"RAND_MAX",-1);
 	sq_pushinteger(v,RAND_MAX);
 	sq_newslot(v,-3,SQFalse);
-	sq_pushstring(v,_SC("PI"),-1);
+	sq_pushstring(v,"PI",-1);
 	sq_pushfloat(v,(float_t)M_PI);
 	sq_newslot(v,-3,SQFalse);
 	return SQ_OK;

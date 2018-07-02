@@ -35,7 +35,7 @@ static bool sq_aux_gettypedarg(rabbit::VirtualMachine* v,int64_t idx,rabbit::Obj
 	*o = &stack_get(v,idx);
 	if(sq_type(**o) != type){
 		rabbit::ObjectPtr oval = v->printObjVal(**o);
-		v->raise_error(_SC("wrong argument type, expected '%s' got '%.50s'"),IdType2Name(type),_stringval(oval));
+		v->raise_error("wrong argument type, expected '%s' got '%.50s'",IdType2Name(type),_stringval(oval));
 		return false;
 	}
 	return true;
@@ -45,14 +45,14 @@ static bool sq_aux_gettypedarg(rabbit::VirtualMachine* v,int64_t idx,rabbit::Obj
 
 #define sq_aux_paramscheck(v,count) \
 { \
-	if(sq_gettop(v) < count){ v->raise_error(_SC("not enough params in the stack")); return SQ_ERROR; }\
+	if(sq_gettop(v) < count){ v->raise_error("not enough params in the stack"); return SQ_ERROR; }\
 }
 
 namespace rabbit {
 	int64_t sq_aux_invalidtype(rabbit::VirtualMachine* v,rabbit::ObjectType type)
 	{
 		uint64_t buf_size = 100 *sizeof(char);
-		snprintf(_get_shared_state(v)->getScratchPad(buf_size), buf_size, _SC("unexpected type %s"), IdType2Name(type));
+		snprintf(_get_shared_state(v)->getScratchPad(buf_size), buf_size, "unexpected type %s", IdType2Name(type));
 		return sq_throwerror(v, _get_shared_state(v)->getScratchPad(-1));
 	}
 }
@@ -154,7 +154,7 @@ rabbit::Result rabbit::sq_compile(rabbit::VirtualMachine* v,SQLEXREADFUNC read,r
 	}
 	return SQ_ERROR;
 #else
-	return sq_throwerror(v,_SC("this is a no compiler build"));
+	return sq_throwerror(v,"this is a no compiler build");
 #endif
 }
 
@@ -299,7 +299,7 @@ rabbit::Result rabbit::sq_newclass(rabbit::VirtualMachine* v,rabbit::Bool hasbas
 	if(hasbase) {
 		rabbit::ObjectPtr &base = stack_get(v,-1);
 		if(sq_type(base) != rabbit::OT_CLASS)
-			return sq_throwerror(v,_SC("invalid base type"));
+			return sq_throwerror(v,"invalid base type");
 		baseclass = _class(base);
 	}
 	rabbit::Class *newclass = rabbit::Class::create(_get_shared_state(v), baseclass);
@@ -314,7 +314,7 @@ rabbit::Bool rabbit::sq_instanceof(rabbit::VirtualMachine* v)
 	rabbit::ObjectPtr &cl = stack_get(v,-2);
 	if(    sq_type(inst) != rabbit::OT_INSTANCE
 	    || sq_type(cl) != rabbit::OT_CLASS)
-		return sq_throwerror(v,_SC("invalid param type"));
+		return sq_throwerror(v,"invalid param type");
 	return _instance(inst)->instanceOf(_class(cl))?SQTrue:SQFalse;
 }
 
@@ -340,7 +340,7 @@ rabbit::Result rabbit::sq_arraypop(rabbit::VirtualMachine* v,int64_t idx,rabbit:
 		_array(*arr)->pop();
 		return SQ_OK;
 	}
-	return sq_throwerror(v, _SC("empty array"));
+	return sq_throwerror(v, "empty array");
 }
 
 rabbit::Result rabbit::sq_arrayresize(rabbit::VirtualMachine* v,int64_t idx,int64_t newsize)
@@ -352,7 +352,7 @@ rabbit::Result rabbit::sq_arrayresize(rabbit::VirtualMachine* v,int64_t idx,int6
 		_array(*arr)->resize(newsize);
 		return SQ_OK;
 	}
-	return sq_throwerror(v,_SC("negative size"));
+	return sq_throwerror(v,"negative size");
 }
 
 
@@ -382,7 +382,7 @@ rabbit::Result rabbit::sq_arrayremove(rabbit::VirtualMachine* v,int64_t idx,int6
 	sq_aux_paramscheck(v, 1);
 	rabbit::ObjectPtr *arr;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_ARRAY,arr);
-	return _array(*arr)->remove(itemidx) ? SQ_OK : sq_throwerror(v,_SC("index out of range"));
+	return _array(*arr)->remove(itemidx) ? SQ_OK : sq_throwerror(v,"index out of range");
 }
 
 rabbit::Result rabbit::sq_arrayinsert(rabbit::VirtualMachine* v,int64_t idx,int64_t destpos)
@@ -390,7 +390,7 @@ rabbit::Result rabbit::sq_arrayinsert(rabbit::VirtualMachine* v,int64_t idx,int6
 	sq_aux_paramscheck(v, 1);
 	rabbit::ObjectPtr *arr;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_ARRAY,arr);
-	rabbit::Result ret = _array(*arr)->insert(destpos, v->getUp(-1)) ? SQ_OK : sq_throwerror(v,_SC("index out of range"));
+	rabbit::Result ret = _array(*arr)->insert(destpos, v->getUp(-1)) ? SQ_OK : sq_throwerror(v,"index out of range");
 	v->pop();
 	return ret;
 }
@@ -423,7 +423,7 @@ rabbit::Result rabbit::sq_getclosureinfo(rabbit::VirtualMachine* v,int64_t idx,u
 		*nfreevars = c->_noutervalues;
 		return SQ_OK;
 	}
-	return sq_throwerror(v,_SC("the object is not a closure"));
+	return sq_throwerror(v,"the object is not a closure");
 }
 
 rabbit::Result rabbit::sq_setnativeclosurename(rabbit::VirtualMachine* v,int64_t idx,const char *name)
@@ -434,20 +434,20 @@ rabbit::Result rabbit::sq_setnativeclosurename(rabbit::VirtualMachine* v,int64_t
 		nc->_name = rabbit::String::create(_get_shared_state(v),name);
 		return SQ_OK;
 	}
-	return sq_throwerror(v,_SC("the object is not a nativeclosure"));
+	return sq_throwerror(v,"the object is not a nativeclosure");
 }
 
 rabbit::Result rabbit::sq_setparamscheck(rabbit::VirtualMachine* v,int64_t nparamscheck,const char *typemask)
 {
 	rabbit::Object o = stack_get(v, -1);
 	if(!sq_isnativeclosure(o))
-		return sq_throwerror(v, _SC("native closure expected"));
+		return sq_throwerror(v, "native closure expected");
 	rabbit::NativeClosure *nc = _nativeclosure(o);
 	nc->_nparamscheck = nparamscheck;
 	if(typemask) {
 		etk::Vector<int64_t> res;
 		if(!compileTypemask(res, typemask))
-			return sq_throwerror(v, _SC("invalid typemask"));
+			return sq_throwerror(v, "invalid typemask");
 		nc->_typecheck = res;
 	}
 	else {
@@ -464,13 +464,13 @@ rabbit::Result rabbit::sq_bindenv(rabbit::VirtualMachine* v,int64_t idx)
 	rabbit::ObjectPtr &o = stack_get(v,idx);
 	if(!sq_isnativeclosure(o) &&
 		!sq_isclosure(o))
-		return sq_throwerror(v,_SC("the target is not a closure"));
+		return sq_throwerror(v, "the target is not a closure");
 	rabbit::ObjectPtr &env = stack_get(v,-1);
 	if(!sq_istable(env) &&
 		!sq_isarray(env) &&
 		!sq_isclass(env) &&
 		!sq_isinstance(env))
-		return sq_throwerror(v,_SC("invalid environment"));
+		return sq_throwerror(v,"invalid environment");
 	rabbit::WeakRef *w = _refcounted(env)->getWeakRef(sq_type(env));
 	rabbit::ObjectPtr ret;
 	if(sq_isclosure(o)) {
@@ -501,7 +501,7 @@ rabbit::Result rabbit::sq_getclosurename(rabbit::VirtualMachine* v,int64_t idx)
 	rabbit::ObjectPtr &o = stack_get(v,idx);
 	if(!sq_isnativeclosure(o) &&
 		!sq_isclosure(o))
-		return sq_throwerror(v,_SC("the target is not a closure"));
+		return sq_throwerror(v,"the target is not a closure");
 	if(sq_isnativeclosure(o))
 	{
 		v->push(_nativeclosure(o)->_name);
@@ -516,19 +516,19 @@ rabbit::Result rabbit::sq_setclosureroot(rabbit::VirtualMachine* v,int64_t idx)
 {
 	rabbit::ObjectPtr &c = stack_get(v,idx);
 	rabbit::Object o = stack_get(v, -1);
-	if(!sq_isclosure(c)) return sq_throwerror(v, _SC("closure expected"));
+	if(!sq_isclosure(c)) return sq_throwerror(v, "closure expected");
 	if(sq_istable(o)) {
 		_closure(c)->setRoot(_table(o)->getWeakRef(rabbit::OT_TABLE));
 		v->pop();
 		return SQ_OK;
 	}
-	return sq_throwerror(v, _SC("invalid type"));
+	return sq_throwerror(v, "invalid type");
 }
 
 rabbit::Result rabbit::sq_getclosureroot(rabbit::VirtualMachine* v,int64_t idx)
 {
 	rabbit::ObjectPtr &c = stack_get(v,idx);
-	if(!sq_isclosure(c)) return sq_throwerror(v, _SC("closure expected"));
+	if(!sq_isclosure(c)) return sq_throwerror(v, "closure expected");
 	v->push(_closure(c)->_root->_obj);
 	return SQ_OK;
 }
@@ -540,7 +540,7 @@ rabbit::Result rabbit::sq_clear(rabbit::VirtualMachine* v,int64_t idx)
 		case rabbit::OT_TABLE: _table(o)->clear();  break;
 		case rabbit::OT_ARRAY: _array(o)->resize(0); break;
 		default:
-			return sq_throwerror(v, _SC("clear only works on table and array"));
+			return sq_throwerror(v, "clear only works on table and array");
 		break;
 
 	}
@@ -570,7 +570,7 @@ rabbit::Result rabbit::sq_setroottable(rabbit::VirtualMachine* v)
 		v->pop();
 		return SQ_OK;
 	}
-	return sq_throwerror(v, _SC("invalid type"));
+	return sq_throwerror(v, "invalid type");
 }
 
 rabbit::Result rabbit::sq_setconsttable(rabbit::VirtualMachine* v)
@@ -581,7 +581,7 @@ rabbit::Result rabbit::sq_setconsttable(rabbit::VirtualMachine* v)
 		v->pop();
 		return SQ_OK;
 	}
-	return sq_throwerror(v, _SC("invalid type, expected table"));
+	return sq_throwerror(v, "invalid type, expected table");
 }
 
 void rabbit::sq_setforeignptr(rabbit::VirtualMachine* v,rabbit::UserPointer p)
@@ -776,7 +776,7 @@ rabbit::Result rabbit::sq_settypetag(rabbit::VirtualMachine* v,int64_t idx,rabbi
 			_class(o)->_typetag = typetag;
 			break;
 		default:
-			return sq_throwerror(v,_SC("invalid object type"));
+			return sq_throwerror(v,"invalid object type");
 	}
 	return SQ_OK;
 }
@@ -811,7 +811,7 @@ rabbit::Result rabbit::sq_getuserpointer(rabbit::VirtualMachine* v, int64_t idx,
 rabbit::Result rabbit::sq_setinstanceup(rabbit::VirtualMachine* v, int64_t idx, rabbit::UserPointer p)
 {
 	rabbit::ObjectPtr &o = stack_get(v,idx);
-	if(sq_type(o) != rabbit::OT_INSTANCE) return sq_throwerror(v,_SC("the object is not a class instance"));
+	if(sq_type(o) != rabbit::OT_INSTANCE) return sq_throwerror(v,"the object is not a class instance");
 	_instance(o)->_userpointer = p;
 	return SQ_OK;
 }
@@ -819,8 +819,8 @@ rabbit::Result rabbit::sq_setinstanceup(rabbit::VirtualMachine* v, int64_t idx, 
 rabbit::Result rabbit::sq_setclassudsize(rabbit::VirtualMachine* v, int64_t idx, int64_t udsize)
 {
 	rabbit::ObjectPtr &o = stack_get(v,idx);
-	if(sq_type(o) != rabbit::OT_CLASS) return sq_throwerror(v,_SC("the object is not a class"));
-	if(_class(o)->_locked) return sq_throwerror(v,_SC("the class is locked"));
+	if(sq_type(o) != rabbit::OT_CLASS) return sq_throwerror(v,"the object is not a class");
+	if(_class(o)->_locked) return sq_throwerror(v,"the class is locked");
 	_class(o)->_udsize = udsize;
 	return SQ_OK;
 }
@@ -829,7 +829,7 @@ rabbit::Result rabbit::sq_setclassudsize(rabbit::VirtualMachine* v, int64_t idx,
 rabbit::Result rabbit::sq_getinstanceup(rabbit::VirtualMachine* v, int64_t idx, rabbit::UserPointer *p,rabbit::UserPointer typetag)
 {
 	rabbit::ObjectPtr &o = stack_get(v,idx);
-	if(sq_type(o) != rabbit::OT_INSTANCE) return sq_throwerror(v,_SC("the object is not a class instance"));
+	if(sq_type(o) != rabbit::OT_INSTANCE) return sq_throwerror(v,"the object is not a class instance");
 	(*p) = _instance(o)->_userpointer;
 	if(typetag != 0) {
 		rabbit::Class *cl = _instance(o)->_class;
@@ -838,7 +838,7 @@ rabbit::Result rabbit::sq_getinstanceup(rabbit::VirtualMachine* v, int64_t idx, 
 				return SQ_OK;
 			cl = cl->_base;
 		}while(cl != NULL);
-		return sq_throwerror(v,_SC("invalid type tag"));
+		return sq_throwerror(v,"invalid type tag");
 	}
 	return SQ_OK;
 }
@@ -888,7 +888,7 @@ rabbit::Result rabbit::sq_newslot(rabbit::VirtualMachine* v, int64_t idx, rabbit
 	rabbit::ObjectPtr &self = stack_get(v, idx);
 	if(sq_type(self) == rabbit::OT_TABLE || sq_type(self) == rabbit::OT_CLASS) {
 		rabbit::ObjectPtr &key = v->getUp(-2);
-		if(sq_type(key) == rabbit::OT_NULL) return sq_throwerror(v, _SC("null is not a valid key"));
+		if(sq_type(key) == rabbit::OT_NULL) return sq_throwerror(v, "null is not a valid key");
 		v->newSlot(self, key, v->getUp(-1),bstatic?true:false);
 		v->pop(2);
 	}
@@ -901,7 +901,7 @@ rabbit::Result rabbit::sq_deleteslot(rabbit::VirtualMachine* v,int64_t idx,rabbi
 	rabbit::ObjectPtr *self;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_TABLE,self);
 	rabbit::ObjectPtr &key = v->getUp(-1);
-	if(sq_type(key) == rabbit::OT_NULL) return sq_throwerror(v, _SC("null is not a valid key"));
+	if(sq_type(key) == rabbit::OT_NULL) return sq_throwerror(v, "null is not a valid key");
 	rabbit::ObjectPtr res;
 	if(!v->deleteSlot(*self, key, res)){
 		v->pop();
@@ -928,7 +928,7 @@ rabbit::Result rabbit::sq_rawset(rabbit::VirtualMachine* v,int64_t idx)
 	rabbit::ObjectPtr &key = v->getUp(-2);
 	if(sq_type(key) == rabbit::OT_NULL) {
 		v->pop(2);
-		return sq_throwerror(v, _SC("null key"));
+		return sq_throwerror(v, "null key");
 	}
 	switch(sq_type(self)) {
 	case rabbit::OT_TABLE:
@@ -955,7 +955,7 @@ rabbit::Result rabbit::sq_rawset(rabbit::VirtualMachine* v,int64_t idx)
 	break;
 	default:
 		v->pop(2);
-		return sq_throwerror(v, _SC("rawset works only on array/table/class and instance"));
+		return sq_throwerror(v, "rawset works only on array/table/class and instance");
 	}
 	v->raise_Idxerror(v->getUp(-2));return SQ_ERROR;
 }
@@ -963,9 +963,9 @@ rabbit::Result rabbit::sq_rawset(rabbit::VirtualMachine* v,int64_t idx)
 rabbit::Result rabbit::sq_newmember(rabbit::VirtualMachine* v,int64_t idx,rabbit::Bool bstatic)
 {
 	rabbit::ObjectPtr &self = stack_get(v, idx);
-	if(sq_type(self) != rabbit::OT_CLASS) return sq_throwerror(v, _SC("new member only works with classes"));
+	if(sq_type(self) != rabbit::OT_CLASS) return sq_throwerror(v, "new member only works with classes");
 	rabbit::ObjectPtr &key = v->getUp(-3);
-	if(sq_type(key) == rabbit::OT_NULL) return sq_throwerror(v, _SC("null key"));
+	if(sq_type(key) == rabbit::OT_NULL) return sq_throwerror(v, "null key");
 	if(!v->newSlotA(self,key,v->getUp(-2),v->getUp(-1),bstatic?true:false,false)) {
 		v->pop(3);
 		return SQ_ERROR;
@@ -977,9 +977,9 @@ rabbit::Result rabbit::sq_newmember(rabbit::VirtualMachine* v,int64_t idx,rabbit
 rabbit::Result rabbit::sq_rawnewmember(rabbit::VirtualMachine* v,int64_t idx,rabbit::Bool bstatic)
 {
 	rabbit::ObjectPtr &self = stack_get(v, idx);
-	if(sq_type(self) != rabbit::OT_CLASS) return sq_throwerror(v, _SC("new member only works with classes"));
+	if(sq_type(self) != rabbit::OT_CLASS) return sq_throwerror(v, "new member only works with classes");
 	rabbit::ObjectPtr &key = v->getUp(-3);
-	if(sq_type(key) == rabbit::OT_NULL) return sq_throwerror(v, _SC("null key"));
+	if(sq_type(key) == rabbit::OT_NULL) return sq_throwerror(v, "null key");
 	if(!v->newSlotA(self,key,v->getUp(-2),v->getUp(-1),bstatic?true:false,true)) {
 		v->pop(3);
 		return SQ_ERROR;
@@ -997,7 +997,7 @@ rabbit::Result rabbit::sq_setdelegate(rabbit::VirtualMachine* v,int64_t idx)
 	case rabbit::OT_TABLE:
 		if(sq_type(mt) == rabbit::OT_TABLE) {
 			if(!_table(self)->setDelegate(_table(mt))) {
-				return sq_throwerror(v, _SC("delagate cycle"));
+				return sq_throwerror(v, "delagate cycle");
 			}
 			v->pop();
 		}
@@ -1048,7 +1048,7 @@ rabbit::Result rabbit::sq_getdelegate(rabbit::VirtualMachine* v,int64_t idx)
 		}
 		v->push(rabbit::ObjectPtr(_delegable(self)->_delegate));
 		break;
-	default: return sq_throwerror(v,_SC("wrong type")); break;
+	default: return sq_throwerror(v,"wrong type"); break;
 	}
 	return SQ_OK;
 
@@ -1089,16 +1089,16 @@ rabbit::Result rabbit::sq_rawget(rabbit::VirtualMachine* v,int64_t idx)
 		}
 		else {
 			v->pop();
-			return sq_throwerror(v,_SC("invalid index type for an array"));
+			return sq_throwerror(v,"invalid index type for an array");
 		}
 				  }
 		break;
 	default:
 		v->pop();
-		return sq_throwerror(v,_SC("rawget works only on array/table/instance and class"));
+		return sq_throwerror(v,"rawget works only on array/table/instance and class");
 	}
 	v->pop();
-	return sq_throwerror(v,_SC("the index doesn't exist"));
+	return sq_throwerror(v,"the index doesn't exist");
 }
 
 rabbit::Result rabbit::sq_getstackobj(rabbit::VirtualMachine* v,int64_t idx,rabbit::Object *po)
@@ -1170,7 +1170,7 @@ rabbit::Result rabbit::sq_reservestack(rabbit::VirtualMachine* v,int64_t nsize)
 {
 	if (((uint64_t)v->_top + nsize) > v->_stack.size()) {
 		if(v->_nmetamethodscall) {
-			return sq_throwerror(v,_SC("cannot resize stack while in a metamethod"));
+			return sq_throwerror(v,"cannot resize stack while in a metamethod");
 		}
 		v->_stack.resize(v->_stack.size() + ((v->_top + nsize) - v->_stack.size()));
 	}
@@ -1188,7 +1188,7 @@ rabbit::Result rabbit::sq_resume(rabbit::VirtualMachine* v,rabbit::Bool retval,r
 			v->pop();
 		return SQ_OK;
 	}
-	return sq_throwerror(v,_SC("only generators can be resumed"));
+	return sq_throwerror(v,"only generators can be resumed");
 }
 
 rabbit::Result rabbit::sq_call(rabbit::VirtualMachine* v,int64_t params,rabbit::Bool retval,rabbit::Bool raiseerror)
@@ -1210,19 +1210,19 @@ rabbit::Result rabbit::sq_call(rabbit::VirtualMachine* v,int64_t params,rabbit::
 	}
 	if(!v->_suspended)
 		v->pop(params);
-	return sq_throwerror(v,_SC("call failed"));
+	return sq_throwerror(v,"call failed");
 }
 
 rabbit::Result rabbit::sq_tailcall(rabbit::VirtualMachine* v, int64_t nparams)
 {
 	rabbit::ObjectPtr &res = v->getUp(-(nparams + 1));
 	if (sq_type(res) != rabbit::OT_CLOSURE) {
-		return sq_throwerror(v, _SC("only closure can be tail called"));
+		return sq_throwerror(v, "only closure can be tail called");
 	}
 	rabbit::Closure *clo = _closure(res);
 	if (clo->_function->_bgenerator)
 	{
-		return sq_throwerror(v, _SC("generators cannot be tail called"));
+		return sq_throwerror(v, "generators cannot be tail called");
 	}
 	
 	int64_t stackbase = (v->_top - nparams) - v->_stackbase;
@@ -1241,7 +1241,7 @@ rabbit::Result rabbit::sq_wakeupvm(rabbit::VirtualMachine* v,rabbit::Bool wakeup
 {
 	rabbit::ObjectPtr ret;
 	if(!v->_suspended)
-		return sq_throwerror(v,_SC("cannot resume a vm that is not running any code"));
+		return sq_throwerror(v,"cannot resume a vm that is not running any code");
 	int64_t target = v->_suspended_target;
 	if(wakeupret) {
 		if(target != -1) {
@@ -1306,9 +1306,9 @@ rabbit::Result rabbit::sq_writeclosure(rabbit::VirtualMachine* v,SQWRITEFUNC w,r
 	_GETSAFE_OBJ(v, -1, rabbit::OT_CLOSURE,o);
 	unsigned short tag = SQ_BYTECODE_STREAM_TAG;
 	if(_closure(*o)->_function->_noutervalues)
-		return sq_throwerror(v,_SC("a closure with free variables bound cannot be serialized"));
+		return sq_throwerror(v,"a closure with free variables bound cannot be serialized");
 	if(w(up,&tag,2) != 2)
-		return sq_throwerror(v,_SC("io error"));
+		return sq_throwerror(v,"io error");
 	if(!_closure(*o)->save(v,up,w))
 		return SQ_ERROR;
 	return SQ_OK;
@@ -1320,9 +1320,9 @@ rabbit::Result rabbit::sq_readclosure(rabbit::VirtualMachine* v,SQREADFUNC r,rab
 
 	unsigned short tag;
 	if(r(up,&tag,2) != 2)
-		return sq_throwerror(v,_SC("io error"));
+		return sq_throwerror(v,"io error");
 	if(tag != SQ_BYTECODE_STREAM_TAG)
-		return sq_throwerror(v,_SC("invalid stream"));
+		return sq_throwerror(v,"invalid stream");
 	if(!rabbit::Closure::load(v,up,r,closure))
 		return SQ_ERROR;
 	v->push(closure);
@@ -1336,7 +1336,7 @@ char * rabbit::sq_getscratchpad(rabbit::VirtualMachine* v,int64_t minsize)
 
 rabbit::Result rabbit::sq_resurrectunreachable(rabbit::VirtualMachine* v)
 {
-	return sq_throwerror(v,_SC("sq_resurrectunreachable requires a garbage collector build"));
+	return sq_throwerror(v,"sq_resurrectunreachable requires a garbage collector build");
 }
 
 // TODO: remove this...
@@ -1352,7 +1352,7 @@ rabbit::Result rabbit::sq_getcallee(rabbit::VirtualMachine* v)
 		v->push(v->_callsstack[v->_callsstacksize - 2]._closure);
 		return SQ_OK;
 	}
-	return sq_throwerror(v,_SC("no closure in the calls stack"));
+	return sq_throwerror(v,"no closure in the calls stack");
 }
 
 const char * rabbit::sq_getfreevariable(rabbit::VirtualMachine* v,int64_t idx,uint64_t nval)
@@ -1375,7 +1375,7 @@ const char * rabbit::sq_getfreevariable(rabbit::VirtualMachine* v,int64_t idx,ui
 		rabbit::NativeClosure *clo = _nativeclosure(self);
 		if(clo->_noutervalues > nval) {
 			v->push(clo->_outervalues[nval]);
-			name = _SC("@NATIVE");
+			name = "@NATIVE";
 		}
 						  }
 		break;
@@ -1394,14 +1394,14 @@ rabbit::Result rabbit::sq_setfreevariable(rabbit::VirtualMachine* v,int64_t idx,
 		if(((uint64_t)fp->_noutervalues) > nval){
 			*(_outer(_closure(self)->_outervalues[nval])->_valptr) = stack_get(v,-1);
 		}
-		else return sq_throwerror(v,_SC("invalid free var index"));
+		else return sq_throwerror(v,"invalid free var index");
 					}
 		break;
 	case rabbit::OT_NATIVECLOSURE:
 		if(_nativeclosure(self)->_noutervalues > nval){
 			_nativeclosure(self)->_outervalues[nval] = stack_get(v,-1);
 		}
-		else return sq_throwerror(v,_SC("invalid free var index"));
+		else return sq_throwerror(v,"invalid free var index");
 		break;
 	default:
 		return sq_aux_invalidtype(v, sq_type(self));
@@ -1429,7 +1429,7 @@ rabbit::Result rabbit::sq_setattributes(rabbit::VirtualMachine* v,int64_t idx)
 		v->push(attrs);
 		return SQ_OK;
 	}
-	return sq_throwerror(v,_SC("wrong index"));
+	return sq_throwerror(v,"wrong index");
 }
 
 rabbit::Result rabbit::sq_getattributes(rabbit::VirtualMachine* v,int64_t idx)
@@ -1449,7 +1449,7 @@ rabbit::Result rabbit::sq_getattributes(rabbit::VirtualMachine* v,int64_t idx)
 		v->push(attrs);
 		return SQ_OK;
 	}
-	return sq_throwerror(v,_SC("wrong index"));
+	return sq_throwerror(v,"wrong index");
 }
 
 rabbit::Result rabbit::sq_getmemberhandle(rabbit::VirtualMachine* v,int64_t idx,rabbit::MemberHandle *handle)
@@ -1465,7 +1465,7 @@ rabbit::Result rabbit::sq_getmemberhandle(rabbit::VirtualMachine* v,int64_t idx,
 		v->pop();
 		return SQ_OK;
 	}
-	return sq_throwerror(v,_SC("wrong index"));
+	return sq_throwerror(v,"wrong index");
 }
 
 rabbit::Result _getmemberbyhandle(rabbit::VirtualMachine* v,rabbit::ObjectPtr &self,const rabbit::MemberHandle *handle,rabbit::ObjectPtr *&val)
@@ -1494,7 +1494,7 @@ rabbit::Result _getmemberbyhandle(rabbit::VirtualMachine* v,rabbit::ObjectPtr &s
 			}
 			break;
 		default:
-			return sq_throwerror(v,_SC("wrong type(expected class or instance)"));
+			return sq_throwerror(v,"wrong type(expected class or instance)");
 	}
 	return SQ_OK;
 }
@@ -1564,7 +1564,7 @@ rabbit::Result rabbit::sq_getweakrefval(rabbit::VirtualMachine* v,int64_t idx)
 {
 	rabbit::ObjectPtr &o = stack_get(v,idx);
 	if(sq_type(o) != rabbit::OT_WEAKREF) {
-		return sq_throwerror(v,_SC("the object must be a weakref"));
+		return sq_throwerror(v,"the object must be a weakref");
 	}
 	v->push(_weakref(o)->_obj);
 	return SQ_OK;
@@ -1584,7 +1584,7 @@ rabbit::Result rabbit::sq_getdefaultdelegate(rabbit::VirtualMachine* v,rabbit::O
 	case rabbit::OT_CLASS: v->push(ss->_class_default_delegate); break;
 	case rabbit::OT_INSTANCE: v->push(ss->_instance_default_delegate); break;
 	case rabbit::OT_WEAKREF: v->push(ss->_weakref_default_delegate); break;
-	default: return sq_throwerror(v,_SC("the type doesn't have a default delegate"));
+	default: return sq_throwerror(v,"the type doesn't have a default delegate");
 	}
 	return SQ_OK;
 }
@@ -1593,7 +1593,7 @@ rabbit::Result rabbit::sq_next(rabbit::VirtualMachine* v,int64_t idx)
 {
 	rabbit::ObjectPtr o=stack_get(v,idx),&refpos = stack_get(v,-1),realkey,val;
 	if(sq_type(o) == rabbit::OT_GENERATOR) {
-		return sq_throwerror(v,_SC("cannot iterate a generator"));
+		return sq_throwerror(v,"cannot iterate a generator");
 	}
 	int faketojump;
 	if(!v->FOREACH_OP(o,realkey,val,refpos,0,666,faketojump))

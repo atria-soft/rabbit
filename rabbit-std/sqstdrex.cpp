@@ -15,12 +15,22 @@
 #ifdef _DEBUG
 #include <stdio.h>
 
-static const char *g_nnames[] =
-{
-	_SC("NONE"),_SC("OP_GREEDY"),   _SC("OP_OR"),
-	_SC("OP_EXPR"),_SC("OP_NOCAPEXPR"),_SC("OP_DOT"),   _SC("OP_CLASS"),
-	_SC("OP_CCLASS"),_SC("OP_NCLASS"),_SC("OP_RANGE"),_SC("OP_CHAR"),
-	_SC("OP_EOL"),_SC("OP_BOL"),_SC("OP_WB"),_SC("OP_MB")
+static const char *g_nnames[] = {
+	"NONE",
+	"OP_GREEDY",
+	"OP_OR",
+	"OP_EXPR",
+	"OP_NOCAPEXPR",
+	"OP_DOT",
+	"OP_CLASS",
+	"OP_CCLASS",
+	"OP_NCLASS",
+	"OP_RANGE",
+	"OP_CHAR",
+	"OP_EOL",
+	"OP_BOL",
+	"OP_WB",
+	"OP_MB"
 };
 
 #endif
@@ -105,7 +115,7 @@ namespace std {
 		
 		static void rex_expect(SQRex *exp, int64_t n){
 			if((*exp->_p) != n)
-				rabbit::std::rex_error(exp, _SC("expected paren"));
+				rabbit::std::rex_error(exp, "expected paren");
 			exp->_p++;
 		}
 		
@@ -121,7 +131,7 @@ namespace std {
 				case 'f': exp->_p++; return '\f';
 				default: return (*exp->_p++);
 				}
-			} else if(!isprint(*exp->_p)) rabbit::std::rex_error(exp,_SC("letter expected"));
+			} else if(!isprint(*exp->_p)) rabbit::std::rex_error(exp,"letter expected");
 			return (*exp->_p++);
 		}
 		
@@ -156,15 +166,15 @@ namespace std {
 							 cb = *++exp->_p; //skip 'm'
 							 ce = *++exp->_p;
 							 exp->_p++; //points to the next char to be parsed
-							 if ((!cb) || (!ce)) rabbit::std::rex_error(exp,_SC("balanced chars expected"));
-							 if ( cb == ce ) rabbit::std::rex_error(exp,_SC("open/close char can't be the same"));
+							 if ((!cb) || (!ce)) rabbit::std::rex_error(exp,"balanced chars expected");
+							 if ( cb == ce ) rabbit::std::rex_error(exp,"open/close char can't be the same");
 							 int64_t node =  rabbit::std::rex_newnode(exp,OP_MB);
 							 exp->_nodes[node].left = cb;
 							 exp->_nodes[node].right = ce;
 							 return node;
 						}
 					case 0:
-						rabbit::std::rex_error(exp,_SC("letter expected for argument of escape sequence"));
+						rabbit::std::rex_error(exp,"letter expected for argument of escape sequence");
 						break;
 					case 'b':
 					case 'B':
@@ -181,7 +191,7 @@ namespace std {
 			}
 			else if(!isprint(*exp->_p)) {
 		
-				rabbit::std::rex_error(exp,_SC("letter expected"));
+				rabbit::std::rex_error(exp,"letter expected");
 			}
 			t = *exp->_p; exp->_p++;
 			return rabbit::std::rex_newnode(exp,t);
@@ -195,15 +205,15 @@ namespace std {
 				exp->_p++;
 			}else ret = rabbit::std::rex_newnode(exp,OP_CLASS);
 		
-			if(*exp->_p == ']') rabbit::std::rex_error(exp,_SC("empty class"));
+			if(*exp->_p == ']') rabbit::std::rex_error(exp,"empty class");
 			chain = ret;
 			while(*exp->_p != ']' && exp->_p != exp->_eol) {
 				if(*exp->_p == '-' && first != -1){
 					int64_t r;
-					if(*exp->_p++ == ']') rabbit::std::rex_error(exp,_SC("unfinished range"));
+					if(*exp->_p++ == ']') rabbit::std::rex_error(exp,"unfinished range");
 					r = rabbit::std::rex_newnode(exp,OP_RANGE);
-					if(exp->_nodes[first].type>*exp->_p) rabbit::std::rex_error(exp,_SC("invalid range"));
-					if(exp->_nodes[first].type == OP_CCLASS) rabbit::std::rex_error(exp,_SC("cannot use character classes in ranges"));
+					if(exp->_nodes[first].type>*exp->_p) rabbit::std::rex_error(exp,"invalid range");
+					if(exp->_nodes[first].type == OP_CCLASS) rabbit::std::rex_error(exp,"cannot use character classes in ranges");
 					exp->_nodes[r].left = exp->_nodes[first].type;
 					int64_t t = rabbit::std::rex_escapechar(exp);
 					exp->_nodes[r].right = t;
@@ -240,7 +250,7 @@ namespace std {
 			exp->_p++;
 			while(isdigit(*exp->_p)) {
 				ret = ret*10+(*exp->_p++-'0');
-				if(positions==1000000000) rabbit::std::rex_error(exp,_SC("overflow in numeric constant"));
+				if(positions==1000000000) rabbit::std::rex_error(exp,"overflow in numeric constant");
 				positions *= 10;
 			};
 			return ret;
@@ -290,7 +300,7 @@ namespace std {
 				case SQREX_SYMBOL_GREEDY_ZERO_OR_ONE: p0 = 0; p1 = 1; exp->_p++; isgreedy = SQTrue; break;
 				case '{':
 					exp->_p++;
-					if(!isdigit(*exp->_p)) rabbit::std::rex_error(exp,_SC("number expected"));
+					if(!isdigit(*exp->_p)) rabbit::std::rex_error(exp,"number expected");
 					p0 = (unsigned short)rabbit::std::rex_parsenumber(exp);
 					/*******************************/
 					switch(*exp->_p) {
@@ -306,7 +316,7 @@ namespace std {
 					rabbit::std::rex_expect(exp,'}');
 					break;
 				default:
-					rabbit::std::rex_error(exp,_SC(", or } expected"));
+					rabbit::std::rex_error(exp,", or } expected");
 					}
 					/*******************************/
 					isgreedy = SQTrue;
@@ -579,22 +589,22 @@ rabbit::std::SQRex *rabbit::std::rex_compile(const char *pattern,const char **er
 		int64_t res = rabbit::std::rex_list(exp);
 		exp->_nodes[exp->_first].left = res;
 		if(*exp->_p!='\0')
-			rabbit::std::rex_error(exp,_SC("unexpected character"));
+			rabbit::std::rex_error(exp,"unexpected character");
 #ifdef _DEBUG
 		{
 			int64_t nsize,i;
 			SQRexNode *t;
 			nsize = exp->_nsize;
 			t = &exp->_nodes[0];
-			printf(_SC("\n"));
+			printf("\n");
 			for(i = 0;i < nsize; i++) {
 				if(exp->_nodes[i].type>UINT8_MAX)
-					printf(_SC("[%02d] %10s "), (int32_t)i,g_nnames[exp->_nodes[i].type-UINT8_MAX]);
+					printf("[%02d] %10s ", (int32_t)i,g_nnames[exp->_nodes[i].type-UINT8_MAX]);
 				else
-					printf(_SC("[%02d] %10c "), (int32_t)i,exp->_nodes[i].type);
-				printf(_SC("left %02d right %02d next %02d\n"), (int32_t)exp->_nodes[i].left, (int32_t)exp->_nodes[i].right, (int32_t)exp->_nodes[i].next);
+					printf("[%02d] %10c ", (int32_t)i,exp->_nodes[i].type);
+				printf("left %02d right %02d next %02d\n", (int32_t)exp->_nodes[i].left, (int32_t)exp->_nodes[i].right, (int32_t)exp->_nodes[i].next);
 			}
-			printf(_SC("\n"));
+			printf("\n");
 		}
 #endif
 		exp->_matches = (SQRexMatch *) sq_malloc(exp->_nsubexpr * sizeof(SQRexMatch));

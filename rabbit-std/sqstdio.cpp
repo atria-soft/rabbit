@@ -117,7 +117,7 @@ namespace rabbit {
 }
 static int64_t _file__typeof(rabbit::VirtualMachine* v)
 {
-	sq_pushstring(v,_SC("file"),-1);
+	sq_pushstring(v,"file",-1);
 	return 1;
 }
 
@@ -139,19 +139,19 @@ static int64_t _file_constructor(rabbit::VirtualMachine* v)
 		rabbit::sq_getstring(v, 2, &filename);
 		rabbit::sq_getstring(v, 3, &mode);
 		newf = rabbit::std::fopen(filename, mode);
-		if(!newf) return rabbit::sq_throwerror(v, _SC("cannot open file"));
+		if(!newf) return rabbit::sq_throwerror(v, "cannot open file");
 	} else if(rabbit::sq_gettype(v,2) == rabbit::OT_USERPOINTER) {
 		owns = !(rabbit::sq_gettype(v,3) == rabbit::OT_NULL);
 		rabbit::sq_getuserpointer(v,2,&newf);
 	} else {
-		return rabbit::sq_throwerror(v,_SC("wrong parameter"));
+		return rabbit::sq_throwerror(v,"wrong parameter");
 	}
 
 	f = new (rabbit::sq_malloc(sizeof(rabbit::std::File)))rabbit::std::File(newf,owns);
 	if(SQ_FAILED(rabbit::sq_setinstanceup(v,1,f))) {
 		f->~File();
 		rabbit::sq_free(f,sizeof(rabbit::std::File));
-		return rabbit::sq_throwerror(v, _SC("cannot create blob with negative size"));
+		return rabbit::sq_throwerror(v, "cannot create blob with negative size");
 	}
 	rabbit::sq_setreleasehook(v,1,_file_releasehook);
 	return 0;
@@ -169,11 +169,11 @@ static int64_t _file_close(rabbit::VirtualMachine* v)
 }
 
 //bindings
-#define _DECL_FILE_FUNC(name,nparams,typecheck) {_SC(#name),_file_##name,nparams,typecheck}
+#define _DECL_FILE_FUNC(name,nparams,typecheck) {#name,_file_##name,nparams,typecheck}
 static const rabbit::RegFunction _file_methods[] = {
-	_DECL_FILE_FUNC(constructor,3,_SC("x")),
-	_DECL_FILE_FUNC(_typeof,1,_SC("x")),
-	_DECL_FILE_FUNC(close,1,_SC("x")),
+	_DECL_FILE_FUNC(constructor,3,"x"),
+	_DECL_FILE_FUNC(_typeof,1,"x"),
+	_DECL_FILE_FUNC(close,1,"x"),
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 
@@ -183,7 +183,7 @@ rabbit::Result rabbit::std::createfile(rabbit::VirtualMachine* v, SQFILE file,ra
 {
 	int64_t top = sq_gettop(v);
 	sq_pushregistrytable(v);
-	sq_pushstring(v,_SC("std_file"),-1);
+	sq_pushstring(v,"std_file",-1);
 	if(SQ_SUCCEEDED(sq_get(v,-2))) {
 		sq_remove(v,-2); //removes the registry
 		sq_pushroottable(v); // push the this
@@ -210,7 +210,7 @@ rabbit::Result rabbit::std::getfile(rabbit::VirtualMachine* v, int64_t idx, SQFI
 		*file = fileobj->getHandle();
 		return SQ_OK;
 	}
-	return sq_throwerror(v,_SC("not a file"));
+	return sq_throwerror(v,"not a file");
 }
 
 
@@ -305,7 +305,7 @@ int64_t file_write(rabbit::UserPointer file,rabbit::UserPointer p,int64_t size)
 
 rabbit::Result rabbit::std::loadfile(rabbit::VirtualMachine* v,const char *filename,rabbit::Bool printerror)
 {
-	SQFILE file = rabbit::std::fopen(filename,_SC("rb"));
+	SQFILE file = rabbit::std::fopen(filename,"rb");
 
 	int64_t ret;
 	unsigned short us;
@@ -334,11 +334,11 @@ rabbit::Result rabbit::std::loadfile(rabbit::VirtualMachine* v,const char *filen
 				case 0xBBEF:
 					if(rabbit::std::fread(&uc,1,sizeof(uc),file) == 0) {
 						rabbit::std::fclose(file);
-						return sq_throwerror(v,_SC("io error"));
+						return sq_throwerror(v,"io error");
 					}
 					if(uc != 0xBF) {
 						rabbit::std::fclose(file);
-						return sq_throwerror(v,_SC("Unrecognized encoding"));
+						return sq_throwerror(v,"Unrecognized encoding");
 					}
 					func = _io_file_lexfeed_PLAIN;
 					break;//UTF-8 ;
@@ -356,14 +356,14 @@ rabbit::Result rabbit::std::loadfile(rabbit::VirtualMachine* v,const char *filen
 		rabbit::std::fclose(file);
 		return SQ_ERROR;
 	}
-	return sq_throwerror(v,_SC("cannot open the file"));
+	return sq_throwerror(v,"cannot open the file");
 }
 
 rabbit::Result rabbit::std::dofile(rabbit::VirtualMachine* v,const char *filename,rabbit::Bool retval,rabbit::Bool printerror)
 {
 	//at least one entry must exist in order for us to push it as the environment
 	if(sq_gettop(v) == 0)
-		return sq_throwerror(v,_SC("environment table expected"));
+		return sq_throwerror(v,"environment table expected");
 
 	if(SQ_SUCCEEDED(rabbit::std::loadfile(v,filename,printerror))) {
 		sq_push(v,-2);
@@ -378,8 +378,8 @@ rabbit::Result rabbit::std::dofile(rabbit::VirtualMachine* v,const char *filenam
 
 rabbit::Result rabbit::std::writeclosuretofile(rabbit::VirtualMachine* v,const char *filename)
 {
-	SQFILE file = rabbit::std::fopen(filename,_SC("wb+"));
-	if(!file) return sq_throwerror(v,_SC("cannot open the file"));
+	SQFILE file = rabbit::std::fopen(filename,"wb+");
+	if(!file) return sq_throwerror(v,"cannot open the file");
 	if(SQ_SUCCEEDED(sq_writeclosure(v,file_write,file))) {
 		rabbit::std::fclose(file);
 		return SQ_OK;
@@ -424,11 +424,11 @@ int64_t _g_io_dofile(rabbit::VirtualMachine* v)
 	return SQ_ERROR; //propagates the error
 }
 
-#define _DECL_GLOBALIO_FUNC(name,nparams,typecheck) {_SC(#name),_g_io_##name,nparams,typecheck}
+#define _DECL_GLOBALIO_FUNC(name,nparams,typecheck) {#name,_g_io_##name,nparams,typecheck}
 static const rabbit::RegFunction iolib_funcs[]={
-	_DECL_GLOBALIO_FUNC(loadfile,-2,_SC(".sb")),
-	_DECL_GLOBALIO_FUNC(dofile,-2,_SC(".sb")),
-	_DECL_GLOBALIO_FUNC(writeclosuretofile,3,_SC(".sc")),
+	_DECL_GLOBALIO_FUNC(loadfile,-2,".sb"),
+	_DECL_GLOBALIO_FUNC(dofile,-2,".sb"),
+	_DECL_GLOBALIO_FUNC(writeclosuretofile,3,".sc"),
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 
@@ -436,14 +436,14 @@ rabbit::Result rabbit::std::register_iolib(rabbit::VirtualMachine* v)
 {
 	int64_t top = sq_gettop(v);
 	//create delegate
-	declare_stream(v,_SC("file"),(rabbit::UserPointer)SQSTD_FILE_TYPE_TAG,_SC("std_file"),_file_methods,iolib_funcs);
-	sq_pushstring(v,_SC("stdout"),-1);
+	declare_stream(v,"file",(rabbit::UserPointer)SQSTD_FILE_TYPE_TAG, "std_file",_file_methods,iolib_funcs);
+	sq_pushstring(v,"stdout",-1);
 	rabbit::std::createfile(v,stdout,SQFalse);
 	sq_newslot(v,-3,SQFalse);
-	sq_pushstring(v,_SC("stdin"),-1);
+	sq_pushstring(v,"stdin",-1);
 	rabbit::std::createfile(v,stdin,SQFalse);
 	sq_newslot(v,-3,SQFalse);
-	sq_pushstring(v,_SC("stderr"),-1);
+	sq_pushstring(v,"stderr",-1);
 	rabbit::std::createfile(v,stderr,SQFalse);
 	sq_newslot(v,-3,SQFalse);
 	sq_settop(v,top);

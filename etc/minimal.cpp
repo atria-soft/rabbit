@@ -25,7 +25,7 @@ void call_foo(HSQUIRRELVM v, int n,float f,const char *s)
 {
 	int64_t top = sq_gettop(v); //saves the stack size before the call
 	sq_pushroottable(v); //pushes the global table
-	sq_pushstring(v,_SC("foo"),-1);
+	sq_pushstring(v,"foo",-1);
 	if(SQ_SUCCEEDED(sq_get(v,-2))) { //gets the field 'foo' from the global table
 		sq_pushroottable(v); //push the 'this' (in this case is the global table)
 		sq_pushinteger(v,n);
@@ -53,9 +53,9 @@ int main(int argc, char* argv[])
 	sq_setprintfunc(v, printfunc,errorfunc); //sets the print function
 
 	sq_pushroottable(v); //push the root table(were the globals of the script will be stored)
-	if(SQ_SUCCEEDED(rabbit::std::dofile(v, _SC("test.nut"), SQFalse, SQTrue))) // also prints syntax errors if any
+	if(SQ_SUCCEEDED(rabbit::std::dofile(v, "test.nut", SQFalse, SQTrue))) // also prints syntax errors if any
 	{
-		call_foo(v,1,2.5,_SC("teststring"));
+		call_foo(v,1,2.5,"teststring");
 	}
 
 	sq_pop(v,1); //pops the root table

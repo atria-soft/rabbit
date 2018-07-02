@@ -17,8 +17,8 @@
 #define NEXT() {next();_currentcolumn++;}
 #define INIT_TEMP_STRING() { _longstr.resize(0);}
 #define APPEND_CHAR(c) { _longstr.pushBack(c);}
-#define TERMINATE_BUFFER() {_longstr.pushBack(_SC('\0'));}
-#define ADD_KEYWORD(key,id) _keywords->newSlot( rabbit::String::create(ss, _SC(#key)) ,int64_t(id))
+#define TERMINATE_BUFFER() {_longstr.pushBack('\0');}
+#define ADD_KEYWORD(key,id) _keywords->newSlot( rabbit::String::create(ss, #key) ,int64_t(id))
 
 rabbit::Lexer::Lexer(){}
 rabbit::Lexer::~Lexer()
@@ -89,7 +89,7 @@ void rabbit::Lexer::error(const char *err)
 void rabbit::Lexer::next()
 {
 	int64_t t = _readf(_up);
-	if(t > UINT8_MAX) error(_SC("Invalid character"));
+	if(t > UINT8_MAX) error("Invalid character");
 	if(t != 0) {
 		_currdata = (Lexchar)t;
 		return;
@@ -115,16 +115,16 @@ void rabbit::Lexer::lexBlockComment()
 	bool done = false;
 	while(!done) {
 		switch(CUR_CHAR) {
-			case _SC('*'): { NEXT(); if(CUR_CHAR == _SC('/')) { done = true; NEXT(); }}; continue;
-			case _SC('\n'): _currentline++; NEXT(); continue;
-			case RABBIT_EOB: error(_SC("missing \"*/\" in comment"));
+			case '*': { NEXT(); if(CUR_CHAR == '/') { done = true; NEXT(); }}; continue;
+			case '\n': _currentline++; NEXT(); continue;
+			case RABBIT_EOB: error("missing \"*/\" in comment");
 			default: NEXT();
 		}
 	}
 }
 void rabbit::Lexer::lexLineComment()
 {
-	do { NEXT(); } while (CUR_CHAR != _SC('\n') && (!IS_EOB()));
+	do { NEXT(); } while (CUR_CHAR != '\n' && (!IS_EOB()));
 }
 
 int64_t rabbit::Lexer::Lex()
@@ -132,131 +132,131 @@ int64_t rabbit::Lexer::Lex()
 	_lasttokenline = _currentline;
 	while(CUR_CHAR != RABBIT_EOB) {
 		switch(CUR_CHAR){
-		case _SC('\t'): case _SC('\r'): case _SC(' '): NEXT(); continue;
-		case _SC('\n'):
+		case '\t': case '\r': case ' ': NEXT(); continue;
+		case '\n':
 			_currentline++;
 			_prevtoken=_curtoken;
-			_curtoken=_SC('\n');
+			_curtoken='\n';
 			NEXT();
 			_currentcolumn=1;
 			continue;
-		case _SC('#'): lexLineComment(); continue;
-		case _SC('/'):
+		case '#': lexLineComment(); continue;
+		case '/':
 			NEXT();
 			switch(CUR_CHAR){
-			case _SC('*'):
+			case '*':
 				NEXT();
 				lexBlockComment();
 				continue;
-			case _SC('/'):
+			case '/':
 				lexLineComment();
 				continue;
-			case _SC('='):
+			case '=':
 				NEXT();
 				RETURN_TOKEN(TK_DIVEQ);
 				continue;
-			case _SC('>'):
+			case '>':
 				NEXT();
 				RETURN_TOKEN(TK_ATTR_CLOSE);
 				continue;
 			default:
 				RETURN_TOKEN('/');
 			}
-		case _SC('='):
+		case '=':
 			NEXT();
-			if (CUR_CHAR != _SC('=')){ RETURN_TOKEN('=') }
+			if (CUR_CHAR != '='){ RETURN_TOKEN('=') }
 			else { NEXT(); RETURN_TOKEN(TK_EQ); }
-		case _SC('<'):
+		case '<':
 			NEXT();
 			switch(CUR_CHAR) {
-			case _SC('='):
+			case '=':
 				NEXT();
-				if(CUR_CHAR == _SC('>')) {
+				if(CUR_CHAR == '>') {
 					NEXT();
 					RETURN_TOKEN(TK_3WAYSCMP);
 				}
 				RETURN_TOKEN(TK_LE)
 				break;
-			case _SC('-'): NEXT(); RETURN_TOKEN(TK_NEWSLOT); break;
-			case _SC('<'): NEXT(); RETURN_TOKEN(TK_SHIFTL); break;
-			case _SC('/'): NEXT(); RETURN_TOKEN(TK_ATTR_OPEN); break;
+			case '-': NEXT(); RETURN_TOKEN(TK_NEWSLOT); break;
+			case '<': NEXT(); RETURN_TOKEN(TK_SHIFTL); break;
+			case '/': NEXT(); RETURN_TOKEN(TK_ATTR_OPEN); break;
 			}
 			RETURN_TOKEN('<');
-		case _SC('>'):
+		case '>':
 			NEXT();
-			if (CUR_CHAR == _SC('=')){ NEXT(); RETURN_TOKEN(TK_GE);}
-			else if(CUR_CHAR == _SC('>')){
+			if (CUR_CHAR == '='){ NEXT(); RETURN_TOKEN(TK_GE);}
+			else if(CUR_CHAR == '>'){
 				NEXT();
-				if(CUR_CHAR == _SC('>')){
+				if(CUR_CHAR == '>'){
 					NEXT();
 					RETURN_TOKEN(TK_USHIFTR);
 				}
 				RETURN_TOKEN(TK_SHIFTR);
 			}
 			else { RETURN_TOKEN('>') }
-		case _SC('!'):
+		case '!':
 			NEXT();
-			if (CUR_CHAR != _SC('=')){ RETURN_TOKEN('!')}
+			if (CUR_CHAR != '='){ RETURN_TOKEN('!')}
 			else { NEXT(); RETURN_TOKEN(TK_NE); }
-		case _SC('@'): {
+		case '@': {
 			int64_t stype;
 			NEXT();
-			if(CUR_CHAR != _SC('"')) {
+			if(CUR_CHAR != '"') {
 				RETURN_TOKEN('@');
 			}
 			if((stype=readString('"',true))!=-1) {
 				RETURN_TOKEN(stype);
 			}
-			error(_SC("error parsing the string"));
+			error("error parsing the string");
 					   }
-		case _SC('"'):
-		case _SC('\''): {
+		case '"':
+		case '\'': {
 			int64_t stype;
 			if((stype=readString(CUR_CHAR,false))!=-1){
 				RETURN_TOKEN(stype);
 			}
-			error(_SC("error parsing the string"));
+			error("error parsing the string");
 			}
-		case _SC('{'): case _SC('}'): case _SC('('): case _SC(')'): case _SC('['): case _SC(']'):
-		case _SC(';'): case _SC(','): case _SC('?'): case _SC('^'): case _SC('~'):
+		case '{': case '}': case '(': case ')': case '[': case ']':
+		case ';': case ',': case '?': case '^': case '~':
 			{int64_t ret = CUR_CHAR;
 			NEXT(); RETURN_TOKEN(ret); }
-		case _SC('.'):
+		case '.':
 			NEXT();
-			if (CUR_CHAR != _SC('.')){ RETURN_TOKEN('.') }
+			if (CUR_CHAR != '.'){ RETURN_TOKEN('.') }
 			NEXT();
-			if (CUR_CHAR != _SC('.')){ error(_SC("invalid token '..'")); }
+			if (CUR_CHAR != '.'){ error("invalid token '..'"); }
 			NEXT();
 			RETURN_TOKEN(TK_VARPARAMS);
-		case _SC('&'):
+		case '&':
 			NEXT();
-			if (CUR_CHAR != _SC('&')){ RETURN_TOKEN('&') }
+			if (CUR_CHAR != '&'){ RETURN_TOKEN('&') }
 			else { NEXT(); RETURN_TOKEN(TK_AND); }
-		case _SC('|'):
+		case '|':
 			NEXT();
-			if (CUR_CHAR != _SC('|')){ RETURN_TOKEN('|') }
+			if (CUR_CHAR != '|'){ RETURN_TOKEN('|') }
 			else { NEXT(); RETURN_TOKEN(TK_OR); }
-		case _SC(':'):
+		case ':':
 			NEXT();
-			if (CUR_CHAR != _SC(':')){ RETURN_TOKEN(':') }
+			if (CUR_CHAR != ':'){ RETURN_TOKEN(':') }
 			else { NEXT(); RETURN_TOKEN(TK_DOUBLE_COLON); }
-		case _SC('*'):
+		case '*':
 			NEXT();
-			if (CUR_CHAR == _SC('=')){ NEXT(); RETURN_TOKEN(TK_MULEQ);}
+			if (CUR_CHAR == '='){ NEXT(); RETURN_TOKEN(TK_MULEQ);}
 			else RETURN_TOKEN('*');
-		case _SC('%'):
+		case '%':
 			NEXT();
-			if (CUR_CHAR == _SC('=')){ NEXT(); RETURN_TOKEN(TK_MODEQ);}
+			if (CUR_CHAR == '='){ NEXT(); RETURN_TOKEN(TK_MODEQ);}
 			else RETURN_TOKEN('%');
-		case _SC('-'):
+		case '-':
 			NEXT();
-			if (CUR_CHAR == _SC('=')){ NEXT(); RETURN_TOKEN(TK_MINUSEQ);}
-			else if  (CUR_CHAR == _SC('-')){ NEXT(); RETURN_TOKEN(TK_MINUSMINUS);}
+			if (CUR_CHAR == '='){ NEXT(); RETURN_TOKEN(TK_MINUSEQ);}
+			else if  (CUR_CHAR == '-'){ NEXT(); RETURN_TOKEN(TK_MINUSMINUS);}
 			else RETURN_TOKEN('-');
-		case _SC('+'):
+		case '+':
 			NEXT();
-			if (CUR_CHAR == _SC('=')){ NEXT(); RETURN_TOKEN(TK_PLUSEQ);}
-			else if (CUR_CHAR == _SC('+')){ NEXT(); RETURN_TOKEN(TK_PLUSPLUS);}
+			if (CUR_CHAR == '='){ NEXT(); RETURN_TOKEN(TK_PLUSEQ);}
+			else if (CUR_CHAR == '+'){ NEXT(); RETURN_TOKEN(TK_PLUSPLUS);}
 			else RETURN_TOKEN('+');
 		case RABBIT_EOB:
 			return 0;
@@ -265,13 +265,13 @@ int64_t rabbit::Lexer::Lex()
 					int64_t ret = readNumber();
 					RETURN_TOKEN(ret);
 				}
-				else if (isalpha(CUR_CHAR) || CUR_CHAR == _SC('_')) {
+				else if (isalpha(CUR_CHAR) || CUR_CHAR == '_') {
 					int64_t t = readId();
 					RETURN_TOKEN(t);
 				}
 				else {
 					int64_t c = CUR_CHAR;
-					if (iscntrl((int)c)) error(_SC("unexpected character(control)"));
+					if (iscntrl((int)c)) error("unexpected character(control)");
 					NEXT();
 					RETURN_TOKEN(c);
 				}
@@ -321,7 +321,7 @@ int64_t rabbit::Lexer::addUTF8(uint64_t ch)
 int64_t rabbit::Lexer::processStringHexEscape(char *dest, int64_t maxdigits)
 {
 	NEXT();
-	if (!isxdigit(CUR_CHAR)) error(_SC("hexadecimal number expected"));
+	if (!isxdigit(CUR_CHAR)) error("hexadecimal number expected");
 	int64_t n = 0;
 	while (isxdigit(CUR_CHAR) && n < maxdigits) {
 		dest[n] = CUR_CHAR;
@@ -342,21 +342,21 @@ int64_t rabbit::Lexer::readString(int64_t ndelim,bool verbatim)
 			int64_t x = CUR_CHAR;
 			switch (x) {
 			case RABBIT_EOB:
-				error(_SC("unfinished string"));
+				error("unfinished string");
 				return -1;
-			case _SC('\n'):
-				if(!verbatim) error(_SC("newline in a constant"));
+			case '\n':
+				if(!verbatim) error("newline in a constant");
 				APPEND_CHAR(CUR_CHAR); NEXT();
 				_currentline++;
 				break;
-			case _SC('\\'):
+			case '\\':
 				if(verbatim) {
 					APPEND_CHAR('\\'); NEXT();
 				}
 				else {
 					NEXT();
 					switch(CUR_CHAR) {
-					case _SC('x'):  {
+					case 'x':  {
 						const int64_t maxdigits = sizeof(char) * 2;
 						char temp[maxdigits + 1];
 						processStringHexEscape(temp, maxdigits);
@@ -364,8 +364,8 @@ int64_t rabbit::Lexer::readString(int64_t ndelim,bool verbatim)
 						APPEND_CHAR((char)strtoul(temp, &stemp, 16));
 					}
 					break;
-					case _SC('U'):
-					case _SC('u'):  {
+					case 'U':
+					case 'u':  {
 						const int64_t maxdigits = CUR_CHAR == 'u' ? 4 : 8;
 						char temp[8 + 1];
 						processStringHexEscape(temp, maxdigits);
@@ -373,19 +373,19 @@ int64_t rabbit::Lexer::readString(int64_t ndelim,bool verbatim)
 						addUTF8(strtoul(temp, &stemp, 16));
 					}
 					break;
-					case _SC('t'): APPEND_CHAR(_SC('\t')); NEXT(); break;
-					case _SC('a'): APPEND_CHAR(_SC('\a')); NEXT(); break;
-					case _SC('b'): APPEND_CHAR(_SC('\b')); NEXT(); break;
-					case _SC('n'): APPEND_CHAR(_SC('\n')); NEXT(); break;
-					case _SC('r'): APPEND_CHAR(_SC('\r')); NEXT(); break;
-					case _SC('v'): APPEND_CHAR(_SC('\v')); NEXT(); break;
-					case _SC('f'): APPEND_CHAR(_SC('\f')); NEXT(); break;
-					case _SC('0'): APPEND_CHAR(_SC('\0')); NEXT(); break;
-					case _SC('\\'): APPEND_CHAR(_SC('\\')); NEXT(); break;
-					case _SC('"'): APPEND_CHAR(_SC('"')); NEXT(); break;
-					case _SC('\''): APPEND_CHAR(_SC('\'')); NEXT(); break;
+					case 't': APPEND_CHAR('\t'); NEXT(); break;
+					case 'a': APPEND_CHAR('\a'); NEXT(); break;
+					case 'b': APPEND_CHAR('\b'); NEXT(); break;
+					case 'n': APPEND_CHAR('\n'); NEXT(); break;
+					case 'r': APPEND_CHAR('\r'); NEXT(); break;
+					case 'v': APPEND_CHAR('\v'); NEXT(); break;
+					case 'f': APPEND_CHAR('\f'); NEXT(); break;
+					case '0': APPEND_CHAR('\0'); NEXT(); break;
+					case '\\': APPEND_CHAR('\\'); NEXT(); break;
+					case '"': APPEND_CHAR('"'); NEXT(); break;
+					case '\'': APPEND_CHAR('\''); NEXT(); break;
 					default:
-						error(_SC("unrecognised escaper char"));
+						error("unrecognised escaper char");
 					break;
 					}
 				}
@@ -406,9 +406,9 @@ int64_t rabbit::Lexer::readString(int64_t ndelim,bool verbatim)
 	}
 	TERMINATE_BUFFER();
 	int64_t len = _longstr.size()-1;
-	if(ndelim == _SC('\'')) {
-		if(len == 0) error(_SC("empty constant"));
-		if(len > 1) error(_SC("constant too long"));
+	if(ndelim == '\'') {
+		if(len == 0) error("empty constant");
+		if(len > 1) error("constant too long");
 		_nvalue = _longstr[0];
 		return TK_INTEGER;
 	}
@@ -436,7 +436,7 @@ void LexInteger(const char *s,uint64_t *res)
 	}
 }
 
-int64_t scisodigit(int64_t c) { return c >= _SC('0') && c <= _SC('7'); }
+int64_t scisodigit(int64_t c) { return c >= '0' && c <= '7'; }
 
 void LexOctal(const char *s,uint64_t *res)
 {
@@ -463,14 +463,14 @@ int64_t rabbit::Lexer::readNumber()
 	char *sTemp;
 	INIT_TEMP_STRING();
 	NEXT();
-	if(firstchar == _SC('0') && (toupper(CUR_CHAR) == _SC('X') || scisodigit(CUR_CHAR)) ) {
+	if(firstchar == '0' && (toupper(CUR_CHAR) == 'X' || scisodigit(CUR_CHAR)) ) {
 		if(scisodigit(CUR_CHAR)) {
 			type = TOCTAL;
 			while(scisodigit(CUR_CHAR)) {
 				APPEND_CHAR(CUR_CHAR);
 				NEXT();
 			}
-			if(isdigit(CUR_CHAR)) error(_SC("invalid octal number"));
+			if(isdigit(CUR_CHAR)) error("invalid octal number");
 		}
 		else {
 			NEXT();
@@ -479,15 +479,15 @@ int64_t rabbit::Lexer::readNumber()
 				APPEND_CHAR(CUR_CHAR);
 				NEXT();
 			}
-			if(_longstr.size() > MAX_HEX_DIGITS) error(_SC("too many digits for an Hex number"));
+			if(_longstr.size() > MAX_HEX_DIGITS) error("too many digits for an Hex number");
 		}
 	}
 	else {
 		APPEND_CHAR((int)firstchar);
-		while (CUR_CHAR == _SC('.') || isdigit(CUR_CHAR) || isexponent(CUR_CHAR)) {
-			if(CUR_CHAR == _SC('.') || isexponent(CUR_CHAR)) type = TFLOAT;
+		while (CUR_CHAR == '.' || isdigit(CUR_CHAR) || isexponent(CUR_CHAR)) {
+			if(CUR_CHAR == '.' || isexponent(CUR_CHAR)) type = TFLOAT;
 			if(isexponent(CUR_CHAR)) {
-				if(type != TFLOAT) error(_SC("invalid numeric format"));
+				if(type != TFLOAT) error("invalid numeric format");
 				type = TSCIENTIFIC;
 				APPEND_CHAR(CUR_CHAR);
 				NEXT();
@@ -495,7 +495,7 @@ int64_t rabbit::Lexer::readNumber()
 					APPEND_CHAR(CUR_CHAR);
 					NEXT();
 				}
-				if(!isdigit(CUR_CHAR)) error(_SC("exponent expected"));
+				if(!isdigit(CUR_CHAR)) error("exponent expected");
 			}
 
 			APPEND_CHAR(CUR_CHAR);
@@ -528,7 +528,7 @@ int64_t rabbit::Lexer::readId()
 	do {
 		APPEND_CHAR(CUR_CHAR);
 		NEXT();
-	} while(isalnum(CUR_CHAR) || CUR_CHAR == _SC('_'));
+	} while(isalnum(CUR_CHAR) || CUR_CHAR == '_');
 	TERMINATE_BUFFER();
 	res = getIDType(&_longstr[0],_longstr.size() - 1);
 	if(res == TK_IDENTIFIER || res == TK_CONSTRUCTOR) {

@@ -19,9 +19,9 @@
 
 #include "sqconfig.hpp"
 
-#define RABBIT_VERSION    _SC("Rabbit 0.1 un-stable")
-#define RABBIT_COPYRIGHT  _SC("Copyright (C) 2003-2017 Alberto Demichelis")
-#define RABBIT_AUTHOR     _SC("Edouard DUPIN")
+#define RABBIT_VERSION    "Rabbit 0.1 un-stable"
+#define RABBIT_COPYRIGHT  "Copyright (C) 2003-2017 Alberto Demichelis"
+#define RABBIT_AUTHOR     "Edouard DUPIN"
 #define RABBIT_VERSION_NUMBER 010
 
 #define SQ_VMSTATE_IDLE       0
