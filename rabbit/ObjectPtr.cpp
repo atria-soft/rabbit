@@ -12,7 +12,7 @@
 #define RABBIT_OBJ_REF_TYPE_INSTANCIATE(type,_class,sym) \
 	rabbit::ObjectPtr::ObjectPtr(_class * x) \
 	{ \
-		SQ_OBJECT_RAWINIT() \
+		_unVal.raw = 0; \
 		_type=type; \
 		_unVal.sym = x; \
 		assert(_unVal.pTable); \
@@ -25,7 +25,7 @@
 		tOldType=_type; \
 		unOldVal=_unVal; \
 		_type = type; \
-		SQ_REFOBJECT_INIT() \
+		_unVal.raw = 0; \
 		_unVal.sym = x; \
 		_unVal.pRefCounted->refCountIncrement(); \
 		__release(tOldType,unOldVal); \
@@ -35,7 +35,7 @@
 #define RABBIT_SCALAR_TYPE_INSTANCIATE(type,_class,sym) \
 	rabbit::ObjectPtr::ObjectPtr(_class x) \
 	{ \
-		SQ_OBJECT_RAWINIT() \
+		_unVal.raw = 0; \
 		_type=type; \
 		_unVal.sym = x; \
 	} \
@@ -43,7 +43,7 @@
 	{  \
 		__release(_type,_unVal); \
 		_type = type; \
-		SQ_OBJECT_RAWINIT() \
+		_unVal.raw = 0; \
 		_unVal.sym = x; \
 		return *this; \
 	}
@@ -70,7 +70,7 @@ RABBIT_SCALAR_TYPE_INSTANCIATE(rabbit::OT_USERPOINTER, rabbit::UserPointer, pUse
 
 
 rabbit::ObjectPtr::ObjectPtr() {
-	SQ_OBJECT_RAWINIT()
+	_unVal.raw = 0;
 	_type = rabbit::OT_NULL;
 	_unVal.pUserPointer = NULL;
 }
@@ -88,14 +88,14 @@ rabbit::ObjectPtr::ObjectPtr(const rabbit::Object& _obj) {
 }
 
 rabbit::ObjectPtr::ObjectPtr(bool _value) {
-	SQ_OBJECT_RAWINIT()
+	_unVal.raw = 0;
 	_type = rabbit::OT_BOOL;
 	_unVal.nInteger = _value?1:0;
 }
 
 rabbit::ObjectPtr& rabbit::ObjectPtr::operator=(bool _value) {
 	__release(_type,_unVal);
-	SQ_OBJECT_RAWINIT()
+	_unVal.raw = 0;
 	_type = rabbit::OT_BOOL;
 	_unVal.nInteger = _value?1:0;
 	return *this;
@@ -133,7 +133,7 @@ void rabbit::ObjectPtr::Null() {
 	rabbit::ObjectType tOldType = _type;
 	rabbit::ObjectValue unOldVal = _unVal;
 	_type = rabbit::OT_NULL;
-	_unVal.raw = (rabbit::RawObjectVal)NULL;
+	_unVal.raw = 0;
 	__release(tOldType ,unOldVal);
 }
 

@@ -676,11 +676,7 @@ bool rabbit::VirtualMachine::IsFalse(rabbit::ObjectPtr &o)
 {
 	if(((sq_type(o) & SQOBJECT_CANBEFALSE)
 		&& ( ((sq_type(o) == rabbit::OT_FLOAT) && (_float(o) == float_t(0.0))) ))
-#if !defined(SQUSEDOUBLE) || (defined(SQUSEDOUBLE) && defined(_SQ64))
 		|| (_integer(o) == 0) )  //rabbit::OT_NULL|OT_INTEGER|OT_BOOL
-#else
-		|| (((type(o) != rabbit::OT_FLOAT) && (_integer(o) == 0))) )  //OT_NULL|OT_INTEGER|OT_BOOL
-#endif
 	{
 		return true;
 	}
@@ -733,11 +729,7 @@ exception_restore:
 			case _OP_LINE: if (_debughook) callDebugHook('l',arg1); continue;
 			case _OP_LOAD: TARGET = ci->_literals[arg1]; continue;
 			case _OP_LOADINT:
-#ifndef _SQ64
-				TARGET = (int64_t)arg1; continue;
-#else
 				TARGET = (int64_t)((int32_t)arg1); continue;
-#endif
 			case _OP_LOADFLOAT: TARGET = *((const float_t *)&arg1); continue;
 			case _OP_DLOAD: TARGET = ci->_literals[arg1]; STK(arg2) = ci->_literals[arg3];continue;
 			case _OP_TAILCALL:{
@@ -932,11 +924,7 @@ exception_restore:
 					val = ci->_literals[arg1]; break;
 				case AAT_INT:
 					val._type = rabbit::OT_INTEGER;
-#ifndef _SQ64
-					val._unVal.nInteger = (int64_t)arg1;
-#else
 					val._unVal.nInteger = (int64_t)((int32_t)arg1);
-#endif
 					break;
 				case AAT_FLOAT:
 					val._type = rabbit::OT_FLOAT;

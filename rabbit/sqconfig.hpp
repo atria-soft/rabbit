@@ -15,16 +15,6 @@ typedef double float_t;
 typedef float float_t;
 #endif
 
-namespace rabbit {
-	#if defined(SQUSEDOUBLE) && !defined(_SQ64) || !defined(SQUSEDOUBLE) && defined(_SQ64)
-		using RawObjectVal = uint64_t; //must be 64bits
-		#define SQ_OBJECT_RAWINIT() { _unVal.raw = 0; }
-	#else
-		using RawObjectVal = uint64_t; //is 32 bits on 32 bits builds and 64 bits otherwise
-		#define SQ_OBJECT_RAWINIT()
-	#endif
-}
-
 #ifndef SQ_ALIGNMENT
 	#define SQ_ALIGNMENT 8
 #endif
@@ -47,12 +37,6 @@ namespace rabbit {
 #define SQTrue  (1)
 #define SQFalse (0)
 
-
-#ifdef _SQ64
-#define UINT_MINUS_ONE (0xFFFFFFFFFFFFFFFF)
-#else
-#define UINT_MINUS_ONE (0xFFFFFFFF)
-#endif
 
 namespace rabbit {
 	class UserData;

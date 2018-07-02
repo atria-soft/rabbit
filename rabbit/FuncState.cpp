@@ -23,6 +23,9 @@
 #include <rabbit/sqopcodes.hpp>
 #include <rabbit/squtils.hpp>
 
+#define UINT_MINUS_ONE (0xFFFFFFFFFFFFFFFF)
+
+
 #ifdef _DEBUG_DUMP
 rabbit::InstructionDesc g_InstrDesc[]={
 	{"_OP_LINE"},

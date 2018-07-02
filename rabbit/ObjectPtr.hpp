@@ -14,13 +14,8 @@
 #include <rabbit/Object.hpp>
 
 namespace rabbit {
-	#if defined(SQUSEDOUBLE) && !defined(_SQ64) || !defined(SQUSEDOUBLE) && defined(_SQ64)
-		#define SQ_REFOBJECT_INIT() SQ_OBJECT_RAWINIT()
-	#else
-		#define SQ_REFOBJECT_INIT()
-	#endif
 	#define RABBIT_OBJ_REF_TYPE_DECLARE(type,_class,sym) \
-		ObjectPtr(_class * x);\
+		ObjectPtr(_class * x); \
 		ObjectPtr& operator=(_class *x);
 	
 	#define RABBIT_SCALAR_TYPE_DECLARE(type,_class,sym) \

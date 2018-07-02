@@ -113,40 +113,43 @@ rabbit::Result rabbit::std::format(rabbit::VirtualMachine* v,int64_t nformatstri
 			int64_t ti = 0;
 			float_t tf = 0;
 			switch(format[n]) {
-			case 's':
-				if(SQ_FAILED(sq_getstring(v,nparam,&ts)))
-					return sq_throwerror(v,"string expected for the specified format");
-				addlen = (sq_getsize(v,nparam)*sizeof(char))+((w+1)*sizeof(char));
-				valtype = 's';
-				break;
-			case 'i': case 'd': case 'o': case 'u':  case 'x':  case 'X':
-#ifdef _SQ64
-				{
-				size_t flen = strlen(fmt);
-				int64_t fpos = flen - 1;
-				char f = fmt[fpos];
-				const char *prec = (const char *)_PRINT_INT_PREC;
-				while(*prec != '\0') {
-					fmt[fpos++] = *prec++;
-				}
-				fmt[fpos++] = f;
-				fmt[fpos++] = '\0';
-				}
-#endif
-			case 'c':
-				if(SQ_FAILED(sq_getinteger(v,nparam,&ti)))
-					return sq_throwerror(v,"integer expected for the specified format");
-				addlen = (ADDITIONAL_FORMAT_SPACE)+((w+1)*sizeof(char));
-				valtype = 'i';
-				break;
-			case 'f': case 'g': case 'G': case 'e':  case 'E':
-				if(SQ_FAILED(sq_getfloat(v,nparam,&tf)))
-					return sq_throwerror(v,"float expected for the specified format");
-				addlen = (ADDITIONAL_FORMAT_SPACE)+((w+1)*sizeof(char));
-				valtype = 'f';
-				break;
-			default:
-				return sq_throwerror(v,"invalid format");
+				case 's':
+					if(SQ_FAILED(sq_getstring(v,nparam,&ts)))
+						return sq_throwerror(v,"string expected for the specified format");
+					addlen = (sq_getsize(v,nparam)*sizeof(char))+((w+1)*sizeof(char));
+					valtype = 's';
+					break;
+				case 'i':
+				case 'd':
+				case 'o':
+				case 'u':
+				case 'x':
+				case 'X':
+					{
+					size_t flen = strlen(fmt);
+					int64_t fpos = flen - 1;
+					char f = fmt[fpos];
+					const char *prec = (const char *)_PRINT_INT_PREC;
+					while(*prec != '\0') {
+						fmt[fpos++] = *prec++;
+					}
+					fmt[fpos++] = f;
+					fmt[fpos++] = '\0';
+					}
+				case 'c':
+					if(SQ_FAILED(sq_getinteger(v,nparam,&ti)))
+						return sq_throwerror(v,"integer expected for the specified format");
+					addlen = (ADDITIONAL_FORMAT_SPACE)+((w+1)*sizeof(char));
+					valtype = 'i';
+					break;
+				case 'f': case 'g': case 'G': case 'e':  case 'E':
+					if(SQ_FAILED(sq_getfloat(v,nparam,&tf)))
+						return sq_throwerror(v,"float expected for the specified format");
+					addlen = (ADDITIONAL_FORMAT_SPACE)+((w+1)*sizeof(char));
+					valtype = 'f';
+					break;
+				default:
+					return sq_throwerror(v,"invalid format");
 			}
 			n++;
 			allocated += addlen + sizeof(char);

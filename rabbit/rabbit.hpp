@@ -11,12 +11,6 @@
 #include _SQ_CONFIG_INCLUDE
 #endif
 
-#if (defined(_WIN64) || defined(_LP64))
-#ifndef _SQ64
-#define _SQ64
-#endif
-#endif
-
 #include "sqconfig.hpp"
 
 #define RABBIT_VERSION    "Rabbit 0.1 un-stable"

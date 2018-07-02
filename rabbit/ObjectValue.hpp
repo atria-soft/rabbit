@@ -33,7 +33,7 @@ namespace rabbit {
 		rabbit::Array* pArray;
 		rabbit::UserData* pUserData;
 		
-		rabbit::RawObjectVal raw;
+		uint64_t raw;
 	};
 
 }
