@@ -418,7 +418,7 @@ rabbit::Result rabbit::sq_getclosureinfo(rabbit::VirtualMachine* v,int64_t idx,u
 	}
 	else if(sq_type(o) == rabbit::OT_NATIVECLOSURE)
 	{
-		rabbit::NativeClosure *c = _nativeclosure(o);
+		rabbit::NativeClosure *c = o.toNativeClosure();
 		*nparams = (uint64_t)c->_nparamscheck;
 		*nfreevars = c->_noutervalues;
 		return SQ_OK;
@@ -430,7 +430,7 @@ rabbit::Result rabbit::sq_setnativeclosurename(rabbit::VirtualMachine* v,int64_t
 {
 	rabbit::Object o = stack_get(v, idx);
 	if(sq_isnativeclosure(o)) {
-		rabbit::NativeClosure *nc = _nativeclosure(o);
+		rabbit::NativeClosure *nc = o.toNativeClosure();
 		nc->_name = rabbit::String::create(_get_shared_state(v),name);
 		return SQ_OK;
 	}
@@ -442,7 +442,7 @@ rabbit::Result rabbit::sq_setparamscheck(rabbit::VirtualMachine* v,int64_t npara
 	rabbit::Object o = stack_get(v, -1);
 	if(!sq_isnativeclosure(o))
 		return sq_throwerror(v, "native closure expected");
-	rabbit::NativeClosure *nc = _nativeclosure(o);
+	rabbit::NativeClosure *nc = o.toNativeClosure();
 	nc->_nparamscheck = nparamscheck;
 	if(typemask) {
 		etk::Vector<int64_t> res;
@@ -485,7 +485,7 @@ rabbit::Result rabbit::sq_bindenv(rabbit::VirtualMachine* v,int64_t idx)
 		ret = c;
 	}
 	else { //then must be a native closure
-		rabbit::NativeClosure *c = _nativeclosure(o)->clone();
+		rabbit::NativeClosure *c = o.toNativeClosure()->clone();
 		__Objrelease(c->_env);
 		c->_env = w;
 		__ObjaddRef(c->_env);
@@ -504,7 +504,7 @@ rabbit::Result rabbit::sq_getclosurename(rabbit::VirtualMachine* v,int64_t idx)
 		return sq_throwerror(v,"the target is not a closure");
 	if(sq_isnativeclosure(o))
 	{
-		v->push(_nativeclosure(o)->_name);
+		v->push(o.toNativeClosure()->_name);
 	}
 	else { //closure
 		v->push(o.toClosure()->_function->_name);
@@ -1372,7 +1372,7 @@ const char * rabbit::sq_getfreevariable(rabbit::VirtualMachine* v,int64_t idx,ui
 					}
 		break;
 	case rabbit::OT_NATIVECLOSURE:{
-		rabbit::NativeClosure *clo = _nativeclosure(self);
+		rabbit::NativeClosure *clo = self.toNativeClosure();
 		if(clo->_noutervalues > nval) {
 			v->push(clo->_outervalues[nval]);
 			name = "@NATIVE";
@@ -1398,8 +1398,8 @@ rabbit::Result rabbit::sq_setfreevariable(rabbit::VirtualMachine* v,int64_t idx,
 					}
 		break;
 	case rabbit::OT_NATIVECLOSURE:
-		if(_nativeclosure(self)->_noutervalues > nval){
-			_nativeclosure(self)->_outervalues[nval] = stack_get(v,-1);
+		if(self.toNativeClosure()->_noutervalues > nval){
+			self.toNativeClosure()->_outervalues[nval] = stack_get(v,-1);
 		}
 		else return sq_throwerror(v,"invalid free var index");
 		break;

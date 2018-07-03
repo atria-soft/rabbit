@@ -756,7 +756,7 @@ exception_restore:
 					case rabbit::OT_NATIVECLOSURE: {
 						bool suspend;
 						bool tailcall;
-						_GUARD(callNative(_nativeclosure(clo), arg3, _stackbase+arg2, clo, (int32_t)sarg0, suspend, tailcall));
+						_GUARD(callNative(clo.toNativeClosure(), arg3, _stackbase+arg2, clo, (int32_t)sarg0, suspend, tailcall));
 						if(suspend){
 							_suspended = SQTrue;
 							_suspended_target = sarg0;
@@ -787,7 +787,7 @@ exception_restore:
 								bool dummy;
 								stkbase = _stackbase+arg2;
 								_stack[stkbase] = inst;
-								_GUARD(callNative(_nativeclosure(clo), arg3, stkbase, clo, -1, dummy, dummy));
+								_GUARD(callNative(clo.toNativeClosure(), arg3, stkbase, clo, -1, dummy, dummy));
 								break;
 							default: break; //shutup GCC 4.x
 						}
@@ -1607,7 +1607,7 @@ int64_t prevstackbase = _stackbase;
 		break;
 	case rabbit::OT_NATIVECLOSURE:{
 		bool dummy;
-		return callNative(_nativeclosure(closure), nparams, stackbase, outres, -1, dummy, dummy);
+		return callNative(closure.toNativeClosure(), nparams, stackbase, outres, -1, dummy, dummy);
 
 						  }
 		break;

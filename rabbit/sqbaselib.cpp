@@ -1001,7 +1001,7 @@ static int64_t closure_getinfos(rabbit::VirtualMachine* v) {
 	res->newSlot(rabbit::String::create(_get_shared_state(v),"defparams",-1),defparams);
 	}
 	else { //rabbit::OT_NATIVECLOSURE
-		rabbit::NativeClosure *nc = _nativeclosure(o);
+		rabbit::NativeClosure *nc = o.toNativeClosure();
 		res->newSlot(rabbit::String::create(_get_shared_state(v),"native",-1),true);
 		res->newSlot(rabbit::String::create(_get_shared_state(v),"name",-1),nc->_name);
 		res->newSlot(rabbit::String::create(_get_shared_state(v),"paramscheck",-1),nc->_nparamscheck);

@@ -59,8 +59,8 @@ rabbit::Result rabbit::sq_stackinfos(rabbit::VirtualMachine* v, int64_t level, r
 		case rabbit::OT_NATIVECLOSURE:
 			si->source = "NATIVE";
 			si->funcname = "unknown";
-			if(sq_type(_nativeclosure(ci._closure)->_name) == rabbit::OT_STRING)
-				si->funcname = _stringval(_nativeclosure(ci._closure)->_name);
+			if(sq_type(ci._closure.toNativeClosure()->_name) == rabbit::OT_STRING)
+				si->funcname = _stringval(ci._closure.toNativeClosure()->_name);
 			si->line = -1;
 			break;
 		default: break; //shutup compiler
