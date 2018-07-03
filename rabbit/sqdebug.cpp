@@ -27,7 +27,7 @@ rabbit::Result rabbit::sq_getfunctioninfo(rabbit::VirtualMachine* v,int64_t leve
 	int64_t cssize = v->_callsstacksize;
 	if (cssize > level) {
 		rabbit::VirtualMachine::callInfo &ci = v->_callsstack[cssize-level-1];
-		if(sq_isclosure(ci._closure)) {
+		if(ci._closure.isClosure()) {
 			rabbit::Closure *c = ci._closure.toClosure();
 			rabbit::FunctionProto *proto = c->_function;
 			fi->funcid = proto;

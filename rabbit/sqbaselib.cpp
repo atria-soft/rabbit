@@ -176,13 +176,14 @@ static int64_t get_slice_params(rabbit::VirtualMachine* v,int64_t &sidx,int64_t 
 	o=stack_get(v,1);
 	if(top>1){
 		rabbit::ObjectPtr &start=stack_get(v,2);
-		if(sq_type(start)!=rabbit::OT_NULL && sq_isnumeric(start)){
+		if(    sq_type(start)!=rabbit::OT_NULL
+		    && start.isNumeric() == true){
 			sidx=tointeger(start);
 		}
 	}
 	if(top>2){
 		rabbit::ObjectPtr &end=stack_get(v,3);
-		if(sq_isnumeric(end)){
+		if(end.isNumeric() == true){
 			eidx=tointeger(end);
 		}
 	}
@@ -562,7 +563,9 @@ static int64_t array_remove(rabbit::VirtualMachine* v)
 {
 	rabbit::Object &o = stack_get(v, 1);
 	rabbit::Object &idx = stack_get(v, 2);
-	if(!sq_isnumeric(idx)) return sq_throwerror(v, "wrong type");
+	if(idx.isNumeric() == false) {
+		return sq_throwerror(v, "wrong type");
+	}
 	rabbit::ObjectPtr val;
 	if(o.toArray()->get(tointeger(idx), val)) {
 		o.toArray()->remove(tointeger(idx));
@@ -577,7 +580,7 @@ static int64_t array_resize(rabbit::VirtualMachine* v)
 	rabbit::Object &o = stack_get(v, 1);
 	rabbit::Object &nsize = stack_get(v, 2);
 	rabbit::ObjectPtr fill;
-	if(sq_isnumeric(nsize)) {
+	if (nsize.isNumeric() == true) {
 		int64_t sz = tointeger(nsize);
 		if (sz<0)
 		  return sq_throwerror(v, "resizing to negative length");
@@ -710,8 +713,9 @@ static bool _sort_compare(rabbit::VirtualMachine* v,rabbit::ObjectPtr &a,rabbit:
 		v->push(a);
 		v->push(b);
 		if(SQ_FAILED(sq_call(v, 3, SQTrue, SQFalse))) {
-			if(!sq_isstring( v->_lasterror))
+			if (v->_lasterror.isString() == false) {
 				v->raise_error("compare func failed");
+			}
 			return false;
 		}
 		if(SQ_FAILED(sq_getinteger(v, -1, &ret))) {

@@ -132,6 +132,63 @@ namespace rabbit {
 			uint64_t toRaw() const {
 				return _unVal.raw;
 			}
+			bool isNumeric() const {
+				return (_type & SQOBJECT_NUMERIC) != 0;
+			}
+			bool isTable() const {
+				return _type == rabbit::OT_TABLE;
+			}
+			bool isArray() const {
+				return _type == rabbit::OT_ARRAY;
+			}
+			bool isFunctionProto() const {
+				return _type == rabbit::OT_FUNCPROTO;
+			}
+			bool isClosure() const {
+				return _type == rabbit::OT_CLOSURE;
+			}
+			bool isGenerator() const {
+				return _type == rabbit::OT_GENERATOR;
+			}
+			bool isNativeClosure() const {
+				return _type == rabbit::OT_NATIVECLOSURE;
+			}
+			bool isString() const {
+				return _type == rabbit::OT_STRING;
+			}
+			bool isInteger() const {
+				return _type == rabbit::OT_INTEGER;
+			}
+			bool isFloat() const {
+				return _type == rabbit::OT_FLOAT;
+			}
+			bool isUserPointer() const {
+				return _type == rabbit::OT_USERPOINTER;
+			}
+			bool isUserData() const {
+				return _type == rabbit::OT_USERDATA;
+			}
+			bool isVirtualMachine() const {
+				return _type == rabbit::OT_THREAD;
+			}
+			bool isNull() const {
+				return _type == rabbit::OT_NULL;
+			}
+			bool isClass() const {
+				return _type == rabbit::OT_CLASS;
+			}
+			bool isInstance() const {
+				return _type == rabbit::OT_INSTANCE;
+			}
+			bool isBoolean() const {
+				return _type == rabbit::OT_BOOL;
+			}
+			bool isWeakRef() const {
+				return _type == rabbit::OT_WEAKREF;
+			}
+			rabbit::ObjectType getType() const {
+				return _type;
+			}
 	};
 	
 	#define __addRef(type,unval) if(ISREFCOUNTED(type)) \
@@ -155,26 +212,8 @@ namespace rabbit {
 	#define tofloat(num) ((sq_type(num)==rabbit::OT_INTEGER)?(float_t)(num).toInteger():(num).toFloat())
 	#define tointeger(num) ((sq_type(num)==rabbit::OT_FLOAT)?(int64_t)(num).toFloat():(num).toInteger())
 	
-	#define sq_isnumeric(o) ((o)._type&SQOBJECT_NUMERIC)
-	#define sq_istable(o) ((o)._type==rabbit::OT_TABLE)
-	#define sq_isarray(o) ((o)._type==rabbit::OT_ARRAY)
-	#define sq_isfunction(o) ((o)._type==rabbit::OT_FUNCPROTO)
-	#define sq_isclosure(o) ((o)._type==rabbit::OT_CLOSURE)
-	#define sq_isgenerator(o) ((o)._type==rabbit::OT_GENERATOR)
-	#define sq_isnativeclosure(o) ((o)._type==rabbit::OT_NATIVECLOSURE)
-	#define sq_isstring(o) ((o)._type==rabbit::OT_STRING)
-	#define sq_isinteger(o) ((o)._type==rabbit::OT_INTEGER)
-	#define sq_isfloat(o) ((o)._type==rabbit::OT_FLOAT)
-	#define sq_isuserpointer(o) ((o)._type==rabbit::OT_USERPOINTER)
-	#define sq_isuserdata(o) ((o)._type==rabbit::OT_USERDATA)
-	#define sq_isthread(o) ((o)._type==rabbit::OT_THREAD)
-	#define sq_isnull(o) ((o)._type==rabbit::OT_NULL)
-	#define sq_isclass(o) ((o)._type==rabbit::OT_CLASS)
-	#define sq_isinstance(o) ((o)._type==rabbit::OT_INSTANCE)
-	#define sq_isbool(o) ((o)._type==rabbit::OT_BOOL)
-	#define sq_isweakref(o) ((o)._type==rabbit::OT_WEAKREF)
 	#define sq_type(o) ((o)._type)
-	
+
 	inline void _Swap(rabbit::Object &a,rabbit::Object &b)
 	{
 		rabbit::ObjectType tOldType = a._type;

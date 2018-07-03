@@ -263,7 +263,8 @@ bool rabbit::VirtualMachine::objCmp(const rabbit::ObjectPtr &o1,const rabbit::Ob
 
 	}
 	else{
-		if(sq_isnumeric(o1) && sq_isnumeric(o2)){
+		if(    o1.isNumeric() ==true
+		    && o2.isNumeric() == true){
 			if((t1==rabbit::OT_INTEGER) && (t2==OT_FLOAT)) {
 				if( o1.toInteger()==o2.toFloat() ) { _RET_SUCCEED(0); }
 				else if( o1.toInteger()<o2.toFloat() ) { _RET_SUCCEED(-1); }
@@ -662,7 +663,7 @@ bool rabbit::VirtualMachine::isEqual(const rabbit::ObjectPtr &o1,const rabbit::O
 		res = (o1.toRaw() == o2.toRaw());
 	}
 	else {
-		if(sq_isnumeric(o1) && sq_isnumeric(o2)) {
+		if(o1.isNumeric() && o2.isNumeric()) {
 			res = (tofloat(o1) == tofloat(o2));
 		}
 		else {
@@ -1249,7 +1250,7 @@ bool rabbit::VirtualMachine::get(const rabbit::ObjectPtr &self, const rabbit::Ob
 			}
 			break;
 		case rabbit::OT_ARRAY:
-			if (sq_isnumeric(key)) {
+			if (key.isNumeric() == true) {
 				if (self.toArray()->get(tointeger(key), dest)) {
 					return true;
 				}
@@ -1270,7 +1271,7 @@ bool rabbit::VirtualMachine::get(const rabbit::ObjectPtr &self, const rabbit::Ob
 			}
 			break;
 		case rabbit::OT_STRING:
-			if(sq_isnumeric(key)){
+			if(key.isNumeric()){
 				int64_t n = tointeger(key);
 				int64_t len = self.toString()->_len;
 				if (n < 0) { n += len; }
@@ -1380,7 +1381,7 @@ bool rabbit::VirtualMachine::set(const rabbit::ObjectPtr &self,const rabbit::Obj
 		if(const_cast<rabbit::Instance*>(self.toInstance())->set(key,val)) return true;
 		break;
 	case rabbit::OT_ARRAY:
-		if(!sq_isnumeric(key)) { raise_error("indexing %s with %s",getTypeName(self),getTypeName(key)); return false; }
+		if(key.isNumeric() == false) { raise_error("indexing %s with %s",getTypeName(self),getTypeName(key)); return false; }
 		if(!self.toArray()->set(tointeger(key),val)) {
 			raise_Idxerror(key);
 			return false;

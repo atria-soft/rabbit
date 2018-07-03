@@ -108,7 +108,9 @@ int64_t rabbit::sq_getvmstate(rabbit::VirtualMachine* v)
 void rabbit::sq_seterrorhandler(rabbit::VirtualMachine* v)
 {
 	rabbit::Object o = stack_get(v, -1);
-	if(sq_isclosure(o) || sq_isnativeclosure(o) || sq_isnull(o)) {
+	if(    o.isClosure() == true
+	    || o.isNativeClosure() == true
+	    || o.isNull() == true) {
 		v->_errorhandler = o;
 		v->pop();
 	}
@@ -124,10 +126,12 @@ void rabbit::sq_setnativedebughook(rabbit::VirtualMachine* v,SQDEBUGHOOK hook)
 void rabbit::sq_setdebughook(rabbit::VirtualMachine* v)
 {
 	rabbit::Object o = stack_get(v,-1);
-	if(sq_isclosure(o) || sq_isnativeclosure(o) || sq_isnull(o)) {
+	if (    o.isClosure() == true
+	     || o.isNativeClosure() == true
+	     || o.isNull() == true) {
 		v->_debughook_closure = o;
 		v->_debughook_native = NULL;
-		v->_debughook = !sq_isnull(o);
+		v->_debughook = ! o.isNull();
 		v->pop();
 	}
 }
@@ -204,7 +208,7 @@ const char * rabbit::sq_objtostring(const rabbit::Object *o)
 
 int64_t rabbit::sq_objtointeger(const rabbit::Object *o)
 {
-	if(sq_isnumeric(*o)) {
+	if(o->isNumeric() == true) {
 		return tointeger(*o);
 	}
 	return 0;
@@ -212,7 +216,7 @@ int64_t rabbit::sq_objtointeger(const rabbit::Object *o)
 
 float_t rabbit::sq_objtofloat(const rabbit::Object *o)
 {
-	if(sq_isnumeric(*o)) {
+	if(o->isNumeric() == true) {
 		return tofloat(*o);
 	}
 	return 0;
@@ -220,7 +224,7 @@ float_t rabbit::sq_objtofloat(const rabbit::Object *o)
 
 rabbit::Bool rabbit::sq_objtobool(const rabbit::Object *o)
 {
-	if(sq_isbool(*o)) {
+	if(o->isBoolean() == true) {
 		return o->toInteger();
 	}
 	return SQFalse;
@@ -228,7 +232,7 @@ rabbit::Bool rabbit::sq_objtobool(const rabbit::Object *o)
 
 rabbit::UserPointer rabbit::sq_objtouserpointer(const rabbit::Object *o)
 {
-	if(sq_isuserpointer(*o)) {
+	if(o->isUserPointer() == true) {
 		return o->toUserPointer();
 	}
 	return 0;
@@ -429,7 +433,7 @@ rabbit::Result rabbit::sq_getclosureinfo(rabbit::VirtualMachine* v,int64_t idx,u
 rabbit::Result rabbit::sq_setnativeclosurename(rabbit::VirtualMachine* v,int64_t idx,const char *name)
 {
 	rabbit::Object o = stack_get(v, idx);
-	if(sq_isnativeclosure(o)) {
+	if(o.isNativeClosure() == true) {
 		rabbit::NativeClosure *nc = o.toNativeClosure();
 		nc->_name = rabbit::String::create(_get_shared_state(v),name);
 		return SQ_OK;
@@ -440,7 +444,7 @@ rabbit::Result rabbit::sq_setnativeclosurename(rabbit::VirtualMachine* v,int64_t
 rabbit::Result rabbit::sq_setparamscheck(rabbit::VirtualMachine* v,int64_t nparamscheck,const char *typemask)
 {
 	rabbit::Object o = stack_get(v, -1);
-	if(!sq_isnativeclosure(o))
+	if(o.isNativeClosure() == false)
 		return sq_throwerror(v, "native closure expected");
 	rabbit::NativeClosure *nc = o.toNativeClosure();
 	nc->_nparamscheck = nparamscheck;
@@ -462,18 +466,20 @@ rabbit::Result rabbit::sq_setparamscheck(rabbit::VirtualMachine* v,int64_t npara
 rabbit::Result rabbit::sq_bindenv(rabbit::VirtualMachine* v,int64_t idx)
 {
 	rabbit::ObjectPtr &o = stack_get(v,idx);
-	if(!sq_isnativeclosure(o) &&
-		!sq_isclosure(o))
+	if(    o.isNativeClosure() == false
+	    && o.isClosure() == false) {
 		return sq_throwerror(v, "the target is not a closure");
+	}
 	rabbit::ObjectPtr &env = stack_get(v,-1);
-	if(!sq_istable(env) &&
-		!sq_isarray(env) &&
-		!sq_isclass(env) &&
-		!sq_isinstance(env))
+	if (    env.isTable() == false
+	     && env.isArray() ==false
+	     && env.isClass() == false
+	     && env.isInstance() == false) {
 		return sq_throwerror(v,"invalid environment");
+	}
 	rabbit::WeakRef *w = env.toRefCounted()->getWeakRef(sq_type(env));
 	rabbit::ObjectPtr ret;
-	if(sq_isclosure(o)) {
+	if(o.isClosure() == true) {
 		rabbit::Closure *c = o.toClosure()->clone();
 		__Objrelease(c->_env);
 		c->_env = w;
@@ -499,14 +505,14 @@ rabbit::Result rabbit::sq_bindenv(rabbit::VirtualMachine* v,int64_t idx)
 rabbit::Result rabbit::sq_getclosurename(rabbit::VirtualMachine* v,int64_t idx)
 {
 	rabbit::ObjectPtr &o = stack_get(v,idx);
-	if(!sq_isnativeclosure(o) &&
-		!sq_isclosure(o))
+	if (    o.isNativeClosure() == false
+	     && o.isClosure() == false) {
 		return sq_throwerror(v,"the target is not a closure");
-	if(sq_isnativeclosure(o))
-	{
-		v->push(o.toNativeClosure()->_name);
 	}
-	else { //closure
+	if (o.isNativeClosure() == true) {
+		v->push(o.toNativeClosure()->_name);
+	} else {
+		//closure
 		v->push(o.toClosure()->_function->_name);
 	}
 	return SQ_OK;
@@ -516,8 +522,10 @@ rabbit::Result rabbit::sq_setclosureroot(rabbit::VirtualMachine* v,int64_t idx)
 {
 	rabbit::ObjectPtr &c = stack_get(v,idx);
 	rabbit::Object o = stack_get(v, -1);
-	if(!sq_isclosure(c)) return sq_throwerror(v, "closure expected");
-	if(sq_istable(o)) {
+	if(c.isClosure() == false) {
+		return sq_throwerror(v, "closure expected");
+	}
+	if(o.isTable() == true) {
 		c.toClosure()->setRoot(o.toTable()->getWeakRef(rabbit::OT_TABLE));
 		v->pop();
 		return SQ_OK;
@@ -528,7 +536,9 @@ rabbit::Result rabbit::sq_setclosureroot(rabbit::VirtualMachine* v,int64_t idx)
 rabbit::Result rabbit::sq_getclosureroot(rabbit::VirtualMachine* v,int64_t idx)
 {
 	rabbit::ObjectPtr &c = stack_get(v,idx);
-	if(!sq_isclosure(c)) return sq_throwerror(v, "closure expected");
+	if(c.isClosure() == false) {
+		return sq_throwerror(v, "closure expected");
+	}
 	v->push(c.toClosure()->_root->_obj);
 	return SQ_OK;
 }
@@ -565,7 +575,8 @@ void rabbit::sq_pushconsttable(rabbit::VirtualMachine* v)
 rabbit::Result rabbit::sq_setroottable(rabbit::VirtualMachine* v)
 {
 	rabbit::Object o = stack_get(v, -1);
-	if(sq_istable(o) || sq_isnull(o)) {
+	if (    o.isTable() == true
+	     || o.isNull() == true) {
 		v->_roottable = o;
 		v->pop();
 		return SQ_OK;
@@ -576,7 +587,7 @@ rabbit::Result rabbit::sq_setroottable(rabbit::VirtualMachine* v)
 rabbit::Result rabbit::sq_setconsttable(rabbit::VirtualMachine* v)
 {
 	rabbit::Object o = stack_get(v, -1);
-	if(sq_istable(o)) {
+	if (o.isTable() == true) {
 		_get_shared_state(v)->_consts = o;
 		v->pop();
 		return SQ_OK;
@@ -665,11 +676,11 @@ void rabbit::sq_tobool(rabbit::VirtualMachine* v, int64_t idx, rabbit::Bool *b)
 rabbit::Result rabbit::sq_getinteger(rabbit::VirtualMachine* v,int64_t idx,int64_t *i)
 {
 	rabbit::ObjectPtr &o = stack_get(v, idx);
-	if(sq_isnumeric(o)) {
+	if(o.isNumeric() == true) {
 		*i = tointeger(o);
 		return SQ_OK;
 	}
-	if(sq_isbool(o)) {
+	if(o.isBoolean() == true) {
 		*i = rabbit::VirtualMachine::IsFalse(o)?SQFalse:SQTrue;
 		return SQ_OK;
 	}
@@ -679,7 +690,7 @@ rabbit::Result rabbit::sq_getinteger(rabbit::VirtualMachine* v,int64_t idx,int64
 rabbit::Result rabbit::sq_getfloat(rabbit::VirtualMachine* v,int64_t idx,float_t *f)
 {
 	rabbit::ObjectPtr &o = stack_get(v, idx);
-	if(sq_isnumeric(o)) {
+	if(o.isNumeric() == true) {
 		*f = tofloat(o);
 		return SQ_OK;
 	}
@@ -689,7 +700,7 @@ rabbit::Result rabbit::sq_getfloat(rabbit::VirtualMachine* v,int64_t idx,float_t
 rabbit::Result rabbit::sq_getbool(rabbit::VirtualMachine* v,int64_t idx,rabbit::Bool *b)
 {
 	rabbit::ObjectPtr &o = stack_get(v, idx);
-	if(sq_isbool(o)) {
+	if (o.isBoolean() == true) {
 		*b = o.toInteger();
 		return SQ_OK;
 	}
@@ -1083,7 +1094,7 @@ rabbit::Result rabbit::sq_rawget(rabbit::VirtualMachine* v,int64_t idx)
 		break;
 	case rabbit::OT_ARRAY:
 		{
-			if(sq_isnumeric(obj)){
+			if(obj.isNumeric() == true){
 				if(self.toArray()->get(tointeger(obj),obj)) {
 					return SQ_OK;
 				}
