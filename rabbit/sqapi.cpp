@@ -229,7 +229,7 @@ rabbit::Bool rabbit::sq_objtobool(const rabbit::Object *o)
 rabbit::UserPointer rabbit::sq_objtouserpointer(const rabbit::Object *o)
 {
 	if(sq_isuserpointer(*o)) {
-		return _userpointer(*o);
+		return o->getUserPointer();
 	}
 	return 0;
 }
@@ -804,7 +804,7 @@ rabbit::Result rabbit::sq_getuserpointer(rabbit::VirtualMachine* v, int64_t idx,
 {
 	rabbit::ObjectPtr *o = NULL;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_USERPOINTER,o);
-	(*p) = _userpointer(*o);
+	(*p) = o->getUserPointer();
 	return SQ_OK;
 }
 

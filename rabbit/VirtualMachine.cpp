@@ -255,7 +255,7 @@ bool rabbit::VirtualMachine::objCmp(const rabbit::ObjectPtr &o1,const rabbit::Ob
 			}
 			//continues through (no break needed)
 		default:
-			_RET_SUCCEED( _userpointer(o1) < _userpointer(o2)?-1:1 );
+			_RET_SUCCEED( o1.getUserPointer() < o2.getUserPointer()?-1:1 );
 		}
 		assert(0);
 		//if(type(res)!=rabbit::OT_INTEGER) { raise_Compareerror(o1,o2); return false; }
@@ -1796,7 +1796,7 @@ void rabbit::VirtualMachine::dumpstack(int64_t stackbase,bool dumpall)
 		case rabbit::OT_USERDATA:	   printf("USERDATA %p[%p]",_userdataval(obj),obj.toUserData()->_delegate);break;
 		case rabbit::OT_GENERATOR:	  printf("GENERATOR %p",obj.toGenerator());break;
 		case rabbit::OT_THREAD:		 printf("THREAD [%p]",_thread(obj));break;
-		case rabbit::OT_USERPOINTER:	printf("USERPOINTER %p",_userpointer(obj));break;
+		case rabbit::OT_USERPOINTER:	printf("USERPOINTER %p",obj.getUserPointer());break;
 		case rabbit::OT_CLASS:		  printf("CLASS %p",_class(obj));break;
 		case rabbit::OT_INSTANCE:	   printf("INSTANCE %p",_instance(obj));break;
 		case rabbit::OT_WEAKREF:		printf("WEAKERF %p",_weakref(obj));break;
