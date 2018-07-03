@@ -94,7 +94,7 @@ rabbit::String *rabbit::VirtualMachine::printObjVal(const rabbit::ObjectPtr &o)
 		return rabbit::String::create(_get_shared_state(this), _spval);
 		break;
 	case rabbit::OT_FLOAT:
-		snprintf(_sp(sq_rsl(NUMBER_UINT8_MAX+1)), sq_rsl(NUMBER_UINT8_MAX), "%.14g", _float(o));
+		snprintf(_sp(sq_rsl(NUMBER_UINT8_MAX+1)), sq_rsl(NUMBER_UINT8_MAX), "%.14g", o.toFloat());
 		return rabbit::String::create(_get_shared_state(this), _spval);
 		break;
 	default:

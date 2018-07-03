@@ -72,7 +72,7 @@ bool rabbit::WriteObject(rabbit::VirtualMachine* v,rabbit::UserPointer up,SQWRIT
 	case rabbit::OT_INTEGER:
 		_CHECK_IO(SafeWrite(v,write,up,&o.toInteger(),sizeof(int64_t)));break;
 	case rabbit::OT_FLOAT:
-		_CHECK_IO(SafeWrite(v,write,up,&_float(o),sizeof(float_t)));break;
+		_CHECK_IO(SafeWrite(v,write,up,&o.toFloat(),sizeof(float_t)));break;
 	case rabbit::OT_NULL:
 		break;
 	default:

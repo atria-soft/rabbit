@@ -801,7 +801,7 @@ public:
 					rabbit::ObjectType ctype = sq_type(constval);
 					switch(ctype) {
 						case rabbit::OT_INTEGER: EmitloadConstInt(constval.toInteger(),_es.epos); break;
-						case rabbit::OT_FLOAT: EmitloadConstFloat(_float(constval),_es.epos); break;
+						case rabbit::OT_FLOAT: EmitloadConstFloat(constval.toFloat(),_es.epos); break;
 						case rabbit::OT_BOOL: _fs->addInstruction(_OP_LOADBOOL, _es.epos, constval.toInteger()); break;
 						default: _fs->addInstruction(_OP_LOAD,_es.epos,_fs->getConstant(constval)); break;
 					}

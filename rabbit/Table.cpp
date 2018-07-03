@@ -15,7 +15,7 @@ rabbit::Hash rabbit::HashObj(const rabbit::ObjectPtr &key) {
 		case rabbit::OT_STRING:
 			return _string(key)->_hash;
 		case rabbit::OT_FLOAT:
-			return (rabbit::Hash)((int64_t)_float(key));
+			return (rabbit::Hash)((int64_t)key.toFloat());
 		case rabbit::OT_BOOL:
 		case rabbit::OT_INTEGER:
 			return (rabbit::Hash)((int64_t)key.toInteger());

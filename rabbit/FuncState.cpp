@@ -101,7 +101,7 @@ void rabbit::FuncState::addInstruction(SQOpcode _op,int64_t arg0,int64_t arg1,in
 static void dumpLiteral(rabbit::ObjectPtr &o) {
 	switch(sq_type(o)){
 		case rabbit::OT_STRING: printf("\"%s\"",_stringval(o));break;
-		case rabbit::OT_FLOAT: printf("{%f}",_float(o));break;
+		case rabbit::OT_FLOAT: printf("{%f}",o.toFloat());break;
 		case rabbit::OT_INTEGER: printf("{" _PRINT_INT_FMT "}",o.toInteger());break;
 		case rabbit::OT_BOOL: printf("%s",o.toInteger()?"true":"false");break;
 		default: printf("(%s %p)",getTypeName(o),(void*)_rawval(o));break; break; //shut up compiler
