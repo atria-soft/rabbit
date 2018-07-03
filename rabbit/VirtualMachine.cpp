@@ -972,7 +972,7 @@ exception_restore:
 			case _OP_INSTANCEOF:
 				if(sq_type(STK(arg1)) != rabbit::OT_CLASS)
 				{raise_error("cannot apply instanceof between a %s and a %s",getTypeName(STK(arg1)),getTypeName(STK(arg2))); SQ_THROW();}
-				TARGET = (sq_type(STK(arg2)) == rabbit::OT_INSTANCE) ? (_instance(STK(arg2))->instanceOf(STK(arg1).toClass())?true:false) : false;
+				TARGET = (sq_type(STK(arg2)) == rabbit::OT_INSTANCE) ? (STK(arg2).toInstance()->instanceOf(STK(arg1).toClass())?true:false) : false;
 				continue;
 			case _OP_AND:
 				if(IsFalse(STK(arg2))) {
@@ -1260,7 +1260,7 @@ bool rabbit::VirtualMachine::get(const rabbit::ObjectPtr &self, const rabbit::Ob
 			}
 			break;
 		case rabbit::OT_INSTANCE:
-			if(_instance(self)->get(key,dest)) {
+			if(const_cast<rabbit::Instance*>(self.toInstance())->get(key,dest)) {
 				return true;
 			}
 			break;
@@ -1377,7 +1377,7 @@ bool rabbit::VirtualMachine::set(const rabbit::ObjectPtr &self,const rabbit::Obj
 		if(self.toTable()->set(key,val)) return true;
 		break;
 	case rabbit::OT_INSTANCE:
-		if(_instance(self)->set(key,val)) return true;
+		if(const_cast<rabbit::Instance*>(self.toInstance())->set(key,val)) return true;
 		break;
 	case rabbit::OT_ARRAY:
 		if(!sq_isnumeric(key)) { raise_error("indexing %s with %s",getTypeName(self),getTypeName(key)); return false; }
@@ -1449,7 +1449,7 @@ bool rabbit::VirtualMachine::clone(const rabbit::ObjectPtr &self,rabbit::ObjectP
 		newobj = self.toTable()->clone();
 		goto cloned_mt;
 	case rabbit::OT_INSTANCE: {
-		newobj = _instance(self)->clone(_get_shared_state(this));
+		newobj = const_cast<rabbit::Instance*>(self.toInstance())->clone(_get_shared_state(this));
 cloned_mt:
 		rabbit::ObjectPtr closure;
 		if(_delegable(newobj)->_delegate && _delegable(newobj)->getMetaMethod(this,MT_CLONED,closure)) {
@@ -1798,7 +1798,7 @@ void rabbit::VirtualMachine::dumpstack(int64_t stackbase,bool dumpall)
 		case rabbit::OT_THREAD:		 printf("THREAD [%p]",obj.toVirtualMachine());break;
 		case rabbit::OT_USERPOINTER:	printf("USERPOINTER %p",obj.toUserPointer());break;
 		case rabbit::OT_CLASS:		  printf("CLASS %p",obj.toClass());break;
-		case rabbit::OT_INSTANCE:	   printf("INSTANCE %p",_instance(obj));break;
+		case rabbit::OT_INSTANCE:	   printf("INSTANCE %p",obj.toInstance());break;
 		case rabbit::OT_WEAKREF:		printf("WEAKERF %p",_weakref(obj));break;
 		default:
 			assert(0);

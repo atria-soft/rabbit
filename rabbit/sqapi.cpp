@@ -315,7 +315,7 @@ rabbit::Bool rabbit::sq_instanceof(rabbit::VirtualMachine* v)
 	if(    sq_type(inst) != rabbit::OT_INSTANCE
 	    || sq_type(cl) != rabbit::OT_CLASS)
 		return sq_throwerror(v,"invalid param type");
-	return _instance(inst)->instanceOf(cl.toClass())?SQTrue:SQFalse;
+	return inst.toInstance()->instanceOf(cl.toClass())?SQTrue:SQFalse;
 }
 
 rabbit::Result rabbit::sq_arrayappend(rabbit::VirtualMachine* v,int64_t idx)
@@ -741,7 +741,7 @@ int64_t rabbit::sq_getsize(rabbit::VirtualMachine* v, int64_t idx)
 	case rabbit::OT_TABLE:	  return o.toTable()->countUsed();
 	case rabbit::OT_ARRAY:	  return o.toArray()->size();
 	case rabbit::OT_USERDATA:   return o.toUserData()->getsize();
-	case rabbit::OT_INSTANCE:   return _instance(o)->_class->_udsize;
+	case rabbit::OT_INSTANCE:   return o.toInstance()->_class->_udsize;
 	case rabbit::OT_CLASS:	  return o.toClass()->_udsize;
 	default:
 		return sq_aux_invalidtype(v, type);
@@ -784,7 +784,7 @@ rabbit::Result rabbit::sq_settypetag(rabbit::VirtualMachine* v,int64_t idx,rabbi
 rabbit::Result rabbit::sq_getobjtypetag(const rabbit::Object *o,rabbit::UserPointer * typetag)
 {
   switch(sq_type(*o)) {
-	case rabbit::OT_INSTANCE: *typetag = _instance(*o)->_class->_typetag; break;
+	case rabbit::OT_INSTANCE: *typetag = o->toInstance()->_class->_typetag; break;
 	case rabbit::OT_USERDATA: *typetag = o->toUserData()->getTypeTag(); break;
 	case rabbit::OT_CLASS:	*typetag = o->toClass()->_typetag; break;
 	default: return SQ_ERROR;
@@ -812,7 +812,7 @@ rabbit::Result rabbit::sq_setinstanceup(rabbit::VirtualMachine* v, int64_t idx, 
 {
 	rabbit::ObjectPtr &o = stack_get(v,idx);
 	if(sq_type(o) != rabbit::OT_INSTANCE) return sq_throwerror(v,"the object is not a class instance");
-	_instance(o)->_userpointer = p;
+	o.toInstance()->_userpointer = p;
 	return SQ_OK;
 }
 
@@ -830,9 +830,9 @@ rabbit::Result rabbit::sq_getinstanceup(rabbit::VirtualMachine* v, int64_t idx, 
 {
 	rabbit::ObjectPtr &o = stack_get(v,idx);
 	if(sq_type(o) != rabbit::OT_INSTANCE) return sq_throwerror(v,"the object is not a class instance");
-	(*p) = _instance(o)->_userpointer;
+	(*p) = o.toInstance()->_userpointer;
 	if(typetag != 0) {
-		rabbit::Class *cl = _instance(o)->_class;
+		rabbit::Class *cl = o.toInstance()->_class;
 		do{
 			if(cl->_typetag == typetag)
 				return SQ_OK;
@@ -942,7 +942,7 @@ rabbit::Result rabbit::sq_rawset(rabbit::VirtualMachine* v,int64_t idx)
 		return SQ_OK;
 	break;
 	case rabbit::OT_INSTANCE:
-		if(_instance(self)->set(key, v->getUp(-1))) {
+		if(self.toInstance()->set(key, v->getUp(-1))) {
 			v->pop(2);
 			return SQ_OK;
 		}
@@ -1078,7 +1078,7 @@ rabbit::Result rabbit::sq_rawget(rabbit::VirtualMachine* v,int64_t idx)
 			return SQ_OK;
 		break;
 	case rabbit::OT_INSTANCE:
-		if(_instance(self)->get(obj,obj))
+		if(self.toInstance()->get(obj,obj))
 			return SQ_OK;
 		break;
 	case rabbit::OT_ARRAY:
@@ -1267,7 +1267,7 @@ void rabbit::sq_setreleasehook(rabbit::VirtualMachine* v,int64_t idx,SQRELEASEHO
 			ud.toUserData()->setHook(hook);
 			break;
 		case rabbit::OT_INSTANCE:
-			_instance(ud)->_hook = hook;
+			ud.toInstance()->_hook = hook;
 			break;
 		case rabbit::OT_CLASS:
 			ud.toClass()->_hook = hook;
@@ -1285,7 +1285,7 @@ SQRELEASEHOOK rabbit::sq_getreleasehook(rabbit::VirtualMachine* v,int64_t idx)
 			return ud.toUserData()->getHook();
 			break;
 		case rabbit::OT_INSTANCE:
-			return _instance(ud)->_hook;
+			return ud.toInstance()->_hook;
 			break;
 		case rabbit::OT_CLASS:
 			return ud.toClass()->_hook;
@@ -1472,7 +1472,7 @@ rabbit::Result _getmemberbyhandle(rabbit::VirtualMachine* v,rabbit::ObjectPtr &s
 {
 	switch(sq_type(self)) {
 		case rabbit::OT_INSTANCE: {
-				rabbit::Instance *i = _instance(self);
+				rabbit::Instance *i = self.toInstance();
 				if(handle->_static) {
 					rabbit::Class *c = i->_class;
 					val = &c->_methods[handle->_index].val;
@@ -1538,7 +1538,7 @@ rabbit::Result rabbit::sq_getclass(rabbit::VirtualMachine* v,int64_t idx)
 {
 	rabbit::ObjectPtr *o = NULL;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_INSTANCE,o);
-	v->push(rabbit::ObjectPtr(_instance(*o)->_class));
+	v->push(rabbit::ObjectPtr(o->toInstance()->_class));
 	return SQ_OK;
 }
 

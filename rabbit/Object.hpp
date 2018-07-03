@@ -149,7 +149,6 @@ namespace rabbit {
 	#define is_delegable(t) (sq_type(t)&SQOBJECT_DELEGABLE)
 	#define raw_type(obj) _RAW_TYPE((obj)._type)
 	
-	#define _instance(obj) ((obj)._unVal.pInstance)
 	#define _delegable(obj) ((rabbit::Delegable *)(obj)._unVal.pDelegable)
 	#define _weakref(obj) ((obj)._unVal.pWeakRef)
 	#define _outer(obj) ((obj)._unVal.pOuter)
