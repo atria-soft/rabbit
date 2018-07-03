@@ -149,14 +149,11 @@ namespace rabbit {
 	#define is_delegable(t) (sq_type(t)&SQOBJECT_DELEGABLE)
 	#define raw_type(obj) _RAW_TYPE((obj)._type)
 	
-	#define _rawval(obj) ((obj)._unVal.raw)
-	
 	#define _stringval(obj) (obj)._unVal.pString->_val
 	#define _userdataval(obj) ((rabbit::UserPointer)sq_aligning((obj)._unVal.pUserData + 1))
 	
 	#define tofloat(num) ((sq_type(num)==rabbit::OT_INTEGER)?(float_t)(num).toInteger():(num).toFloat())
 	#define tointeger(num) ((sq_type(num)==rabbit::OT_FLOAT)?(int64_t)(num).toFloat():(num).toInteger())
-	
 	
 	#define sq_isnumeric(o) ((o)._type&SQOBJECT_NUMERIC)
 	#define sq_istable(o) ((o)._type==rabbit::OT_TABLE)

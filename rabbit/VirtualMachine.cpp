@@ -227,7 +227,7 @@ bool rabbit::VirtualMachine::objCmp(const rabbit::ObjectPtr &o1,const rabbit::Ob
 {
 	rabbit::ObjectType t1 = sq_type(o1), t2 = sq_type(o2);
 	if(t1 == t2) {
-		if(_rawval(o1) == _rawval(o2))_RET_SUCCEED(0);
+		if(o1.toRaw() == o2.toRaw())_RET_SUCCEED(0);
 		rabbit::ObjectPtr res;
 		switch(t1){
 		case rabbit::OT_STRING:
@@ -332,7 +332,7 @@ bool rabbit::VirtualMachine::toString(const rabbit::ObjectPtr &o,rabbit::ObjectP
 			}
 		}
 	default:
-		snprintf(_sp(sq_rsl((sizeof(void*)*2)+NUMBER_UINT8_MAX)),sq_rsl((sizeof(void*)*2)+NUMBER_UINT8_MAX),"(%s : 0x%p)",getTypeName(o),(void*)_rawval(o));
+		snprintf(_sp(sq_rsl((sizeof(void*)*2)+NUMBER_UINT8_MAX)),sq_rsl((sizeof(void*)*2)+NUMBER_UINT8_MAX),"(%s : 0x%p)",getTypeName(o),(void*)o.toRaw());
 	}
 	res = rabbit::String::create(_get_shared_state(this),_spval);
 	return true;
@@ -659,7 +659,7 @@ bool rabbit::VirtualMachine::CLASS_OP(rabbit::ObjectPtr &target,int64_t baseclas
 bool rabbit::VirtualMachine::isEqual(const rabbit::ObjectPtr &o1,const rabbit::ObjectPtr &o2,bool &res)
 {
 	if(sq_type(o1) == sq_type(o2)) {
-		res = (_rawval(o1) == _rawval(o2));
+		res = (o1.toRaw() == o2.toRaw());
 	}
 	else {
 		if(sq_isnumeric(o1) && sq_isnumeric(o2)) {

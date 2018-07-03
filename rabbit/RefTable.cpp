@@ -118,7 +118,7 @@ rabbit::RefTable::RefNode* rabbit::RefTable::get(rabbit::Object &obj,rabbit::Has
 	mainpos = rabbit::HashObj(obj)&(_numofslots-1);
 	*prev = NULL;
 	for (ref = _buckets[mainpos]; ref; ) {
-		if(_rawval(ref->obj) == _rawval(obj) && sq_type(ref->obj) == sq_type(obj))
+		if(ref->obj.toRaw() == obj.toRaw() && sq_type(ref->obj) == sq_type(obj))
 			break;
 		*prev = ref;
 		ref = ref->next;

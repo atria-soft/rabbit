@@ -253,7 +253,7 @@ rabbit::Table::~Table() {
 rabbit::Table::_HashNode* rabbit::Table::_get(const rabbit::ObjectPtr &key,rabbit::Hash hash) const{
 	_HashNode *n = &_nodes[hash];
 	do {
-		if(    _rawval(n->key) == _rawval(key)
+		if(    n->key.toRaw() == key.toRaw()
 		    && sq_type(n->key) == sq_type(key)){
 			return n;
 		}
