@@ -48,7 +48,7 @@ rabbit::SharedState::SharedState()
 
 #define newmetamethod(s) {  \
 	_metamethods->pushBack(rabbit::String::create(this,s));  \
-	_table(_metamethodsmap)->newSlot(_metamethods->back(),(int64_t)(_metamethods->size()-1)); \
+	_metamethodsmap.toTable()->newSlot(_metamethods->back(),(int64_t)(_metamethods->size()-1)); \
 	}
 
 bool rabbit::compileTypemask(etk::Vector<int64_t> &res,const char *typemask)
@@ -162,9 +162,9 @@ rabbit::SharedState::~SharedState()
 		_releasehook = NULL;
 	}
 	_constructoridx.Null();
-	_table(_registry)->finalize();
-	_table(_consts)->finalize();
-	_table(_metamethodsmap)->finalize();
+	_registry.toTable()->finalize();
+	_consts.toTable()->finalize();
+	_metamethodsmap.toTable()->finalize();
 	_registry.Null();
 	_consts.Null();
 	_metamethodsmap.Null();
@@ -199,7 +199,7 @@ int64_t rabbit::SharedState::getMetaMethodIdxByName(const rabbit::ObjectPtr &nam
 		return -1;
 	}
 	rabbit::ObjectPtr ret;
-	if(_table(_metamethodsmap)->get(name,ret)) {
+	if(_metamethodsmap.toTable()->get(name,ret)) {
 		return ret.toInteger();
 	}
 	return -1;

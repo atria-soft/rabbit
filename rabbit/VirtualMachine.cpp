@@ -540,7 +540,7 @@ bool rabbit::VirtualMachine::FOREACH_OP(rabbit::ObjectPtr &o1,rabbit::ObjectPtr 
 	int64_t nrefidx;
 	switch(sq_type(o1)) {
 	case rabbit::OT_TABLE:
-		if((nrefidx = _table(o1)->next(false,o4, o2, o3)) == -1) _FINISH(exitpos);
+		if((nrefidx = o1.toTable()->next(false,o4, o2, o3)) == -1) _FINISH(exitpos);
 		o4 = (int64_t)nrefidx; _FINISH(1);
 	case rabbit::OT_ARRAY:
 		if((nrefidx = o1.toArray()->next(o4, o2, o3)) == -1) _FINISH(exitpos);
@@ -603,7 +603,7 @@ bool rabbit::VirtualMachine::FOREACH_OP(rabbit::ObjectPtr &o1,rabbit::ObjectPtr 
 bool rabbit::VirtualMachine::CLOSURE_OP(rabbit::ObjectPtr &target, rabbit::FunctionProto *func)
 {
 	int64_t nouters;
-	rabbit::Closure *closure = rabbit::Closure::create(_get_shared_state(this), func,_table(_roottable)->getWeakRef(rabbit::OT_TABLE));
+	rabbit::Closure *closure = rabbit::Closure::create(_get_shared_state(this), func,_roottable.toTable()->getWeakRef(rabbit::OT_TABLE));
 	if((nouters = func->_noutervalues)) {
 		for(int64_t i = 0; i<nouters; i++) {
 			rabbit::OuterVar &v = func->_outervalues[i];
@@ -1244,7 +1244,7 @@ bool rabbit::VirtualMachine::tailcall(rabbit::Closure *closure, int64_t parambas
 bool rabbit::VirtualMachine::get(const rabbit::ObjectPtr &self, const rabbit::ObjectPtr &key, rabbit::ObjectPtr &dest, uint64_t getflags, int64_t selfidx) {
 	switch(sq_type(self)){
 		case rabbit::OT_TABLE:
-			if(_table(self)->get(key,dest)) {
+			if(self.toTable()->get(key,dest)) {
 				return true;
 			}
 			break;
@@ -1374,7 +1374,7 @@ bool rabbit::VirtualMachine::set(const rabbit::ObjectPtr &self,const rabbit::Obj
 {
 	switch(sq_type(self)){
 	case rabbit::OT_TABLE:
-		if(_table(self)->set(key,val)) return true;
+		if(self.toTable()->set(key,val)) return true;
 		break;
 	case rabbit::OT_INSTANCE:
 		if(_instance(self)->set(key,val)) return true;
@@ -1398,7 +1398,7 @@ bool rabbit::VirtualMachine::set(const rabbit::ObjectPtr &self,const rabbit::Obj
 		case FALLBACK_ERROR: return false; // the metamethod failed
 	}
 	if(selfidx == 0) {
-		if(_table(_roottable)->set(key,val))
+		if(_roottable.toTable()->set(key,val))
 			return true;
 	}
 	raise_Idxerror(key);
@@ -1409,8 +1409,8 @@ int64_t rabbit::VirtualMachine::fallBackSet(const rabbit::ObjectPtr &self,const 
 {
 	switch(sq_type(self)) {
 	case rabbit::OT_TABLE:
-		if(_table(self)->_delegate) {
-			if(set(_table(self)->_delegate,key,val,DONT_FALL_BACK)) return FALLBACK_OK;
+		if(self.toTable()->_delegate) {
+			if(set(self.toTable()->_delegate,key,val,DONT_FALL_BACK)) return FALLBACK_OK;
 		}
 		//keps on going
 	case rabbit::OT_INSTANCE:
@@ -1446,7 +1446,7 @@ bool rabbit::VirtualMachine::clone(const rabbit::ObjectPtr &self,rabbit::ObjectP
 	rabbit::ObjectPtr newobj;
 	switch(sq_type(self)){
 	case rabbit::OT_TABLE:
-		newobj = _table(self)->clone();
+		newobj = self.toTable()->clone();
 		goto cloned_mt;
 	case rabbit::OT_INSTANCE: {
 		newobj = _instance(self)->clone(_get_shared_state(this));
@@ -1498,27 +1498,30 @@ bool rabbit::VirtualMachine::newSlot(const rabbit::ObjectPtr &self,const rabbit:
 {
 	if(sq_type(key) == rabbit::OT_NULL) { raise_error("null cannot be used as index"); return false; }
 	switch(sq_type(self)) {
-	case rabbit::OT_TABLE: {
-		bool rawcall = true;
-		if(_table(self)->_delegate) {
-			rabbit::ObjectPtr res;
-			if(!_table(self)->get(key,res)) {
-				rabbit::ObjectPtr closure;
-				if(_delegable(self)->_delegate && _delegable(self)->getMetaMethod(this,MT_NEWSLOT,closure)) {
-					push(self);push(key);push(val);
-					if(!callMetaMethod(closure,MT_NEWSLOT,3,res)) {
-						return false;
+	case rabbit::OT_TABLE:
+		{
+			bool rawcall = true;
+			if(self.toTable()->_delegate) {
+				rabbit::ObjectPtr res;
+				if(!self.toTable()->get(key,res)) {
+					rabbit::ObjectPtr closure;
+					if(_delegable(self)->_delegate && _delegable(self)->getMetaMethod(this,MT_NEWSLOT,closure)) {
+						push(self);push(key);push(val);
+						if(!callMetaMethod(closure,MT_NEWSLOT,3,res)) {
+							return false;
+						}
+						rawcall = false;
 					}
-					rawcall = false;
-				}
-				else {
-					rawcall = true;
+					else {
+						rawcall = true;
+					}
 				}
 			}
+			if(rawcall) {
+				self.toTable()->newSlot(key,val); //cannot fail
+			}
+			break;
 		}
-		if(rawcall) _table(self)->newSlot(key,val); //cannot fail
-
-		break;}
 	case rabbit::OT_INSTANCE: {
 		rabbit::ObjectPtr res;
 		rabbit::ObjectPtr closure;
@@ -1570,8 +1573,8 @@ bool rabbit::VirtualMachine::deleteSlot(const rabbit::ObjectPtr &self,const rabb
 		}
 		else {
 			if(sq_type(self) == rabbit::OT_TABLE) {
-				if(_table(self)->get(key,t)) {
-					_table(self)->remove(key);
+				if(self.toTable()->get(key,t)) {
+					self.toTable()->remove(key);
 				}
 				else {
 					raise_Idxerror((const rabbit::Object &)key);
@@ -1786,7 +1789,7 @@ void rabbit::VirtualMachine::dumpstack(int64_t stackbase,bool dumpall)
 		case rabbit::OT_BOOL:		   printf("BOOL %s",obj.toInteger()?"true":"false");break;
 		case rabbit::OT_STRING:		 printf("STRING %s",_stringval(obj));break;
 		case rabbit::OT_NULL:		   printf("NULL");  break;
-		case rabbit::OT_TABLE:		  printf("TABLE %p[%p]",_table(obj),_table(obj)->_delegate);break;
+		case rabbit::OT_TABLE:		  printf("TABLE %p[%p]",obj.toTable(),obj.toTable()->_delegate);break;
 		case rabbit::OT_ARRAY:		  printf("ARRAY %p",obj.toArray());break;
 		case rabbit::OT_CLOSURE:		printf("CLOSURE [%p]",_closure(obj));break;
 		case rabbit::OT_NATIVECLOSURE:  printf("NATIVECLOSURE");break;

@@ -148,7 +148,7 @@ void rabbit::FuncState::dump(rabbit::FunctionProto *func)
 	int64_t idx;
 	etk::Vector<rabbit::ObjectPtr> templiterals;
 	templiterals.resize(_nliterals);
-	while((idx=_table(_literals)->next(false,refidx,key,val))!=-1) {
+	while((idx=_literals.toTable()->next(false,refidx,key,val))!=-1) {
 		refidx=idx;
 		templiterals[val.toInteger()]=key;
 	}
@@ -193,7 +193,7 @@ void rabbit::FuncState::dump(rabbit::FunctionProto *func)
 			else {
 				int64_t refidx;
 				rabbit::ObjectPtr val,key,refo;
-				while(((refidx=_table(_literals)->next(false,refo,key,val))!= -1) && (val.toInteger() != lidx)) {
+				while(((refidx=_literals.toTable()->next(false,refo,key,val))!= -1) && (val.toInteger() != lidx)) {
 					refo = refidx;
 				}
 				dumpLiteral(key);
@@ -209,7 +209,7 @@ void rabbit::FuncState::dump(rabbit::FunctionProto *func)
 				else {
 					int64_t refidx;
 					rabbit::ObjectPtr val,key,refo;
-					while(((refidx=_table(_literals)->next(false,refo,key,val))!= -1) && (val.toInteger() != lidx)) {
+					while(((refidx=_literals.toTable()->next(false,refo,key,val))!= -1) && (val.toInteger() != lidx)) {
 						refo = refidx;
 				}
 				dumpLiteral(key);
@@ -247,10 +247,10 @@ int64_t rabbit::FuncState::getNumericConstant(const float_t cons)
 int64_t rabbit::FuncState::getConstant(const rabbit::Object &cons)
 {
 	rabbit::ObjectPtr val;
-	if(!_table(_literals)->get(cons,val))
+	if(!_literals.toTable()->get(cons,val))
 	{
 		val = _nliterals;
-		_table(_literals)->newSlot(cons,val);
+		_literals.toTable()->newSlot(cons,val);
 		_nliterals++;
 		if(_nliterals > MAX_LITERALS) {
 			val.Null();
@@ -358,7 +358,7 @@ void rabbit::FuncState::setStacksize(int64_t n)
 bool rabbit::FuncState::isConstant(const rabbit::Object &name,rabbit::Object &e)
 {
 	rabbit::ObjectPtr val;
-	if(_table(_sharedstate->_consts)->get(name,val)) {
+	if(_sharedstate->_consts.toTable()->get(name,val)) {
 		e = val;
 		return true;
 	}
@@ -601,14 +601,14 @@ void rabbit::FuncState::addInstruction(rabbit::Instruction &i)
 rabbit::Object rabbit::FuncState::createString(const char *s,int64_t len)
 {
 	rabbit::ObjectPtr ns(rabbit::String::create(_sharedstate,s,len));
-	_table(_strings)->newSlot(ns,(int64_t)1);
+	_strings.toTable()->newSlot(ns,(int64_t)1);
 	return ns;
 }
 
 rabbit::Object rabbit::FuncState::createTable()
 {
 	rabbit::ObjectPtr nt(rabbit::Table::create(_sharedstate,0));
-	_table(_strings)->newSlot(nt,(int64_t)1);
+	_strings.toTable()->newSlot(nt,(int64_t)1);
 	return nt;
 }
 
@@ -625,7 +625,7 @@ rabbit::FunctionProto* rabbit::FuncState::buildProto() {
 	f->_bgenerator = _bgenerator;
 	f->_name = _name;
 
-	while((idx=_table(_literals)->next(false,refidx,key,val))!=-1) {
+	while((idx=_literals.toTable()->next(false,refidx,key,val))!=-1) {
 		f->_literals[val.toInteger()]=key;
 		refidx=idx;
 	}

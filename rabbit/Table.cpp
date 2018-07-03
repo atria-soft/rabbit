@@ -35,7 +35,7 @@ rabbit::Table::Table(rabbit::SharedState *ss,int64_t ninitialsize) {
 	_delegate = NULL;
 }
 
-void rabbit::Table::remove(const rabbit::ObjectPtr &key) {
+void rabbit::Table::remove(const rabbit::ObjectPtr &key) const {
 	_HashNode *n = _get(key, HashObj(key) & (_numofnodes - 1));
 	if (n) {
 		n->val.Null();
@@ -45,7 +45,7 @@ void rabbit::Table::remove(const rabbit::ObjectPtr &key) {
 	}
 }
 
-void rabbit::Table::allocNodes(int64_t nsize)
+void rabbit::Table::allocNodes(int64_t nsize) const
 {
 	_HashNode *nodes=(_HashNode *)SQ_MALLOC(sizeof(_HashNode)*nsize);
 	for(int64_t i=0;i<nsize;i++){
@@ -58,7 +58,7 @@ void rabbit::Table::allocNodes(int64_t nsize)
 	_firstfree=&_nodes[_numofnodes-1];
 }
 
-void rabbit::Table::Rehash(bool force)
+void rabbit::Table::Rehash(bool force) const
 {
 	int64_t oldsize=_numofnodes;
 	//prevent problems with the integer division
@@ -85,7 +85,7 @@ void rabbit::Table::Rehash(bool force)
 	SQ_FREE(nold,oldsize*sizeof(_HashNode));
 }
 
-rabbit::Table *rabbit::Table::clone()
+rabbit::Table *rabbit::Table::clone() const
 {
 	rabbit::Table *nt=create(NULL,_numofnodes);
 #ifdef _FAST_CLONE
@@ -120,7 +120,7 @@ rabbit::Table *rabbit::Table::clone()
 	return nt;
 }
 
-bool rabbit::Table::get(const rabbit::ObjectPtr &key,rabbit::ObjectPtr &val)
+bool rabbit::Table::get(const rabbit::ObjectPtr &key,rabbit::ObjectPtr &val) const
 {
 	if(sq_type(key) == rabbit::OT_NULL)
 		return false;
@@ -131,7 +131,7 @@ bool rabbit::Table::get(const rabbit::ObjectPtr &key,rabbit::ObjectPtr &val)
 	}
 	return false;
 }
-bool rabbit::Table::newSlot(const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val)
+bool rabbit::Table::newSlot(const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val) const
 {
 	assert(sq_type(key) != rabbit::OT_NULL);
 	rabbit::Hash h = HashObj(key) & (_numofnodes - 1);
@@ -188,7 +188,7 @@ bool rabbit::Table::newSlot(const rabbit::ObjectPtr &key,const rabbit::ObjectPtr
 	return newSlot(key, val);
 }
 
-int64_t rabbit::Table::next(bool getweakrefs,const rabbit::ObjectPtr &refpos, rabbit::ObjectPtr &outkey, rabbit::ObjectPtr &outval)
+int64_t rabbit::Table::next(bool getweakrefs,const rabbit::ObjectPtr &refpos, rabbit::ObjectPtr &outkey, rabbit::ObjectPtr &outval) const
 {
 	int64_t idx = (int64_t)translateIndex(refpos);
 	while (idx < _numofnodes) {
@@ -207,7 +207,7 @@ int64_t rabbit::Table::next(bool getweakrefs,const rabbit::ObjectPtr &refpos, ra
 }
 
 
-bool rabbit::Table::set(const rabbit::ObjectPtr &key, const rabbit::ObjectPtr &val)
+bool rabbit::Table::set(const rabbit::ObjectPtr &key, const rabbit::ObjectPtr &val) const
 {
 	_HashNode *n = _get(key, HashObj(key) & (_numofnodes - 1));
 	if (n) {
@@ -217,7 +217,7 @@ bool rabbit::Table::set(const rabbit::ObjectPtr &key, const rabbit::ObjectPtr &v
 	return false;
 }
 
-void rabbit::Table::_clearNodes()
+void rabbit::Table::_clearNodes() const
 {
 	for(int64_t i = 0;i < _numofnodes; i++) { _HashNode &n = _nodes[i]; n.key.Null(); n.val.Null(); }
 }
@@ -228,7 +228,7 @@ void rabbit::Table::finalize()
 	setDelegate(NULL);
 }
 
-void rabbit::Table::clear()
+void rabbit::Table::clear() const
 {
 	_clearNodes();
 	_usednodes = 0;
@@ -250,7 +250,7 @@ rabbit::Table::~Table() {
 	SQ_FREE(_nodes, _numofnodes * sizeof(_HashNode));
 }
 
-rabbit::Table::_HashNode* rabbit::Table::_get(const rabbit::ObjectPtr &key,rabbit::Hash hash) {
+rabbit::Table::_HashNode* rabbit::Table::_get(const rabbit::ObjectPtr &key,rabbit::Hash hash) const{
 	_HashNode *n = &_nodes[hash];
 	do {
 		if(    _rawval(n->key) == _rawval(key)
@@ -262,7 +262,7 @@ rabbit::Table::_HashNode* rabbit::Table::_get(const rabbit::ObjectPtr &key,rabbi
 }
 
 //for compiler use
-bool rabbit::Table::getStr(const char* key,int64_t keylen,rabbit::ObjectPtr &val) {
+bool rabbit::Table::getStr(const char* key,int64_t keylen,rabbit::ObjectPtr &val) const{
 	rabbit::Hash hash = _hashstr(key,keylen);
 	_HashNode *n = &_nodes[hash & (_numofnodes - 1)];
 	_HashNode *res = NULL;
@@ -279,7 +279,7 @@ bool rabbit::Table::getStr(const char* key,int64_t keylen,rabbit::ObjectPtr &val
 	return false;
 }
 
-int64_t rabbit::Table::countUsed() {
+int64_t rabbit::Table::countUsed() const {
 	return _usednodes;
 }
 

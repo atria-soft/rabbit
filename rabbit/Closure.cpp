@@ -137,7 +137,7 @@ bool rabbit::Closure::load(rabbit::VirtualMachine *v,rabbit::UserPointer up,SQRE
 	rabbit::ObjectPtr func;
 	_CHECK_IO(rabbit::FunctionProto::load(v,up,read,func));
 	_CHECK_IO(CheckTag(v,read,up,SQ_CLOSURESTREAM_TAIL));
-	ret = rabbit::Closure::create(_get_shared_state(v),_funcproto(func),_table(v->_roottable)->getWeakRef(rabbit::OT_TABLE));
+	ret = rabbit::Closure::create(_get_shared_state(v),_funcproto(func),v->_roottable.toTable()->getWeakRef(rabbit::OT_TABLE));
 	//FIXME: load an root for this closure
 	return true;
 }

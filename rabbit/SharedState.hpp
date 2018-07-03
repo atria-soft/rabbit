@@ -70,16 +70,16 @@ namespace rabbit {
 	#define _sp(s) (_sharedstate->getScratchPad(s))
 	#define _spval (_sharedstate->getScratchPad(-1))
 	
-	#define _table_ddel     _table(_sharedstate->_table_default_delegate)
-	#define _array_ddel     _table(_sharedstate->_array_default_delegate)
-	#define _string_ddel    _table(_sharedstate->_string_default_delegate)
-	#define _number_ddel    _table(_sharedstate->_number_default_delegate)
-	#define _generator_ddel _table(_sharedstate->_generator_default_delegate)
-	#define _closure_ddel   _table(_sharedstate->_closure_default_delegate)
-	#define _thread_ddel    _table(_sharedstate->_thread_default_delegate)
-	#define _class_ddel     _table(_sharedstate->_class_default_delegate)
-	#define _instance_ddel  _table(_sharedstate->_instance_default_delegate)
-	#define _weakref_ddel   _table(_sharedstate->_weakref_default_delegate)
+	#define _table_ddel     _sharedstate->_table_default_delegate.toTable()
+	#define _array_ddel     _sharedstate->_array_default_delegate.toTable()
+	#define _string_ddel    _sharedstate->_string_default_delegate.toTable()
+	#define _number_ddel    _sharedstate->_number_default_delegate.toTable()
+	#define _generator_ddel _sharedstate->_generator_default_delegate.toTable()
+	#define _closure_ddel   _sharedstate->_closure_default_delegate.toTable()
+	#define _thread_ddel    _sharedstate->_thread_default_delegate.toTable()
+	#define _class_ddel     _sharedstate->_class_default_delegate.toTable()
+	#define _instance_ddel  _sharedstate->_instance_default_delegate.toTable()
+	#define _weakref_ddel   _sharedstate->_weakref_default_delegate.toTable()
 	
 	bool compileTypemask(etk::Vector<int64_t> &res,const char *typemask);
 	

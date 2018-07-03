@@ -473,7 +473,7 @@ static int64_t table_getdelegate(rabbit::VirtualMachine* v)
 static int64_t table_filter(rabbit::VirtualMachine* v)
 {
 	rabbit::Object &o = stack_get(v,1);
-	rabbit::Table *tbl = _table(o);
+	rabbit::Table *tbl = o.toTable();
 	rabbit::ObjectPtr ret = rabbit::Table::create(_get_shared_state(v),0);
 
 	rabbit::ObjectPtr itr, key, val;
@@ -488,7 +488,7 @@ static int64_t table_filter(rabbit::VirtualMachine* v)
 			return SQ_ERROR;
 		}
 		if(!rabbit::VirtualMachine::IsFalse(v->getUp(-1))) {
-			_table(ret)->newSlot(key, val);
+			ret.toTable()->newSlot(key, val);
 		}
 		v->pop();
 	}

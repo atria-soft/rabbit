@@ -320,7 +320,7 @@ public:
 			Expect('=');
 			rabbit::Object val = ExpectScalar();
 			OptionalSemicolon();
-			rabbit::Table *enums = _table(_get_shared_state(_vm)->_consts);
+			rabbit::Table *enums = _get_shared_state(_vm)->_consts.toTable();
 			rabbit::ObjectPtr strongid = id;
 			enums->newSlot(strongid,rabbit::ObjectPtr(val));
 			strongid.Null();
@@ -787,7 +787,7 @@ public:
 					if(sq_type(constant) == rabbit::OT_TABLE) {
 						Expect('.');
 						constid = Expect(TK_IDENTIFIER);
-						if(!_table(constant)->get(constid, constval)) {
+						if(!constant.toTable()->get(constid, constval)) {
 							constval.Null();
 							error("invalid constant [%s.%s]", _stringval(id), _stringval(constid));
 						}
@@ -1400,10 +1400,10 @@ public:
 				val._type = rabbit::OT_INTEGER;
 				val._unVal.nInteger = nval++;
 			}
-			_table(table)->newSlot(rabbit::ObjectPtr(key),rabbit::ObjectPtr(val));
+			table.toTable()->newSlot(rabbit::ObjectPtr(key),rabbit::ObjectPtr(val));
 			if(_token == ',') Lex();
 		}
-		rabbit::Table *enums = _table(_get_shared_state(_vm)->_consts);
+		rabbit::Table *enums = _get_shared_state(_vm)->_consts.toTable();
 		rabbit::ObjectPtr strongid = id;
 		enums->newSlot(rabbit::ObjectPtr(strongid),rabbit::ObjectPtr(table));
 		strongid.Null();

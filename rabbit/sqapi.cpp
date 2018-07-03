@@ -149,7 +149,7 @@ rabbit::Result rabbit::sq_compile(rabbit::VirtualMachine* v,SQLEXREADFUNC read,r
 	rabbit::ObjectPtr o;
 #ifndef NO_COMPILER
 	if(compile(v, read, p, sourcename, o, raiseerror?true:false, _get_shared_state(v)->_debuginfo)) {
-		v->push(rabbit::Closure::create(_get_shared_state(v), _funcproto(o), _table(v->_roottable)->getWeakRef(rabbit::OT_TABLE)));
+		v->push(rabbit::Closure::create(_get_shared_state(v), _funcproto(o), v->_roottable.toTable()->getWeakRef(rabbit::OT_TABLE)));
 		return SQ_OK;
 	}
 	return SQ_ERROR;
@@ -518,7 +518,7 @@ rabbit::Result rabbit::sq_setclosureroot(rabbit::VirtualMachine* v,int64_t idx)
 	rabbit::Object o = stack_get(v, -1);
 	if(!sq_isclosure(c)) return sq_throwerror(v, "closure expected");
 	if(sq_istable(o)) {
-		_closure(c)->setRoot(_table(o)->getWeakRef(rabbit::OT_TABLE));
+		_closure(c)->setRoot(o.toTable()->getWeakRef(rabbit::OT_TABLE));
 		v->pop();
 		return SQ_OK;
 	}
@@ -537,7 +537,7 @@ rabbit::Result rabbit::sq_clear(rabbit::VirtualMachine* v,int64_t idx)
 {
 	rabbit::Object &o=stack_get(v,idx);
 	switch(sq_type(o)) {
-		case rabbit::OT_TABLE: _table(o)->clear();  break;
+		case rabbit::OT_TABLE: o.toTable()->clear();  break;
 		case rabbit::OT_ARRAY: o.toArray()->resize(0); break;
 		default:
 			return sq_throwerror(v, "clear only works on table and array");
@@ -738,7 +738,7 @@ int64_t rabbit::sq_getsize(rabbit::VirtualMachine* v, int64_t idx)
 	rabbit::ObjectType type = sq_type(o);
 	switch(type) {
 	case rabbit::OT_STRING:	 return o.toString()->_len;
-	case rabbit::OT_TABLE:	  return _table(o)->countUsed();
+	case rabbit::OT_TABLE:	  return o.toTable()->countUsed();
 	case rabbit::OT_ARRAY:	  return o.toArray()->size();
 	case rabbit::OT_USERDATA:   return _userdata(o)->getsize();
 	case rabbit::OT_INSTANCE:   return _instance(o)->_class->_udsize;
@@ -932,7 +932,7 @@ rabbit::Result rabbit::sq_rawset(rabbit::VirtualMachine* v,int64_t idx)
 	}
 	switch(sq_type(self)) {
 	case rabbit::OT_TABLE:
-		_table(self)->newSlot(key, v->getUp(-1));
+		self.toTable()->newSlot(key, v->getUp(-1));
 		v->pop(2);
 		return SQ_OK;
 	break;
@@ -996,18 +996,18 @@ rabbit::Result rabbit::sq_setdelegate(rabbit::VirtualMachine* v,int64_t idx)
 	switch(type) {
 	case rabbit::OT_TABLE:
 		if(sq_type(mt) == rabbit::OT_TABLE) {
-			if(!_table(self)->setDelegate(_table(mt))) {
+			if(!self.toTable()->setDelegate(mt.toTable())) {
 				return sq_throwerror(v, "delagate cycle");
 			}
 			v->pop();
 		}
 		else if(sq_type(mt)==rabbit::OT_NULL) {
-			_table(self)->setDelegate(NULL); v->pop(); }
+			self.toTable()->setDelegate(NULL); v->pop(); }
 		else return sq_aux_invalidtype(v,type);
 		break;
 	case rabbit::OT_USERDATA:
 		if(sq_type(mt)==rabbit::OT_TABLE) {
-			_userdata(self)->setDelegate(_table(mt)); v->pop(); }
+			_userdata(self)->setDelegate(mt.toTable()); v->pop(); }
 		else if(sq_type(mt)==rabbit::OT_NULL) {
 			_userdata(self)->setDelegate(NULL); v->pop(); }
 		else return sq_aux_invalidtype(v, type);
@@ -1026,8 +1026,8 @@ rabbit::Result rabbit::sq_rawdeleteslot(rabbit::VirtualMachine* v,int64_t idx,ra
 	_GETSAFE_OBJ(v, idx, rabbit::OT_TABLE,self);
 	rabbit::ObjectPtr &key = v->getUp(-1);
 	rabbit::ObjectPtr t;
-	if(_table(*self)->get(key,t)) {
-		_table(*self)->remove(key);
+	if(self->toTable()->get(key,t)) {
+		self->toTable()->remove(key);
 	}
 	if(pushval != 0)
 		v->getUp(-1) = t;
@@ -1070,7 +1070,7 @@ rabbit::Result rabbit::sq_rawget(rabbit::VirtualMachine* v,int64_t idx)
 	rabbit::ObjectPtr &obj = v->getUp(-1);
 	switch(sq_type(self)) {
 	case rabbit::OT_TABLE:
-		if(_table(self)->get(obj,obj))
+		if(self.toTable()->get(obj,obj))
 			return SQ_OK;
 		break;
 	case rabbit::OT_CLASS:
@@ -1081,17 +1081,17 @@ rabbit::Result rabbit::sq_rawget(rabbit::VirtualMachine* v,int64_t idx)
 		if(_instance(self)->get(obj,obj))
 			return SQ_OK;
 		break;
-	case rabbit::OT_ARRAY:{
-		if(sq_isnumeric(obj)){
-			if(self.toArray()->get(tointeger(obj),obj)) {
-				return SQ_OK;
+	case rabbit::OT_ARRAY:
+		{
+			if(sq_isnumeric(obj)){
+				if(self.toArray()->get(tointeger(obj),obj)) {
+					return SQ_OK;
+				}
+			} else {
+				v->pop();
+				return sq_throwerror(v,"invalid index type for an array");
 			}
 		}
-		else {
-			v->pop();
-			return sq_throwerror(v,"invalid index type for an array");
-		}
-				  }
 		break;
 	default:
 		v->pop();
