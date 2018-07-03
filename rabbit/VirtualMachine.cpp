@@ -1799,7 +1799,7 @@ void rabbit::VirtualMachine::dumpstack(int64_t stackbase,bool dumpall)
 		case rabbit::OT_USERPOINTER:	printf("USERPOINTER %p",obj.toUserPointer());break;
 		case rabbit::OT_CLASS:		  printf("CLASS %p",obj.toClass());break;
 		case rabbit::OT_INSTANCE:	   printf("INSTANCE %p",obj.toInstance());break;
-		case rabbit::OT_WEAKREF:		printf("WEAKERF %p",_weakref(obj));break;
+		case rabbit::OT_WEAKREF:		printf("WEAKERF %p",obj.toWeakRef());break;
 		default:
 			assert(0);
 			break;

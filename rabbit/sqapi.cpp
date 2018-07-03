@@ -1566,7 +1566,7 @@ rabbit::Result rabbit::sq_getweakrefval(rabbit::VirtualMachine* v,int64_t idx)
 	if(sq_type(o) != rabbit::OT_WEAKREF) {
 		return sq_throwerror(v,"the object must be a weakref");
 	}
-	v->push(_weakref(o)->_obj);
+	v->push(o.toWeakRef()->_obj);
 	return SQ_OK;
 }
 

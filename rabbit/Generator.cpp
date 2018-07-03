@@ -74,7 +74,7 @@ bool rabbit::Generator::resume(rabbit::VirtualMachine *v,rabbit::ObjectPtr &dest
 		et._stacksize += newbase;
 	}
 	rabbit::Object _this = _stack[0];
-	v->_stack[v->_stackbase] = sq_type(_this) == rabbit::OT_WEAKREF ? _weakref(_this)->_obj : _this;
+	v->_stack[v->_stackbase] = sq_type(_this) == rabbit::OT_WEAKREF ? _this.toWeakRef()->_obj : _this;
 
 	for(int64_t n = 1; n<size; n++) {
 		v->_stack[v->_stackbase+n] = _stack[n];
