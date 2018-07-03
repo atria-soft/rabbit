@@ -740,7 +740,7 @@ int64_t rabbit::sq_getsize(rabbit::VirtualMachine* v, int64_t idx)
 	case rabbit::OT_STRING:	 return o.toString()->_len;
 	case rabbit::OT_TABLE:	  return o.toTable()->countUsed();
 	case rabbit::OT_ARRAY:	  return o.toArray()->size();
-	case rabbit::OT_USERDATA:   return _userdata(o)->getsize();
+	case rabbit::OT_USERDATA:   return o.toUserData()->getsize();
 	case rabbit::OT_INSTANCE:   return _instance(o)->_class->_udsize;
 	case rabbit::OT_CLASS:	  return _class(o)->_udsize;
 	default:
@@ -760,7 +760,7 @@ rabbit::Result rabbit::sq_getuserdata(rabbit::VirtualMachine* v,int64_t idx,rabb
 	_GETSAFE_OBJ(v, idx, rabbit::OT_USERDATA,o);
 	(*p) = _userdataval(*o);
 	if(typetag) {
-		*typetag = _userdata(*o)->getTypeTag();
+		*typetag = o->toUserData()->getTypeTag();
 	}
 	return SQ_OK;
 }
@@ -770,7 +770,7 @@ rabbit::Result rabbit::sq_settypetag(rabbit::VirtualMachine* v,int64_t idx,rabbi
 	rabbit::ObjectPtr &o = stack_get(v,idx);
 	switch(sq_type(o)) {
 		case rabbit::OT_USERDATA:
-			_userdata(o)->setTypeTag(typetag);
+			o.toUserData()->setTypeTag(typetag);
 			break;
 		case rabbit::OT_CLASS:
 			_class(o)->_typetag = typetag;
@@ -785,7 +785,7 @@ rabbit::Result rabbit::sq_getobjtypetag(const rabbit::Object *o,rabbit::UserPoin
 {
   switch(sq_type(*o)) {
 	case rabbit::OT_INSTANCE: *typetag = _instance(*o)->_class->_typetag; break;
-	case rabbit::OT_USERDATA: *typetag = _userdata(*o)->getTypeTag(); break;
+	case rabbit::OT_USERDATA: *typetag = o->toUserData()->getTypeTag(); break;
 	case rabbit::OT_CLASS:	*typetag = _class(*o)->_typetag; break;
 	default: return SQ_ERROR;
   }
@@ -1007,9 +1007,9 @@ rabbit::Result rabbit::sq_setdelegate(rabbit::VirtualMachine* v,int64_t idx)
 		break;
 	case rabbit::OT_USERDATA:
 		if(sq_type(mt)==rabbit::OT_TABLE) {
-			_userdata(self)->setDelegate(mt.toTable()); v->pop(); }
+			self.toUserData()->setDelegate(mt.toTable()); v->pop(); }
 		else if(sq_type(mt)==rabbit::OT_NULL) {
-			_userdata(self)->setDelegate(NULL); v->pop(); }
+			self.toUserData()->setDelegate(NULL); v->pop(); }
 		else return sq_aux_invalidtype(v, type);
 		break;
 	default:
@@ -1264,7 +1264,7 @@ void rabbit::sq_setreleasehook(rabbit::VirtualMachine* v,int64_t idx,SQRELEASEHO
 	rabbit::ObjectPtr &ud=stack_get(v,idx);
 	switch(sq_type(ud) ) {
 		case rabbit::OT_USERDATA:
-			_userdata(ud)->setHook(hook);
+			ud.toUserData()->setHook(hook);
 			break;
 		case rabbit::OT_INSTANCE:
 			_instance(ud)->_hook = hook;
@@ -1282,7 +1282,7 @@ SQRELEASEHOOK rabbit::sq_getreleasehook(rabbit::VirtualMachine* v,int64_t idx)
 	rabbit::ObjectPtr &ud=stack_get(v,idx);
 	switch(sq_type(ud) ) {
 		case rabbit::OT_USERDATA:
-			return _userdata(ud)->getHook();
+			return ud.toUserData()->getHook();
 			break;
 		case rabbit::OT_INSTANCE:
 			return _instance(ud)->_hook;
