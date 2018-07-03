@@ -24,12 +24,12 @@ namespace rabbit {
 			                     int64_t _ninitialsize);
 			void finalize();
 			bool get(const int64_t _nidx,
-			         rabbit::ObjectPtr& _val);
-			bool set(const int64_t _nidx,const rabbit::ObjectPtr& _val);
+			         rabbit::ObjectPtr& _val) const;
+			bool set(const int64_t _nidx,const rabbit::ObjectPtr& _val) const;
 			int64_t next(const rabbit::ObjectPtr& _refpos,
 			             rabbit::ObjectPtr& _outkey,
 			             rabbit::ObjectPtr& _outval);
-			Array* clone();
+			Array* clone() const;
 			int64_t size() const;
 			void resize(int64_t _size);
 			void resize(int64_t _size,
@@ -46,7 +46,7 @@ namespace rabbit {
 			rabbit::ObjectPtr& operator[] (const size_t _pos);
 			const rabbit::ObjectPtr& operator[] (const size_t _pos) const;
 		private:
-			etk::Vector<rabbit::ObjectPtr> m_data;
+			mutable etk::Vector<rabbit::ObjectPtr> m_data;
 	};
 }
 

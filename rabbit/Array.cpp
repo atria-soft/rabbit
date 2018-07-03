@@ -21,8 +21,7 @@ void rabbit::Array::extend(const rabbit::Array *a){
 	}
 }
 
-rabbit::Array::Array(rabbit::SharedState* _ss,
-      int64_t _nsize) {
+rabbit::Array::Array(rabbit::SharedState* _ss, int64_t _nsize) {
 	m_data.resize(_nsize);
 }
 rabbit::Array::~Array() {
@@ -38,8 +37,7 @@ rabbit::Array* rabbit::Array::create(rabbit::SharedState* _ss,
 void rabbit::Array::finalize() {
 	m_data.resize(0);
 }
-bool rabbit::Array::get(const int64_t _nidx,
-         rabbit::ObjectPtr& _val) {
+bool rabbit::Array::get(const int64_t _nidx, rabbit::ObjectPtr& _val) const {
 	if(    _nidx >= 0
 	    && _nidx < (int64_t)m_data.size()){
 		rabbit::ObjectPtr &o = m_data[_nidx];
@@ -48,7 +46,7 @@ bool rabbit::Array::get(const int64_t _nidx,
 	}
 	return false;
 }
-bool rabbit::Array::set(const int64_t _nidx,const rabbit::ObjectPtr& _val) {
+bool rabbit::Array::set(const int64_t _nidx,const rabbit::ObjectPtr& _val) const {
 	if(_nidx>=0 && _nidx<(int64_t)m_data.size()){
 		m_data[_nidx] = _val;
 		return true;
@@ -70,7 +68,7 @@ int64_t rabbit::Array::next(const rabbit::ObjectPtr& _refpos,
 	//nothing to iterate anymore
 	return -1;
 }
-rabbit::Array* rabbit::Array::clone() {
+rabbit::Array* rabbit::Array::clone() const {
 	Array *anew = create(NULL,0);
 	anew->m_data = m_data;
 	return anew;

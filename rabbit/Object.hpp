@@ -17,6 +17,121 @@ namespace rabbit {
 		public:
 			rabbit::ObjectType _type;
 			rabbit::ObjectValue _unVal;
+			
+			int64_t& toInteger() {
+				return _unVal.nInteger;
+			}
+			int64_t toInteger() const {
+				return _unVal.nInteger;
+			}
+			float_t& toFloat() {
+				return _unVal.fFloat;
+			}
+			float_t toFloat() const {
+				return _unVal.fFloat;
+			}
+			rabbit::String*& toString() {
+				return _unVal.pString;
+			}
+			const rabbit::String* toString() const {
+				return _unVal.pString;
+			}
+			rabbit::Table*& toTable() {
+				return _unVal.pTable;
+			}
+			const rabbit::Table* toTable() const {
+				return _unVal.pTable;
+			}
+			rabbit::Array*& toArray() {
+				return _unVal.pArray;
+			}
+			const rabbit::Array* toArray() const {
+				return _unVal.pArray;
+			}
+			rabbit::FunctionProto*& toFunctionProto() {
+				return _unVal.pFunctionProto;
+			}
+			const rabbit::FunctionProto* toFunctionProto() const {
+				return _unVal.pFunctionProto;
+			}
+			rabbit::Closure*& toClosure() {
+				return _unVal.pClosure;
+			}
+			const rabbit::Closure* toClosure() const {
+				return _unVal.pClosure;
+			}
+			rabbit::Outer*& toOuter() {
+				return _unVal.pOuter;
+			}
+			const rabbit::Outer* toOuter() const {
+				return _unVal.pOuter;
+			}
+			rabbit::Generator*& toGenerator() {
+				return _unVal.pGenerator;
+			}
+			const rabbit::Generator* toGenerator() const {
+				return _unVal.pGenerator;
+			}
+			rabbit::NativeClosure*& toNativeClosure() {
+				return _unVal.pNativeClosure;
+			}
+			const rabbit::NativeClosure* toNativeClosure() const {
+				return _unVal.pNativeClosure;
+			}
+			rabbit::Class*& toClass() {
+				return _unVal.pClass;
+			}
+			const rabbit::Class* toClass() const {
+				return _unVal.pClass;
+			}
+			rabbit::Instance*& toInstance() {
+				return _unVal.pInstance;
+			}
+			const rabbit::Instance* toInstance() const {
+				return _unVal.pInstance;
+			}
+			rabbit::Delegable*& toDelegable() {
+				return _unVal.pDelegable;
+			}
+			const rabbit::Delegable* toDelegable() const {
+				return _unVal.pDelegable;
+			}
+			rabbit::UserPointer& toUserPointer() {
+				return _unVal.pUserPointer;
+			}
+			const rabbit::UserPointer toUserPointer() const {
+				return _unVal.pUserPointer;
+			}
+			rabbit::WeakRef*& toWeakRef() {
+				return _unVal.pWeakRef;
+			}
+			const rabbit::WeakRef* toWeakRef() const {
+				return _unVal.pWeakRef;
+			}
+			rabbit::VirtualMachine*& toVirtualMachine() {
+				return _unVal.pThread;
+			}
+			const rabbit::VirtualMachine* toVirtualMachine() const {
+				return _unVal.pThread;
+			}
+			rabbit::RefCounted*& toRefCounted() {
+				return _unVal.pRefCounted;
+			}
+			const rabbit::RefCounted* toRefCounted() const {
+				return _unVal.pRefCounted;
+			}
+			rabbit::UserData*& toUserData() {
+				return _unVal.pUserData;
+			}
+			const rabbit::UserData* toUserData() const {
+				return _unVal.pUserData;
+			}
+			uint64_t& toRaw() {
+				return _unVal.raw;
+			}
+			uint64_t toRaw() const {
+				return _unVal.raw;
+			}
 	};
 	
 	#define __addRef(type,unval) if(ISREFCOUNTED(type)) \
@@ -38,7 +153,6 @@ namespace rabbit {
 	#define _float(obj) ((obj)._unVal.fFloat)
 	#define _string(obj) ((obj)._unVal.pString)
 	#define _table(obj) ((obj)._unVal.pTable)
-	#define _array(obj) ((obj)._unVal.pArray)
 	#define _closure(obj) ((obj)._unVal.pClosure)
 	#define _generator(obj) ((obj)._unVal.pGenerator)
 	#define _nativeclosure(obj) ((obj)._unVal.pNativeClosure)

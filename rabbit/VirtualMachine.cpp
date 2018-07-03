@@ -543,7 +543,7 @@ bool rabbit::VirtualMachine::FOREACH_OP(rabbit::ObjectPtr &o1,rabbit::ObjectPtr 
 		if((nrefidx = _table(o1)->next(false,o4, o2, o3)) == -1) _FINISH(exitpos);
 		o4 = (int64_t)nrefidx; _FINISH(1);
 	case rabbit::OT_ARRAY:
-		if((nrefidx = _array(o1)->next(o4, o2, o3)) == -1) _FINISH(exitpos);
+		if((nrefidx = o1.toArray()->next(o4, o2, o3)) == -1) _FINISH(exitpos);
 		o4 = (int64_t) nrefidx; _FINISH(1);
 	case rabbit::OT_STRING:
 		if((nrefidx = _string(o1)->next(o4, o2, o3)) == -1)_FINISH(exitpos);
@@ -909,7 +909,7 @@ exception_restore:
 			case _OP_NEWOBJ:
 				switch(arg3) {
 					case NOT_TABLE: TARGET = rabbit::Table::create(_get_shared_state(this), arg1); continue;
-					case NOT_ARRAY: TARGET = rabbit::Array::create(_get_shared_state(this), 0); _array(TARGET)->reserve(arg1); continue;
+					case NOT_ARRAY: TARGET = rabbit::Array::create(_get_shared_state(this), 0); TARGET.toArray()->reserve(arg1); continue;
 					case NOT_CLASS: _GUARD(CLASS_OP(TARGET,arg1,arg2)); continue;
 					default: assert(0); continue;
 				}
@@ -937,7 +937,7 @@ exception_restore:
 				default: val._type = rabbit::OT_INTEGER; assert(0); break;
 
 				}
-				_array(STK(arg0))->append(val); continue;
+				STK(arg0).toArray()->append(val); continue;
 				}
 			case _OP_COMPARITH: {
 				int64_t selfidx = (((uint64_t)arg1&0xFFFF0000)>>16);
@@ -1237,45 +1237,62 @@ bool rabbit::VirtualMachine::tailcall(rabbit::Closure *closure, int64_t parambas
 	return ret;
 }
 
-#define FALLBACK_OK		 0
-#define FALLBACK_NO_MATCH   1
-#define FALLBACK_ERROR	  2
+#define FALLBACK_OK        0
+#define FALLBACK_NO_MATCH  1
+#define FALLBACK_ERROR     2
 
-bool rabbit::VirtualMachine::get(const rabbit::ObjectPtr &self, const rabbit::ObjectPtr &key, rabbit::ObjectPtr &dest, uint64_t getflags, int64_t selfidx)
-{
+bool rabbit::VirtualMachine::get(const rabbit::ObjectPtr &self, const rabbit::ObjectPtr &key, rabbit::ObjectPtr &dest, uint64_t getflags, int64_t selfidx) {
 	switch(sq_type(self)){
-	case rabbit::OT_TABLE:
-		if(_table(self)->get(key,dest))return true;
-		break;
-	case rabbit::OT_ARRAY:
-		if (sq_isnumeric(key)) { if (_array(self)->get(tointeger(key), dest)) { return true; } if ((getflags & GET_FLAG_DO_NOT_RAISE_ERROR) == 0) raise_Idxerror(key); return false; }
-		break;
-	case rabbit::OT_INSTANCE:
-		if(_instance(self)->get(key,dest)) return true;
-		break;
-	case rabbit::OT_CLASS:
-		if(_class(self)->get(key,dest)) return true;
-		break;
-	case rabbit::OT_STRING:
-		if(sq_isnumeric(key)){
-			int64_t n = tointeger(key);
-			int64_t len = _string(self)->_len;
-			if (n < 0) { n += len; }
-			if (n >= 0 && n < len) {
-				dest = int64_t(_stringval(self)[n]);
+		case rabbit::OT_TABLE:
+			if(_table(self)->get(key,dest)) {
 				return true;
 			}
-			if ((getflags & GET_FLAG_DO_NOT_RAISE_ERROR) == 0) raise_Idxerror(key);
-			return false;
-		}
-		break;
-	default:break; //shut up compiler
+			break;
+		case rabbit::OT_ARRAY:
+			if (sq_isnumeric(key)) {
+				if (self.toArray()->get(tointeger(key), dest)) {
+					return true;
+				}
+				if ((getflags & GET_FLAG_DO_NOT_RAISE_ERROR) == 0) {
+					raise_Idxerror(key);
+				}
+				return false;
+			}
+			break;
+		case rabbit::OT_INSTANCE:
+			if(_instance(self)->get(key,dest)) {
+				return true;
+			}
+			break;
+		case rabbit::OT_CLASS:
+			if(_class(self)->get(key,dest)) {
+				return true;
+			}
+			break;
+		case rabbit::OT_STRING:
+			if(sq_isnumeric(key)){
+				int64_t n = tointeger(key);
+				int64_t len = _string(self)->_len;
+				if (n < 0) { n += len; }
+				if (n >= 0 && n < len) {
+					dest = int64_t(_stringval(self)[n]);
+					return true;
+				}
+				if ((getflags & GET_FLAG_DO_NOT_RAISE_ERROR) == 0) raise_Idxerror(key);
+				return false;
+			}
+			break;
+		default:
+			break; //shut up compiler
 	}
 	if ((getflags & GET_FLAG_RAW) == 0) {
 		switch(fallBackGet(self,key,dest)) {
-			case FALLBACK_OK: return true; //okie
-			case FALLBACK_NO_MATCH: break; //keep falling back
-			case FALLBACK_ERROR: return false; // the metamethod failed
+			case FALLBACK_OK: 
+				return true; //okie
+			case FALLBACK_NO_MATCH:
+				break; //keep falling back
+			case FALLBACK_ERROR:
+				return false; // the metamethod failed
 		}
 		if(invokeDefaultDelegate(self,key,dest)) {
 			return true;
@@ -1364,7 +1381,7 @@ bool rabbit::VirtualMachine::set(const rabbit::ObjectPtr &self,const rabbit::Obj
 		break;
 	case rabbit::OT_ARRAY:
 		if(!sq_isnumeric(key)) { raise_error("indexing %s with %s",getTypeName(self),getTypeName(key)); return false; }
-		if(!_array(self)->set(tointeger(key),val)) {
+		if(!self.toArray()->set(tointeger(key),val)) {
 			raise_Idxerror(key);
 			return false;
 		}
@@ -1445,7 +1462,7 @@ cloned_mt:
 		target = newobj;
 		return true;
 	case rabbit::OT_ARRAY:
-		target = _array(self)->clone();
+		target = self.toArray()->clone();
 		return true;
 	default:
 		raise_error("cloning a %s", getTypeName(self));
@@ -1770,7 +1787,7 @@ void rabbit::VirtualMachine::dumpstack(int64_t stackbase,bool dumpall)
 		case rabbit::OT_STRING:		 printf("STRING %s",_stringval(obj));break;
 		case rabbit::OT_NULL:		   printf("NULL");  break;
 		case rabbit::OT_TABLE:		  printf("TABLE %p[%p]",_table(obj),_table(obj)->_delegate);break;
-		case rabbit::OT_ARRAY:		  printf("ARRAY %p",_array(obj));break;
+		case rabbit::OT_ARRAY:		  printf("ARRAY %p",obj.toArray());break;
 		case rabbit::OT_CLOSURE:		printf("CLOSURE [%p]",_closure(obj));break;
 		case rabbit::OT_NATIVECLOSURE:  printf("NATIVECLOSURE");break;
 		case rabbit::OT_USERDATA:	   printf("USERDATA %p[%p]",_userdataval(obj),_userdata(obj)->_delegate);break;

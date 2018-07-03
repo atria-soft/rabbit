@@ -522,7 +522,7 @@ static int64_t array_append(rabbit::VirtualMachine* v)
 
 static int64_t array_extend(rabbit::VirtualMachine* v)
 {
-	_array(stack_get(v,1))->extend(_array(stack_get(v,2)));
+	stack_get(v,1).toArray()->extend(stack_get(v,2).toArray());
 	sq_pop(v,1);
 	return 1;
 }
@@ -540,8 +540,8 @@ static int64_t array_pop(rabbit::VirtualMachine* v)
 static int64_t array_top(rabbit::VirtualMachine* v)
 {
 	rabbit::Object &o=stack_get(v,1);
-	if(_array(o)->size()>0){
-		v->push(_array(o)->top());
+	if(o.toArray()->size()>0){
+		v->push(o.toArray()->top());
 		return 1;
 	}
 	else return sq_throwerror(v,"top() on a empty array");
@@ -552,7 +552,7 @@ static int64_t array_insert(rabbit::VirtualMachine* v)
 	rabbit::Object &o=stack_get(v,1);
 	rabbit::Object &idx=stack_get(v,2);
 	rabbit::Object &val=stack_get(v,3);
-	if(!_array(o)->insert(tointeger(idx),val))
+	if(!o.toArray()->insert(tointeger(idx),val))
 		return sq_throwerror(v,"index out of range");
 	sq_pop(v,2);
 	return 1;
@@ -564,8 +564,8 @@ static int64_t array_remove(rabbit::VirtualMachine* v)
 	rabbit::Object &idx = stack_get(v, 2);
 	if(!sq_isnumeric(idx)) return sq_throwerror(v, "wrong type");
 	rabbit::ObjectPtr val;
-	if(_array(o)->get(tointeger(idx), val)) {
-		_array(o)->remove(tointeger(idx));
+	if(o.toArray()->get(tointeger(idx), val)) {
+		o.toArray()->remove(tointeger(idx));
 		v->push(val);
 		return 1;
 	}
@@ -584,7 +584,7 @@ static int64_t array_resize(rabbit::VirtualMachine* v)
 
 		if(sq_gettop(v) > 2)
 			fill = stack_get(v, 3);
-		_array(o)->resize(sz,fill);
+		o.toArray()->resize(sz,fill);
 		sq_settop(v, 1);
 		return 1;
 	}
@@ -610,9 +610,9 @@ static int64_t __map_array(rabbit::Array *dest,rabbit::Array *src,rabbit::Virtua
 static int64_t array_map(rabbit::VirtualMachine* v)
 {
 	rabbit::Object &o = stack_get(v,1);
-	int64_t size = _array(o)->size();
+	int64_t size = o.toArray()->size();
 	rabbit::ObjectPtr ret = rabbit::Array::create(_get_shared_state(v),size);
-	if(SQ_FAILED(__map_array(_array(ret),_array(o),v)))
+	if(SQ_FAILED(__map_array(ret.toArray(),o.toArray(),v)))
 		return SQ_ERROR;
 	v->push(ret);
 	return 1;
@@ -621,7 +621,7 @@ static int64_t array_map(rabbit::VirtualMachine* v)
 static int64_t array_apply(rabbit::VirtualMachine* v)
 {
 	rabbit::Object &o = stack_get(v,1);
-	if(SQ_FAILED(__map_array(_array(o),_array(o),v)))
+	if(SQ_FAILED(__map_array(o.toArray(),o.toArray(),v)))
 		return SQ_ERROR;
 	sq_pop(v,1);
 	return 1;
@@ -630,7 +630,7 @@ static int64_t array_apply(rabbit::VirtualMachine* v)
 static int64_t array_reduce(rabbit::VirtualMachine* v)
 {
 	rabbit::Object &o = stack_get(v,1);
-	rabbit::Array *a = _array(o);
+	rabbit::Array *a = o.toArray();
 	int64_t size = a->size();
 	if(size == 0) {
 		return 0;
@@ -658,7 +658,7 @@ static int64_t array_reduce(rabbit::VirtualMachine* v)
 static int64_t array_filter(rabbit::VirtualMachine* v)
 {
 	rabbit::Object &o = stack_get(v,1);
-	rabbit::Array *a = _array(o);
+	rabbit::Array *a = o.toArray();
 	rabbit::ObjectPtr ret = rabbit::Array::create(_get_shared_state(v),0);
 	int64_t size = a->size();
 	rabbit::ObjectPtr val;
@@ -671,7 +671,7 @@ static int64_t array_filter(rabbit::VirtualMachine* v)
 			return SQ_ERROR;
 		}
 		if(!rabbit::VirtualMachine::IsFalse(v->getUp(-1))) {
-			_array(ret)->append(val);
+			ret.toArray()->append(val);
 		}
 		v->pop();
 	}
@@ -683,7 +683,7 @@ static int64_t array_find(rabbit::VirtualMachine* v)
 {
 	rabbit::Object &o = stack_get(v,1);
 	rabbit::ObjectPtr &val = stack_get(v,2);
-	rabbit::Array *a = _array(o);
+	rabbit::Array *a = o.toArray();
 	int64_t size = a->size();
 	rabbit::ObjectPtr temp;
 	for(int64_t n = 0; n < size; n++) {
@@ -766,7 +766,7 @@ static bool _hsort_sift_down(rabbit::VirtualMachine* v,rabbit::Array *arr, int64
 
 static bool _hsort(rabbit::VirtualMachine* v,rabbit::ObjectPtr &arr, int64_t SQ_UNUSED_ARG(l), int64_t SQ_UNUSED_ARG(r),int64_t func)
 {
-	rabbit::Array *a = _array(arr);
+	rabbit::Array *a = arr.toArray();
 	int64_t i;
 	int64_t array_size = a->size();
 	for (i = (array_size / 2); i >= 0; i--) {
@@ -785,9 +785,9 @@ static int64_t array_sort(rabbit::VirtualMachine* v)
 {
 	int64_t func = -1;
 	rabbit::ObjectPtr &o = stack_get(v,1);
-	if(_array(o)->size() > 1) {
+	if(o.toArray()->size() > 1) {
 		if(sq_gettop(v) == 2) func = 2;
-		if(!_hsort(v, o, 0, _array(o)->size()-1, func))
+		if(!_hsort(v, o, 0, o.toArray()->size()-1, func))
 			return SQ_ERROR;
 
 	}
@@ -800,7 +800,7 @@ static int64_t array_slice(rabbit::VirtualMachine* v)
 	int64_t sidx,eidx;
 	rabbit::ObjectPtr o;
 	if(get_slice_params(v,sidx,eidx,o)==-1)return -1;
-	int64_t alen = _array(o)->size();
+	int64_t alen = o.toArray()->size();
 	if(sidx < 0)sidx = alen + sidx;
 	if(eidx < 0)eidx = alen + eidx;
 	if(eidx < sidx)return sq_throwerror(v,"wrong indexes");
@@ -809,7 +809,7 @@ static int64_t array_slice(rabbit::VirtualMachine* v)
 	rabbit::ObjectPtr t;
 	int64_t count=0;
 	for(int64_t i=sidx;i<eidx;i++){
-		_array(o)->get(i,t);
+		o.toArray()->get(i,t);
 		arr->set(count++,t);
 	}
 	v->push(arr);
@@ -938,7 +938,7 @@ static int64_t closure_call(rabbit::VirtualMachine* v)
 
 static int64_t _closure_acall(rabbit::VirtualMachine* v,rabbit::Bool raiseerror)
 {
-	rabbit::Array *aparams=_array(stack_get(v,2));
+	rabbit::Array *aparams=stack_get(v,2).toArray();
 	int64_t nparams=aparams->size();
 	v->push(stack_get(v,1));
 	for(int64_t i=0;i<nparams;i++)v->push((*aparams)[i]);
@@ -985,13 +985,13 @@ static int64_t closure_getinfos(rabbit::VirtualMachine* v) {
 		rabbit::ObjectPtr params = rabbit::Array::create(_get_shared_state(v),nparams);
 	rabbit::ObjectPtr defparams = rabbit::Array::create(_get_shared_state(v),f->_ndefaultparams);
 		for(int64_t n = 0; n<f->_nparameters; n++) {
-			_array(params)->set((int64_t)n,f->_parameters[n]);
+			params.toArray()->set((int64_t)n,f->_parameters[n]);
 		}
 	for(int64_t j = 0; j<f->_ndefaultparams; j++) {
-			_array(defparams)->set((int64_t)j,_closure(o)->_defaultparams[j]);
+			defparams.toArray()->set((int64_t)j,_closure(o)->_defaultparams[j]);
 		}
 		if(f->_varparams) {
-			_array(params)->set(nparams-1,rabbit::String::create(_get_shared_state(v),"...",-1));
+			params.toArray()->set(nparams-1,rabbit::String::create(_get_shared_state(v),"...",-1));
 		}
 		res->newSlot(rabbit::String::create(_get_shared_state(v),"native",-1),false);
 		res->newSlot(rabbit::String::create(_get_shared_state(v),"name",-1),f->_name);
@@ -1010,7 +1010,7 @@ static int64_t closure_getinfos(rabbit::VirtualMachine* v) {
 			typecheck =
 				rabbit::Array::create(_get_shared_state(v), nc->_typecheck.size());
 			for(uint64_t n = 0; n<nc->_typecheck.size(); n++) {
-					_array(typecheck)->set((int64_t)n,nc->_typecheck[n]);
+					typecheck.toArray()->set((int64_t)n,nc->_typecheck[n]);
 			}
 		}
 		res->newSlot(rabbit::String::create(_get_shared_state(v),"typecheck",-1),typecheck);

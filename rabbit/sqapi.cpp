@@ -323,7 +323,7 @@ rabbit::Result rabbit::sq_arrayappend(rabbit::VirtualMachine* v,int64_t idx)
 	sq_aux_paramscheck(v,2);
 	rabbit::ObjectPtr *arr;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_ARRAY,arr);
-	_array(*arr)->append(v->getUp(-1));
+	arr->toArray()->append(v->getUp(-1));
 	v->pop();
 	return SQ_OK;
 }
@@ -333,11 +333,11 @@ rabbit::Result rabbit::sq_arraypop(rabbit::VirtualMachine* v,int64_t idx,rabbit:
 	sq_aux_paramscheck(v, 1);
 	rabbit::ObjectPtr *arr;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_ARRAY,arr);
-	if(_array(*arr)->size() > 0) {
+	if(arr->toArray()->size() > 0) {
 		if(pushval != 0){
-			v->push(_array(*arr)->top());
+			v->push(arr->toArray()->top());
 		}
-		_array(*arr)->pop();
+		arr->toArray()->pop();
 		return SQ_OK;
 	}
 	return sq_throwerror(v, "empty array");
@@ -349,7 +349,7 @@ rabbit::Result rabbit::sq_arrayresize(rabbit::VirtualMachine* v,int64_t idx,int6
 	rabbit::ObjectPtr *arr;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_ARRAY,arr);
 	if(newsize >= 0) {
-		_array(*arr)->resize(newsize);
+		arr->toArray()->resize(newsize);
 		return SQ_OK;
 	}
 	return sq_throwerror(v,"negative size");
@@ -361,7 +361,7 @@ rabbit::Result rabbit::sq_arrayreverse(rabbit::VirtualMachine* v,int64_t idx)
 	sq_aux_paramscheck(v, 1);
 	rabbit::ObjectPtr *o;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_ARRAY,o);
-	rabbit::Array *arr = _array(*o);
+	rabbit::Array *arr = o->toArray();
 	if(arr->size() > 0) {
 		rabbit::ObjectPtr t;
 		int64_t size = arr->size();
@@ -382,7 +382,7 @@ rabbit::Result rabbit::sq_arrayremove(rabbit::VirtualMachine* v,int64_t idx,int6
 	sq_aux_paramscheck(v, 1);
 	rabbit::ObjectPtr *arr;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_ARRAY,arr);
-	return _array(*arr)->remove(itemidx) ? SQ_OK : sq_throwerror(v,"index out of range");
+	return arr->toArray()->remove(itemidx) ? SQ_OK : sq_throwerror(v,"index out of range");
 }
 
 rabbit::Result rabbit::sq_arrayinsert(rabbit::VirtualMachine* v,int64_t idx,int64_t destpos)
@@ -390,7 +390,7 @@ rabbit::Result rabbit::sq_arrayinsert(rabbit::VirtualMachine* v,int64_t idx,int6
 	sq_aux_paramscheck(v, 1);
 	rabbit::ObjectPtr *arr;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_ARRAY,arr);
-	rabbit::Result ret = _array(*arr)->insert(destpos, v->getUp(-1)) ? SQ_OK : sq_throwerror(v,"index out of range");
+	rabbit::Result ret = arr->toArray()->insert(destpos, v->getUp(-1)) ? SQ_OK : sq_throwerror(v,"index out of range");
 	v->pop();
 	return ret;
 }
@@ -538,7 +538,7 @@ rabbit::Result rabbit::sq_clear(rabbit::VirtualMachine* v,int64_t idx)
 	rabbit::Object &o=stack_get(v,idx);
 	switch(sq_type(o)) {
 		case rabbit::OT_TABLE: _table(o)->clear();  break;
-		case rabbit::OT_ARRAY: _array(o)->resize(0); break;
+		case rabbit::OT_ARRAY: o.toArray()->resize(0); break;
 		default:
 			return sq_throwerror(v, "clear only works on table and array");
 		break;
@@ -739,7 +739,7 @@ int64_t rabbit::sq_getsize(rabbit::VirtualMachine* v, int64_t idx)
 	switch(type) {
 	case rabbit::OT_STRING:	 return _string(o)->_len;
 	case rabbit::OT_TABLE:	  return _table(o)->countUsed();
-	case rabbit::OT_ARRAY:	  return _array(o)->size();
+	case rabbit::OT_ARRAY:	  return o.toArray()->size();
 	case rabbit::OT_USERDATA:   return _userdata(o)->getsize();
 	case rabbit::OT_INSTANCE:   return _instance(o)->_class->_udsize;
 	case rabbit::OT_CLASS:	  return _class(o)->_udsize;
@@ -1083,7 +1083,7 @@ rabbit::Result rabbit::sq_rawget(rabbit::VirtualMachine* v,int64_t idx)
 		break;
 	case rabbit::OT_ARRAY:{
 		if(sq_isnumeric(obj)){
-			if(_array(self)->get(tointeger(obj),obj)) {
+			if(self.toArray()->get(tointeger(obj),obj)) {
 				return SQ_OK;
 			}
 		}
