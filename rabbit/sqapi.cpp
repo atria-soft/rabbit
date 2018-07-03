@@ -1123,7 +1123,7 @@ const char * rabbit::sq_getlocal(rabbit::VirtualMachine* v,uint64_t level,uint64
 		rabbit::Closure *c=ci._closure.toClosure();
 		rabbit::FunctionProto *func=c->_function;
 		if(func->_noutervalues > (int64_t)idx) {
-			v->push(*_outer(c->_outervalues[idx])->_valptr);
+			v->push(*c->_outervalues[idx].toOuter()->_valptr);
 			return _stringval(func->_outervalues[idx]._name);
 		}
 		idx -= func->_noutervalues;
@@ -1365,7 +1365,7 @@ const char * rabbit::sq_getfreevariable(rabbit::VirtualMachine* v,int64_t idx,ui
 		rabbit::Closure *clo = self.toClosure();
 		rabbit::FunctionProto *fp = clo->_function;
 		if(((uint64_t)fp->_noutervalues) > nval) {
-			v->push(*(_outer(clo->_outervalues[nval])->_valptr));
+			v->push(*(clo->_outervalues[nval].toOuter()->_valptr));
 			rabbit::OuterVar &ov = fp->_outervalues[nval];
 			name = _stringval(ov._name);
 		}
@@ -1392,7 +1392,7 @@ rabbit::Result rabbit::sq_setfreevariable(rabbit::VirtualMachine* v,int64_t idx,
 	case rabbit::OT_CLOSURE:{
 		rabbit::FunctionProto *fp = self.toClosure()->_function;
 		if(((uint64_t)fp->_noutervalues) > nval){
-			*(_outer(self.toClosure()->_outervalues[nval])->_valptr) = stack_get(v,-1);
+			*(self.toClosure()->_outervalues[nval].toOuter()->_valptr) = stack_get(v,-1);
 		}
 		else return sq_throwerror(v,"invalid free var index");
 					}

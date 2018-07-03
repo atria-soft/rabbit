@@ -893,13 +893,13 @@ exception_restore:
 			case _OP_JZ: if(IsFalse(STK(arg0))) ci->_ip+=(sarg1); continue;
 			case _OP_GETOUTER: {
 				rabbit::Closure *cur_cls = ci->_closure.toClosure();
-				rabbit::Outer *otr = _outer(cur_cls->_outervalues[arg1]);
+				rabbit::Outer *otr = cur_cls->_outervalues[arg1].toOuter();
 				TARGET = *(otr->_valptr);
 				}
 			continue;
 			case _OP_SETOUTER: {
 				rabbit::Closure *cur_cls = ci->_closure.toClosure();
-				rabbit::Outer   *otr = _outer(cur_cls->_outervalues[arg1]);
+				rabbit::Outer   *otr = cur_cls->_outervalues[arg1].toOuter();
 				*(otr->_valptr) = STK(arg2);
 				if(arg0 != 0xFF) {
 					TARGET = STK(arg2);
