@@ -577,15 +577,15 @@ bool rabbit::VirtualMachine::FOREACH_OP(rabbit::ObjectPtr &o1,rabbit::ObjectPtr 
 		}
 		break;
 	case rabbit::OT_GENERATOR:
-		if(_generator(o1)->_state == rabbit::Generator::eDead) _FINISH(exitpos);
-		if(_generator(o1)->_state == rabbit::Generator::eSuspended) {
+		if(o1.toGenerator()->_state == rabbit::Generator::eDead) _FINISH(exitpos);
+		if(o1.toGenerator()->_state == rabbit::Generator::eSuspended) {
 			int64_t idx = 0;
 			if(sq_type(o4) == rabbit::OT_INTEGER) {
 				idx = o4.toInteger() + 1;
 			}
 			o2 = idx;
 			o4 = idx;
-			_generator(o1)->resume(this, o3);
+			o1.toGenerator()->resume(this, o3);
 			_FINISH(0);
 		}
 	default:
@@ -706,7 +706,7 @@ bool rabbit::VirtualMachine::execute(rabbit::ObjectPtr &closure, int64_t nargs, 
 			ci->_root = SQTrue;
 					  }
 			break;
-		case ET_RESUME_GENERATOR: _generator(closure)->resume(this, outres); ci->_root = SQTrue; traps += ci->_etraps; break;
+		case ET_RESUME_GENERATOR: closure.toGenerator()->resume(this, outres); ci->_root = SQTrue; traps += ci->_etraps; break;
 		case ET_RESUME_VM:
 		case ET_RESUME_THROW_VM:
 			traps = _suspended_traps;
@@ -1020,7 +1020,7 @@ exception_restore:
 				continue;
 			case _OP_RESUME:
 				if(sq_type(STK(arg1)) != rabbit::OT_GENERATOR){ raise_error("trying to resume a '%s',only genenerator can be resumed", getTypeName(STK(arg1))); SQ_THROW();}
-				_GUARD(_generator(STK(arg1))->resume(this, TARGET));
+				_GUARD(STK(arg1).toGenerator()->resume(this, TARGET));
 				traps += ci->_etraps;
 				continue;
 			case _OP_FOREACH:{ int tojump;
@@ -1029,7 +1029,7 @@ exception_restore:
 				continue;
 			case _OP_POSTFOREACH:
 				assert(sq_type(STK(arg0)) == rabbit::OT_GENERATOR);
-				if(_generator(STK(arg0))->_state == rabbit::Generator::eDead)
+				if(STK(arg0).toGenerator()->_state == rabbit::Generator::eDead)
 					ci->_ip += (sarg1 - 1);
 				continue;
 			case _OP_CLONE: _GUARD(clone(STK(arg1), TARGET)); continue;
@@ -1794,7 +1794,7 @@ void rabbit::VirtualMachine::dumpstack(int64_t stackbase,bool dumpall)
 		case rabbit::OT_CLOSURE:		printf("CLOSURE [%p]",obj.toClosure());break;
 		case rabbit::OT_NATIVECLOSURE:  printf("NATIVECLOSURE");break;
 		case rabbit::OT_USERDATA:	   printf("USERDATA %p[%p]",_userdataval(obj),_userdata(obj)->_delegate);break;
-		case rabbit::OT_GENERATOR:	  printf("GENERATOR %p",_generator(obj));break;
+		case rabbit::OT_GENERATOR:	  printf("GENERATOR %p",obj.toGenerator());break;
 		case rabbit::OT_THREAD:		 printf("THREAD [%p]",_thread(obj));break;
 		case rabbit::OT_USERPOINTER:	printf("USERPOINTER %p",_userpointer(obj));break;
 		case rabbit::OT_CLASS:		  printf("CLASS %p",_class(obj));break;

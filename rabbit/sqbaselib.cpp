@@ -1039,7 +1039,7 @@ const rabbit::RegFunction rabbit::SharedState::_closure_default_delegate_funcz[]
 static int64_t generator_getstatus(rabbit::VirtualMachine* v)
 {
 	rabbit::Object &o=stack_get(v,1);
-	switch(_generator(o)->_state){
+	switch(o.toGenerator()->_state){
 		case rabbit::Generator::eSuspended:v->push(rabbit::String::create(_get_shared_state(v),"suspended"));break;
 		case rabbit::Generator::eRunning:v->push(rabbit::String::create(_get_shared_state(v),"running"));break;
 		case rabbit::Generator::eDead:v->push(rabbit::String::create(_get_shared_state(v),"dead"));break;
