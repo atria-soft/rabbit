@@ -180,10 +180,10 @@ bool rabbit::VirtualMachine::arithMetaMethod(int64_t op,const rabbit::ObjectPtr 
 		case '%': mm=MT_MODULO; break;
 		default: mm = MT_ADD; assert(0); break; //shutup compiler
 	}
-	if(is_delegable(o1) && _delegable(o1)->_delegate) {
+	if(is_delegable(o1) && o1.toDelegable()->_delegate) {
 
 		rabbit::ObjectPtr closure;
-		if(_delegable(o1)->getMetaMethod(this, mm, closure)) {
+		if(o1.toDelegable()->getMetaMethod(this, mm, closure)) {
 			push(o1);
 			push(o2);
 			return callMetaMethod(closure,mm,2,dest);
@@ -206,9 +206,9 @@ bool rabbit::VirtualMachine::NEG_OP(rabbit::ObjectPtr &trg,const rabbit::ObjectP
 	case rabbit::OT_TABLE:
 	case rabbit::OT_USERDATA:
 	case rabbit::OT_INSTANCE:
-		if(_delegable(o)->_delegate) {
+		if(o.toDelegable()->_delegate) {
 			rabbit::ObjectPtr closure;
-			if(_delegable(o)->getMetaMethod(this, MT_UNM, closure)) {
+			if(o.toDelegable()->getMetaMethod(this, MT_UNM, closure)) {
 				push(o);
 				if(!callMetaMethod(closure, MT_UNM, 1, temp_reg)) return false;
 				_Swap(trg,temp_reg);
@@ -239,9 +239,9 @@ bool rabbit::VirtualMachine::objCmp(const rabbit::ObjectPtr &o1,const rabbit::Ob
 		case rabbit::OT_TABLE:
 		case rabbit::OT_USERDATA:
 		case rabbit::OT_INSTANCE:
-			if(_delegable(o1)->_delegate) {
+			if(o1.toDelegable()->_delegate) {
 				rabbit::ObjectPtr closure;
-				if(_delegable(o1)->getMetaMethod(this, MT_CMP, closure)) {
+				if(o1.toDelegable()->getMetaMethod(this, MT_CMP, closure)) {
 					push(o1);push(o2);
 					if(callMetaMethod(closure,MT_CMP,2,res)) {
 						if(sq_type(res) != rabbit::OT_INTEGER) {
@@ -318,9 +318,9 @@ bool rabbit::VirtualMachine::toString(const rabbit::ObjectPtr &o,rabbit::ObjectP
 	case rabbit::OT_TABLE:
 	case rabbit::OT_USERDATA:
 	case rabbit::OT_INSTANCE:
-		if(_delegable(o)->_delegate) {
+		if(o.toDelegable()->_delegate) {
 			rabbit::ObjectPtr closure;
-			if(_delegable(o)->getMetaMethod(this, MT_TOSTRING, closure)) {
+			if(o.toDelegable()->getMetaMethod(this, MT_TOSTRING, closure)) {
 				push(o);
 				if(callMetaMethod(closure,MT_TOSTRING,1,res)) {
 					if(sq_type(res) == rabbit::OT_STRING)
@@ -354,9 +354,9 @@ bool rabbit::VirtualMachine::stringCat(const rabbit::ObjectPtr &str,const rabbit
 
 bool rabbit::VirtualMachine::typeOf(const rabbit::ObjectPtr &obj1,rabbit::ObjectPtr &dest)
 {
-	if(is_delegable(obj1) && _delegable(obj1)->_delegate) {
+	if(is_delegable(obj1) && obj1.toDelegable()->_delegate) {
 		rabbit::ObjectPtr closure;
-		if(_delegable(obj1)->getMetaMethod(this, MT_TYPEOF, closure)) {
+		if(obj1.toDelegable()->getMetaMethod(this, MT_TYPEOF, closure)) {
 			push(obj1);
 			return callMetaMethod(closure,MT_TYPEOF,1,dest);
 		}
@@ -553,10 +553,10 @@ bool rabbit::VirtualMachine::FOREACH_OP(rabbit::ObjectPtr &o1,rabbit::ObjectPtr 
 		o4 = (int64_t)nrefidx; _FINISH(1);
 	case rabbit::OT_USERDATA:
 	case rabbit::OT_INSTANCE:
-		if(_delegable(o1)->_delegate) {
+		if(o1.toDelegable()->_delegate) {
 			rabbit::ObjectPtr itr;
 			rabbit::ObjectPtr closure;
-			if(_delegable(o1)->getMetaMethod(this, MT_NEXTI, closure)) {
+			if(o1.toDelegable()->getMetaMethod(this, MT_NEXTI, closure)) {
 				push(o1);
 				push(o4);
 				if(callMetaMethod(closure, MT_NEXTI, 2, itr)) {
@@ -797,7 +797,7 @@ exception_restore:
 					case rabbit::OT_USERDATA:
 					case rabbit::OT_INSTANCE:{
 						rabbit::ObjectPtr closure;
-						if(_delegable(clo)->_delegate && _delegable(clo)->getMetaMethod(this,MT_CALL,closure)) {
+						if(clo.toDelegable()->_delegate && clo.toDelegable()->getMetaMethod(this,MT_CALL,closure)) {
 							push(clo);
 							for (int64_t i = 0; i < arg3; i++) push(STK(arg2 + i));
 							if(!callMetaMethod(closure, MT_CALL, arg3+1, clo)) SQ_THROW();
@@ -1338,8 +1338,8 @@ int64_t rabbit::VirtualMachine::fallBackGet(const rabbit::ObjectPtr &self,const 
 	case rabbit::OT_TABLE:
 	case rabbit::OT_USERDATA:
 		//delegation
-		if(_delegable(self)->_delegate) {
-			if(get(rabbit::ObjectPtr(_delegable(self)->_delegate),key,dest,0,DONT_FALL_BACK)) return FALLBACK_OK;
+		if(self.toDelegable()->_delegate) {
+			if(get(rabbit::ObjectPtr(self.toDelegable()->_delegate),key,dest,0,DONT_FALL_BACK)) return FALLBACK_OK;
 		}
 		else {
 			return FALLBACK_NO_MATCH;
@@ -1347,7 +1347,7 @@ int64_t rabbit::VirtualMachine::fallBackGet(const rabbit::ObjectPtr &self,const 
 		//go through
 	case rabbit::OT_INSTANCE: {
 		rabbit::ObjectPtr closure;
-		if(_delegable(self)->getMetaMethod(this, MT_GET, closure)) {
+		if(self.toDelegable()->getMetaMethod(this, MT_GET, closure)) {
 			push(self);push(key);
 			_nmetamethodscall++;
 			AutoDec ad(&_nmetamethodscall);
@@ -1417,7 +1417,7 @@ int64_t rabbit::VirtualMachine::fallBackSet(const rabbit::ObjectPtr &self,const 
 	case rabbit::OT_USERDATA:{
 		rabbit::ObjectPtr closure;
 		rabbit::ObjectPtr t;
-		if(_delegable(self)->getMetaMethod(this, MT_SET, closure)) {
+		if(self.toDelegable()->getMetaMethod(this, MT_SET, closure)) {
 			push(self);push(key);push(val);
 			_nmetamethodscall++;
 			AutoDec ad(&_nmetamethodscall);
@@ -1452,7 +1452,7 @@ bool rabbit::VirtualMachine::clone(const rabbit::ObjectPtr &self,rabbit::ObjectP
 		newobj = const_cast<rabbit::Instance*>(self.toInstance())->clone(_get_shared_state(this));
 cloned_mt:
 		rabbit::ObjectPtr closure;
-		if(_delegable(newobj)->_delegate && _delegable(newobj)->getMetaMethod(this,MT_CLONED,closure)) {
+		if(newobj.toDelegable()->_delegate && newobj.toDelegable()->getMetaMethod(this,MT_CLONED,closure)) {
 			push(newobj);
 			push(self);
 			if(!callMetaMethod(closure,MT_CLONED,2,temp_reg))
@@ -1505,7 +1505,7 @@ bool rabbit::VirtualMachine::newSlot(const rabbit::ObjectPtr &self,const rabbit:
 				rabbit::ObjectPtr res;
 				if(!self.toTable()->get(key,res)) {
 					rabbit::ObjectPtr closure;
-					if(_delegable(self)->_delegate && _delegable(self)->getMetaMethod(this,MT_NEWSLOT,closure)) {
+					if(self.toDelegable()->_delegate && self.toDelegable()->getMetaMethod(this,MT_NEWSLOT,closure)) {
 						push(self);push(key);push(val);
 						if(!callMetaMethod(closure,MT_NEWSLOT,3,res)) {
 							return false;
@@ -1525,7 +1525,7 @@ bool rabbit::VirtualMachine::newSlot(const rabbit::ObjectPtr &self,const rabbit:
 	case rabbit::OT_INSTANCE: {
 		rabbit::ObjectPtr res;
 		rabbit::ObjectPtr closure;
-		if(_delegable(self)->_delegate && _delegable(self)->getMetaMethod(this,MT_NEWSLOT,closure)) {
+		if(self.toDelegable()->_delegate && self.toDelegable()->getMetaMethod(this,MT_NEWSLOT,closure)) {
 			push(self);push(key);push(val);
 			if(!callMetaMethod(closure,MT_NEWSLOT,3,res)) {
 				return false;
@@ -1567,7 +1567,7 @@ bool rabbit::VirtualMachine::deleteSlot(const rabbit::ObjectPtr &self,const rabb
 		rabbit::ObjectPtr t;
 		//bool handled = false;
 		rabbit::ObjectPtr closure;
-		if(_delegable(self)->_delegate && _delegable(self)->getMetaMethod(this,MT_DELSLOT,closure)) {
+		if(self.toDelegable()->_delegate && self.toDelegable()->getMetaMethod(this,MT_DELSLOT,closure)) {
 			push(self);push(key);
 			return callMetaMethod(closure,MT_DELSLOT,2,res);
 		}

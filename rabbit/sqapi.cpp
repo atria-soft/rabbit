@@ -1042,11 +1042,11 @@ rabbit::Result rabbit::sq_getdelegate(rabbit::VirtualMachine* v,int64_t idx)
 	switch(sq_type(self)){
 	case rabbit::OT_TABLE:
 	case rabbit::OT_USERDATA:
-		if(!_delegable(self)->_delegate){
+		if(!self.toDelegable()->_delegate){
 			v->pushNull();
 			break;
 		}
-		v->push(rabbit::ObjectPtr(_delegable(self)->_delegate));
+		v->push(rabbit::ObjectPtr(self.toDelegable()->_delegate));
 		break;
 	default: return sq_throwerror(v,"wrong type"); break;
 	}

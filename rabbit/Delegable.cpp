@@ -13,7 +13,7 @@
 #include <rabbit/SharedState.hpp>
 
 
-bool rabbit::Delegable::getMetaMethod(rabbit::VirtualMachine *v,rabbit::MetaMethod mm,rabbit::ObjectPtr &res) {
+bool rabbit::Delegable::getMetaMethod(rabbit::VirtualMachine *v,rabbit::MetaMethod mm,rabbit::ObjectPtr &res) const {
 	if(_delegate) {
 		return _delegate->get((*_get_shared_state(v)->_metamethods)[mm],res);
 	}

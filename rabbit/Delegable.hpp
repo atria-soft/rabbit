@@ -19,7 +19,7 @@ namespace rabbit {
 		public:
 			bool setDelegate(rabbit::Table *m);
 		public:
-			virtual bool getMetaMethod(rabbit::VirtualMachine *v, rabbit::MetaMethod mm, rabbit::ObjectPtr& res);
-			rabbit::Table *_delegate;
+			virtual bool getMetaMethod(rabbit::VirtualMachine *v, rabbit::MetaMethod mm, rabbit::ObjectPtr& res) const;
+			mutable rabbit::Table *_delegate;
 	};
 }
