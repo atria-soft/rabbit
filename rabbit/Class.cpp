@@ -113,8 +113,8 @@ bool rabbit::Class::newSlot(rabbit::SharedState *ss,const rabbit::ObjectPtr &key
 		} else {
 			rabbit::ObjectPtr theval = val;
 			if(_base && sq_type(val) == rabbit::OT_CLOSURE) {
-				theval = _closure(val)->clone();
-				_closure(theval)->_base = _base;
+				theval = const_cast<rabbit::Closure*>(val.toClosure())->clone();
+				theval.toClosure()->_base = _base;
 				__ObjaddRef(_base); //ref for the closure
 			}
 			if(sq_type(temp) == rabbit::OT_NULL) {

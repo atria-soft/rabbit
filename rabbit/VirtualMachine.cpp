@@ -612,7 +612,7 @@ bool rabbit::VirtualMachine::CLOSURE_OP(rabbit::ObjectPtr &target, rabbit::Funct
 				findOuter(closure->_outervalues[i], &STK(v._src.toInteger()));
 				break;
 			case otOUTER:
-				closure->_outervalues[i] = _closure(ci->_closure)->_outervalues[v._src.toInteger()];
+				closure->_outervalues[i] = ci->_closure.toClosure()->_outervalues[v._src.toInteger()];
 				break;
 			}
 		}
@@ -694,7 +694,7 @@ bool rabbit::VirtualMachine::execute(rabbit::ObjectPtr &closure, int64_t nargs, 
 	switch(et) {
 		case ET_CALL: {
 			temp_reg = closure;
-			if(!startcall(_closure(temp_reg), _top - nargs, nargs, stackbase, false)) {
+			if(!startcall(temp_reg.toClosure(), _top - nargs, nargs, stackbase, false)) {
 				//call the handler if there are no calls in the stack, if not relies on the previous node
 				if(ci == NULL) callerrorHandler(_lasterror);
 				return false;
@@ -723,7 +723,7 @@ exception_restore:
 		{
 			const rabbit::Instruction &_i_ = *ci->_ip++;
 			//dumpstack(_stackbase);
-			//printf("\n[%d] %s %d %d %d %d\n",ci->_ip-_closure(ci->_closure)->_function->_instructions,g_InstrDesc[_i_.op].name,arg0,arg1,arg2,arg3);
+			//printf("\n[%d] %s %d %d %d %d\n",ci->_ip-ci->_closure.toClosure()->_function->_instructions,g_InstrDesc[_i_.op].name,arg0,arg1,arg2,arg3);
 			switch(_i_.op)
 			{
 			case _OP_LINE: if (_debughook) callDebugHook('l',arg1); continue;
@@ -735,12 +735,12 @@ exception_restore:
 			case _OP_TAILCALL:{
 				rabbit::ObjectPtr &t = STK(arg1);
 				if (sq_type(t) == rabbit::OT_CLOSURE
-					&& (!_closure(t)->_function->_bgenerator)){
+					&& (!t.toClosure()->_function->_bgenerator)){
 					rabbit::ObjectPtr clo = t;
 					int64_t last_top = _top;
 					if(_openouters) closeOuters(&(_stack[_stackbase]));
 					for (int64_t i = 0; i < arg3; i++) STK(i) = STK(arg2 + i);
-					_GUARD(startcall(_closure(clo), ci->_target, arg3, _stackbase, true));
+					_GUARD(startcall(clo.toClosure(), ci->_target, arg3, _stackbase, true));
 					if (last_top >= _top) {
 						_top = last_top;
 					}
@@ -751,7 +751,7 @@ exception_restore:
 					rabbit::ObjectPtr clo = STK(arg1);
 					switch (sq_type(clo)) {
 					case rabbit::OT_CLOSURE:
-						_GUARD(startcall(_closure(clo), sarg0, arg3, _stackbase+arg2, false));
+						_GUARD(startcall(clo.toClosure(), sarg0, arg3, _stackbase+arg2, false));
 						continue;
 					case rabbit::OT_NATIVECLOSURE: {
 						bool suspend;
@@ -781,7 +781,7 @@ exception_restore:
 							case rabbit::OT_CLOSURE:
 								stkbase = _stackbase+arg2;
 								_stack[stkbase] = inst;
-								_GUARD(startcall(_closure(clo), -1, arg3, stkbase, false));
+								_GUARD(startcall(clo.toClosure(), -1, arg3, stkbase, false));
 								break;
 							case rabbit::OT_NATIVECLOSURE:
 								bool dummy;
@@ -874,7 +874,7 @@ exception_restore:
 				continue;
 			case _OP_LOADNULLS:{ for(int32_t n=0; n < arg1; n++) STK(arg0+n).Null(); }continue;
 			case _OP_LOADROOT:  {
-				rabbit::WeakRef *w = _closure(ci->_closure)->_root;
+				rabbit::WeakRef *w = ci->_closure.toClosure()->_root;
 				if(sq_type(w->_obj) != rabbit::OT_NULL) {
 					TARGET = w->_obj;
 				} else {
@@ -892,13 +892,13 @@ exception_restore:
 				continue;
 			case _OP_JZ: if(IsFalse(STK(arg0))) ci->_ip+=(sarg1); continue;
 			case _OP_GETOUTER: {
-				rabbit::Closure *cur_cls = _closure(ci->_closure);
+				rabbit::Closure *cur_cls = ci->_closure.toClosure();
 				rabbit::Outer *otr = _outer(cur_cls->_outervalues[arg1]);
 				TARGET = *(otr->_valptr);
 				}
 			continue;
 			case _OP_SETOUTER: {
-				rabbit::Closure *cur_cls = _closure(ci->_closure);
+				rabbit::Closure *cur_cls = ci->_closure.toClosure();
 				rabbit::Outer   *otr = _outer(cur_cls->_outervalues[arg1]);
 				*(otr->_valptr) = STK(arg2);
 				if(arg0 != 0xFF) {
@@ -1035,7 +1035,7 @@ exception_restore:
 			case _OP_CLONE: _GUARD(clone(STK(arg1), TARGET)); continue;
 			case _OP_TYPEOF: _GUARD(typeOf(STK(arg1), TARGET)) continue;
 			case _OP_PUSHTRAP:{
-				rabbit::Instruction *_iv = _closure(ci->_closure)->_function->_instructions;
+				rabbit::Instruction *_iv = ci->_closure.toClosure()->_function->_instructions;
 				_etraps.pushBack(rabbit::ExceptionTrap(_top,_stackbase, &_iv[(ci->_ip-_iv)+arg1], arg0)); traps++;
 				ci->_etraps++;
 							  }
@@ -1052,7 +1052,7 @@ exception_restore:
 				_GUARD(newSlotA(STK(arg1),STK(arg2),STK(arg3),(arg0&NEW_SLOT_ATTRIBUTES_FLAG) ? STK(arg2-1) : rabbit::ObjectPtr(),(arg0&NEW_SLOT_STATIC_FLAG)?true:false,false));
 				continue;
 			case _OP_GETBASE:{
-				rabbit::Closure *clo = _closure(ci->_closure);
+				rabbit::Closure *clo = ci->_closure.toClosure();
 				if(clo->_base) {
 					TARGET = clo->_base;
 				}
@@ -1130,7 +1130,7 @@ void rabbit::VirtualMachine::callerrorHandler(rabbit::ObjectPtr &error)
 void rabbit::VirtualMachine::callDebugHook(int64_t type,int64_t forcedline)
 {
 	_debughook = false;
-	rabbit::FunctionProto *func=_closure(ci->_closure)->_function;
+	rabbit::FunctionProto *func=ci->_closure.toClosure()->_function;
 	if(_debughook_native) {
 		const char *src = sq_type(func->_sourcename) == rabbit::OT_STRING?_stringval(func->_sourcename):NULL;
 		const char *fname = sq_type(func->_name) == rabbit::OT_STRING?_stringval(func->_name):NULL;
@@ -1300,7 +1300,7 @@ bool rabbit::VirtualMachine::get(const rabbit::ObjectPtr &self, const rabbit::Ob
 	}
 //#ifdef ROrabbit::OT_FALLBACK
 	if(selfidx == 0) {
-		rabbit::WeakRef *w = _closure(ci->_closure)->_root;
+		rabbit::WeakRef *w = ci->_closure.toClosure()->_root;
 		if(sq_type(w->_obj) != rabbit::OT_NULL)
 		{
 			if(get(*((const rabbit::ObjectPtr *)&w->_obj),key,dest,0,DONT_FALL_BACK)) return true;
@@ -1791,7 +1791,7 @@ void rabbit::VirtualMachine::dumpstack(int64_t stackbase,bool dumpall)
 		case rabbit::OT_NULL:		   printf("NULL");  break;
 		case rabbit::OT_TABLE:		  printf("TABLE %p[%p]",obj.toTable(),obj.toTable()->_delegate);break;
 		case rabbit::OT_ARRAY:		  printf("ARRAY %p",obj.toArray());break;
-		case rabbit::OT_CLOSURE:		printf("CLOSURE [%p]",_closure(obj));break;
+		case rabbit::OT_CLOSURE:		printf("CLOSURE [%p]",obj.toClosure());break;
 		case rabbit::OT_NATIVECLOSURE:  printf("NATIVECLOSURE");break;
 		case rabbit::OT_USERDATA:	   printf("USERDATA %p[%p]",_userdataval(obj),_userdata(obj)->_delegate);break;
 		case rabbit::OT_GENERATOR:	  printf("GENERATOR %p",_generator(obj));break;

@@ -149,7 +149,6 @@ namespace rabbit {
 	#define is_delegable(t) (sq_type(t)&SQOBJECT_DELEGABLE)
 	#define raw_type(obj) _RAW_TYPE((obj)._type)
 	
-	#define _closure(obj) ((obj)._unVal.pClosure)
 	#define _generator(obj) ((obj)._unVal.pGenerator)
 	#define _nativeclosure(obj) ((obj)._unVal.pNativeClosure)
 	#define _userdata(obj) ((obj)._unVal.pUserData)

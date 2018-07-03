@@ -410,7 +410,7 @@ rabbit::Result rabbit::sq_getclosureinfo(rabbit::VirtualMachine* v,int64_t idx,u
 {
 	rabbit::Object o = stack_get(v, idx);
 	if(sq_type(o) == rabbit::OT_CLOSURE) {
-		rabbit::Closure *c = _closure(o);
+		rabbit::Closure *c = o.toClosure();
 		rabbit::FunctionProto *proto = c->_function;
 		*nparams = (uint64_t)proto->_nparameters;
 		*nfreevars = (uint64_t)proto->_noutervalues;
@@ -474,12 +474,12 @@ rabbit::Result rabbit::sq_bindenv(rabbit::VirtualMachine* v,int64_t idx)
 	rabbit::WeakRef *w = _refcounted(env)->getWeakRef(sq_type(env));
 	rabbit::ObjectPtr ret;
 	if(sq_isclosure(o)) {
-		rabbit::Closure *c = _closure(o)->clone();
+		rabbit::Closure *c = o.toClosure()->clone();
 		__Objrelease(c->_env);
 		c->_env = w;
 		__ObjaddRef(c->_env);
-		if(_closure(o)->_base) {
-			c->_base = _closure(o)->_base;
+		if(o.toClosure()->_base) {
+			c->_base = o.toClosure()->_base;
 			__ObjaddRef(c->_base);
 		}
 		ret = c;
@@ -507,7 +507,7 @@ rabbit::Result rabbit::sq_getclosurename(rabbit::VirtualMachine* v,int64_t idx)
 		v->push(_nativeclosure(o)->_name);
 	}
 	else { //closure
-		v->push(_closure(o)->_function->_name);
+		v->push(o.toClosure()->_function->_name);
 	}
 	return SQ_OK;
 }
@@ -518,7 +518,7 @@ rabbit::Result rabbit::sq_setclosureroot(rabbit::VirtualMachine* v,int64_t idx)
 	rabbit::Object o = stack_get(v, -1);
 	if(!sq_isclosure(c)) return sq_throwerror(v, "closure expected");
 	if(sq_istable(o)) {
-		_closure(c)->setRoot(o.toTable()->getWeakRef(rabbit::OT_TABLE));
+		c.toClosure()->setRoot(o.toTable()->getWeakRef(rabbit::OT_TABLE));
 		v->pop();
 		return SQ_OK;
 	}
@@ -529,7 +529,7 @@ rabbit::Result rabbit::sq_getclosureroot(rabbit::VirtualMachine* v,int64_t idx)
 {
 	rabbit::ObjectPtr &c = stack_get(v,idx);
 	if(!sq_isclosure(c)) return sq_throwerror(v, "closure expected");
-	v->push(_closure(c)->_root->_obj);
+	v->push(c.toClosure()->_root->_obj);
 	return SQ_OK;
 }
 
@@ -1120,7 +1120,7 @@ const char * rabbit::sq_getlocal(rabbit::VirtualMachine* v,uint64_t level,uint64
 		rabbit::VirtualMachine::callInfo &ci=v->_callsstack[lvl];
 		if(sq_type(ci._closure)!=rabbit::OT_CLOSURE)
 			return NULL;
-		rabbit::Closure *c=_closure(ci._closure);
+		rabbit::Closure *c=ci._closure.toClosure();
 		rabbit::FunctionProto *func=c->_function;
 		if(func->_noutervalues > (int64_t)idx) {
 			v->push(*_outer(c->_outervalues[idx])->_valptr);
@@ -1219,7 +1219,7 @@ rabbit::Result rabbit::sq_tailcall(rabbit::VirtualMachine* v, int64_t nparams)
 	if (sq_type(res) != rabbit::OT_CLOSURE) {
 		return sq_throwerror(v, "only closure can be tail called");
 	}
-	rabbit::Closure *clo = _closure(res);
+	rabbit::Closure *clo = res.toClosure();
 	if (clo->_function->_bgenerator)
 	{
 		return sq_throwerror(v, "generators cannot be tail called");
@@ -1305,11 +1305,11 @@ rabbit::Result rabbit::sq_writeclosure(rabbit::VirtualMachine* v,SQWRITEFUNC w,r
 	rabbit::ObjectPtr *o = NULL;
 	_GETSAFE_OBJ(v, -1, rabbit::OT_CLOSURE,o);
 	unsigned short tag = SQ_BYTECODE_STREAM_TAG;
-	if(_closure(*o)->_function->_noutervalues)
+	if(o->toClosure()->_function->_noutervalues)
 		return sq_throwerror(v,"a closure with free variables bound cannot be serialized");
 	if(w(up,&tag,2) != 2)
 		return sq_throwerror(v,"io error");
-	if(!_closure(*o)->save(v,up,w))
+	if(!o->toClosure()->save(v,up,w))
 		return SQ_ERROR;
 	return SQ_OK;
 }
@@ -1362,7 +1362,7 @@ const char * rabbit::sq_getfreevariable(rabbit::VirtualMachine* v,int64_t idx,ui
 	switch(sq_type(self))
 	{
 	case rabbit::OT_CLOSURE:{
-		rabbit::Closure *clo = _closure(self);
+		rabbit::Closure *clo = self.toClosure();
 		rabbit::FunctionProto *fp = clo->_function;
 		if(((uint64_t)fp->_noutervalues) > nval) {
 			v->push(*(_outer(clo->_outervalues[nval])->_valptr));
@@ -1390,9 +1390,9 @@ rabbit::Result rabbit::sq_setfreevariable(rabbit::VirtualMachine* v,int64_t idx,
 	switch(sq_type(self))
 	{
 	case rabbit::OT_CLOSURE:{
-		rabbit::FunctionProto *fp = _closure(self)->_function;
+		rabbit::FunctionProto *fp = self.toClosure()->_function;
 		if(((uint64_t)fp->_noutervalues) > nval){
-			*(_outer(_closure(self)->_outervalues[nval])->_valptr) = stack_get(v,-1);
+			*(_outer(self.toClosure()->_outervalues[nval])->_valptr) = stack_get(v,-1);
 		}
 		else return sq_throwerror(v,"invalid free var index");
 					}

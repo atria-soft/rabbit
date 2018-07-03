@@ -237,7 +237,7 @@ static int64_t base_compilestring(rabbit::VirtualMachine* v)
 static int64_t base_newthread(rabbit::VirtualMachine* v)
 {
 	rabbit::ObjectPtr &func = stack_get(v,2);
-	int64_t stksize = (_closure(func)->_function->_stacksize << 1) +2;
+	int64_t stksize = (func.toClosure()->_function->_stacksize << 1) +2;
 	rabbit::VirtualMachine* newv = sq_newthread(v, (stksize < MIN_STACK_OVERHEAD + 2)? MIN_STACK_OVERHEAD + 2 : stksize);
 	sq_move(newv,v,-2);
 	return 1;
@@ -929,7 +929,7 @@ static int64_t closure_pcall(rabbit::VirtualMachine* v)
 static int64_t closure_call(rabbit::VirtualMachine* v)
 {
 	rabbit::ObjectPtr &c = stack_get(v, -1);
-	if (sq_type(c) == rabbit::OT_CLOSURE && (_closure(c)->_function->_bgenerator == false))
+	if (sq_type(c) == rabbit::OT_CLOSURE && (c.toClosure()->_function->_bgenerator == false))
 	{
 		return sq_tailcall(v, sq_gettop(v) - 1);
 	}
@@ -980,7 +980,7 @@ static int64_t closure_getinfos(rabbit::VirtualMachine* v) {
 	rabbit::Object o = stack_get(v,1);
 	rabbit::Table *res = rabbit::Table::create(_get_shared_state(v),4);
 	if(sq_type(o) == rabbit::OT_CLOSURE) {
-		rabbit::FunctionProto *f = _closure(o)->_function;
+		rabbit::FunctionProto *f = o.toClosure()->_function;
 		int64_t nparams = f->_nparameters + (f->_varparams?1:0);
 		rabbit::ObjectPtr params = rabbit::Array::create(_get_shared_state(v),nparams);
 	rabbit::ObjectPtr defparams = rabbit::Array::create(_get_shared_state(v),f->_ndefaultparams);
@@ -988,7 +988,7 @@ static int64_t closure_getinfos(rabbit::VirtualMachine* v) {
 			params.toArray()->set((int64_t)n,f->_parameters[n]);
 		}
 	for(int64_t j = 0; j<f->_ndefaultparams; j++) {
-			defparams.toArray()->set((int64_t)j,_closure(o)->_defaultparams[j]);
+			defparams.toArray()->set((int64_t)j,o.toClosure()->_defaultparams[j]);
 		}
 		if(f->_varparams) {
 			params.toArray()->set(nparams-1,rabbit::String::create(_get_shared_state(v),"...",-1));
