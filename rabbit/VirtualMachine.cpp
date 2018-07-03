@@ -344,7 +344,7 @@ bool rabbit::VirtualMachine::stringCat(const rabbit::ObjectPtr &str,const rabbit
 	rabbit::ObjectPtr a, b;
 	if(!toString(str, a)) return false;
 	if(!toString(obj, b)) return false;
-	int64_t l = _string(a)->_len , ol = _string(b)->_len;
+	int64_t l = a.toString()->_len , ol = b.toString()->_len;
 	char *s = _sp(sq_rsl(l + ol + 1));
 	memcpy(s, _stringval(a), sq_rsl(l));
 	memcpy(s + l, _stringval(b), sq_rsl(ol));
@@ -546,7 +546,7 @@ bool rabbit::VirtualMachine::FOREACH_OP(rabbit::ObjectPtr &o1,rabbit::ObjectPtr 
 		if((nrefidx = o1.toArray()->next(o4, o2, o3)) == -1) _FINISH(exitpos);
 		o4 = (int64_t) nrefidx; _FINISH(1);
 	case rabbit::OT_STRING:
-		if((nrefidx = _string(o1)->next(o4, o2, o3)) == -1)_FINISH(exitpos);
+		if((nrefidx = o1.toString()->next(o4, o2, o3)) == -1)_FINISH(exitpos);
 		o4 = (int64_t)nrefidx; _FINISH(1);
 	case rabbit::OT_CLASS:
 		if((nrefidx = _class(o1)->next(o4, o2, o3)) == -1)_FINISH(exitpos);
@@ -1272,7 +1272,7 @@ bool rabbit::VirtualMachine::get(const rabbit::ObjectPtr &self, const rabbit::Ob
 		case rabbit::OT_STRING:
 			if(sq_isnumeric(key)){
 				int64_t n = tointeger(key);
-				int64_t len = _string(self)->_len;
+				int64_t len = self.toString()->_len;
 				if (n < 0) { n += len; }
 				if (n >= 0 && n < len) {
 					dest = int64_t(_stringval(self)[n]);

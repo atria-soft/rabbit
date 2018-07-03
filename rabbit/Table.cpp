@@ -13,7 +13,7 @@
 rabbit::Hash rabbit::HashObj(const rabbit::ObjectPtr &key) {
 	switch(sq_type(key)) {
 		case rabbit::OT_STRING:
-			return _string(key)->_hash;
+			return key.toString()->_hash;
 		case rabbit::OT_FLOAT:
 			return (rabbit::Hash)((int64_t)key.toFloat());
 		case rabbit::OT_BOOL:

@@ -391,7 +391,7 @@ int64_t rabbit::FuncState::getLocalVariable(const rabbit::Object &name)
 	int64_t locals=_vlocals.size();
 	while(locals>=1){
 		rabbit::LocalVarInfo &lvi = _vlocals[locals-1];
-		if(sq_type(lvi._name)==rabbit::OT_STRING && _string(lvi._name)==_string(name)){
+		if(sq_type(lvi._name)==rabbit::OT_STRING && lvi._name.toString()==name.toString()){
 			return locals-1;
 		}
 		locals--;
@@ -410,7 +410,7 @@ int64_t rabbit::FuncState::getOuterVariable(const rabbit::Object &name)
 {
 	int64_t outers = _outervalues.size();
 	for(int64_t i = 0; i<outers; i++) {
-		if(_string(_outervalues[i]._name) == _string(name))
+		if(_outervalues[i]._name.toString() == name.toString())
 			return i;
 	}
 	int64_t pos=-1;

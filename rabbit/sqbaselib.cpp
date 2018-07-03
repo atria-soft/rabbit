@@ -847,7 +847,7 @@ static int64_t string_slice(rabbit::VirtualMachine* v)
 	int64_t sidx,eidx;
 	rabbit::ObjectPtr o;
 	if(SQ_FAILED(get_slice_params(v,sidx,eidx,o)))return -1;
-	int64_t slen = _string(o)->_len;
+	int64_t slen = o.toString()->_len;
 	if(sidx < 0)sidx = slen + sidx;
 	if(eidx < 0)eidx = slen + eidx;
 	if(eidx < sidx) return sq_throwerror(v,"wrong indexes");
@@ -879,12 +879,12 @@ static int64_t string_find(rabbit::VirtualMachine* v)
 	int64_t sidx,eidx; \
 	rabbit::ObjectPtr str; \
 	if(SQ_FAILED(get_slice_params(v,sidx,eidx,str)))return -1; \
-	int64_t slen = _string(str)->_len; \
+	int64_t slen = str.toString()->_len; \
 	if(sidx < 0)sidx = slen + sidx; \
 	if(eidx < 0)eidx = slen + eidx; \
 	if(eidx < sidx) return sq_throwerror(v,"wrong indexes"); \
 	if(eidx > slen || sidx < 0) return sq_throwerror(v,"slice out of range"); \
-	int64_t len=_string(str)->_len; \
+	int64_t len=str.toString()->_len; \
 	const char *sthis=_stringval(str); \
 	char *snew=(_get_shared_state(v)->getScratchPad(sq_rsl(len))); \
 	memcpy(snew,sthis,sq_rsl(len));\

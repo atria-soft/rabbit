@@ -65,8 +65,8 @@ bool rabbit::WriteObject(rabbit::VirtualMachine* v,rabbit::UserPointer up,SQWRIT
 	_CHECK_IO(SafeWrite(v,write,up,&_type,sizeof(_type)));
 	switch(sq_type(o)){
 	case rabbit::OT_STRING:
-		_CHECK_IO(SafeWrite(v,write,up,&_string(o)->_len,sizeof(int64_t)));
-		_CHECK_IO(SafeWrite(v,write,up,_stringval(o),sq_rsl(_string(o)->_len)));
+		_CHECK_IO(SafeWrite(v,write,up,&o.toString()->_len,sizeof(int64_t)));
+		_CHECK_IO(SafeWrite(v,write,up,_stringval(o),sq_rsl(o.toString()->_len)));
 		break;
 	case rabbit::OT_BOOL:
 	case rabbit::OT_INTEGER:

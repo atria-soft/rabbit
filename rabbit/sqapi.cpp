@@ -701,7 +701,7 @@ rabbit::Result rabbit::sq_getstringandsize(rabbit::VirtualMachine* v,int64_t idx
 	rabbit::ObjectPtr *o = NULL;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_STRING,o);
 	*c = _stringval(*o);
-	*size = _string(*o)->_len;
+	*size = o->toString()->_len;
 	return SQ_OK;
 }
 
@@ -737,7 +737,7 @@ int64_t rabbit::sq_getsize(rabbit::VirtualMachine* v, int64_t idx)
 	rabbit::ObjectPtr &o = stack_get(v, idx);
 	rabbit::ObjectType type = sq_type(o);
 	switch(type) {
-	case rabbit::OT_STRING:	 return _string(o)->_len;
+	case rabbit::OT_STRING:	 return o.toString()->_len;
 	case rabbit::OT_TABLE:	  return _table(o)->countUsed();
 	case rabbit::OT_ARRAY:	  return o.toArray()->size();
 	case rabbit::OT_USERDATA:   return _userdata(o)->getsize();
