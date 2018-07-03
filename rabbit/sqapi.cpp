@@ -471,7 +471,7 @@ rabbit::Result rabbit::sq_bindenv(rabbit::VirtualMachine* v,int64_t idx)
 		!sq_isclass(env) &&
 		!sq_isinstance(env))
 		return sq_throwerror(v,"invalid environment");
-	rabbit::WeakRef *w = _refcounted(env)->getWeakRef(sq_type(env));
+	rabbit::WeakRef *w = env.toRefCounted()->getWeakRef(sq_type(env));
 	rabbit::ObjectPtr ret;
 	if(sq_isclosure(o)) {
 		rabbit::Closure *c = o.toClosure()->clone();
@@ -1554,7 +1554,7 @@ void rabbit::sq_weakref(rabbit::VirtualMachine* v,int64_t idx)
 {
 	rabbit::Object &o=stack_get(v,idx);
 	if(ISREFCOUNTED(sq_type(o))) {
-		v->push(_refcounted(o)->getWeakRef(sq_type(o)));
+		v->push(o.toRefCounted()->getWeakRef(sq_type(o)));
 		return;
 	}
 	v->push(o);

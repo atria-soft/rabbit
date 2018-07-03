@@ -22,7 +22,7 @@ bool rabbit::Generator::yield(rabbit::VirtualMachine *v,int64_t target)
 
 	_stack.resize(size);
 	rabbit::Object _this = v->_stack[v->_stackbase];
-	_stack[0] = ISREFCOUNTED(sq_type(_this)) ? rabbit::ObjectPtr(_refcounted(_this)->getWeakRef(sq_type(_this))) : _this;
+	_stack[0] = ISREFCOUNTED(sq_type(_this)) ? rabbit::ObjectPtr(_this.toRefCounted()->getWeakRef(sq_type(_this))) : _this;
 	for(int64_t n =1; n<target; n++) {
 		_stack[n] = v->_stack[v->_stackbase+n];
 	}

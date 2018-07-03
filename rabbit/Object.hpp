@@ -149,7 +149,6 @@ namespace rabbit {
 	#define is_delegable(t) (sq_type(t)&SQOBJECT_DELEGABLE)
 	#define raw_type(obj) _RAW_TYPE((obj)._type)
 	
-	#define _refcounted(obj) ((obj)._unVal.pRefCounted)
 	#define _rawval(obj) ((obj)._unVal.raw)
 	
 	#define _stringval(obj) (obj)._unVal.pString->_val
