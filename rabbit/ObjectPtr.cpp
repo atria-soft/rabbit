@@ -145,7 +145,7 @@ uint64_t rabbit::translateIndex(const rabbit::ObjectPtr &idx)
 		case rabbit::OT_NULL:
 			return 0;
 		case rabbit::OT_INTEGER:
-			return (uint64_t)_integer(idx);
+			return (uint64_t)idx.toInteger();
 		default: assert(0); break;
 	}
 	return 0;

@@ -102,8 +102,8 @@ static void dumpLiteral(rabbit::ObjectPtr &o) {
 	switch(sq_type(o)){
 		case rabbit::OT_STRING: printf("\"%s\"",_stringval(o));break;
 		case rabbit::OT_FLOAT: printf("{%f}",_float(o));break;
-		case rabbit::OT_INTEGER: printf("{" _PRINT_INT_FMT "}",_integer(o));break;
-		case rabbit::OT_BOOL: printf("%s",_integer(o)?"true":"false");break;
+		case rabbit::OT_INTEGER: printf("{" _PRINT_INT_FMT "}",o.toInteger());break;
+		case rabbit::OT_BOOL: printf("%s",o.toInteger()?"true":"false");break;
 		default: printf("(%s %p)",getTypeName(o),(void*)_rawval(o));break; break; //shut up compiler
 	}
 }
@@ -150,7 +150,7 @@ void rabbit::FuncState::dump(rabbit::FunctionProto *func)
 	templiterals.resize(_nliterals);
 	while((idx=_table(_literals)->next(false,refidx,key,val))!=-1) {
 		refidx=idx;
-		templiterals[_integer(val)]=key;
+		templiterals[val.toInteger()]=key;
 	}
 	for(i=0;i<templiterals.size();i++){
 		printf("[%d] ", (int32_t)n);
@@ -193,7 +193,7 @@ void rabbit::FuncState::dump(rabbit::FunctionProto *func)
 			else {
 				int64_t refidx;
 				rabbit::ObjectPtr val,key,refo;
-				while(((refidx=_table(_literals)->next(false,refo,key,val))!= -1) && (_integer(val) != lidx)) {
+				while(((refidx=_table(_literals)->next(false,refo,key,val))!= -1) && (val.toInteger() != lidx)) {
 					refo = refidx;
 				}
 				dumpLiteral(key);
@@ -209,7 +209,7 @@ void rabbit::FuncState::dump(rabbit::FunctionProto *func)
 				else {
 					int64_t refidx;
 					rabbit::ObjectPtr val,key,refo;
-					while(((refidx=_table(_literals)->next(false,refo,key,val))!= -1) && (_integer(val) != lidx)) {
+					while(((refidx=_table(_literals)->next(false,refo,key,val))!= -1) && (val.toInteger() != lidx)) {
 						refo = refidx;
 				}
 				dumpLiteral(key);
@@ -257,7 +257,7 @@ int64_t rabbit::FuncState::getConstant(const rabbit::Object &cons)
 			error("internal compiler error: too many literals");
 		}
 	}
-	return _integer(val);
+	return val.toInteger();
 }
 
 void rabbit::FuncState::setIntructionParams(int64_t pos,int64_t arg0,int64_t arg1,int64_t arg2,int64_t arg3)
@@ -626,7 +626,7 @@ rabbit::FunctionProto* rabbit::FuncState::buildProto() {
 	f->_name = _name;
 
 	while((idx=_table(_literals)->next(false,refidx,key,val))!=-1) {
-		f->_literals[_integer(val)]=key;
+		f->_literals[val.toInteger()]=key;
 		refidx=idx;
 	}
 

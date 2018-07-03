@@ -800,9 +800,9 @@ public:
 					/* generate direct or literal function depending on size */
 					rabbit::ObjectType ctype = sq_type(constval);
 					switch(ctype) {
-						case rabbit::OT_INTEGER: EmitloadConstInt(_integer(constval),_es.epos); break;
+						case rabbit::OT_INTEGER: EmitloadConstInt(constval.toInteger(),_es.epos); break;
 						case rabbit::OT_FLOAT: EmitloadConstFloat(_float(constval),_es.epos); break;
-						case rabbit::OT_BOOL: _fs->addInstruction(_OP_LOADBOOL, _es.epos, _integer(constval)); break;
+						case rabbit::OT_BOOL: _fs->addInstruction(_OP_LOADBOOL, _es.epos, constval.toInteger()); break;
 						default: _fs->addInstruction(_OP_LOAD,_es.epos,_fs->getConstant(constval)); break;
 					}
 					_es.etype = EXPR;

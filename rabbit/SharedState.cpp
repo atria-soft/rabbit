@@ -200,7 +200,7 @@ int64_t rabbit::SharedState::getMetaMethodIdxByName(const rabbit::ObjectPtr &nam
 	}
 	rabbit::ObjectPtr ret;
 	if(_table(_metamethodsmap)->get(name,ret)) {
-		return _integer(ret);
+		return ret.toInteger();
 	}
 	return -1;
 }

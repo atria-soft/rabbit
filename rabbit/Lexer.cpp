@@ -104,7 +104,7 @@ const char *rabbit::Lexer::tok2Str(int64_t tok)
 	int64_t nitr;
 	while((nitr = _keywords->next(false,itr, key, val)) != -1) {
 		itr = (int64_t)nitr;
-		if(((int64_t)_integer(val)) == tok)
+		if(((int64_t)val.toInteger()) == tok)
 			return _stringval(key);
 	}
 	return NULL;
@@ -286,7 +286,7 @@ int64_t rabbit::Lexer::getIDType(const char *s,int64_t len)
 {
 	rabbit::ObjectPtr t;
 	if(_keywords->getStr(s,len, t)) {
-		return int64_t(_integer(t));
+		return int64_t(t.toInteger());
 	}
 	return TK_IDENTIFIER;
 }

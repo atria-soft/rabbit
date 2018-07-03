@@ -357,7 +357,7 @@ static int64_t default_delegate_tofloat(rabbit::VirtualMachine* v)
 		v->push(rabbit::ObjectPtr(tofloat(o)));
 		break;
 	case rabbit::OT_BOOL:
-		v->push(rabbit::ObjectPtr((float_t)(_integer(o)?1:0)));
+		v->push(rabbit::ObjectPtr((float_t)(o.toInteger()?1:0)));
 		break;
 	default:
 		v->pushNull();
@@ -387,7 +387,7 @@ static int64_t default_delegate_tointeger(rabbit::VirtualMachine* v)
 		v->push(rabbit::ObjectPtr(tointeger(o)));
 		break;
 	case rabbit::OT_BOOL:
-		v->push(rabbit::ObjectPtr(_integer(o)?(int64_t)1:(int64_t)0));
+		v->push(rabbit::ObjectPtr(o.toInteger()?(int64_t)1:(int64_t)0));
 		break;
 	default:
 		v->pushNull();

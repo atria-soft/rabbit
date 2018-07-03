@@ -221,7 +221,7 @@ float_t rabbit::sq_objtofloat(const rabbit::Object *o)
 rabbit::Bool rabbit::sq_objtobool(const rabbit::Object *o)
 {
 	if(sq_isbool(*o)) {
-		return _integer(*o);
+		return o->toInteger();
 	}
 	return SQFalse;
 }
@@ -690,7 +690,7 @@ rabbit::Result rabbit::sq_getbool(rabbit::VirtualMachine* v,int64_t idx,rabbit::
 {
 	rabbit::ObjectPtr &o = stack_get(v, idx);
 	if(sq_isbool(o)) {
-		*b = _integer(o);
+		*b = o.toInteger();
 		return SQ_OK;
 	}
 	return SQ_ERROR;

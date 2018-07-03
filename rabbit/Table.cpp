@@ -18,7 +18,7 @@ rabbit::Hash rabbit::HashObj(const rabbit::ObjectPtr &key) {
 			return (rabbit::Hash)((int64_t)_float(key));
 		case rabbit::OT_BOOL:
 		case rabbit::OT_INTEGER:
-			return (rabbit::Hash)((int64_t)_integer(key));
+			return (rabbit::Hash)((int64_t)key.toInteger());
 		default:
 			return hashptr(key._unVal.pRefCounted);
 	}

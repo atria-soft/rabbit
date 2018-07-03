@@ -90,7 +90,7 @@ rabbit::String *rabbit::VirtualMachine::printObjVal(const rabbit::ObjectPtr &o)
 	switch(sq_type(o)) {
 	case rabbit::OT_STRING: return _string(o);
 	case rabbit::OT_INTEGER:
-		snprintf(_sp(sq_rsl(NUMBER_UINT8_MAX+1)),sq_rsl(NUMBER_UINT8_MAX), _PRINT_INT_FMT, _integer(o));
+		snprintf(_sp(sq_rsl(NUMBER_UINT8_MAX+1)),sq_rsl(NUMBER_UINT8_MAX), _PRINT_INT_FMT, o.toInteger());
 		return rabbit::String::create(_get_shared_state(this), _spval);
 		break;
 	case rabbit::OT_FLOAT:

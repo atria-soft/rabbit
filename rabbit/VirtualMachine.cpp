@@ -39,7 +39,7 @@ bool rabbit::VirtualMachine::BW_OP(uint64_t op,rabbit::ObjectPtr &trg,const rabb
 	int64_t res;
 	if((sq_type(o1)| sq_type(o2)) == rabbit::OT_INTEGER)
 	{
-		int64_t i1 = _integer(o1), i2 = _integer(o2);
+		int64_t i1 = o1.toInteger(), i2 = o2.toInteger();
 		switch(op) {
 			case BW_AND:	res = i1 & i2; break;
 			case BW_OR:	 res = i1 | i2; break;
@@ -63,7 +63,7 @@ void rabbit::VirtualMachine::release() {
 { \
 	int64_t tmask = sq_type(o1)|sq_type(o2); \
 	switch(tmask) { \
-		case rabbit::OT_INTEGER: trg = _integer(o1) op _integer(o2);break; \
+		case rabbit::OT_INTEGER: trg = o1.toInteger() op o2.toInteger();break; \
 		case (rabbit::OT_FLOAT|OT_INTEGER): \
 		case (rabbit::OT_FLOAT): trg = tofloat(o1) op tofloat(o2); break;\
 		default: _GUARD(ARITH_OP((#op)[0],trg,o1,o2)); break;\
@@ -74,7 +74,7 @@ void rabbit::VirtualMachine::release() {
 { \
 	int64_t tmask = sq_type(o1)|sq_type(o2); \
 	switch(tmask) { \
-		case rabbit::OT_INTEGER: { int64_t i2 = _integer(o2); if(i2 == 0) { raise_error(err); SQ_THROW(); } trg = _integer(o1) op i2; } break;\
+		case rabbit::OT_INTEGER: { int64_t i2 = o2.toInteger(); if(i2 == 0) { raise_error(err); SQ_THROW(); } trg = o1.toInteger() op i2; } break;\
 		case (rabbit::OT_FLOAT|OT_INTEGER): \
 		case (rabbit::OT_FLOAT): trg = tofloat(o1) op tofloat(o2); break;\
 		default: _GUARD(ARITH_OP((#op)[0],trg,o1,o2)); break;\
@@ -86,7 +86,7 @@ bool rabbit::VirtualMachine::ARITH_OP(uint64_t op,rabbit::ObjectPtr &trg,const r
 	int64_t tmask = sq_type(o1)| sq_type(o2);
 	switch(tmask) {
 		case rabbit::OT_INTEGER:{
-			int64_t res, i1 = _integer(o1), i2 = _integer(o2);
+			int64_t res, i1 = o1.toInteger(), i2 = o2.toInteger();
 			switch(op) {
 			case '+': res = i1 + i2; break;
 			case '-': res = i1 - i2; break;
@@ -198,7 +198,7 @@ bool rabbit::VirtualMachine::NEG_OP(rabbit::ObjectPtr &trg,const rabbit::ObjectP
 
 	switch(sq_type(o)) {
 	case rabbit::OT_INTEGER:
-		trg = -_integer(o);
+		trg = -o.toInteger();
 		return true;
 	case rabbit::OT_FLOAT:
 		trg = -_float(o);
@@ -233,7 +233,7 @@ bool rabbit::VirtualMachine::objCmp(const rabbit::ObjectPtr &o1,const rabbit::Ob
 		case rabbit::OT_STRING:
 			_RET_SUCCEED(strcmp(_stringval(o1),_stringval(o2)));
 		case rabbit::OT_INTEGER:
-			_RET_SUCCEED((_integer(o1)<_integer(o2))?-1:1);
+			_RET_SUCCEED((o1.toInteger()<o2.toInteger())?-1:1);
 		case rabbit::OT_FLOAT:
 			_RET_SUCCEED((_float(o1)<_float(o2))?-1:1);
 		case rabbit::OT_TABLE:
@@ -248,7 +248,7 @@ bool rabbit::VirtualMachine::objCmp(const rabbit::ObjectPtr &o1,const rabbit::Ob
 							raise_error("_cmp must return an integer");
 							return false;
 						}
-						_RET_SUCCEED(_integer(res))
+						_RET_SUCCEED(res.toInteger())
 					}
 					return false;
 				}
@@ -259,19 +259,19 @@ bool rabbit::VirtualMachine::objCmp(const rabbit::ObjectPtr &o1,const rabbit::Ob
 		}
 		assert(0);
 		//if(type(res)!=rabbit::OT_INTEGER) { raise_Compareerror(o1,o2); return false; }
-		//  _RET_SUCCEED(_integer(res));
+		//  _RET_SUCCEED(res.toInteger());
 
 	}
 	else{
 		if(sq_isnumeric(o1) && sq_isnumeric(o2)){
 			if((t1==rabbit::OT_INTEGER) && (t2==OT_FLOAT)) {
-				if( _integer(o1)==_float(o2) ) { _RET_SUCCEED(0); }
-				else if( _integer(o1)<_float(o2) ) { _RET_SUCCEED(-1); }
+				if( o1.toInteger()==_float(o2) ) { _RET_SUCCEED(0); }
+				else if( o1.toInteger()<_float(o2) ) { _RET_SUCCEED(-1); }
 				_RET_SUCCEED(1);
 			}
 			else{
-				if( _float(o1)==_integer(o2) ) { _RET_SUCCEED(0); }
-				else if( _float(o1)<_integer(o2) ) { _RET_SUCCEED(-1); }
+				if( _float(o1)==o2.toInteger() ) { _RET_SUCCEED(0); }
+				else if( _float(o1)<o2.toInteger() ) { _RET_SUCCEED(-1); }
 				_RET_SUCCEED(1);
 			}
 		}
@@ -310,10 +310,10 @@ bool rabbit::VirtualMachine::toString(const rabbit::ObjectPtr &o,rabbit::ObjectP
 		snprintf(_sp(sq_rsl(NUMBER_UINT8_MAX+1)),sq_rsl(NUMBER_UINT8_MAX),"%g",_float(o));
 		break;
 	case rabbit::OT_INTEGER:
-		snprintf(_sp(sq_rsl(NUMBER_UINT8_MAX+1)),sq_rsl(NUMBER_UINT8_MAX),_PRINT_INT_FMT,_integer(o));
+		snprintf(_sp(sq_rsl(NUMBER_UINT8_MAX+1)),sq_rsl(NUMBER_UINT8_MAX),_PRINT_INT_FMT,o.toInteger());
 		break;
 	case rabbit::OT_BOOL:
-		snprintf(_sp(sq_rsl(6)),sq_rsl(6),_integer(o)?"true":"false");
+		snprintf(_sp(sq_rsl(6)),sq_rsl(6),o.toInteger()?"true":"false");
 		break;
 	case rabbit::OT_TABLE:
 	case rabbit::OT_USERDATA:
@@ -581,7 +581,7 @@ bool rabbit::VirtualMachine::FOREACH_OP(rabbit::ObjectPtr &o1,rabbit::ObjectPtr 
 		if(_generator(o1)->_state == rabbit::Generator::eSuspended) {
 			int64_t idx = 0;
 			if(sq_type(o4) == rabbit::OT_INTEGER) {
-				idx = _integer(o4) + 1;
+				idx = o4.toInteger() + 1;
 			}
 			o2 = idx;
 			o4 = idx;
@@ -609,10 +609,10 @@ bool rabbit::VirtualMachine::CLOSURE_OP(rabbit::ObjectPtr &target, rabbit::Funct
 			rabbit::OuterVar &v = func->_outervalues[i];
 			switch(v._type){
 			case otLOCAL:
-				findOuter(closure->_outervalues[i], &STK(_integer(v._src)));
+				findOuter(closure->_outervalues[i], &STK(v._src.toInteger()));
 				break;
 			case otOUTER:
-				closure->_outervalues[i] = _closure(ci->_closure)->_outervalues[_integer(v._src)];
+				closure->_outervalues[i] = _closure(ci->_closure)->_outervalues[v._src.toInteger()];
 				break;
 			}
 		}
@@ -676,7 +676,7 @@ bool rabbit::VirtualMachine::IsFalse(rabbit::ObjectPtr &o)
 {
 	if(((sq_type(o) & SQOBJECT_CANBEFALSE)
 		&& ( ((sq_type(o) == rabbit::OT_FLOAT) && (_float(o) == float_t(0.0))) ))
-		|| (_integer(o) == 0) )  //rabbit::OT_NULL|OT_INTEGER|OT_BOOL
+		|| (o.toInteger() == 0) )  //rabbit::OT_NULL|OT_INTEGER|OT_BOOL
 	{
 		return true;
 	}
@@ -948,7 +948,7 @@ exception_restore:
 			case _OP_INCL: {
 				rabbit::ObjectPtr &a = STK(arg1);
 				if(sq_type(a) == rabbit::OT_INTEGER) {
-					a._unVal.nInteger = _integer(a) + sarg3;
+					a._unVal.nInteger = a.toInteger() + sarg3;
 				}
 				else {
 					rabbit::ObjectPtr o(sarg3); //_GUARD(LOCAL_INC('+',TARGET, STK(arg1), o));
@@ -960,7 +960,7 @@ exception_restore:
 				rabbit::ObjectPtr &a = STK(arg1);
 				if(sq_type(a) == rabbit::OT_INTEGER) {
 					TARGET = a;
-					a._unVal.nInteger = _integer(a) + sarg3;
+					a._unVal.nInteger = a.toInteger() + sarg3;
 				}
 				else {
 					rabbit::ObjectPtr o(sarg3); _GUARD(PLOCAL_INC('+',TARGET, STK(arg1), o));
@@ -990,7 +990,7 @@ exception_restore:
 			case _OP_NOT: TARGET = IsFalse(STK(arg1)); continue;
 			case _OP_BWNOT:
 				if(sq_type(STK(arg1)) == rabbit::OT_INTEGER) {
-					int64_t t = _integer(STK(arg1));
+					int64_t t = STK(arg1).toInteger();
 					TARGET = int64_t(~t);
 					continue;
 				}
@@ -1782,8 +1782,8 @@ void rabbit::VirtualMachine::dumpstack(int64_t stackbase,bool dumpall)
 		printf("[" _PRINT_INT_FMT "]:",n);
 		switch(sq_type(obj)){
 		case rabbit::OT_FLOAT:		  printf("FLOAT %.3f",_float(obj));break;
-		case rabbit::OT_INTEGER:		printf("INTEGER " _PRINT_INT_FMT,_integer(obj));break;
-		case rabbit::OT_BOOL:		   printf("BOOL %s",_integer(obj)?"true":"false");break;
+		case rabbit::OT_INTEGER:		printf("INTEGER " _PRINT_INT_FMT,obj.toInteger());break;
+		case rabbit::OT_BOOL:		   printf("BOOL %s",obj.toInteger()?"true":"false");break;
 		case rabbit::OT_STRING:		 printf("STRING %s",_stringval(obj));break;
 		case rabbit::OT_NULL:		   printf("NULL");  break;
 		case rabbit::OT_TABLE:		  printf("TABLE %p[%p]",_table(obj),_table(obj)->_delegate);break;
