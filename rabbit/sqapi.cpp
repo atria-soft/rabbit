@@ -149,7 +149,7 @@ rabbit::Result rabbit::sq_compile(rabbit::VirtualMachine* v,SQLEXREADFUNC read,r
 	rabbit::ObjectPtr o;
 #ifndef NO_COMPILER
 	if(compile(v, read, p, sourcename, o, raiseerror?true:false, _get_shared_state(v)->_debuginfo)) {
-		v->push(rabbit::Closure::create(_get_shared_state(v), _funcproto(o), v->_roottable.toTable()->getWeakRef(rabbit::OT_TABLE)));
+		v->push(rabbit::Closure::create(_get_shared_state(v), o.toFunctionProto(), v->_roottable.toTable()->getWeakRef(rabbit::OT_TABLE)));
 		return SQ_OK;
 	}
 	return SQ_ERROR;

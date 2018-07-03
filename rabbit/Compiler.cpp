@@ -205,7 +205,7 @@ public:
 			_fs->setStacksize(0);
 			o =_fs->buildProto();
 #ifdef _DEBUG_DUMP
-			_fs->dump(_funcproto(o));
+			_fs->dump(o.toFunctionProto());
 #endif
 		}
 		else {

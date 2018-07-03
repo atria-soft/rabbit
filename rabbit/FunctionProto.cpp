@@ -189,7 +189,7 @@ bool rabbit::FunctionProto::save(rabbit::VirtualMachine *v,rabbit::UserPointer u
 
 	_CHECK_IO(WriteTag(v,write,up,SQ_CLOSURESTREAM_PART));
 	for(i=0;i<nfunctions;i++){
-		_CHECK_IO(_funcproto(_functions[i])->save(v,up,write));
+		_CHECK_IO(_functions[i].toFunctionProto()->save(v,up,write));
 	}
 	_CHECK_IO(SafeWrite(v,write,up,&_stacksize,sizeof(_stacksize)));
 	_CHECK_IO(SafeWrite(v,write,up,&_bgenerator,sizeof(_bgenerator)));
@@ -268,7 +268,7 @@ bool rabbit::FunctionProto::load(rabbit::VirtualMachine *v,rabbit::UserPointer u
 
 	_CHECK_IO(CheckTag(v,read,up,SQ_CLOSURESTREAM_PART));
 	for(i = 0; i < nfunctions; i++){
-		_CHECK_IO(_funcproto(o)->load(v, up, read, o));
+		_CHECK_IO(o.toFunctionProto()->load(v, up, read, o));
 		f->_functions[i] = o;
 	}
 	_CHECK_IO(SafeRead(v,read,up, &f->_stacksize, sizeof(f->_stacksize)));
