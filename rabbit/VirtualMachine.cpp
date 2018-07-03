@@ -549,7 +549,7 @@ bool rabbit::VirtualMachine::FOREACH_OP(rabbit::ObjectPtr &o1,rabbit::ObjectPtr 
 		if((nrefidx = o1.toString()->next(o4, o2, o3)) == -1)_FINISH(exitpos);
 		o4 = (int64_t)nrefidx; _FINISH(1);
 	case rabbit::OT_CLASS:
-		if((nrefidx = _class(o1)->next(o4, o2, o3)) == -1)_FINISH(exitpos);
+		if((nrefidx = o1.toClass()->next(o4, o2, o3)) == -1)_FINISH(exitpos);
 		o4 = (int64_t)nrefidx; _FINISH(1);
 	case rabbit::OT_USERDATA:
 	case rabbit::OT_INSTANCE:
@@ -636,23 +636,23 @@ bool rabbit::VirtualMachine::CLASS_OP(rabbit::ObjectPtr &target,int64_t baseclas
 	rabbit::ObjectPtr attrs;
 	if(baseclass != -1) {
 		if(sq_type(_stack[_stackbase+baseclass]) != rabbit::OT_CLASS) { raise_error("trying to inherit from a %s",getTypeName(_stack[_stackbase+baseclass])); return false; }
-		base = _class(_stack[_stackbase + baseclass]);
+		base = _stack[_stackbase + baseclass].toClass();
 	}
 	if(attributes != MAX_FUNC_STACKSIZE) {
 		attrs = _stack[_stackbase+attributes];
 	}
 	target = rabbit::Class::create(_get_shared_state(this),base);
-	if(sq_type(_class(target)->_metamethods[MT_INHERITED]) != rabbit::OT_NULL) {
+	if(sq_type(target.toClass()->_metamethods[MT_INHERITED]) != rabbit::OT_NULL) {
 		int nparams = 2;
 		rabbit::ObjectPtr ret;
 		push(target); push(attrs);
-		if(!call(_class(target)->_metamethods[MT_INHERITED],nparams,_top - nparams, ret, false)) {
+		if(!call(target.toClass()->_metamethods[MT_INHERITED],nparams,_top - nparams, ret, false)) {
 			pop(nparams);
 			return false;
 		}
 		pop(nparams);
 	}
-	_class(target)->_attributes = attrs;
+	target.toClass()->_attributes = attrs;
 	return true;
 }
 
@@ -772,7 +772,7 @@ exception_restore:
 						continue;
 					case rabbit::OT_CLASS:{
 						rabbit::ObjectPtr inst;
-						_GUARD(createClassInstance(_class(clo),inst,clo));
+						_GUARD(createClassInstance(clo.toClass(),inst,clo));
 						if(sarg0 != -1) {
 							STK(arg0) = inst;
 						}
@@ -972,7 +972,7 @@ exception_restore:
 			case _OP_INSTANCEOF:
 				if(sq_type(STK(arg1)) != rabbit::OT_CLASS)
 				{raise_error("cannot apply instanceof between a %s and a %s",getTypeName(STK(arg1)),getTypeName(STK(arg2))); SQ_THROW();}
-				TARGET = (sq_type(STK(arg2)) == rabbit::OT_INSTANCE) ? (_instance(STK(arg2))->instanceOf(_class(STK(arg1)))?true:false) : false;
+				TARGET = (sq_type(STK(arg2)) == rabbit::OT_INSTANCE) ? (_instance(STK(arg2))->instanceOf(STK(arg1).toClass())?true:false) : false;
 				continue;
 			case _OP_AND:
 				if(IsFalse(STK(arg2))) {
@@ -1265,7 +1265,7 @@ bool rabbit::VirtualMachine::get(const rabbit::ObjectPtr &self, const rabbit::Ob
 			}
 			break;
 		case rabbit::OT_CLASS:
-			if(_class(self)->get(key,dest)) {
+			if(const_cast<rabbit::Class*>(self.toClass())->get(key,dest)) {
 				return true;
 			}
 			break;
@@ -1476,7 +1476,7 @@ bool rabbit::VirtualMachine::newSlotA(const rabbit::ObjectPtr &self,const rabbit
 		raise_error("object must be a class");
 		return false;
 	}
-	rabbit::Class *c = _class(self);
+	rabbit::Class *c = const_cast<rabbit::Class*>(self.toClass());
 	if(!raw) {
 		rabbit::ObjectPtr &mm = c->_metamethods[MT_NEWMEMBER];
 		if(sq_type(mm) != rabbit::OT_NULL ) {
@@ -1536,8 +1536,8 @@ bool rabbit::VirtualMachine::newSlot(const rabbit::ObjectPtr &self,const rabbit:
 		return false;
 		break;}
 	case rabbit::OT_CLASS:
-		if(!_class(self)->newSlot(_get_shared_state(this),key,val,bstatic)) {
-			if(_class(self)->_locked) {
+		if(!const_cast<rabbit::Class*>(self.toClass())->newSlot(_get_shared_state(this),key,val,bstatic)) {
+			if(self.toClass()->_locked) {
 				raise_error("trying to modify a class that has already been instantiated");
 				return false;
 			}
@@ -1614,7 +1614,7 @@ int64_t prevstackbase = _stackbase;
 	case rabbit::OT_CLASS: {
 		rabbit::ObjectPtr constr;
 		rabbit::ObjectPtr temp;
-		createClassInstance(_class(closure),outres,constr);
+		createClassInstance(closure.toClass(),outres,constr);
 		rabbit::ObjectType ctype = sq_type(constr);
 		if (ctype == rabbit::OT_NATIVECLOSURE || ctype == OT_CLOSURE) {
 			_stack[stackbase] = outres;
@@ -1797,7 +1797,7 @@ void rabbit::VirtualMachine::dumpstack(int64_t stackbase,bool dumpall)
 		case rabbit::OT_GENERATOR:	  printf("GENERATOR %p",obj.toGenerator());break;
 		case rabbit::OT_THREAD:		 printf("THREAD [%p]",obj.toVirtualMachine());break;
 		case rabbit::OT_USERPOINTER:	printf("USERPOINTER %p",obj.toUserPointer());break;
-		case rabbit::OT_CLASS:		  printf("CLASS %p",_class(obj));break;
+		case rabbit::OT_CLASS:		  printf("CLASS %p",obj.toClass());break;
 		case rabbit::OT_INSTANCE:	   printf("INSTANCE %p",_instance(obj));break;
 		case rabbit::OT_WEAKREF:		printf("WEAKERF %p",_weakref(obj));break;
 		default:

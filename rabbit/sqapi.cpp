@@ -300,7 +300,7 @@ rabbit::Result rabbit::sq_newclass(rabbit::VirtualMachine* v,rabbit::Bool hasbas
 		rabbit::ObjectPtr &base = stack_get(v,-1);
 		if(sq_type(base) != rabbit::OT_CLASS)
 			return sq_throwerror(v,"invalid base type");
-		baseclass = _class(base);
+		baseclass = base.toClass();
 	}
 	rabbit::Class *newclass = rabbit::Class::create(_get_shared_state(v), baseclass);
 	if(baseclass) v->pop();
@@ -315,7 +315,7 @@ rabbit::Bool rabbit::sq_instanceof(rabbit::VirtualMachine* v)
 	if(    sq_type(inst) != rabbit::OT_INSTANCE
 	    || sq_type(cl) != rabbit::OT_CLASS)
 		return sq_throwerror(v,"invalid param type");
-	return _instance(inst)->instanceOf(_class(cl))?SQTrue:SQFalse;
+	return _instance(inst)->instanceOf(cl.toClass())?SQTrue:SQFalse;
 }
 
 rabbit::Result rabbit::sq_arrayappend(rabbit::VirtualMachine* v,int64_t idx)
@@ -742,7 +742,7 @@ int64_t rabbit::sq_getsize(rabbit::VirtualMachine* v, int64_t idx)
 	case rabbit::OT_ARRAY:	  return o.toArray()->size();
 	case rabbit::OT_USERDATA:   return o.toUserData()->getsize();
 	case rabbit::OT_INSTANCE:   return _instance(o)->_class->_udsize;
-	case rabbit::OT_CLASS:	  return _class(o)->_udsize;
+	case rabbit::OT_CLASS:	  return o.toClass()->_udsize;
 	default:
 		return sq_aux_invalidtype(v, type);
 	}
@@ -773,7 +773,7 @@ rabbit::Result rabbit::sq_settypetag(rabbit::VirtualMachine* v,int64_t idx,rabbi
 			o.toUserData()->setTypeTag(typetag);
 			break;
 		case rabbit::OT_CLASS:
-			_class(o)->_typetag = typetag;
+			o.toClass()->_typetag = typetag;
 			break;
 		default:
 			return sq_throwerror(v,"invalid object type");
@@ -786,7 +786,7 @@ rabbit::Result rabbit::sq_getobjtypetag(const rabbit::Object *o,rabbit::UserPoin
   switch(sq_type(*o)) {
 	case rabbit::OT_INSTANCE: *typetag = _instance(*o)->_class->_typetag; break;
 	case rabbit::OT_USERDATA: *typetag = o->toUserData()->getTypeTag(); break;
-	case rabbit::OT_CLASS:	*typetag = _class(*o)->_typetag; break;
+	case rabbit::OT_CLASS:	*typetag = o->toClass()->_typetag; break;
 	default: return SQ_ERROR;
   }
   return SQ_OK;
@@ -820,8 +820,8 @@ rabbit::Result rabbit::sq_setclassudsize(rabbit::VirtualMachine* v, int64_t idx,
 {
 	rabbit::ObjectPtr &o = stack_get(v,idx);
 	if(sq_type(o) != rabbit::OT_CLASS) return sq_throwerror(v,"the object is not a class");
-	if(_class(o)->_locked) return sq_throwerror(v,"the class is locked");
-	_class(o)->_udsize = udsize;
+	if(o.toClass()->_locked) return sq_throwerror(v,"the class is locked");
+	o.toClass()->_udsize = udsize;
 	return SQ_OK;
 }
 
@@ -937,7 +937,7 @@ rabbit::Result rabbit::sq_rawset(rabbit::VirtualMachine* v,int64_t idx)
 		return SQ_OK;
 	break;
 	case rabbit::OT_CLASS:
-		_class(self)->newSlot(_get_shared_state(v), key, v->getUp(-1),false);
+		self.toClass()->newSlot(_get_shared_state(v), key, v->getUp(-1),false);
 		v->pop(2);
 		return SQ_OK;
 	break;
@@ -1074,7 +1074,7 @@ rabbit::Result rabbit::sq_rawget(rabbit::VirtualMachine* v,int64_t idx)
 			return SQ_OK;
 		break;
 	case rabbit::OT_CLASS:
-		if(_class(self)->get(obj,obj))
+		if(self.toClass()->get(obj,obj))
 			return SQ_OK;
 		break;
 	case rabbit::OT_INSTANCE:
@@ -1270,7 +1270,7 @@ void rabbit::sq_setreleasehook(rabbit::VirtualMachine* v,int64_t idx,SQRELEASEHO
 			_instance(ud)->_hook = hook;
 			break;
 		case rabbit::OT_CLASS:
-			_class(ud)->_hook = hook;
+			ud.toClass()->_hook = hook;
 			break;
 		default:
 			return;
@@ -1288,7 +1288,7 @@ SQRELEASEHOOK rabbit::sq_getreleasehook(rabbit::VirtualMachine* v,int64_t idx)
 			return _instance(ud)->_hook;
 			break;
 		case rabbit::OT_CLASS:
-			return _class(ud)->_hook;
+			return ud.toClass()->_hook;
 			break;
 		default:
 			return NULL;
@@ -1418,13 +1418,13 @@ rabbit::Result rabbit::sq_setattributes(rabbit::VirtualMachine* v,int64_t idx)
 	rabbit::ObjectPtr &val = stack_get(v,-1);
 	rabbit::ObjectPtr attrs;
 	if(sq_type(key) == rabbit::OT_NULL) {
-		attrs = _class(*o)->_attributes;
-		_class(*o)->_attributes = val;
+		attrs = o->toClass()->_attributes;
+		o->toClass()->_attributes = val;
 		v->pop(2);
 		v->push(attrs);
 		return SQ_OK;
-	}else if(_class(*o)->getAttributes(key,attrs)) {
-		_class(*o)->setAttributes(key,val);
+	}else if(o->toClass()->getAttributes(key,attrs)) {
+		o->toClass()->setAttributes(key,val);
 		v->pop(2);
 		v->push(attrs);
 		return SQ_OK;
@@ -1439,12 +1439,12 @@ rabbit::Result rabbit::sq_getattributes(rabbit::VirtualMachine* v,int64_t idx)
 	rabbit::ObjectPtr &key = stack_get(v,-1);
 	rabbit::ObjectPtr attrs;
 	if(sq_type(key) == rabbit::OT_NULL) {
-		attrs = _class(*o)->_attributes;
+		attrs = o->toClass()->_attributes;
 		v->pop();
 		v->push(attrs);
 		return SQ_OK;
 	}
-	else if(_class(*o)->getAttributes(key,attrs)) {
+	else if(o->toClass()->getAttributes(key,attrs)) {
 		v->pop();
 		v->push(attrs);
 		return SQ_OK;
@@ -1457,7 +1457,7 @@ rabbit::Result rabbit::sq_getmemberhandle(rabbit::VirtualMachine* v,int64_t idx,
 	rabbit::ObjectPtr *o = NULL;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_CLASS,o);
 	rabbit::ObjectPtr &key = stack_get(v,-1);
-	rabbit::Table *m = _class(*o)->_members;
+	rabbit::Table *m = o->toClass()->_members;
 	rabbit::ObjectPtr val;
 	if(m->get(key,val)) {
 		handle->_static = _isfield(val) ? SQFalse : SQTrue;
@@ -1484,7 +1484,7 @@ rabbit::Result _getmemberbyhandle(rabbit::VirtualMachine* v,rabbit::ObjectPtr &s
 			}
 			break;
 		case rabbit::OT_CLASS: {
-				rabbit::Class *c = _class(self);
+				rabbit::Class *c = self.toClass();
 				if(handle->_static) {
 					val = &c->_methods[handle->_index].val;
 				}
@@ -1527,8 +1527,8 @@ rabbit::Result rabbit::sq_getbase(rabbit::VirtualMachine* v,int64_t idx)
 {
 	rabbit::ObjectPtr *o = NULL;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_CLASS,o);
-	if(_class(*o)->_base)
-		v->push(rabbit::ObjectPtr(_class(*o)->_base));
+	if(o->toClass()->_base)
+		v->push(rabbit::ObjectPtr(o->toClass()->_base));
 	else
 		v->pushNull();
 	return SQ_OK;
@@ -1546,7 +1546,7 @@ rabbit::Result rabbit::sq_createinstance(rabbit::VirtualMachine* v,int64_t idx)
 {
 	rabbit::ObjectPtr *o = NULL;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_CLASS,o);
-	v->push(_class(*o)->createInstance());
+	v->push(o->toClass()->createInstance());
 	return SQ_OK;
 }
 
