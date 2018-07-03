@@ -135,7 +135,7 @@ void rabbit::sq_setdebughook(rabbit::VirtualMachine* v)
 void rabbit::sq_close(rabbit::VirtualMachine* v)
 {
 	rabbit::SharedState *ss = _get_shared_state(v);
-	_thread(ss->_root_vm)->finalize();
+	ss->_root_vm.toVirtualMachine()->finalize();
 	sq_delete(ss, SharedState);
 }
 
@@ -229,7 +229,7 @@ rabbit::Bool rabbit::sq_objtobool(const rabbit::Object *o)
 rabbit::UserPointer rabbit::sq_objtouserpointer(const rabbit::Object *o)
 {
 	if(sq_isuserpointer(*o)) {
-		return o->getUserPointer();
+		return o->toUserPointer();
 	}
 	return 0;
 }
@@ -717,7 +717,7 @@ rabbit::Result rabbit::sq_getthread(rabbit::VirtualMachine* v,int64_t idx,rabbit
 {
 	rabbit::ObjectPtr *o = NULL;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_THREAD,o);
-	*thread = _thread(*o);
+	*thread = o->toVirtualMachine();
 	return SQ_OK;
 }
 
@@ -804,7 +804,7 @@ rabbit::Result rabbit::sq_getuserpointer(rabbit::VirtualMachine* v, int64_t idx,
 {
 	rabbit::ObjectPtr *o = NULL;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_USERPOINTER,o);
-	(*p) = o->getUserPointer();
+	(*p) = o->toUserPointer();
 	return SQ_OK;
 }
 

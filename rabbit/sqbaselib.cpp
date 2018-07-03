@@ -1060,15 +1060,15 @@ static int64_t thread_call(rabbit::VirtualMachine* v)
 	rabbit::ObjectPtr o = stack_get(v,1);
 	if(sq_type(o) == rabbit::OT_THREAD) {
 		int64_t nparams = sq_gettop(v);
-		_thread(o)->push(_thread(o)->_roottable);
+		o.toVirtualMachine()->push(o.toVirtualMachine()->_roottable);
 		for(int64_t i = 2; i<(nparams+1); i++)
-			sq_move(_thread(o),v,i);
-		if(SQ_SUCCEEDED(sq_call(_thread(o),nparams,SQTrue,SQTrue))) {
-			sq_move(v,_thread(o),-1);
-			sq_pop(_thread(o),1);
+			sq_move(o.toVirtualMachine(),v,i);
+		if(SQ_SUCCEEDED(sq_call(o.toVirtualMachine(),nparams,SQTrue,SQTrue))) {
+			sq_move(v,o.toVirtualMachine(),-1);
+			sq_pop(o.toVirtualMachine(),1);
 			return 1;
 		}
-		v->_lasterror = _thread(o)->_lasterror;
+		v->_lasterror = o.toVirtualMachine()->_lasterror;
 		return SQ_ERROR;
 	}
 	return sq_throwerror(v,"wrong parameter");
@@ -1078,7 +1078,7 @@ static int64_t thread_wakeup(rabbit::VirtualMachine* v)
 {
 	rabbit::ObjectPtr o = stack_get(v,1);
 	if(sq_type(o) == rabbit::OT_THREAD) {
-		rabbit::VirtualMachine *thread = _thread(o);
+		rabbit::VirtualMachine *thread = o.toVirtualMachine();
 		int64_t state = sq_getvmstate(thread);
 		if(state != SQ_VMSTATE_SUSPENDED) {
 			switch(state) {
@@ -1114,7 +1114,7 @@ static int64_t thread_wakeupthrow(rabbit::VirtualMachine* v)
 {
 	rabbit::ObjectPtr o = stack_get(v,1);
 	if(sq_type(o) == rabbit::OT_THREAD) {
-		rabbit::VirtualMachine *thread = _thread(o);
+		rabbit::VirtualMachine *thread = o.toVirtualMachine();
 		int64_t state = sq_getvmstate(thread);
 		if(state != SQ_VMSTATE_SUSPENDED) {
 			switch(state) {
@@ -1154,7 +1154,7 @@ static int64_t thread_wakeupthrow(rabbit::VirtualMachine* v)
 static int64_t thread_getstatus(rabbit::VirtualMachine* v)
 {
 	rabbit::ObjectPtr &o = stack_get(v,1);
-	switch(sq_getvmstate(_thread(o))) {
+	switch(sq_getvmstate(o.toVirtualMachine())) {
 		case SQ_VMSTATE_IDLE:
 			sq_pushstring(v,"idle",-1);
 		break;
@@ -1174,7 +1174,7 @@ static int64_t thread_getstackinfos(rabbit::VirtualMachine* v)
 {
 	rabbit::ObjectPtr o = stack_get(v,1);
 	if(sq_type(o) == rabbit::OT_THREAD) {
-		rabbit::VirtualMachine *thread = _thread(o);
+		rabbit::VirtualMachine *thread = o.toVirtualMachine();
 		int64_t threadtop = sq_gettop(thread);
 		int64_t level;
 		sq_getinteger(v,-1,&level);

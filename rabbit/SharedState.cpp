@@ -172,7 +172,7 @@ rabbit::SharedState::~SharedState()
 		_systemstrings->back().Null();
 		_systemstrings->popBack();
 	}
-	_thread(_root_vm)->finalize();
+	_root_vm.toVirtualMachine()->finalize();
 	_root_vm.Null();
 	_table_default_delegate.Null();
 	_array_default_delegate.Null();
