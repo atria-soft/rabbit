@@ -178,13 +178,13 @@ static int64_t get_slice_params(rabbit::VirtualMachine* v,int64_t &sidx,int64_t 
 		rabbit::ObjectPtr &start=stack_get(v,2);
 		if(    start.isNull() == false
 		    && start.isNumeric() == true){
-			sidx=tointeger(start);
+			sidx=start.toIntegerValue();
 		}
 	}
 	if(top>2){
 		rabbit::ObjectPtr &end=stack_get(v,3);
 		if(end.isNumeric() == true){
-			eidx=tointeger(end);
+			eidx=end.toIntegerValue();
 		}
 	}
 	else {
@@ -255,10 +255,10 @@ static int64_t base_array(rabbit::VirtualMachine* v)
 	rabbit::Object &size = stack_get(v,2);
 	if(sq_gettop(v) > 2) {
 		a = rabbit::Array::create(_get_shared_state(v),0);
-		a->resize(tointeger(size),stack_get(v,3));
+		a->resize(size.toIntegerValue(),stack_get(v,3));
 	}
 	else {
-		a = rabbit::Array::create(_get_shared_state(v),tointeger(size));
+		a = rabbit::Array::create(_get_shared_state(v),size.toIntegerValue());
 	}
 	v->push(a);
 	return 1;
@@ -348,14 +348,14 @@ static int64_t default_delegate_tofloat(rabbit::VirtualMachine* v)
 	case rabbit::OT_STRING:{
 		rabbit::ObjectPtr res;
 		if(str2num(_stringval(o),res,10)){
-			v->push(rabbit::ObjectPtr(tofloat(res)));
+			v->push(rabbit::ObjectPtr(res.toFloatValue()));
 			break;
 		}}
 		return sq_throwerror(v, "cannot convert the string");
 		break;
 	case rabbit::OT_INTEGER:
 	case rabbit::OT_FLOAT:
-		v->push(rabbit::ObjectPtr(tofloat(o)));
+		v->push(rabbit::ObjectPtr(o.toFloatValue()));
 		break;
 	case rabbit::OT_BOOL:
 		v->push(rabbit::ObjectPtr((float_t)(o.toInteger()?1:0)));
@@ -378,14 +378,14 @@ static int64_t default_delegate_tointeger(rabbit::VirtualMachine* v)
 	case rabbit::OT_STRING:{
 		rabbit::ObjectPtr res;
 		if(str2num(_stringval(o),res,base)){
-			v->push(rabbit::ObjectPtr(tointeger(res)));
+			v->push(rabbit::ObjectPtr(res.toIntegerValue()));
 			break;
 		}}
 		return sq_throwerror(v, "cannot convert the string");
 		break;
 	case rabbit::OT_INTEGER:
 	case rabbit::OT_FLOAT:
-		v->push(rabbit::ObjectPtr(tointeger(o)));
+		v->push(rabbit::ObjectPtr(o.toIntegerValue()));
 		break;
 	case rabbit::OT_BOOL:
 		v->push(rabbit::ObjectPtr(o.toInteger()?(int64_t)1:(int64_t)0));
@@ -419,7 +419,7 @@ static int64_t obj_clear(rabbit::VirtualMachine* v)
 static int64_t number_delegate_tochar(rabbit::VirtualMachine* v)
 {
 	rabbit::Object &o=stack_get(v,1);
-	char c = (char)tointeger(o);
+	char c = (char)o.toIntegerValue();
 	v->push(rabbit::String::create(_get_shared_state(v),(const char *)&c,1));
 	return 1;
 }
@@ -553,7 +553,7 @@ static int64_t array_insert(rabbit::VirtualMachine* v)
 	rabbit::Object &o=stack_get(v,1);
 	rabbit::Object &idx=stack_get(v,2);
 	rabbit::Object &val=stack_get(v,3);
-	if(!o.toArray()->insert(tointeger(idx),val))
+	if(!o.toArray()->insert(idx.toIntegerValue(),val))
 		return sq_throwerror(v,"index out of range");
 	sq_pop(v,2);
 	return 1;
@@ -567,8 +567,8 @@ static int64_t array_remove(rabbit::VirtualMachine* v)
 		return sq_throwerror(v, "wrong type");
 	}
 	rabbit::ObjectPtr val;
-	if(o.toArray()->get(tointeger(idx), val)) {
-		o.toArray()->remove(tointeger(idx));
+	if(o.toArray()->get(idx.toIntegerValue(), val)) {
+		o.toArray()->remove(idx.toIntegerValue());
 		v->push(val);
 		return 1;
 	}
@@ -581,7 +581,7 @@ static int64_t array_resize(rabbit::VirtualMachine* v)
 	rabbit::Object &nsize = stack_get(v, 2);
 	rabbit::ObjectPtr fill;
 	if (nsize.isNumeric() == true) {
-		int64_t sz = tointeger(nsize);
+		int64_t sz = nsize.toIntegerValue();
 		if (sz<0)
 		  return sq_throwerror(v, "resizing to negative length");
 

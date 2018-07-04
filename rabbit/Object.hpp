@@ -30,6 +30,24 @@ namespace rabbit {
 			float_t toFloat() const {
 				return _unVal.fFloat;
 			}
+			int64_t toIntegerValue() const {
+				if (isInteger() == true){
+					return _unVal.nInteger;
+				}
+				if (isFloat() == true){
+					return _unVal.fFloat;
+				}
+				return 0;
+			}
+			float_t toFloatValue() const {
+				if (isFloat() == true){
+					return _unVal.fFloat;
+				}
+				if (isInteger() == true){
+					return _unVal.nInteger;
+				}
+				return 0.0f;
+			}
 			rabbit::String*& toString() {
 				return _unVal.pString;
 			}
@@ -218,9 +236,6 @@ namespace rabbit {
 	
 	#define _stringval(obj) (obj)._unVal.pString->_val
 	#define _userdataval(obj) ((rabbit::UserPointer)sq_aligning((obj)._unVal.pUserData + 1))
-	
-	#define tofloat(num) (((num).isInteger()==true)?(float_t)(num).toInteger():(num).toFloat())
-	#define tointeger(num) (((num).isFloat()==true)?(int64_t)(num).toFloat():(num).toInteger())
 	
 	inline void _Swap(rabbit::Object &a,rabbit::Object &b)
 	{

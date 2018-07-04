@@ -217,7 +217,7 @@ const char * rabbit::sq_objtostring(const rabbit::Object *o)
 int64_t rabbit::sq_objtointeger(const rabbit::Object *o)
 {
 	if(o->isNumeric() == true) {
-		return tointeger(*o);
+		return o->toIntegerValue();
 	}
 	return 0;
 }
@@ -225,7 +225,7 @@ int64_t rabbit::sq_objtointeger(const rabbit::Object *o)
 float_t rabbit::sq_objtofloat(const rabbit::Object *o)
 {
 	if(o->isNumeric() == true) {
-		return tofloat(*o);
+		return o->toFloatValue();
 	}
 	return 0;
 }
@@ -684,7 +684,7 @@ rabbit::Result rabbit::sq_getinteger(rabbit::VirtualMachine* v,int64_t idx,int64
 {
 	rabbit::ObjectPtr &o = stack_get(v, idx);
 	if(o.isNumeric() == true) {
-		*i = tointeger(o);
+		*i = o.toIntegerValue();
 		return SQ_OK;
 	}
 	if(o.isBoolean() == true) {
@@ -698,7 +698,7 @@ rabbit::Result rabbit::sq_getfloat(rabbit::VirtualMachine* v,int64_t idx,float_t
 {
 	rabbit::ObjectPtr &o = stack_get(v, idx);
 	if(o.isNumeric() == true) {
-		*f = tofloat(o);
+		*f = o.toFloatValue();
 		return SQ_OK;
 	}
 	return SQ_ERROR;
@@ -1131,7 +1131,7 @@ rabbit::Result rabbit::sq_rawget(rabbit::VirtualMachine* v,int64_t idx) {
 			break;
 		case rabbit::OT_ARRAY:
 			if(obj.isNumeric() == true) {
-				if(self.toArray()->get(tointeger(obj), obj)) {
+				if(self.toArray()->get(obj.toIntegerValue(), obj)) {
 					return SQ_OK;
 				}
 			} else {

@@ -77,7 +77,7 @@ void rabbit::VirtualMachine::release() {
 	switch(tmask) { \
 		case rabbit::OT_INTEGER: trg = o1.toInteger() op o2.toInteger();break; \
 		case (rabbit::OT_FLOAT|OT_INTEGER): \
-		case (rabbit::OT_FLOAT): trg = tofloat(o1) op tofloat(o2); break;\
+		case (rabbit::OT_FLOAT): trg = o1.toFloatValue() op o2.toFloatValue(); break;\
 		default: _GUARD(ARITH_OP((#op)[0],trg,o1,o2)); break;\
 	} \
 }
@@ -88,7 +88,7 @@ void rabbit::VirtualMachine::release() {
 	switch(tmask) { \
 		case rabbit::OT_INTEGER: { int64_t i2 = o2.toInteger(); if(i2 == 0) { raise_error(err); SQ_THROW(); } trg = o1.toInteger() op i2; } break;\
 		case (rabbit::OT_FLOAT|OT_INTEGER): \
-		case (rabbit::OT_FLOAT): trg = tofloat(o1) op tofloat(o2); break;\
+		case (rabbit::OT_FLOAT): trg = o1.toFloatValue() op o2.toFloatValue(); break;\
 		default: _GUARD(ARITH_OP((#op)[0],trg,o1,o2)); break;\
 	} \
 }
@@ -117,14 +117,14 @@ bool rabbit::VirtualMachine::ARITH_OP(uint64_t op,rabbit::ObjectPtr &trg,const r
 			break;
 		case (rabbit::OT_FLOAT|OT_INTEGER):
 		case (rabbit::OT_FLOAT):{
-			float_t res, f1 = tofloat(o1), f2 = tofloat(o2);
+			float_t res, f1 = o1.toFloatValue(), f2 = o2.toFloatValue();
 			switch(op) {
-			case '+': res = f1 + f2; break;
-			case '-': res = f1 - f2; break;
-			case '/': res = f1 / f2; break;
-			case '*': res = f1 * f2; break;
-			case '%': res = float_t(fmod((double)f1,(double)f2)); break;
-			default: res = 0x0f;
+				case '+': res = f1 + f2; break;
+				case '-': res = f1 - f2; break;
+				case '/': res = f1 / f2; break;
+				case '*': res = f1 * f2; break;
+				case '%': res = float_t(fmod((double)f1,(double)f2)); break;
+				default: res = 0x0f;
 			}
 			trg = res; }
 			break;
@@ -692,7 +692,7 @@ bool rabbit::VirtualMachine::isEqual(const rabbit::ObjectPtr &o1,const rabbit::O
 	} else {
 		if(    o1.isNumeric() == true
 		    && o2.isNumeric() == true) {
-			res = (tofloat(o1) == tofloat(o2));
+			res = o1.toFloatValue() == o2.toFloatValue();
 		} else {
 			res = false;
 		}
@@ -1305,7 +1305,7 @@ bool rabbit::VirtualMachine::get(const rabbit::ObjectPtr &self, const rabbit::Ob
 			break;
 		case rabbit::OT_ARRAY:
 			if (key.isNumeric() == true) {
-				if (self.toArray()->get(tointeger(key), dest)) {
+				if (self.toArray()->get(key.toIntegerValue(), dest)) {
 					return true;
 				}
 				if ((getflags & GET_FLAG_DO_NOT_RAISE_ERROR) == 0) {
@@ -1326,7 +1326,7 @@ bool rabbit::VirtualMachine::get(const rabbit::ObjectPtr &self, const rabbit::Ob
 			break;
 		case rabbit::OT_STRING:
 			if(key.isNumeric()){
-				int64_t n = tointeger(key);
+				int64_t n = key.toIntegerValue();
 				int64_t len = self.toString()->_len;
 				if (n < 0) { n += len; }
 				if (n >= 0 && n < len) {
@@ -1437,7 +1437,7 @@ bool rabbit::VirtualMachine::set(const rabbit::ObjectPtr &self,const rabbit::Obj
 		break;
 	case rabbit::OT_ARRAY:
 		if(key.isNumeric() == false) { raise_error("indexing %s with %s",getTypeName(self),getTypeName(key)); return false; }
-		if(!self.toArray()->set(tointeger(key),val)) {
+		if(!self.toArray()->set(key.toIntegerValue(),val)) {
 			raise_Idxerror(key);
 			return false;
 		}
