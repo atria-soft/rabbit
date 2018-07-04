@@ -41,7 +41,7 @@ bool rabbit::Array::get(const int64_t _nidx, rabbit::ObjectPtr& _val) const {
 	if(    _nidx >= 0
 	    && _nidx < (int64_t)m_data.size()){
 		rabbit::ObjectPtr &o = m_data[_nidx];
-		_val = _realval(o);
+		_val = o.getRealObject();
 		return true;
 	}
 	return false;
@@ -61,7 +61,7 @@ int64_t rabbit::Array::next(const rabbit::ObjectPtr& _refpos,
 		//first found
 		_outkey=(int64_t)idx;
 		rabbit::ObjectPtr& o = m_data[idx];
-		_outval = _realval(o);
+		_outval = o.getRealObject();
 		//return idx for the next iteration
 		return ++idx;
 	}

@@ -221,6 +221,7 @@ namespace rabbit {
 			rabbit::ObjectType getTypeRaw() const {
 				return rabbit::ObjectType(_type&_RT_MASK);
 			}
+			rabbit::Object getRealObject() const;
 	};
 	
 	#define ISREFCOUNTED(t) (t&SQOBJECT_REF_COUNTED)
@@ -234,8 +235,6 @@ namespace rabbit {
 		{   \
 			unval.pRefCounted->release();   \
 		}
-	
-	#define _realval(o) ((o).isWeakRef() == false?(rabbit::Object)o:(o).toWeakRef()->_obj)
 	
 	#define _userdataval(obj) ((rabbit::UserPointer)sq_aligning((obj)._unVal.pUserData + 1))
 	

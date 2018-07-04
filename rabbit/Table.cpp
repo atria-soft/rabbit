@@ -131,7 +131,7 @@ bool rabbit::Table::get(const rabbit::ObjectPtr &key,rabbit::ObjectPtr &val) con
 		return false;
 	_HashNode *n = _get(key, HashObj(key) & (_numofnodes - 1));
 	if (n) {
-		val = _realval(n->val);
+		val = n->val.getRealObject();
 		return true;
 	}
 	return false;
@@ -204,7 +204,7 @@ int64_t rabbit::Table::next(bool getweakrefs,const rabbit::ObjectPtr &refpos, ra
 			//first found
 			_HashNode &n = _nodes[idx];
 			outkey = n.key;
-			outval = getweakrefs?(rabbit::Object)n.val:_realval(n.val);
+			outval = getweakrefs?(rabbit::Object)n.val:n.val.getRealObject();
 			//return idx for the next iteration
 			return ++idx;
 		}
@@ -282,7 +282,7 @@ bool rabbit::Table::getStr(const char* key,int64_t keylen,rabbit::ObjectPtr &val
 		}
 	} while((n = n->next));
 	if (res) {
-		val = _realval(res->val);
+		val = res->val.getRealObject();
 		return true;
 	}
 	return false;

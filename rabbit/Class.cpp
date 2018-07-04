@@ -59,7 +59,7 @@ bool rabbit::Class::get(const rabbit::ObjectPtr &key,rabbit::ObjectPtr &val) {
 	if(_members->get(key,val)) {
 		if(_isfield(val)) {
 			rabbit::ObjectPtr &o = _defaultvalues[_member_idx(val)].val;
-			val = _realval(o);
+			val = o.getRealObject();
 		} else {
 			val = _methods[_member_idx(val)].val;
 		}
@@ -155,7 +155,7 @@ int64_t rabbit::Class::next(const rabbit::ObjectPtr &refpos, rabbit::ObjectPtr &
 			outval = _methods[_member_idx(oval)].val;
 		} else {
 			rabbit::ObjectPtr &o = _defaultvalues[_member_idx(oval)].val;
-			outval = _realval(o);
+			outval = o.getRealObject();
 		}
 	}
 	return idx;

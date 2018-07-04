@@ -1559,7 +1559,7 @@ rabbit::Result rabbit::sq_getbyhandle(rabbit::VirtualMachine* v,int64_t idx,cons
 	if(SQ_FAILED(_getmemberbyhandle(v,self,handle,val))) {
 		return SQ_ERROR;
 	}
-	v->push(_realval(*val));
+	v->push(val->getRealObject());
 	return SQ_OK;
 }
 

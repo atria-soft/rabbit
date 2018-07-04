@@ -8,6 +8,7 @@
 
 #include <rabbit/Object.hpp>
 #include <rabbit/String.hpp>
+#include <rabbit/WeakRef.hpp>
 
 const char* rabbit::Object::getStringValue() const {
 	return (const char*)&_unVal.pString->_val[0];
@@ -15,4 +16,12 @@ const char* rabbit::Object::getStringValue() const {
 
 char* rabbit::Object::getStringValue() {
 	return (char*)&_unVal.pString->_val[0];
+}
+
+
+rabbit::Object rabbit::Object::getRealObject() const {
+	if (isWeakRef() == false) {
+		return *this;
+	}
+	return toWeakRef()->_obj;
 }

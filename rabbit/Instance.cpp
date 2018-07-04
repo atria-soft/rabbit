@@ -102,7 +102,7 @@ bool rabbit::Instance::get(const rabbit::ObjectPtr &key,rabbit::ObjectPtr &val) 
 	if(_class->_members->get(key,val)) {
 		if(_isfield(val)) {
 			rabbit::ObjectPtr &o = _values[_member_idx(val)];
-			val = _realval(o);
+			val = o.getRealObject();
 		} else {
 			val = _class->_methods[_member_idx(val)].val;
 		}
