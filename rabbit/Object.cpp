@@ -9,6 +9,8 @@
 #include <rabbit/Object.hpp>
 #include <rabbit/String.hpp>
 #include <rabbit/WeakRef.hpp>
+#include <rabbit/squtils.hpp>
+#include <rabbit/UserData.hpp>
 
 const char* rabbit::Object::getStringValue() const {
 	return (const char*)&_unVal.pString->_val[0];
@@ -24,4 +26,8 @@ rabbit::Object rabbit::Object::getRealObject() const {
 		return *this;
 	}
 	return toWeakRef()->_obj;
+}
+
+rabbit::UserPointer rabbit::Object::getUserDataValue() const {
+	return (rabbit::UserPointer)sq_aligning(_unVal.pUserData + 1);
 }

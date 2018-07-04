@@ -776,7 +776,7 @@ rabbit::Result rabbit::sq_getuserdata(rabbit::VirtualMachine* v,int64_t idx,rabb
 {
 	rabbit::ObjectPtr *o = NULL;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_USERDATA,o);
-	(*p) = _userdataval(*o);
+	(*p) = o->getUserDataValue();
 	if(typetag) {
 		*typetag = o->toUserData()->getTypeTag();
 	}

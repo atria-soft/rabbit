@@ -1855,7 +1855,7 @@ void rabbit::VirtualMachine::dumpstack(int64_t stackbase,bool dumpall)
 		case rabbit::OT_ARRAY:		  printf("ARRAY %p",obj.toArray());break;
 		case rabbit::OT_CLOSURE:		printf("CLOSURE [%p]",obj.toClosure());break;
 		case rabbit::OT_NATIVECLOSURE:  printf("NATIVECLOSURE");break;
-		case rabbit::OT_USERDATA:	   printf("USERDATA %p[%p]",_userdataval(obj),obj.toUserData()->_delegate);break;
+		case rabbit::OT_USERDATA:	   printf("USERDATA %p[%p]", obj.getUserDataValue(), obj.toUserData()->_delegate);break;
 		case rabbit::OT_GENERATOR:	  printf("GENERATOR %p",obj.toGenerator());break;
 		case rabbit::OT_THREAD:		 printf("THREAD [%p]",obj.toVirtualMachine());break;
 		case rabbit::OT_USERPOINTER:	printf("USERPOINTER %p",obj.toUserPointer());break;

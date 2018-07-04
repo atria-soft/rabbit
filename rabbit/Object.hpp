@@ -222,6 +222,7 @@ namespace rabbit {
 				return rabbit::ObjectType(_type&_RT_MASK);
 			}
 			rabbit::Object getRealObject() const;
+			rabbit::UserPointer getUserDataValue() const;
 	};
 	
 	#define ISREFCOUNTED(t) (t&SQOBJECT_REF_COUNTED)
@@ -235,8 +236,6 @@ namespace rabbit {
 		{   \
 			unval.pRefCounted->release();   \
 		}
-	
-	#define _userdataval(obj) ((rabbit::UserPointer)sq_aligning((obj)._unVal.pUserData + 1))
 	
 	inline void _Swap(rabbit::Object &a,rabbit::Object &b)
 	{
