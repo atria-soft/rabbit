@@ -35,7 +35,7 @@ static bool sq_aux_gettypedarg(rabbit::VirtualMachine* v,int64_t idx,rabbit::Obj
 	*o = &stack_get(v,idx);
 	if((*o)->getType() != type){
 		rabbit::ObjectPtr oval = v->printObjVal(**o);
-		v->raise_error("wrong argument type, expected '%s' got '%.50s'",IdType2Name(type),_stringval(oval));
+		v->raise_error("wrong argument type, expected '%s' got '%.50s'",IdType2Name(type),oval.getStringValue());
 		return false;
 	}
 	return true;
@@ -209,7 +209,7 @@ uint64_t rabbit::sq_getvmrefcount(rabbit::VirtualMachine* SQ_UNUSED_ARG(v), cons
 const char * rabbit::sq_objtostring(const rabbit::Object *o)
 {
 	if(o->isString() == true) {
-		return _stringval(*o);
+		return o->getStringValue();
 	}
 	return NULL;
 }
@@ -718,7 +718,7 @@ rabbit::Result rabbit::sq_getstringandsize(rabbit::VirtualMachine* v,int64_t idx
 {
 	rabbit::ObjectPtr *o = NULL;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_STRING,o);
-	*c = _stringval(*o);
+	*c = o->getStringValue();
 	*size = o->toString()->_len;
 	return SQ_OK;
 }
@@ -727,7 +727,7 @@ rabbit::Result rabbit::sq_getstring(rabbit::VirtualMachine* v,int64_t idx,const 
 {
 	rabbit::ObjectPtr *o = NULL;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_STRING,o);
-	*c = _stringval(*o);
+	*c = o->getStringValue();
 	return SQ_OK;
 }
 
@@ -1171,7 +1171,7 @@ const char * rabbit::sq_getlocal(rabbit::VirtualMachine* v,uint64_t level,uint64
 		rabbit::FunctionProto *func=c->_function;
 		if(func->_noutervalues > (int64_t)idx) {
 			v->push(*c->_outervalues[idx].toOuter()->_valptr);
-			return _stringval(func->_outervalues[idx]._name);
+			return func->_outervalues[idx]._name.getStringValue();
 		}
 		idx -= func->_noutervalues;
 		return func->getLocal(v,stackbase,idx,(int64_t)(ci._ip-func->_instructions)-1);
@@ -1417,7 +1417,7 @@ const char * rabbit::sq_getfreevariable(rabbit::VirtualMachine* v,int64_t idx,ui
 				if(((uint64_t)fp->_noutervalues) > nval) {
 					v->push(*(clo->_outervalues[nval].toOuter()->_valptr));
 					rabbit::OuterVar &ov = fp->_outervalues[nval];
-					name = _stringval(ov._name);
+					name = ov._name.getStringValue();
 				}
 			}
 			break;

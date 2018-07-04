@@ -347,7 +347,7 @@ static int64_t default_delegate_tofloat(rabbit::VirtualMachine* v)
 	switch(o.getType()){
 	case rabbit::OT_STRING:{
 		rabbit::ObjectPtr res;
-		if(str2num(_stringval(o),res,10)){
+		if(str2num(o.getStringValue(),res,10)){
 			v->push(rabbit::ObjectPtr(res.toFloatValue()));
 			break;
 		}}
@@ -377,7 +377,7 @@ static int64_t default_delegate_tointeger(rabbit::VirtualMachine* v)
 	switch(o.getType()){
 	case rabbit::OT_STRING:{
 		rabbit::ObjectPtr res;
-		if(str2num(_stringval(o),res,base)){
+		if(str2num(o.getStringValue(),res,base)){
 			v->push(rabbit::ObjectPtr(res.toIntegerValue()));
 			break;
 		}}
@@ -856,7 +856,7 @@ static int64_t string_slice(rabbit::VirtualMachine* v)
 	if(eidx < 0)eidx = slen + eidx;
 	if(eidx < sidx) return sq_throwerror(v,"wrong indexes");
 	if(eidx > slen || sidx < 0) return sq_throwerror(v, "slice out of range");
-	v->push(rabbit::String::create(_get_shared_state(v),&_stringval(o)[sidx],eidx-sidx));
+	v->push(rabbit::String::create(_get_shared_state(v),&o.getStringValue()[sidx],eidx-sidx));
 	return 1;
 }
 
@@ -889,7 +889,7 @@ static int64_t string_find(rabbit::VirtualMachine* v)
 	if(eidx < sidx) return sq_throwerror(v,"wrong indexes"); \
 	if(eidx > slen || sidx < 0) return sq_throwerror(v,"slice out of range"); \
 	int64_t len=str.toString()->_len; \
-	const char *sthis=_stringval(str); \
+	const char *sthis=str.getStringValue(); \
 	char *snew=(_get_shared_state(v)->getScratchPad(sq_rsl(len))); \
 	memcpy(snew,sthis,sq_rsl(len));\
 	for(int64_t i=sidx;i<eidx;i++) snew[i] = func(sthis[i]); \
@@ -1187,7 +1187,7 @@ static int64_t thread_getstackinfos(rabbit::VirtualMachine* v)
 		{
 			sq_settop(thread,threadtop);
 			if(thread->_lasterror.isString() == true) {
-				sq_throwerror(v,_stringval(thread->_lasterror));
+				sq_throwerror(v,thread->_lasterror.getStringValue());
 			}
 			else {
 				sq_throwerror(v,"unknown error");

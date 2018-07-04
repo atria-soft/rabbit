@@ -155,7 +155,7 @@ uint64_t rabbit::translateIndex(const rabbit::ObjectPtr &idx) {
 
 const char* rabbit::IdType2Name(rabbit::ObjectType type)
 {
-	switch(_RAW_TYPE(type)) {
+	switch (type&_RT_MASK) {
 		case _RT_NULL:
 			return "null";
 		case _RT_INTEGER:

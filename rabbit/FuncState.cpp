@@ -101,7 +101,7 @@ void rabbit::FuncState::addInstruction(SQOpcode _op,int64_t arg0,int64_t arg1,in
 static void dumpLiteral(rabbit::ObjectPtr &o) {
 	switch(o.getType()){
 		case rabbit::OT_STRING:
-			printf("\"%s\"",_stringval(o));
+			printf("\"%s\"",o.getStringValue());
 			break;
 		case rabbit::OT_FLOAT:
 			printf("{%f}",o.toFloat());
@@ -152,7 +152,7 @@ void rabbit::FuncState::dump(rabbit::FunctionProto *func)
 	printf("rabbit::Instruction sizeof %d\n",(int32_t)sizeof(rabbit::Instruction));
 	printf("rabbit::Object sizeof %d\n", (int32_t)sizeof(rabbit::Object));
 	printf("--------------------------------------------------------------------\n");
-	printf("*****FUNCTION [%s]\n",func->_name.isString() == true?_stringval(func->_name):"unknown");
+	printf("*****FUNCTION [%s]\n",func->_name.isString() == true?func->_name.getStringValue():"unknown");
 	printf("-----LITERALS\n");
 	rabbit::ObjectPtr refidx,key,val;
 	int64_t idx;
@@ -181,7 +181,7 @@ void rabbit::FuncState::dump(rabbit::FunctionProto *func)
 	printf("-----LOCALS\n");
 	for(si=0;si<func->_nlocalvarinfos;si++){
 		rabbit::LocalVarInfo lvi=func->_localvarinfos[si];
-		printf("[%d] %s \t%d %d\n", (int32_t)lvi._pos,_stringval(lvi._name), (int32_t)lvi._start_op, (int32_t)lvi._end_op);
+		printf("[%d] %s \t%d %d\n", (int32_t)lvi._pos,lvi._name.getStringValue(), (int32_t)lvi._start_op, (int32_t)lvi._end_op);
 		n++;
 	}
 	printf("-----LINE INFO\n");

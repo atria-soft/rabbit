@@ -17,7 +17,6 @@
 #define SQ_MATCHTYPEMASKSTRING (-99999)
 
 #define _RT_MASK 0x00FFFFFF
-#define _RAW_TYPE(type) (type&_RT_MASK)
 
 #define _RT_NULL            0x00000001
 #define _RT_INTEGER         0x00000002

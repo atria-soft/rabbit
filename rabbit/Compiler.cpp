@@ -210,7 +210,7 @@ public:
 		}
 		else {
 			if(_raiseerror && _get_shared_state(_vm)->_compilererrorhandler) {
-				_get_shared_state(_vm)->_compilererrorhandler(_vm, _compilererror, _sourcename.isString() == true?_stringval(_sourcename):"unknown",
+				_get_shared_state(_vm)->_compilererrorhandler(_vm, _compilererror, _sourcename.isString() == true?_sourcename.getStringValue():"unknown",
 					_lex._currentline, _lex._currentcolumn);
 			}
 			_vm->_lasterror = rabbit::String::create(_get_shared_state(_vm), _compilererror, -1);
@@ -789,7 +789,7 @@ public:
 						constid = Expect(TK_IDENTIFIER);
 						if(!constant.toTable()->get(constid, constval)) {
 							constval.Null();
-							error("invalid constant [%s.%s]", _stringval(id), _stringval(constid));
+							error("invalid constant [%s.%s]", id.getStringValue(), constid.getStringValue());
 						}
 					}
 					else {

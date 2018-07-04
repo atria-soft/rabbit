@@ -54,6 +54,8 @@ namespace rabbit {
 			const rabbit::String* toString() const {
 				return _unVal.pString;
 			}
+			const char* getStringValue() const;
+			char* getStringValue();
 			rabbit::Table*& toTable() {
 				return _unVal.pTable;
 			}
@@ -216,6 +218,9 @@ namespace rabbit {
 			rabbit::ObjectType getType() const {
 				return _type;
 			}
+			rabbit::ObjectType getTypeRaw() const {
+				return rabbit::ObjectType(_type&_RT_MASK);
+			}
 	};
 	
 	#define ISREFCOUNTED(t) (t&SQOBJECT_REF_COUNTED)
@@ -232,9 +237,6 @@ namespace rabbit {
 	
 	#define _realval(o) ((o).isWeakRef() == false?(rabbit::Object)o:(o).toWeakRef()->_obj)
 	
-	#define raw_type(obj) _RAW_TYPE((obj)._type)
-	
-	#define _stringval(obj) (obj)._unVal.pString->_val
 	#define _userdataval(obj) ((rabbit::UserPointer)sq_aligning((obj)._unVal.pUserData + 1))
 	
 	inline void _Swap(rabbit::Object &a,rabbit::Object &b)

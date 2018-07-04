@@ -246,7 +246,7 @@ bool rabbit::VirtualMachine::objCmp(const rabbit::ObjectPtr &o1,const rabbit::Ob
 		rabbit::ObjectPtr res;
 		switch(t1){
 		case rabbit::OT_STRING:
-			_RET_SUCCEED(strcmp(_stringval(o1),_stringval(o2)));
+			_RET_SUCCEED(strcmp(o1.getStringValue(),o2.getStringValue()));
 		case rabbit::OT_INTEGER:
 			_RET_SUCCEED((o1.toInteger()<o2.toInteger())?-1:1);
 		case rabbit::OT_FLOAT:
@@ -362,8 +362,8 @@ bool rabbit::VirtualMachine::stringCat(const rabbit::ObjectPtr &str,const rabbit
 	if(!toString(obj, b)) return false;
 	int64_t l = a.toString()->_len , ol = b.toString()->_len;
 	char *s = _sp(sq_rsl(l + ol + 1));
-	memcpy(s, _stringval(a), sq_rsl(l));
-	memcpy(s + l, _stringval(b), sq_rsl(ol));
+	memcpy(s, a.getStringValue(), sq_rsl(l));
+	memcpy(s + l, b.getStringValue(), sq_rsl(ol));
 	dest = rabbit::String::create(_get_shared_state(this), _spval, l + ol);
 	return true;
 }
@@ -1183,11 +1183,11 @@ void rabbit::VirtualMachine::callDebugHook(int64_t type,int64_t forcedline)
 	if(_debughook_native) {
 		const char* src = nullptr;
 		if (func->_sourcename.isString() == true) {
-			src = _stringval(func->_sourcename);
+			src = func->_sourcename.getStringValue();
 		}
 		const char* fname = nullptr;
 		if (func->_name.isString() == true) {
-			fname = _stringval(func->_name);
+			fname = func->_name.getStringValue();
 		}
 		int64_t line = forcedline?forcedline:func->getLine(ci->_ip);
 		_debughook_native(this,type,src,line,fname);
@@ -1330,7 +1330,7 @@ bool rabbit::VirtualMachine::get(const rabbit::ObjectPtr &self, const rabbit::Ob
 				int64_t len = self.toString()->_len;
 				if (n < 0) { n += len; }
 				if (n >= 0 && n < len) {
-					dest = int64_t(_stringval(self)[n]);
+					dest = int64_t(self.getStringValue()[n]);
 					return true;
 				}
 				if ((getflags & GET_FLAG_DO_NOT_RAISE_ERROR) == 0) raise_Idxerror(key);
@@ -1605,7 +1605,7 @@ bool rabbit::VirtualMachine::newSlot(const rabbit::ObjectPtr &self,const rabbit:
 			}
 			else {
 				rabbit::ObjectPtr oval = printObjVal(key);
-				raise_error("the property '%s' already exists",_stringval(oval));
+				raise_error("the property '%s' already exists",oval.getStringValue());
 				return false;
 			}
 		}
@@ -1849,7 +1849,7 @@ void rabbit::VirtualMachine::dumpstack(int64_t stackbase,bool dumpall)
 		case rabbit::OT_FLOAT:		  printf("FLOAT %.3f",obj.toFloat());break;
 		case rabbit::OT_INTEGER:		printf("INTEGER " _PRINT_INT_FMT,obj.toInteger());break;
 		case rabbit::OT_BOOL:		   printf("BOOL %s",obj.toInteger()?"true":"false");break;
-		case rabbit::OT_STRING:		 printf("STRING %s",_stringval(obj));break;
+		case rabbit::OT_STRING:		 printf("STRING %s",obj.getStringValue());break;
 		case rabbit::OT_NULL:		   printf("NULL");  break;
 		case rabbit::OT_TABLE:		  printf("TABLE %p[%p]",obj.toTable(),obj.toTable()->_delegate);break;
 		case rabbit::OT_ARRAY:		  printf("ARRAY %p",obj.toArray());break;

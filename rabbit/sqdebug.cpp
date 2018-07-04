@@ -32,12 +32,12 @@ rabbit::Result rabbit::sq_getfunctioninfo(rabbit::VirtualMachine* v,int64_t leve
 			rabbit::FunctionProto *proto = c->_function;
 			fi->funcid = proto;
 			if (proto->_name.isString() == true) {
-				fi->name = _stringval(proto->_name);
+				fi->name = proto->_name.getStringValue();
 			} else {
 				fi->name = "unknown";
 			}
 			if (proto->_sourcename.isString() == true) {
-				fi->source = _stringval(proto->_sourcename);
+				fi->source = proto->_sourcename.getStringValue();
 			} else {
 				fi->source = "unknown";
 			}
@@ -59,10 +59,10 @@ rabbit::Result rabbit::sq_stackinfos(rabbit::VirtualMachine* v, int64_t level, r
 				{
 					rabbit::FunctionProto *func = ci._closure.toClosure()->_function;
 					if (func->_name.isString() == true) {
-						si->funcname = _stringval(func->_name);
+						si->funcname = func->_name.getStringValue();
 					}
 					if (func->_sourcename.isString() == true) {
-						si->source = _stringval(func->_sourcename);
+						si->source = func->_sourcename.getStringValue();
 					}
 					si->line = func->getLine(ci._ip);
 				}
@@ -71,7 +71,7 @@ rabbit::Result rabbit::sq_stackinfos(rabbit::VirtualMachine* v, int64_t level, r
 				si->source = "NATIVE";
 				si->funcname = "unknown";
 				if(ci._closure.toNativeClosure()->_name.isString() == true) {
-					si->funcname = _stringval(ci._closure.toNativeClosure()->_name);
+					si->funcname = ci._closure.toNativeClosure()->_name.getStringValue();
 				}
 				si->line = -1;
 				break;
@@ -119,13 +119,13 @@ rabbit::String *rabbit::VirtualMachine::printObjVal(const rabbit::ObjectPtr &o)
 void rabbit::VirtualMachine::raise_Idxerror(const rabbit::ObjectPtr &o)
 {
 	rabbit::ObjectPtr oval = printObjVal(o);
-	raise_error("the index '%.50s' does not exist", _stringval(oval));
+	raise_error("the index '%.50s' does not exist", oval.getStringValue());
 }
 
 void rabbit::VirtualMachine::raise_Compareerror(const rabbit::Object &o1, const rabbit::Object &o2)
 {
 	rabbit::ObjectPtr oval1 = printObjVal(o1), oval2 = printObjVal(o2);
-	raise_error("comparison between '%.50s' and '%.50s'", _stringval(oval1), _stringval(oval2));
+	raise_error("comparison between '%.50s' and '%.50s'", oval1.getStringValue(), oval2.getStringValue());
 }
 
 
@@ -142,5 +142,5 @@ void rabbit::VirtualMachine::raise_ParamTypeerror(int64_t nparam,int64_t typemas
 			stringCat(exptypes,rabbit::String::create(_get_shared_state(this), IdType2Name((rabbit::ObjectType)mask), -1), exptypes);
 		}
 	}
-	raise_error("parameter %d has an invalid type '%s' ; expected: '%s'", nparam, IdType2Name((rabbit::ObjectType)type), _stringval(exptypes));
+	raise_error("parameter %d has an invalid type '%s' ; expected: '%s'", nparam, IdType2Name((rabbit::ObjectType)type), exptypes.getStringValue());
 }

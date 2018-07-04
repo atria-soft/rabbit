@@ -276,7 +276,7 @@ bool rabbit::Table::getStr(const char* key,int64_t keylen,rabbit::ObjectPtr &val
 	_HashNode *res = NULL;
 	do {
 		if (    n->key.isString() == true
-		     && strcmp(_stringval(n->key), key) == 0) {
+		     && strcmp(n->key.getStringValue(), key) == 0) {
 			res = n;
 			break;
 		}

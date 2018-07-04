@@ -75,7 +75,7 @@ const char* rabbit::FunctionProto::getLocal(rabbit::VirtualMachine *vm,uint64_t 
 			{
 				if(nseq==0){
 					vm->push(vm->_stack[stackbase+_localvarinfos[i]._pos]);
-					res=_stringval(_localvarinfos[i]._name);
+					res=_localvarinfos[i]._name.getStringValue();
 					break;
 				}
 				nseq--;

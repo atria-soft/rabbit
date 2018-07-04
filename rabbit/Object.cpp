@@ -7,3 +7,12 @@
  */
 
 #include <rabbit/Object.hpp>
+#include <rabbit/String.hpp>
+
+const char* rabbit::Object::getStringValue() const {
+	return (const char*)&_unVal.pString->_val[0];
+}
+
+char* rabbit::Object::getStringValue() {
+	return (char*)&_unVal.pString->_val[0];
+}

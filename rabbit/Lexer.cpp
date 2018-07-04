@@ -105,7 +105,7 @@ const char *rabbit::Lexer::tok2Str(int64_t tok)
 	while((nitr = _keywords->next(false,itr, key, val)) != -1) {
 		itr = (int64_t)nitr;
 		if(((int64_t)val.toInteger()) == tok)
-			return _stringval(key);
+			return key.getStringValue();
 	}
 	return NULL;
 }
