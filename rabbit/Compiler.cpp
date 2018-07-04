@@ -210,7 +210,7 @@ public:
 		}
 		else {
 			if(_raiseerror && _get_shared_state(_vm)->_compilererrorhandler) {
-				_get_shared_state(_vm)->_compilererrorhandler(_vm, _compilererror, sq_type(_sourcename) == rabbit::OT_STRING?_stringval(_sourcename):"unknown",
+				_get_shared_state(_vm)->_compilererrorhandler(_vm, _compilererror, _sourcename.isString() == true?_stringval(_sourcename):"unknown",
 					_lex._currentline, _lex._currentcolumn);
 			}
 			_vm->_lasterror = rabbit::String::create(_get_shared_state(_vm), _compilererror, -1);
@@ -784,7 +784,7 @@ public:
 					/* Handle named constant */
 					rabbit::ObjectPtr constval;
 					rabbit::Object	constid;
-					if(sq_type(constant) == rabbit::OT_TABLE) {
+					if(constant.isTable() == true) {
 						Expect('.');
 						constid = Expect(TK_IDENTIFIER);
 						if(!constant.toTable()->get(constid, constval)) {
@@ -798,12 +798,19 @@ public:
 					_es.epos = _fs->pushTarget();
 
 					/* generate direct or literal function depending on size */
-					rabbit::ObjectType ctype = sq_type(constval);
-					switch(ctype) {
-						case rabbit::OT_INTEGER: EmitloadConstInt(constval.toInteger(),_es.epos); break;
-						case rabbit::OT_FLOAT: EmitloadConstFloat(constval.toFloat(),_es.epos); break;
-						case rabbit::OT_BOOL: _fs->addInstruction(_OP_LOADBOOL, _es.epos, constval.toInteger()); break;
-						default: _fs->addInstruction(_OP_LOAD,_es.epos,_fs->getConstant(constval)); break;
+					switch(constval.getType()) {
+						case rabbit::OT_INTEGER:
+							EmitloadConstInt(constval.toInteger(),_es.epos);
+							break;
+						case rabbit::OT_FLOAT:
+							EmitloadConstFloat(constval.toFloat(),_es.epos);
+							break;
+						case rabbit::OT_BOOL:
+							_fs->addInstruction(_OP_LOADBOOL, _es.epos, constval.toInteger());
+							break;
+						default:
+							_fs->addInstruction(_OP_LOAD,_es.epos,_fs->getConstant(constval));
+							break;
 					}
 					_es.etype = EXPR;
 				}

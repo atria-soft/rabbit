@@ -12,7 +12,7 @@
 #include <rabbit/squtils.hpp>
 
 void rabbit::WeakRef::release() {
-	if(ISREFCOUNTED(_obj._type)) {
+	if(_obj.isRefCounted() == true) {
 		_obj._unVal.pRefCounted->_weakref = null;
 	}
 	sq_delete(this, WeakRef);

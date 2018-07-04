@@ -16,13 +16,23 @@
 
 bool rabbit::Generator::yield(rabbit::VirtualMachine *v,int64_t target)
 {
-	if(_state==eSuspended) { v->raise_error("internal vm error, yielding dead generator");  return false;}
-	if(_state==eDead) { v->raise_error("internal vm error, yielding a dead generator"); return false; }
+	if (_state==eSuspended) {
+		v->raise_error("internal vm error, yielding dead generator");
+		return false;
+	}
+	if (_state==eDead) {
+		v->raise_error("internal vm error, yielding a dead generator");
+		return false;
+	}
 	int64_t size = v->_top-v->_stackbase;
 
 	_stack.resize(size);
 	rabbit::Object _this = v->_stack[v->_stackbase];
-	_stack[0] = ISREFCOUNTED(sq_type(_this)) ? rabbit::ObjectPtr(_this.toRefCounted()->getWeakRef(sq_type(_this))) : _this;
+	if (_this.isRefCounted() == true) {
+		_stack[0] = rabbit::ObjectPtr(_this.toRefCounted()->getWeakRef(_this.getType()));
+	} else {
+		_stack[0] = _this;
+	}
 	for(int64_t n =1; n<target; n++) {
 		_stack[n] = v->_stack[v->_stackbase+n];
 	}
@@ -74,17 +84,19 @@ bool rabbit::Generator::resume(rabbit::VirtualMachine *v,rabbit::ObjectPtr &dest
 		et._stacksize += newbase;
 	}
 	rabbit::Object _this = _stack[0];
-	v->_stack[v->_stackbase] = sq_type(_this) == rabbit::OT_WEAKREF ? _this.toWeakRef()->_obj : _this;
-
+	if (_this.isWeakRef() == true) {
+		v->_stack[v->_stackbase] = _this.toWeakRef()->_obj;
+	} else {
+		v->_stack[v->_stackbase] = _this;
+	}
 	for(int64_t n = 1; n<size; n++) {
 		v->_stack[v->_stackbase+n] = _stack[n];
 		_stack[n].Null();
 	}
-
 	_state=eRunning;
-	if (v->_debughook)
+	if (v->_debughook) {
 		v->callDebugHook('c');
-
+	}
 	return true;
 }
 

@@ -33,7 +33,7 @@
 static bool sq_aux_gettypedarg(rabbit::VirtualMachine* v,int64_t idx,rabbit::ObjectType type,rabbit::ObjectPtr **o)
 {
 	*o = &stack_get(v,idx);
-	if(sq_type(**o) != type){
+	if((*o)->getType() != type){
 		rabbit::ObjectPtr oval = v->printObjVal(**o);
 		v->raise_error("wrong argument type, expected '%s' got '%.50s'",IdType2Name(type),_stringval(oval));
 		return false;
@@ -174,19 +174,25 @@ void rabbit::sq_notifyallexceptions(rabbit::VirtualMachine* v, rabbit::Bool enab
 
 void rabbit::sq_addref(rabbit::VirtualMachine* v,rabbit::Object *po)
 {
-	if(!ISREFCOUNTED(sq_type(*po))) return;
+	if(po->isRefCounted() == false) {
+		return;
+	}
 	__addRef(po->_type,po->_unVal);
 }
 
 uint64_t rabbit::sq_getrefcount(rabbit::VirtualMachine* v,rabbit::Object *po)
 {
-	if(!ISREFCOUNTED(sq_type(*po))) return 0;
-   return po->_unVal.pRefCounted->refCountget();
+	if(po->isRefCounted() == false) {
+		return 0;
+	}
+	return po->_unVal.pRefCounted->refCountget();
 }
 
 rabbit::Bool rabbit::sq_release(rabbit::VirtualMachine* v,rabbit::Object *po)
 {
-	if(!ISREFCOUNTED(sq_type(*po))) return SQTrue;
+	if(po->isRefCounted() == false) {
+		return SQTrue;
+	}
 	bool ret = (po->_unVal.pRefCounted->refCountget() <= 1) ? SQTrue : SQFalse;
 	__release(po->_type,po->_unVal);
 	return ret; //the ret val doesn't work(and cannot be fixed)
@@ -194,13 +200,15 @@ rabbit::Bool rabbit::sq_release(rabbit::VirtualMachine* v,rabbit::Object *po)
 
 uint64_t rabbit::sq_getvmrefcount(rabbit::VirtualMachine* SQ_UNUSED_ARG(v), const rabbit::Object *po)
 {
-	if (!ISREFCOUNTED(sq_type(*po))) return 0;
+	if(po->isRefCounted() == false) {
+		return 0;
+	}
 	return po->_unVal.pRefCounted->refCountget();
 }
 
 const char * rabbit::sq_objtostring(const rabbit::Object *o)
 {
-	if(sq_type(*o) == rabbit::OT_STRING) {
+	if(o->isString() == true) {
 		return _stringval(*o);
 	}
 	return NULL;
@@ -302,8 +310,9 @@ rabbit::Result rabbit::sq_newclass(rabbit::VirtualMachine* v,rabbit::Bool hasbas
 	rabbit::Class *baseclass = NULL;
 	if(hasbase) {
 		rabbit::ObjectPtr &base = stack_get(v,-1);
-		if(sq_type(base) != rabbit::OT_CLASS)
+		if(base.isClass() == false) {
 			return sq_throwerror(v,"invalid base type");
+		}
 		baseclass = base.toClass();
 	}
 	rabbit::Class *newclass = rabbit::Class::create(_get_shared_state(v), baseclass);
@@ -316,8 +325,8 @@ rabbit::Bool rabbit::sq_instanceof(rabbit::VirtualMachine* v)
 {
 	rabbit::ObjectPtr &inst = stack_get(v,-1);
 	rabbit::ObjectPtr &cl = stack_get(v,-2);
-	if(    sq_type(inst) != rabbit::OT_INSTANCE
-	    || sq_type(cl) != rabbit::OT_CLASS)
+	if(    inst.isInstance() == false
+	    || cl.isClass() == false)
 		return sq_throwerror(v,"invalid param type");
 	return inst.toInstance()->instanceOf(cl.toClass())?SQTrue:SQFalse;
 }
@@ -413,15 +422,13 @@ void rabbit::sq_newclosure(rabbit::VirtualMachine* v,SQFUNCTION func,uint64_t nf
 rabbit::Result rabbit::sq_getclosureinfo(rabbit::VirtualMachine* v,int64_t idx,uint64_t *nparams,uint64_t *nfreevars)
 {
 	rabbit::Object o = stack_get(v, idx);
-	if(sq_type(o) == rabbit::OT_CLOSURE) {
+	if(o.isClosure() == true) {
 		rabbit::Closure *c = o.toClosure();
 		rabbit::FunctionProto *proto = c->_function;
 		*nparams = (uint64_t)proto->_nparameters;
 		*nfreevars = (uint64_t)proto->_noutervalues;
 		return SQ_OK;
-	}
-	else if(sq_type(o) == rabbit::OT_NATIVECLOSURE)
-	{
+	} else if(o.isNativeClosure() == true) {
 		rabbit::NativeClosure *c = o.toNativeClosure();
 		*nparams = (uint64_t)c->_nparamscheck;
 		*nfreevars = c->_noutervalues;
@@ -477,7 +484,7 @@ rabbit::Result rabbit::sq_bindenv(rabbit::VirtualMachine* v,int64_t idx)
 	     && env.isInstance() == false) {
 		return sq_throwerror(v,"invalid environment");
 	}
-	rabbit::WeakRef *w = env.toRefCounted()->getWeakRef(sq_type(env));
+	rabbit::WeakRef *w = env.toRefCounted()->getWeakRef(env.getType());
 	rabbit::ObjectPtr ret;
 	if(o.isClosure() == true) {
 		rabbit::Closure *c = o.toClosure()->clone();
@@ -546,7 +553,7 @@ rabbit::Result rabbit::sq_getclosureroot(rabbit::VirtualMachine* v,int64_t idx)
 rabbit::Result rabbit::sq_clear(rabbit::VirtualMachine* v,int64_t idx)
 {
 	rabbit::Object &o=stack_get(v,idx);
-	switch(sq_type(o)) {
+	switch(o.getType()) {
 		case rabbit::OT_TABLE: o.toTable()->clear();  break;
 		case rabbit::OT_ARRAY: o.toArray()->resize(0); break;
 		default:
@@ -642,7 +649,7 @@ void rabbit::sq_push(rabbit::VirtualMachine* v,int64_t idx)
 
 rabbit::ObjectType rabbit::sq_gettype(rabbit::VirtualMachine* v,int64_t idx)
 {
-	return sq_type(stack_get(v, idx));
+	return stack_get(v, idx).getType();
 }
 
 rabbit::Result rabbit::sq_typeof(rabbit::VirtualMachine* v,int64_t idx)
@@ -746,7 +753,7 @@ rabbit::Result rabbit::sq_clone(rabbit::VirtualMachine* v,int64_t idx)
 int64_t rabbit::sq_getsize(rabbit::VirtualMachine* v, int64_t idx)
 {
 	rabbit::ObjectPtr &o = stack_get(v, idx);
-	rabbit::ObjectType type = sq_type(o);
+	rabbit::ObjectType type = o.getType();
 	switch(type) {
 	case rabbit::OT_STRING:	 return o.toString()->_len;
 	case rabbit::OT_TABLE:	  return o.toTable()->countUsed();
@@ -779,7 +786,7 @@ rabbit::Result rabbit::sq_getuserdata(rabbit::VirtualMachine* v,int64_t idx,rabb
 rabbit::Result rabbit::sq_settypetag(rabbit::VirtualMachine* v,int64_t idx,rabbit::UserPointer typetag)
 {
 	rabbit::ObjectPtr &o = stack_get(v,idx);
-	switch(sq_type(o)) {
+	switch(o.getType()) {
 		case rabbit::OT_USERDATA:
 			o.toUserData()->setTypeTag(typetag);
 			break;
@@ -794,7 +801,7 @@ rabbit::Result rabbit::sq_settypetag(rabbit::VirtualMachine* v,int64_t idx,rabbi
 
 rabbit::Result rabbit::sq_getobjtypetag(const rabbit::Object *o,rabbit::UserPointer * typetag)
 {
-  switch(sq_type(*o)) {
+  switch(o->getType()) {
 	case rabbit::OT_INSTANCE: *typetag = o->toInstance()->_class->_typetag; break;
 	case rabbit::OT_USERDATA: *typetag = o->toUserData()->getTypeTag(); break;
 	case rabbit::OT_CLASS:	*typetag = o->toClass()->_typetag; break;
@@ -822,7 +829,9 @@ rabbit::Result rabbit::sq_getuserpointer(rabbit::VirtualMachine* v, int64_t idx,
 rabbit::Result rabbit::sq_setinstanceup(rabbit::VirtualMachine* v, int64_t idx, rabbit::UserPointer p)
 {
 	rabbit::ObjectPtr &o = stack_get(v,idx);
-	if(sq_type(o) != rabbit::OT_INSTANCE) return sq_throwerror(v,"the object is not a class instance");
+	if(o.isInstance() == false) {
+		return sq_throwerror(v,"the object is not a class instance");
+	}
 	o.toInstance()->_userpointer = p;
 	return SQ_OK;
 }
@@ -830,8 +839,12 @@ rabbit::Result rabbit::sq_setinstanceup(rabbit::VirtualMachine* v, int64_t idx, 
 rabbit::Result rabbit::sq_setclassudsize(rabbit::VirtualMachine* v, int64_t idx, int64_t udsize)
 {
 	rabbit::ObjectPtr &o = stack_get(v,idx);
-	if(sq_type(o) != rabbit::OT_CLASS) return sq_throwerror(v,"the object is not a class");
-	if(o.toClass()->_locked) return sq_throwerror(v,"the class is locked");
+	if(o.isClass() == false) {
+		return sq_throwerror(v,"the object is not a class");
+	}
+	if(o.toClass()->_locked) {
+		return sq_throwerror(v,"the class is locked");
+	}
 	o.toClass()->_udsize = udsize;
 	return SQ_OK;
 }
@@ -840,7 +853,9 @@ rabbit::Result rabbit::sq_setclassudsize(rabbit::VirtualMachine* v, int64_t idx,
 rabbit::Result rabbit::sq_getinstanceup(rabbit::VirtualMachine* v, int64_t idx, rabbit::UserPointer *p,rabbit::UserPointer typetag)
 {
 	rabbit::ObjectPtr &o = stack_get(v,idx);
-	if(sq_type(o) != rabbit::OT_INSTANCE) return sq_throwerror(v,"the object is not a class instance");
+	if(o.isInstance() == false) {
+		return sq_throwerror(v,"the object is not a class instance");
+	}
 	(*p) = o.toInstance()->_userpointer;
 	if(typetag != 0) {
 		rabbit::Class *cl = o.toInstance()->_class;
@@ -897,9 +912,12 @@ rabbit::Result rabbit::sq_newslot(rabbit::VirtualMachine* v, int64_t idx, rabbit
 {
 	sq_aux_paramscheck(v, 3);
 	rabbit::ObjectPtr &self = stack_get(v, idx);
-	if(sq_type(self) == rabbit::OT_TABLE || sq_type(self) == rabbit::OT_CLASS) {
+	if(    self.isTable() == true
+	    || self.isClass() == true) {
 		rabbit::ObjectPtr &key = v->getUp(-2);
-		if(sq_type(key) == rabbit::OT_NULL) return sq_throwerror(v, "null is not a valid key");
+		if(key.isNull() == true) {
+			return sq_throwerror(v, "null is not a valid key");
+		}
 		v->newSlot(self, key, v->getUp(-1),bstatic?true:false);
 		v->pop(2);
 	}
@@ -912,14 +930,19 @@ rabbit::Result rabbit::sq_deleteslot(rabbit::VirtualMachine* v,int64_t idx,rabbi
 	rabbit::ObjectPtr *self;
 	_GETSAFE_OBJ(v, idx, rabbit::OT_TABLE,self);
 	rabbit::ObjectPtr &key = v->getUp(-1);
-	if(sq_type(key) == rabbit::OT_NULL) return sq_throwerror(v, "null is not a valid key");
+	if(key.isNull() == true) {
+		return sq_throwerror(v, "null is not a valid key");
+	}
 	rabbit::ObjectPtr res;
 	if(!v->deleteSlot(*self, key, res)){
 		v->pop();
 		return SQ_ERROR;
 	}
-	if(pushval) v->getUp(-1) = res;
-	else v->pop();
+	if(pushval) {
+		v->getUp(-1) = res;
+	} else {
+		v->pop();
+	}
 	return SQ_OK;
 }
 
@@ -937,36 +960,36 @@ rabbit::Result rabbit::sq_rawset(rabbit::VirtualMachine* v,int64_t idx)
 {
 	rabbit::ObjectPtr &self = stack_get(v, idx);
 	rabbit::ObjectPtr &key = v->getUp(-2);
-	if(sq_type(key) == rabbit::OT_NULL) {
+	if(key.isNull() == true) {
 		v->pop(2);
 		return sq_throwerror(v, "null key");
 	}
-	switch(sq_type(self)) {
-	case rabbit::OT_TABLE:
-		self.toTable()->newSlot(key, v->getUp(-1));
-		v->pop(2);
-		return SQ_OK;
-	break;
-	case rabbit::OT_CLASS:
-		self.toClass()->newSlot(_get_shared_state(v), key, v->getUp(-1),false);
-		v->pop(2);
-		return SQ_OK;
-	break;
-	case rabbit::OT_INSTANCE:
-		if(self.toInstance()->set(key, v->getUp(-1))) {
+	switch(self.getType()) {
+		case rabbit::OT_TABLE:
+			self.toTable()->newSlot(key, v->getUp(-1));
 			v->pop(2);
 			return SQ_OK;
-		}
-	break;
-	case rabbit::OT_ARRAY:
-		if(v->set(self, key, v->getUp(-1),false)) {
+		break;
+		case rabbit::OT_CLASS:
+			self.toClass()->newSlot(_get_shared_state(v), key, v->getUp(-1),false);
 			v->pop(2);
 			return SQ_OK;
-		}
-	break;
-	default:
-		v->pop(2);
-		return sq_throwerror(v, "rawset works only on array/table/class and instance");
+		break;
+		case rabbit::OT_INSTANCE:
+			if(self.toInstance()->set(key, v->getUp(-1))) {
+				v->pop(2);
+				return SQ_OK;
+			}
+		break;
+		case rabbit::OT_ARRAY:
+			if(v->set(self, key, v->getUp(-1),false)) {
+				v->pop(2);
+				return SQ_OK;
+			}
+		break;
+		default:
+			v->pop(2);
+			return sq_throwerror(v, "rawset works only on array/table/class and instance");
 	}
 	v->raise_Idxerror(v->getUp(-2));return SQ_ERROR;
 }
@@ -974,9 +997,13 @@ rabbit::Result rabbit::sq_rawset(rabbit::VirtualMachine* v,int64_t idx)
 rabbit::Result rabbit::sq_newmember(rabbit::VirtualMachine* v,int64_t idx,rabbit::Bool bstatic)
 {
 	rabbit::ObjectPtr &self = stack_get(v, idx);
-	if(sq_type(self) != rabbit::OT_CLASS) return sq_throwerror(v, "new member only works with classes");
+	if(self.isClass() == false) {
+		return sq_throwerror(v, "new member only works with classes");
+	}
 	rabbit::ObjectPtr &key = v->getUp(-3);
-	if(sq_type(key) == rabbit::OT_NULL) return sq_throwerror(v, "null key");
+	if(key.isNull() == true) {
+		return sq_throwerror(v, "null key");
+	}
 	if(!v->newSlotA(self,key,v->getUp(-2),v->getUp(-1),bstatic?true:false,false)) {
 		v->pop(3);
 		return SQ_ERROR;
@@ -988,9 +1015,13 @@ rabbit::Result rabbit::sq_newmember(rabbit::VirtualMachine* v,int64_t idx,rabbit
 rabbit::Result rabbit::sq_rawnewmember(rabbit::VirtualMachine* v,int64_t idx,rabbit::Bool bstatic)
 {
 	rabbit::ObjectPtr &self = stack_get(v, idx);
-	if(sq_type(self) != rabbit::OT_CLASS) return sq_throwerror(v, "new member only works with classes");
+	if(self.isClass() == false) {
+		return sq_throwerror(v, "new member only works with classes");
+	}
 	rabbit::ObjectPtr &key = v->getUp(-3);
-	if(sq_type(key) == rabbit::OT_NULL) return sq_throwerror(v, "null key");
+	if(key.isNull() == true) {
+		return sq_throwerror(v, "null key");
+	}
 	if(!v->newSlotA(self,key,v->getUp(-2),v->getUp(-1),bstatic?true:false,true)) {
 		v->pop(3);
 		return SQ_ERROR;
@@ -1003,29 +1034,33 @@ rabbit::Result rabbit::sq_setdelegate(rabbit::VirtualMachine* v,int64_t idx)
 {
 	rabbit::ObjectPtr &self = stack_get(v, idx);
 	rabbit::ObjectPtr &mt = v->getUp(-1);
-	rabbit::ObjectType type = sq_type(self);
+	rabbit::ObjectType type = self.getType();
 	switch(type) {
-	case rabbit::OT_TABLE:
-		if(sq_type(mt) == rabbit::OT_TABLE) {
-			if(!self.toTable()->setDelegate(mt.toTable())) {
-				return sq_throwerror(v, "delagate cycle");
+		case rabbit::OT_TABLE:
+			if (mt.isTable() == true) {
+				if(!self.toTable()->setDelegate(mt.toTable())) {
+					return sq_throwerror(v, "delagate cycle");
+				}
+				v->pop();
+			} else if (mt.isNull() == true) {
+				self.toTable()->setDelegate(NULL); v->pop();
+			} else {
+				return sq_aux_invalidtype(v, type);
 			}
-			v->pop();
-		}
-		else if(sq_type(mt)==rabbit::OT_NULL) {
-			self.toTable()->setDelegate(NULL); v->pop(); }
-		else return sq_aux_invalidtype(v,type);
-		break;
-	case rabbit::OT_USERDATA:
-		if(sq_type(mt)==rabbit::OT_TABLE) {
-			self.toUserData()->setDelegate(mt.toTable()); v->pop(); }
-		else if(sq_type(mt)==rabbit::OT_NULL) {
-			self.toUserData()->setDelegate(NULL); v->pop(); }
-		else return sq_aux_invalidtype(v, type);
-		break;
-	default:
-			return sq_aux_invalidtype(v, type);
-		break;
+			break;
+		case rabbit::OT_USERDATA:
+			if (mt.isTable() == true) {
+				self.toUserData()->setDelegate(mt.toTable());
+				v->pop();
+			} else if (mt.isNull() == true) {
+				self.toUserData()->setDelegate(NULL); v->pop();
+			} else {
+				return sq_aux_invalidtype(v, type);
+			}
+			break;
+		default:
+				return sq_aux_invalidtype(v, type);
+			break;
 	}
 	return SQ_OK;
 }
@@ -1050,19 +1085,19 @@ rabbit::Result rabbit::sq_rawdeleteslot(rabbit::VirtualMachine* v,int64_t idx,ra
 rabbit::Result rabbit::sq_getdelegate(rabbit::VirtualMachine* v,int64_t idx)
 {
 	rabbit::ObjectPtr &self=stack_get(v,idx);
-	switch(sq_type(self)){
-	case rabbit::OT_TABLE:
-	case rabbit::OT_USERDATA:
-		if(!self.toDelegable()->_delegate){
-			v->pushNull();
+	switch (self.getType()){
+		case rabbit::OT_TABLE:
+		case rabbit::OT_USERDATA:
+			if (!self.toDelegable()->_delegate) {
+				v->pushNull();
+				break;
+			}
+			v->push(rabbit::ObjectPtr(self.toDelegable()->_delegate));
 			break;
-		}
-		v->push(rabbit::ObjectPtr(self.toDelegable()->_delegate));
-		break;
-	default: return sq_throwerror(v,"wrong type"); break;
+		default:
+			return sq_throwerror(v,"wrong type");
 	}
 	return SQ_OK;
-
 }
 
 rabbit::Result rabbit::sq_get(rabbit::VirtualMachine* v,int64_t idx)
@@ -1075,38 +1110,38 @@ rabbit::Result rabbit::sq_get(rabbit::VirtualMachine* v,int64_t idx)
 	return SQ_ERROR;
 }
 
-rabbit::Result rabbit::sq_rawget(rabbit::VirtualMachine* v,int64_t idx)
-{
+rabbit::Result rabbit::sq_rawget(rabbit::VirtualMachine* v,int64_t idx) {
 	rabbit::ObjectPtr &self=stack_get(v,idx);
 	rabbit::ObjectPtr &obj = v->getUp(-1);
-	switch(sq_type(self)) {
-	case rabbit::OT_TABLE:
-		if(self.toTable()->get(obj,obj))
-			return SQ_OK;
-		break;
-	case rabbit::OT_CLASS:
-		if(self.toClass()->get(obj,obj))
-			return SQ_OK;
-		break;
-	case rabbit::OT_INSTANCE:
-		if(self.toInstance()->get(obj,obj))
-			return SQ_OK;
-		break;
-	case rabbit::OT_ARRAY:
-		{
-			if(obj.isNumeric() == true){
-				if(self.toArray()->get(tointeger(obj),obj)) {
+	switch(self.getType()) {
+		case rabbit::OT_TABLE:
+			if(self.toTable()->get(obj, obj)) {
+				return SQ_OK;
+			}
+			break;
+		case rabbit::OT_CLASS:
+			if(self.toClass()->get(obj, obj)) {
+				return SQ_OK;
+			}
+			break;
+		case rabbit::OT_INSTANCE:
+			if(self.toInstance()->get(obj, obj)) {
+				return SQ_OK;
+			}
+			break;
+		case rabbit::OT_ARRAY:
+			if(obj.isNumeric() == true) {
+				if(self.toArray()->get(tointeger(obj), obj)) {
 					return SQ_OK;
 				}
 			} else {
 				v->pop();
 				return sq_throwerror(v,"invalid index type for an array");
 			}
-		}
-		break;
-	default:
-		v->pop();
-		return sq_throwerror(v,"rawget works only on array/table/instance and class");
+			break;
+		default:
+			v->pop();
+			return sq_throwerror(v,"rawget works only on array/table/instance and class");
 	}
 	v->pop();
 	return sq_throwerror(v,"the index doesn't exist");
@@ -1129,9 +1164,10 @@ const char * rabbit::sq_getlocal(rabbit::VirtualMachine* v,uint64_t level,uint64
 			stackbase-=ci._prevstkbase;
 		}
 		rabbit::VirtualMachine::callInfo &ci=v->_callsstack[lvl];
-		if(sq_type(ci._closure)!=rabbit::OT_CLOSURE)
+		if(ci._closure.isClosure() == false) {
 			return NULL;
-		rabbit::Closure *c=ci._closure.toClosure();
+		}
+		rabbit::Closure *c = ci._closure.toClosure();
 		rabbit::FunctionProto *func=c->_function;
 		if(func->_noutervalues > (int64_t)idx) {
 			v->push(*c->_outervalues[idx].toOuter()->_valptr);
@@ -1150,7 +1186,8 @@ void rabbit::sq_pushobject(rabbit::VirtualMachine* v,rabbit::Object obj)
 
 void rabbit::sq_resetobject(rabbit::Object *po)
 {
-	po->_unVal.pUserPointer=NULL;po->_type=rabbit::OT_NULL;
+	po->_unVal.pUserPointer = NULL;
+	po->_type = rabbit::OT_NULL;
 }
 
 rabbit::Result rabbit::sq_throwerror(rabbit::VirtualMachine* v,const char *err)
@@ -1190,13 +1227,15 @@ rabbit::Result rabbit::sq_reservestack(rabbit::VirtualMachine* v,int64_t nsize)
 
 rabbit::Result rabbit::sq_resume(rabbit::VirtualMachine* v,rabbit::Bool retval,rabbit::Bool raiseerror)
 {
-	if (sq_type(v->getUp(-1)) == rabbit::OT_GENERATOR)
-	{
+	if (v->getUp(-1).isGenerator() == true) {
 		v->pushNull(); //retval
-		if (!v->execute(v->getUp(-2), 0, v->_top, v->getUp(-1), raiseerror, rabbit::VirtualMachine::ET_RESUME_GENERATOR))
-		{v->raise_error(v->_lasterror); return SQ_ERROR;}
-		if(!retval)
+		if (!v->execute(v->getUp(-2), 0, v->_top, v->getUp(-1), raiseerror, rabbit::VirtualMachine::ET_RESUME_GENERATOR)) {
+			v->raise_error(v->_lasterror);
+			return SQ_ERROR;
+		}
+		if(!retval) {
 			v->pop();
+		}
 		return SQ_OK;
 	}
 	return sq_throwerror(v,"only generators can be resumed");
@@ -1227,7 +1266,7 @@ rabbit::Result rabbit::sq_call(rabbit::VirtualMachine* v,int64_t params,rabbit::
 rabbit::Result rabbit::sq_tailcall(rabbit::VirtualMachine* v, int64_t nparams)
 {
 	rabbit::ObjectPtr &res = v->getUp(-(nparams + 1));
-	if (sq_type(res) != rabbit::OT_CLOSURE) {
+	if (res.isClosure() == false) {
 		return sq_throwerror(v, "only closure can be tail called");
 	}
 	rabbit::Closure *clo = res.toClosure();
@@ -1273,7 +1312,7 @@ rabbit::Result rabbit::sq_wakeupvm(rabbit::VirtualMachine* v,rabbit::Bool wakeup
 void rabbit::sq_setreleasehook(rabbit::VirtualMachine* v,int64_t idx,SQRELEASEHOOK hook)
 {
 	rabbit::ObjectPtr &ud=stack_get(v,idx);
-	switch(sq_type(ud) ) {
+	switch (ud.getType()) {
 		case rabbit::OT_USERDATA:
 			ud.toUserData()->setHook(hook);
 			break;
@@ -1291,7 +1330,7 @@ void rabbit::sq_setreleasehook(rabbit::VirtualMachine* v,int64_t idx,SQRELEASEHO
 SQRELEASEHOOK rabbit::sq_getreleasehook(rabbit::VirtualMachine* v,int64_t idx)
 {
 	rabbit::ObjectPtr &ud=stack_get(v,idx);
-	switch(sq_type(ud) ) {
+	switch (ud.getType()) {
 		case rabbit::OT_USERDATA:
 			return ud.toUserData()->getHook();
 			break;
@@ -1370,27 +1409,29 @@ const char * rabbit::sq_getfreevariable(rabbit::VirtualMachine* v,int64_t idx,ui
 {
 	rabbit::ObjectPtr &self=stack_get(v,idx);
 	const char *name = NULL;
-	switch(sq_type(self))
-	{
-	case rabbit::OT_CLOSURE:{
-		rabbit::Closure *clo = self.toClosure();
-		rabbit::FunctionProto *fp = clo->_function;
-		if(((uint64_t)fp->_noutervalues) > nval) {
-			v->push(*(clo->_outervalues[nval].toOuter()->_valptr));
-			rabbit::OuterVar &ov = fp->_outervalues[nval];
-			name = _stringval(ov._name);
-		}
-					}
-		break;
-	case rabbit::OT_NATIVECLOSURE:{
-		rabbit::NativeClosure *clo = self.toNativeClosure();
-		if(clo->_noutervalues > nval) {
-			v->push(clo->_outervalues[nval]);
-			name = "@NATIVE";
-		}
-						  }
-		break;
-	default: break; //shutup compiler
+	switch(self.getType()) {
+		case rabbit::OT_CLOSURE:
+			{
+				rabbit::Closure *clo = self.toClosure();
+				rabbit::FunctionProto *fp = clo->_function;
+				if(((uint64_t)fp->_noutervalues) > nval) {
+					v->push(*(clo->_outervalues[nval].toOuter()->_valptr));
+					rabbit::OuterVar &ov = fp->_outervalues[nval];
+					name = _stringval(ov._name);
+				}
+			}
+			break;
+		case rabbit::OT_NATIVECLOSURE:
+			{
+				rabbit::NativeClosure *clo = self.toNativeClosure();
+				if(clo->_noutervalues > nval) {
+					v->push(clo->_outervalues[nval]);
+					name = "@NATIVE";
+				}
+			}
+			break;
+		default:
+			break;
 	}
 	return name;
 }
@@ -1398,24 +1439,26 @@ const char * rabbit::sq_getfreevariable(rabbit::VirtualMachine* v,int64_t idx,ui
 rabbit::Result rabbit::sq_setfreevariable(rabbit::VirtualMachine* v,int64_t idx,uint64_t nval)
 {
 	rabbit::ObjectPtr &self=stack_get(v,idx);
-	switch(sq_type(self))
-	{
-	case rabbit::OT_CLOSURE:{
-		rabbit::FunctionProto *fp = self.toClosure()->_function;
-		if(((uint64_t)fp->_noutervalues) > nval){
-			*(self.toClosure()->_outervalues[nval].toOuter()->_valptr) = stack_get(v,-1);
-		}
-		else return sq_throwerror(v,"invalid free var index");
-					}
-		break;
-	case rabbit::OT_NATIVECLOSURE:
-		if(self.toNativeClosure()->_noutervalues > nval){
-			self.toNativeClosure()->_outervalues[nval] = stack_get(v,-1);
-		}
-		else return sq_throwerror(v,"invalid free var index");
-		break;
-	default:
-		return sq_aux_invalidtype(v, sq_type(self));
+	switch (self.getType()) {
+		case rabbit::OT_CLOSURE:
+			{
+				rabbit::FunctionProto *fp = self.toClosure()->_function;
+				if(((uint64_t)fp->_noutervalues) > nval){
+					*(self.toClosure()->_outervalues[nval].toOuter()->_valptr) = stack_get(v,-1);
+				} else {
+					return sq_throwerror(v,"invalid free var index");
+				}
+			}
+			break;
+		case rabbit::OT_NATIVECLOSURE:
+			if(self.toNativeClosure()->_noutervalues > nval) {
+				self.toNativeClosure()->_outervalues[nval] = stack_get(v,-1);
+			} else {
+				return sq_throwerror(v,"invalid free var index");
+			}
+			break;
+		default:
+			return sq_aux_invalidtype(v, self.getType());
 	}
 	v->pop();
 	return SQ_OK;
@@ -1428,13 +1471,13 @@ rabbit::Result rabbit::sq_setattributes(rabbit::VirtualMachine* v,int64_t idx)
 	rabbit::ObjectPtr &key = stack_get(v,-2);
 	rabbit::ObjectPtr &val = stack_get(v,-1);
 	rabbit::ObjectPtr attrs;
-	if(sq_type(key) == rabbit::OT_NULL) {
+	if(key.isNull() == true) {
 		attrs = o->toClass()->_attributes;
 		o->toClass()->_attributes = val;
 		v->pop(2);
 		v->push(attrs);
 		return SQ_OK;
-	}else if(o->toClass()->getAttributes(key,attrs)) {
+	} else if(o->toClass()->getAttributes(key,attrs)) {
 		o->toClass()->setAttributes(key,val);
 		v->pop(2);
 		v->push(attrs);
@@ -1449,13 +1492,13 @@ rabbit::Result rabbit::sq_getattributes(rabbit::VirtualMachine* v,int64_t idx)
 	_GETSAFE_OBJ(v, idx, rabbit::OT_CLASS,o);
 	rabbit::ObjectPtr &key = stack_get(v,-1);
 	rabbit::ObjectPtr attrs;
-	if(sq_type(key) == rabbit::OT_NULL) {
+	if(key.isNull() == true) {
 		attrs = o->toClass()->_attributes;
 		v->pop();
 		v->push(attrs);
 		return SQ_OK;
 	}
-	else if(o->toClass()->getAttributes(key,attrs)) {
+	else if(o->toClass()->getAttributes(key, attrs)) {
 		v->pop();
 		v->push(attrs);
 		return SQ_OK;
@@ -1481,25 +1524,24 @@ rabbit::Result rabbit::sq_getmemberhandle(rabbit::VirtualMachine* v,int64_t idx,
 
 rabbit::Result _getmemberbyhandle(rabbit::VirtualMachine* v,rabbit::ObjectPtr &self,const rabbit::MemberHandle *handle,rabbit::ObjectPtr *&val)
 {
-	switch(sq_type(self)) {
-		case rabbit::OT_INSTANCE: {
+	switch (self.getType()) {
+		case rabbit::OT_INSTANCE:
+			{
 				rabbit::Instance *i = self.toInstance();
 				if(handle->_static) {
 					rabbit::Class *c = i->_class;
 					val = &c->_methods[handle->_index].val;
-				}
-				else {
+				} else {
 					val = &i->_values[handle->_index];
-
 				}
 			}
 			break;
-		case rabbit::OT_CLASS: {
+		case rabbit::OT_CLASS:
+			{
 				rabbit::Class *c = self.toClass();
 				if(handle->_static) {
 					val = &c->_methods[handle->_index].val;
-				}
-				else {
+				} else {
 					val = &c->_defaultvalues[handle->_index].val;
 				}
 			}
@@ -1564,8 +1606,8 @@ rabbit::Result rabbit::sq_createinstance(rabbit::VirtualMachine* v,int64_t idx)
 void rabbit::sq_weakref(rabbit::VirtualMachine* v,int64_t idx)
 {
 	rabbit::Object &o=stack_get(v,idx);
-	if(ISREFCOUNTED(sq_type(o))) {
-		v->push(o.toRefCounted()->getWeakRef(sq_type(o)));
+	if (o.isRefCounted() == true) {
+		v->push(o.toRefCounted()->getWeakRef(o.getType()));
 		return;
 	}
 	v->push(o);
@@ -1574,7 +1616,7 @@ void rabbit::sq_weakref(rabbit::VirtualMachine* v,int64_t idx)
 rabbit::Result rabbit::sq_getweakrefval(rabbit::VirtualMachine* v,int64_t idx)
 {
 	rabbit::ObjectPtr &o = stack_get(v,idx);
-	if(sq_type(o) != rabbit::OT_WEAKREF) {
+	if(o.isWeakRef() == false) {
 		return sq_throwerror(v,"the object must be a weakref");
 	}
 	v->push(o.toWeakRef()->_obj);
@@ -1603,13 +1645,14 @@ rabbit::Result rabbit::sq_getdefaultdelegate(rabbit::VirtualMachine* v,rabbit::O
 rabbit::Result rabbit::sq_next(rabbit::VirtualMachine* v,int64_t idx)
 {
 	rabbit::ObjectPtr o=stack_get(v,idx),&refpos = stack_get(v,-1),realkey,val;
-	if(sq_type(o) == rabbit::OT_GENERATOR) {
+	if (o.isGenerator() == true) {
 		return sq_throwerror(v,"cannot iterate a generator");
 	}
 	int faketojump;
-	if(!v->FOREACH_OP(o,realkey,val,refpos,0,666,faketojump))
+	if (!v->FOREACH_OP(o,realkey,val,refpos,0,666,faketojump)) {
 		return SQ_ERROR;
-	if(faketojump != 666) {
+	}
+	if (faketojump != 666) {
 		v->push(realkey);
 		v->push(val);
 		return SQ_OK;

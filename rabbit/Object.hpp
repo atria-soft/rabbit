@@ -132,8 +132,14 @@ namespace rabbit {
 			uint64_t toRaw() const {
 				return _unVal.raw;
 			}
+			bool isRefCounted() const {
+				return (_type & SQOBJECT_REF_COUNTED) != 0;
+			}
 			bool isNumeric() const {
 				return (_type & SQOBJECT_NUMERIC) != 0;
+			}
+			bool canBeFalse() const {
+				return (_type & SQOBJECT_CANBEFALSE) != 0;
 			}
 			bool isTable() const {
 				return _type == rabbit::OT_TABLE;
@@ -191,6 +197,8 @@ namespace rabbit {
 			}
 	};
 	
+	#define ISREFCOUNTED(t) (t&SQOBJECT_REF_COUNTED)
+	
 	#define __addRef(type,unval) if(ISREFCOUNTED(type)) \
 		{ \
 			unval.pRefCounted->refCountIncrement(); \
@@ -201,19 +209,17 @@ namespace rabbit {
 			unval.pRefCounted->release();   \
 		}
 	
-	#define _realval(o) (sq_type((o)) != rabbit::OT_WEAKREF?(rabbit::Object)o:(o).toWeakRef()->_obj)
+	#define _realval(o) ((o).isWeakRef() == false?(rabbit::Object)o:(o).toWeakRef()->_obj)
 	
-	#define is_delegable(t) (sq_type(t)&SQOBJECT_DELEGABLE)
+	#define is_delegable(t) ((t).getType()&SQOBJECT_DELEGABLE)
 	#define raw_type(obj) _RAW_TYPE((obj)._type)
 	
 	#define _stringval(obj) (obj)._unVal.pString->_val
 	#define _userdataval(obj) ((rabbit::UserPointer)sq_aligning((obj)._unVal.pUserData + 1))
 	
-	#define tofloat(num) ((sq_type(num)==rabbit::OT_INTEGER)?(float_t)(num).toInteger():(num).toFloat())
-	#define tointeger(num) ((sq_type(num)==rabbit::OT_FLOAT)?(int64_t)(num).toFloat():(num).toInteger())
+	#define tofloat(num) (((num).isInteger()==true)?(float_t)(num).toInteger():(num).toFloat())
+	#define tointeger(num) (((num).isFloat()==true)?(int64_t)(num).toFloat():(num).toInteger())
 	
-	#define sq_type(o) ((o)._type)
-
 	inline void _Swap(rabbit::Object &a,rabbit::Object &b)
 	{
 		rabbit::ObjectType tOldType = a._type;

@@ -195,7 +195,7 @@ rabbit::SharedState::~SharedState()
 
 
 int64_t rabbit::SharedState::getMetaMethodIdxByName(const rabbit::ObjectPtr &name) {
-	if(sq_type(name) != rabbit::OT_STRING) {
+	if(name.isString() == false) {
 		return -1;
 	}
 	rabbit::ObjectPtr ret;

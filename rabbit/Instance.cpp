@@ -60,7 +60,7 @@ rabbit::Instance::~Instance() {
 }
 
 bool rabbit::Instance::getMetaMethod(rabbit::VirtualMachine* SQ_UNUSED_ARG(v),rabbit::MetaMethod mm,rabbit::ObjectPtr &res) {
-	if(sq_type(_class->_metamethods[mm]) != rabbit::OT_NULL) {
+	if(_class->_metamethods[mm].isNull() == false) {
 		res = _class->_metamethods[mm];
 		return true;
 	}

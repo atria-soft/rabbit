@@ -99,12 +99,22 @@ void rabbit::FuncState::addInstruction(SQOpcode _op,int64_t arg0,int64_t arg1,in
 }
 
 static void dumpLiteral(rabbit::ObjectPtr &o) {
-	switch(sq_type(o)){
-		case rabbit::OT_STRING: printf("\"%s\"",_stringval(o));break;
-		case rabbit::OT_FLOAT: printf("{%f}",o.toFloat());break;
-		case rabbit::OT_INTEGER: printf("{" _PRINT_INT_FMT "}",o.toInteger());break;
-		case rabbit::OT_BOOL: printf("%s",o.toInteger()?"true":"false");break;
-		default: printf("(%s %p)",getTypeName(o),(void*)o.toRaw());break; break; //shut up compiler
+	switch(o.getType()){
+		case rabbit::OT_STRING:
+			printf("\"%s\"",_stringval(o));
+			break;
+		case rabbit::OT_FLOAT:
+			printf("{%f}",o.toFloat());
+			break;
+		case rabbit::OT_INTEGER:
+			printf("{" _PRINT_INT_FMT "}",o.toInteger());
+			break;
+		case rabbit::OT_BOOL:
+			printf("%s",o.toInteger()?"true":"false");
+			break;
+		default:
+			printf("(%s %p)",getTypeName(o),(void*)o.toRaw());
+			break;
 	}
 }
 
@@ -142,7 +152,7 @@ void rabbit::FuncState::dump(rabbit::FunctionProto *func)
 	printf("rabbit::Instruction sizeof %d\n",(int32_t)sizeof(rabbit::Instruction));
 	printf("rabbit::Object sizeof %d\n", (int32_t)sizeof(rabbit::Object));
 	printf("--------------------------------------------------------------------\n");
-	printf("*****FUNCTION [%s]\n",sq_type(func->_name)==rabbit::OT_STRING?_stringval(func->_name):"unknown");
+	printf("*****FUNCTION [%s]\n",func->_name.isString() == true?_stringval(func->_name):"unknown");
 	printf("-----LITERALS\n");
 	rabbit::ObjectPtr refidx,key,val;
 	int64_t idx;
@@ -312,7 +322,7 @@ int64_t rabbit::FuncState::popTarget()
 	uint64_t npos=_targetstack.back();
 	assert(npos < _vlocals.size());
 	rabbit::LocalVarInfo &t = _vlocals[npos];
-	if(sq_type(t._name)==rabbit::OT_NULL){
+	if(t._name.isNull()==true){
 		_vlocals.popBack();
 	}
 	_targetstack.popBack();
@@ -344,7 +354,7 @@ void rabbit::FuncState::setStacksize(int64_t n)
 	while(size>n){
 		size--;
 		rabbit::LocalVarInfo lvi = _vlocals.back();
-		if(sq_type(lvi._name)!=rabbit::OT_NULL){
+		if(lvi._name.isNull()==false){
 			if(lvi._end_op == UINT_MINUS_ONE) { //this means is an outer
 				_outers--;
 			}
@@ -367,8 +377,11 @@ bool rabbit::FuncState::isConstant(const rabbit::Object &name,rabbit::Object &e)
 
 bool rabbit::FuncState::isLocal(uint64_t stkpos)
 {
-	if(stkpos>=_vlocals.size())return false;
-	else if(sq_type(_vlocals[stkpos]._name)!=rabbit::OT_NULL)return true;
+	if(stkpos>=_vlocals.size()) {
+		return false;
+	} else if(_vlocals[stkpos]._name.isNull()==false) {
+		return true;
+	}
 	return false;
 }
 
@@ -391,7 +404,8 @@ int64_t rabbit::FuncState::getLocalVariable(const rabbit::Object &name)
 	int64_t locals=_vlocals.size();
 	while(locals>=1){
 		rabbit::LocalVarInfo &lvi = _vlocals[locals-1];
-		if(sq_type(lvi._name)==rabbit::OT_STRING && lvi._name.toString()==name.toString()){
+		if(    lvi._name.isString() == true
+		    && lvi._name.toString() == name.toString()){
 			return locals-1;
 		}
 		locals--;

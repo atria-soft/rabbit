@@ -176,7 +176,7 @@ static int64_t get_slice_params(rabbit::VirtualMachine* v,int64_t &sidx,int64_t 
 	o=stack_get(v,1);
 	if(top>1){
 		rabbit::ObjectPtr &start=stack_get(v,2);
-		if(    sq_type(start)!=rabbit::OT_NULL
+		if(    start.isNull() == false
 		    && start.isNumeric() == true){
 			sidx=tointeger(start);
 		}
@@ -344,7 +344,7 @@ static int64_t default_delegate_len(rabbit::VirtualMachine* v)
 static int64_t default_delegate_tofloat(rabbit::VirtualMachine* v)
 {
 	rabbit::ObjectPtr &o=stack_get(v,1);
-	switch(sq_type(o)){
+	switch(o.getType()){
 	case rabbit::OT_STRING:{
 		rabbit::ObjectPtr res;
 		if(str2num(_stringval(o),res,10)){
@@ -374,7 +374,7 @@ static int64_t default_delegate_tointeger(rabbit::VirtualMachine* v)
 	if(sq_gettop(v) > 1) {
 		sq_getinteger(v,2,&base);
 	}
-	switch(sq_type(o)){
+	switch(o.getType()){
 	case rabbit::OT_STRING:{
 		rabbit::ObjectPtr res;
 		if(str2num(_stringval(o),res,base)){
@@ -933,8 +933,8 @@ static int64_t closure_pcall(rabbit::VirtualMachine* v)
 static int64_t closure_call(rabbit::VirtualMachine* v)
 {
 	rabbit::ObjectPtr &c = stack_get(v, -1);
-	if (sq_type(c) == rabbit::OT_CLOSURE && (c.toClosure()->_function->_bgenerator == false))
-	{
+	if (    c.isClosure() == true
+	     && c.toClosure()->_function->_bgenerator == false) {
 		return sq_tailcall(v, sq_gettop(v) - 1);
 	}
 	return SQ_SUCCEEDED(sq_call(v, sq_gettop(v) - 1, SQTrue, SQTrue)) ? 1 : SQ_ERROR;
@@ -983,7 +983,7 @@ static int64_t closure_setroot(rabbit::VirtualMachine* v)
 static int64_t closure_getinfos(rabbit::VirtualMachine* v) {
 	rabbit::Object o = stack_get(v,1);
 	rabbit::Table *res = rabbit::Table::create(_get_shared_state(v),4);
-	if(sq_type(o) == rabbit::OT_CLOSURE) {
+	if(o.isClosure() == true) {
 		rabbit::FunctionProto *f = o.toClosure()->_function;
 		int64_t nparams = f->_nparameters + (f->_varparams?1:0);
 		rabbit::ObjectPtr params = rabbit::Array::create(_get_shared_state(v),nparams);
@@ -1062,7 +1062,7 @@ const rabbit::RegFunction rabbit::SharedState::_generator_default_delegate_funcz
 static int64_t thread_call(rabbit::VirtualMachine* v)
 {
 	rabbit::ObjectPtr o = stack_get(v,1);
-	if(sq_type(o) == rabbit::OT_THREAD) {
+	if(o.isVirtualMachine() == true) {
 		int64_t nparams = sq_gettop(v);
 		o.toVirtualMachine()->push(o.toVirtualMachine()->_roottable);
 		for(int64_t i = 2; i<(nparams+1); i++)
@@ -1081,7 +1081,7 @@ static int64_t thread_call(rabbit::VirtualMachine* v)
 static int64_t thread_wakeup(rabbit::VirtualMachine* v)
 {
 	rabbit::ObjectPtr o = stack_get(v,1);
-	if(sq_type(o) == rabbit::OT_THREAD) {
+	if(o.isVirtualMachine() == true) {
 		rabbit::VirtualMachine *thread = o.toVirtualMachine();
 		int64_t state = sq_getvmstate(thread);
 		if(state != SQ_VMSTATE_SUSPENDED) {
@@ -1117,7 +1117,7 @@ static int64_t thread_wakeup(rabbit::VirtualMachine* v)
 static int64_t thread_wakeupthrow(rabbit::VirtualMachine* v)
 {
 	rabbit::ObjectPtr o = stack_get(v,1);
-	if(sq_type(o) == rabbit::OT_THREAD) {
+	if(o.isVirtualMachine() == true) {
 		rabbit::VirtualMachine *thread = o.toVirtualMachine();
 		int64_t state = sq_getvmstate(thread);
 		if(state != SQ_VMSTATE_SUSPENDED) {
@@ -1177,7 +1177,7 @@ static int64_t thread_getstatus(rabbit::VirtualMachine* v)
 static int64_t thread_getstackinfos(rabbit::VirtualMachine* v)
 {
 	rabbit::ObjectPtr o = stack_get(v,1);
-	if(sq_type(o) == rabbit::OT_THREAD) {
+	if(o.isVirtualMachine() == true) {
 		rabbit::VirtualMachine *thread = o.toVirtualMachine();
 		int64_t threadtop = sq_gettop(thread);
 		int64_t level;
@@ -1186,7 +1186,7 @@ static int64_t thread_getstackinfos(rabbit::VirtualMachine* v)
 		if(SQ_FAILED(res))
 		{
 			sq_settop(thread,threadtop);
-			if(sq_type(thread->_lasterror) == rabbit::OT_STRING) {
+			if(thread->_lasterror.isString() == true) {
 				sq_throwerror(v,_stringval(thread->_lasterror));
 			}
 			else {

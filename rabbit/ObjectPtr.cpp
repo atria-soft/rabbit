@@ -139,14 +139,15 @@ void rabbit::ObjectPtr::Null() {
 
 
 
-uint64_t rabbit::translateIndex(const rabbit::ObjectPtr &idx)
-{
-	switch(sq_type(idx)){
+uint64_t rabbit::translateIndex(const rabbit::ObjectPtr &idx) {
+	switch(idx.getType()){
 		case rabbit::OT_NULL:
 			return 0;
 		case rabbit::OT_INTEGER:
 			return (uint64_t)idx.toInteger();
-		default: assert(0); break;
+		default:
+			assert(0);
+			break;
 	}
 	return 0;
 }
@@ -154,8 +155,7 @@ uint64_t rabbit::translateIndex(const rabbit::ObjectPtr &idx)
 
 const char* rabbit::IdType2Name(rabbit::ObjectType type)
 {
-	switch(_RAW_TYPE(type))
-	{
+	switch(_RAW_TYPE(type)) {
 		case _RT_NULL:
 			return "null";
 		case _RT_INTEGER:
@@ -197,5 +197,5 @@ const char* rabbit::IdType2Name(rabbit::ObjectType type)
 
 const char* rabbit::getTypeName(const rabbit::ObjectPtr &obj1)
 {
-	return IdType2Name(sq_type(obj1));
+	return IdType2Name(obj1.getType());
 }

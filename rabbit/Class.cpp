@@ -92,8 +92,8 @@ void rabbit::Class::release() {
 
 bool rabbit::Class::newSlot(rabbit::SharedState *ss,const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val,bool bstatic) {
 	rabbit::ObjectPtr temp;
-	bool belongs_to_static_table =    sq_type(val) == rabbit::OT_CLOSURE
-	                               || sq_type(val) == rabbit::OT_NATIVECLOSURE
+	bool belongs_to_static_table =    val.isClosure() == true
+	                               || val.isNativeClosure() == true
 	                               || bstatic;
 	if(_locked && !belongs_to_static_table) {
 		//the class already has an instance so cannot be modified
@@ -106,18 +106,18 @@ bool rabbit::Class::newSlot(rabbit::SharedState *ss,const rabbit::ObjectPtr &key
 	}
 	if(belongs_to_static_table) {
 		int64_t mmidx;
-		if(    (    sq_type(val) == rabbit::OT_CLOSURE
-		         || sq_type(val) == rabbit::OT_NATIVECLOSURE )
+		if(    (    val.isClosure() == true
+		         || val.isNativeClosure() == true )
 		    && (mmidx = ss->getMetaMethodIdxByName(key)) != -1) {
 			_metamethods[mmidx] = val;
 		} else {
 			rabbit::ObjectPtr theval = val;
-			if(_base && sq_type(val) == rabbit::OT_CLOSURE) {
+			if(_base && val.isClosure() == true) {
 				theval = const_cast<rabbit::Closure*>(val.toClosure())->clone();
 				theval.toClosure()->_base = _base;
 				__ObjaddRef(_base); //ref for the closure
 			}
-			if(sq_type(temp) == rabbit::OT_NULL) {
+			if(temp.isNull() == true) {
 				bool isconstructor;
 				rabbit::VirtualMachine::isEqual(ss->_constructoridx, key, isconstructor);
 				if(isconstructor) {

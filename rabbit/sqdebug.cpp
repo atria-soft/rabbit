@@ -31,8 +31,16 @@ rabbit::Result rabbit::sq_getfunctioninfo(rabbit::VirtualMachine* v,int64_t leve
 			rabbit::Closure *c = ci._closure.toClosure();
 			rabbit::FunctionProto *proto = c->_function;
 			fi->funcid = proto;
-			fi->name = sq_type(proto->_name) == rabbit::OT_STRING?_stringval(proto->_name):"unknown";
-			fi->source = sq_type(proto->_sourcename) == rabbit::OT_STRING?_stringval(proto->_sourcename):"unknown";
+			if (proto->_name.isString() == true) {
+				fi->name = _stringval(proto->_name);
+			} else {
+				fi->name = "unknown";
+			}
+			if (proto->_sourcename.isString() == true) {
+				fi->source = _stringval(proto->_sourcename);
+			} else {
+				fi->source = "unknown";
+			}
 			fi->line = proto->_lineinfos[0]._line;
 			return SQ_OK;
 		}
@@ -46,24 +54,29 @@ rabbit::Result rabbit::sq_stackinfos(rabbit::VirtualMachine* v, int64_t level, r
 	if (cssize > level) {
 		memset(si, 0, sizeof(rabbit::StackInfos));
 		rabbit::VirtualMachine::callInfo &ci = v->_callsstack[cssize-level-1];
-		switch (sq_type(ci._closure)) {
-		case rabbit::OT_CLOSURE:{
-			rabbit::FunctionProto *func = ci._closure.toClosure()->_function;
-			if (sq_type(func->_name) == rabbit::OT_STRING)
-				si->funcname = _stringval(func->_name);
-			if (sq_type(func->_sourcename) == rabbit::OT_STRING)
-				si->source = _stringval(func->_sourcename);
-			si->line = func->getLine(ci._ip);
-						}
-			break;
-		case rabbit::OT_NATIVECLOSURE:
-			si->source = "NATIVE";
-			si->funcname = "unknown";
-			if(sq_type(ci._closure.toNativeClosure()->_name) == rabbit::OT_STRING)
-				si->funcname = _stringval(ci._closure.toNativeClosure()->_name);
-			si->line = -1;
-			break;
-		default: break; //shutup compiler
+		switch (ci._closure.getType()) {
+			case rabbit::OT_CLOSURE:
+				{
+					rabbit::FunctionProto *func = ci._closure.toClosure()->_function;
+					if (func->_name.isString() == true) {
+						si->funcname = _stringval(func->_name);
+					}
+					if (func->_sourcename.isString() == true) {
+						si->source = _stringval(func->_sourcename);
+					}
+					si->line = func->getLine(ci._ip);
+				}
+				break;
+			case rabbit::OT_NATIVECLOSURE:
+				si->source = "NATIVE";
+				si->funcname = "unknown";
+				if(ci._closure.toNativeClosure()->_name.isString() == true) {
+					si->funcname = _stringval(ci._closure.toNativeClosure()->_name);
+				}
+				si->line = -1;
+				break;
+			default:
+				break; //shutup compiler
 		}
 		return SQ_OK;
 	}
@@ -87,19 +100,19 @@ void rabbit::VirtualMachine::raise_error(const rabbit::ObjectPtr &desc)
 
 rabbit::String *rabbit::VirtualMachine::printObjVal(const rabbit::ObjectPtr &o)
 {
-	switch(sq_type(o)) {
-	case rabbit::OT_STRING:
-		return const_cast<rabbit::String *>(o.toString());
-	case rabbit::OT_INTEGER:
-		snprintf(_sp(sq_rsl(NUMBER_UINT8_MAX+1)),sq_rsl(NUMBER_UINT8_MAX), _PRINT_INT_FMT, o.toInteger());
-		return rabbit::String::create(_get_shared_state(this), _spval);
-		break;
-	case rabbit::OT_FLOAT:
-		snprintf(_sp(sq_rsl(NUMBER_UINT8_MAX+1)), sq_rsl(NUMBER_UINT8_MAX), "%.14g", o.toFloat());
-		return rabbit::String::create(_get_shared_state(this), _spval);
-		break;
-	default:
-		return rabbit::String::create(_get_shared_state(this), getTypeName(o));
+	switch(o.getType()) {
+		case rabbit::OT_STRING:
+			return const_cast<rabbit::String *>(o.toString());
+		case rabbit::OT_INTEGER:
+			snprintf(_sp(sq_rsl(NUMBER_UINT8_MAX+1)),sq_rsl(NUMBER_UINT8_MAX), _PRINT_INT_FMT, o.toInteger());
+			return rabbit::String::create(_get_shared_state(this), _spval);
+			break;
+		case rabbit::OT_FLOAT:
+			snprintf(_sp(sq_rsl(NUMBER_UINT8_MAX+1)), sq_rsl(NUMBER_UINT8_MAX), "%.14g", o.toFloat());
+			return rabbit::String::create(_get_shared_state(this), _spval);
+			break;
+		default:
+			return rabbit::String::create(_get_shared_state(this), getTypeName(o));
 	}
 }
 

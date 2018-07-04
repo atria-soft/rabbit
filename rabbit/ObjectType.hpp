@@ -61,5 +61,4 @@ namespace rabbit {
 	};
 }
 
-#define ISREFCOUNTED(t) (t&SQOBJECT_REF_COUNTED)
 

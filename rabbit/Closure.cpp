@@ -61,23 +61,23 @@ bool rabbit::CheckTag(rabbit::VirtualMachine* v,SQWRITEFUNC read,rabbit::UserPoi
 
 bool rabbit::WriteObject(rabbit::VirtualMachine* v,rabbit::UserPointer up,SQWRITEFUNC write,rabbit::ObjectPtr &o)
 {
-	uint32_t _type = (uint32_t)sq_type(o);
+	uint32_t _type = (uint32_t)o.getType();
 	_CHECK_IO(SafeWrite(v,write,up,&_type,sizeof(_type)));
-	switch(sq_type(o)){
-	case rabbit::OT_STRING:
-		_CHECK_IO(SafeWrite(v,write,up,&o.toString()->_len,sizeof(int64_t)));
-		_CHECK_IO(SafeWrite(v,write,up,_stringval(o),sq_rsl(o.toString()->_len)));
-		break;
-	case rabbit::OT_BOOL:
-	case rabbit::OT_INTEGER:
-		_CHECK_IO(SafeWrite(v,write,up,&o.toInteger(),sizeof(int64_t)));break;
-	case rabbit::OT_FLOAT:
-		_CHECK_IO(SafeWrite(v,write,up,&o.toFloat(),sizeof(float_t)));break;
-	case rabbit::OT_NULL:
-		break;
-	default:
-		v->raise_error("cannot serialize a %s",getTypeName(o));
-		return false;
+	switch(o.getType()){
+		case rabbit::OT_STRING:
+			_CHECK_IO(SafeWrite(v,write,up,&o.toString()->_len,sizeof(int64_t)));
+			_CHECK_IO(SafeWrite(v,write,up,_stringval(o),sq_rsl(o.toString()->_len)));
+			break;
+		case rabbit::OT_BOOL:
+		case rabbit::OT_INTEGER:
+			_CHECK_IO(SafeWrite(v,write,up,&o.toInteger(),sizeof(int64_t)));break;
+		case rabbit::OT_FLOAT:
+			_CHECK_IO(SafeWrite(v,write,up,&o.toFloat(),sizeof(float_t)));break;
+		case rabbit::OT_NULL:
+			break;
+		default:
+			v->raise_error("cannot serialize a %s",getTypeName(o));
+			return false;
 	}
 	return true;
 }

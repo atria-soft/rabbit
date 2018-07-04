@@ -11,7 +11,7 @@
 #include <etk/Allocator.hpp>
 
 rabbit::Hash rabbit::HashObj(const rabbit::ObjectPtr &key) {
-	switch(sq_type(key)) {
+	switch(key.getType()) {
 		case rabbit::OT_STRING:
 			return key.toString()->_hash;
 		case rabbit::OT_FLOAT:
@@ -62,23 +62,28 @@ void rabbit::Table::Rehash(bool force) const
 {
 	int64_t oldsize=_numofnodes;
 	//prevent problems with the integer division
-	if(oldsize<4)oldsize=4;
+	if(oldsize<4) {
+		oldsize=4;
+	}
 	_HashNode *nold=_nodes;
 	int64_t nelems=countUsed();
-	if (nelems >= oldsize-oldsize/4)  /* using more than 3/4? */
+	if (nelems >= oldsize-oldsize/4) {
+		/* using more than 3/4? */
 		allocNodes(oldsize*2);
-	else if (nelems <= oldsize/4 &&  /* less than 1/4? */
-		oldsize > MINPOWER2)
+	} else if (    nelems <= oldsize/4 /* less than 1/4? */
+	            && oldsize > MINPOWER2) {
 		allocNodes(oldsize/2);
-	else if(force)
+	} else if(force) {
 		allocNodes(oldsize);
-	else
+	} else {
 		return;
+	}
 	_usednodes = 0;
 	for (int64_t i=0; i<oldsize; i++) {
 		_HashNode *old = nold+i;
-		if (sq_type(old->key) != rabbit::OT_NULL)
+		if (old->key.isNull() == false) {
 			newSlot(old->key,old->val);
+		}
 	}
 	for(int64_t k=0;k<oldsize;k++)
 		nold[k].~_HashNode();
@@ -122,7 +127,7 @@ rabbit::Table *rabbit::Table::clone() const
 
 bool rabbit::Table::get(const rabbit::ObjectPtr &key,rabbit::ObjectPtr &val) const
 {
-	if(sq_type(key) == rabbit::OT_NULL)
+	if(key.isNull() == true)
 		return false;
 	_HashNode *n = _get(key, HashObj(key) & (_numofnodes - 1));
 	if (n) {
@@ -133,7 +138,7 @@ bool rabbit::Table::get(const rabbit::ObjectPtr &key,rabbit::ObjectPtr &val) con
 }
 bool rabbit::Table::newSlot(const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val) const
 {
-	assert(sq_type(key) != rabbit::OT_NULL);
+	assert(key.isNull() == false);
 	rabbit::Hash h = HashObj(key) & (_numofnodes - 1);
 	_HashNode *n = _get(key, h);
 	if (n) {
@@ -147,7 +152,7 @@ bool rabbit::Table::newSlot(const rabbit::ObjectPtr &key,const rabbit::ObjectPtr
 	//key not found I'll insert it
 	//main pos is not free
 
-	if(sq_type(mp->key) != rabbit::OT_NULL) {
+	if(mp->key.isNull() == false) {
 		n = _firstfree;  /* get a free place */
 		rabbit::Hash mph = HashObj(mp->key) & (_numofnodes - 1);
 		_HashNode *othern;  /* main position of colliding node */
@@ -165,8 +170,7 @@ bool rabbit::Table::newSlot(const rabbit::ObjectPtr &key,const rabbit::ObjectPtr
 			mp->key.Null();
 			mp->val.Null();
 			mp->next = NULL;  /* now `mp' is free */
-		}
-		else{
+		} else{
 			/* new node will go into free position */
 			n->next = mp->next;  /* chain new position */
 			mp->next = n;
@@ -175,14 +179,18 @@ bool rabbit::Table::newSlot(const rabbit::ObjectPtr &key,const rabbit::ObjectPtr
 	}
 	mp->key = key;
 
-	for (;;) {  /* correct `firstfree' */
-		if (sq_type(_firstfree->key) == rabbit::OT_NULL && _firstfree->next == NULL) {
+	for (;;) {
+		/* correct `firstfree' */
+		if (    _firstfree->key.isNull() == true
+		     && _firstfree->next == NULL) {
 			mp->val = val;
 			_usednodes++;
 			return true;  /* OK; table still has a free place */
+		} else if (_firstfree == _nodes) {
+			break;  /* cannot decrement from here */
+		} else {
+			(_firstfree)--;
 		}
-		else if (_firstfree == _nodes) break;  /* cannot decrement from here */
-		else (_firstfree)--;
 	}
 	Rehash(true);
 	return newSlot(key, val);
@@ -192,7 +200,7 @@ int64_t rabbit::Table::next(bool getweakrefs,const rabbit::ObjectPtr &refpos, ra
 {
 	int64_t idx = (int64_t)translateIndex(refpos);
 	while (idx < _numofnodes) {
-		if(sq_type(_nodes[idx].key) != rabbit::OT_NULL) {
+		if(_nodes[idx].key.isNull() == false) {
 			//first found
 			_HashNode &n = _nodes[idx];
 			outkey = n.key;
@@ -254,7 +262,7 @@ rabbit::Table::_HashNode* rabbit::Table::_get(const rabbit::ObjectPtr &key,rabbi
 	_HashNode *n = &_nodes[hash];
 	do {
 		if(    n->key.toRaw() == key.toRaw()
-		    && sq_type(n->key) == sq_type(key)){
+		    && n->key.getType() == key.getType()){
 			return n;
 		}
 	} while((n = n->next));
@@ -266,12 +274,13 @@ bool rabbit::Table::getStr(const char* key,int64_t keylen,rabbit::ObjectPtr &val
 	rabbit::Hash hash = _hashstr(key,keylen);
 	_HashNode *n = &_nodes[hash & (_numofnodes - 1)];
 	_HashNode *res = NULL;
-	do{
-		if(sq_type(n->key) == rabbit::OT_STRING && (strcmp(_stringval(n->key),key) == 0)){
+	do {
+		if (    n->key.isString() == true
+		     && strcmp(_stringval(n->key), key) == 0) {
 			res = n;
 			break;
 		}
-	}while((n = n->next));
+	} while((n = n->next));
 	if (res) {
 		val = _realval(res->val);
 		return true;

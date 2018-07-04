@@ -85,7 +85,7 @@ void rabbit::RefTable::resize(uint64_t size)
 	//rehash
 	uint64_t nfound = 0;
 	for(uint64_t n = 0; n < oldnumofslots; n++) {
-		if(sq_type(t->obj) != rabbit::OT_NULL) {
+		if(t->obj.isNull() == false) {
 			//add back;
 			assert(t->refs != 0);
 			RefNode *nn = add(rabbit::HashObj(t->obj)&(_numofslots-1),t->obj);
@@ -118,7 +118,8 @@ rabbit::RefTable::RefNode* rabbit::RefTable::get(rabbit::Object &obj,rabbit::Has
 	mainpos = rabbit::HashObj(obj)&(_numofslots-1);
 	*prev = NULL;
 	for (ref = _buckets[mainpos]; ref; ) {
-		if(ref->obj.toRaw() == obj.toRaw() && sq_type(ref->obj) == sq_type(obj))
+		if(    ref->obj.toRaw() == obj.toRaw()
+		    && ref->obj.getType() == obj.getType())
 			break;
 		*prev = ref;
 		ref = ref->next;
