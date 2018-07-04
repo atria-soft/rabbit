@@ -141,6 +141,9 @@ namespace rabbit {
 			bool canBeFalse() const {
 				return (_type & SQOBJECT_CANBEFALSE) != 0;
 			}
+			bool isDelegable() const {
+				return (_type & SQOBJECT_DELEGABLE) != 0;
+			}
 			bool isTable() const {
 				return _type == rabbit::OT_TABLE;
 			}
@@ -211,7 +214,6 @@ namespace rabbit {
 	
 	#define _realval(o) ((o).isWeakRef() == false?(rabbit::Object)o:(o).toWeakRef()->_obj)
 	
-	#define is_delegable(t) ((t).getType()&SQOBJECT_DELEGABLE)
 	#define raw_type(obj) _RAW_TYPE((obj)._type)
 	
 	#define _stringval(obj) (obj)._unVal.pString->_val

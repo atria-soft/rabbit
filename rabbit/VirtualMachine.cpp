@@ -192,8 +192,8 @@ bool rabbit::VirtualMachine::arithMetaMethod(int64_t op,const rabbit::ObjectPtr 
 		case '%': mm=MT_MODULO; break;
 		default: mm = MT_ADD; assert(0); break; //shutup compiler
 	}
-	if(is_delegable(o1) && o1.toDelegable()->_delegate) {
-
+	if(    o1.isDelegable() == true
+	    && o1.toDelegable()->_delegate) {
 		rabbit::ObjectPtr closure;
 		if(o1.toDelegable()->getMetaMethod(this, mm, closure)) {
 			push(o1);
@@ -370,7 +370,8 @@ bool rabbit::VirtualMachine::stringCat(const rabbit::ObjectPtr &str,const rabbit
 
 bool rabbit::VirtualMachine::typeOf(const rabbit::ObjectPtr &obj1,rabbit::ObjectPtr &dest)
 {
-	if(is_delegable(obj1) && obj1.toDelegable()->_delegate) {
+	if(    obj1.isDelegable() == true
+	    && obj1.toDelegable()->_delegate) {
 		rabbit::ObjectPtr closure;
 		if(obj1.toDelegable()->getMetaMethod(this, MT_TYPEOF, closure)) {
 			push(obj1);
