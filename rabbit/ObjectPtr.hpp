@@ -52,6 +52,7 @@ namespace rabbit {
 			ObjectPtr& operator=(const ObjectPtr& _obj);
 			ObjectPtr& operator=(const Object& _obj);
 			void Null();
+			void swap(rabbit::ObjectPtr& _obj);
 		private:
 			ObjectPtr(const char * _obj){} //safety
 	};

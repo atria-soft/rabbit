@@ -177,7 +177,7 @@ void rabbit::sq_addref(rabbit::VirtualMachine* v,rabbit::Object *po)
 	if(po->isRefCounted() == false) {
 		return;
 	}
-	__addRef(po->_type,po->_unVal);
+	po->addRef();
 }
 
 uint64_t rabbit::sq_getrefcount(rabbit::VirtualMachine* v,rabbit::Object *po)
@@ -194,7 +194,7 @@ rabbit::Bool rabbit::sq_release(rabbit::VirtualMachine* v,rabbit::Object *po)
 		return SQTrue;
 	}
 	bool ret = (po->_unVal.pRefCounted->refCountget() <= 1) ? SQTrue : SQFalse;
-	__release(po->_type,po->_unVal);
+	po->releaseRef();
 	return ret; //the ret val doesn't work(and cannot be fixed)
 }
 

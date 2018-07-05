@@ -31,3 +31,29 @@ rabbit::Object rabbit::Object::getRealObject() const {
 rabbit::UserPointer rabbit::Object::getUserDataValue() const {
 	return (rabbit::UserPointer)sq_aligning(_unVal.pUserData + 1);
 }
+
+void rabbit::Object::addRef() {
+	if ((_type&SQOBJECT_REF_COUNTED) != 0) {
+		_unVal.pRefCounted->refCountIncrement();
+	}
+}
+
+void rabbit::Object::releaseRef() {
+	if (    (_type&SQOBJECT_REF_COUNTED) != 0
+	     && (_unVal.pRefCounted->refCountDecrement()==0)) {
+		_unVal.pRefCounted->release();
+	}
+	_type = rabbit::OT_NULL;
+	_unVal.raw = 0;
+}
+
+void rabbit::Object::swap(rabbit::Object& _obj) {
+	rabbit::ObjectType tOldType = _type;
+	rabbit::ObjectValue unOldVal = _unVal;
+	_type = _obj._type;
+	_unVal = _obj._unVal;
+	_obj._type = tOldType;
+	_obj._unVal = unOldVal;
+}
+
+

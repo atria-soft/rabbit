@@ -9,26 +9,19 @@
 #include <rabbit/ObjectPtr.hpp>
 #include <rabbit/RefCounted.hpp>
 
-#define RABBIT_OBJ_REF_TYPE_INSTANCIATE(type,_class,sym) \
+#define RABBIT_OBJ_REF_TYPE_INSTANCIATE(type, _class, sym) \
 	rabbit::ObjectPtr::ObjectPtr(_class * x) \
 	{ \
 		_unVal.raw = 0; \
 		_type=type; \
 		_unVal.sym = x; \
 		assert(_unVal.pTable); \
-		_unVal.pRefCounted->refCountIncrement(); \
+		addRef(); \
 	} \
 	rabbit::ObjectPtr& rabbit::ObjectPtr::operator=(_class *x) \
 	{  \
-		rabbit::ObjectType tOldType; \
-		rabbit::ObjectValue unOldVal; \
-		tOldType=_type; \
-		unOldVal=_unVal; \
-		_type = type; \
-		_unVal.raw = 0; \
-		_unVal.sym = x; \
-		_unVal.pRefCounted->refCountIncrement(); \
-		__release(tOldType,unOldVal); \
+		rabbit::ObjectPtr tmp{x}; \
+		swap(tmp); \
 		return *this; \
 	}
 
@@ -41,10 +34,8 @@
 	} \
 	rabbit::ObjectPtr& rabbit::ObjectPtr::operator=(_class x) \
 	{  \
-		__release(_type,_unVal); \
-		_type = type; \
-		_unVal.raw = 0; \
-		_unVal.sym = x; \
+		rabbit::ObjectPtr tmp{x}; \
+		swap(tmp); \
 		return *this; \
 	}
 
@@ -78,13 +69,13 @@ rabbit::ObjectPtr::ObjectPtr() {
 rabbit::ObjectPtr::ObjectPtr(const rabbit::ObjectPtr& _obj) {
 	_type = _obj._type;
 	_unVal = _obj._unVal;
-	__addRef(_type,_unVal);
+	addRef();
 }
 
 rabbit::ObjectPtr::ObjectPtr(const rabbit::Object& _obj) {
 	_type = _obj._type;
 	_unVal = _obj._unVal;
-	__addRef(_type,_unVal);
+	addRef();
 }
 
 rabbit::ObjectPtr::ObjectPtr(bool _value) {
@@ -94,49 +85,41 @@ rabbit::ObjectPtr::ObjectPtr(bool _value) {
 }
 
 rabbit::ObjectPtr& rabbit::ObjectPtr::operator=(bool _value) {
-	__release(_type,_unVal);
+	releaseRef();
 	_unVal.raw = 0;
 	_type = rabbit::OT_BOOL;
 	_unVal.nInteger = _value?1:0;
 	return *this;
 }
 
+void rabbit::ObjectPtr::swap(rabbit::ObjectPtr& _obj) {
+	rabbit::ObjectType tOldType = _type;
+	rabbit::ObjectValue unOldVal = _unVal;
+	_type = _obj._type;
+	_unVal = _obj._unVal;
+	_obj._type = tOldType;
+	_obj._unVal = unOldVal;
+}
+
 rabbit::ObjectPtr::~ObjectPtr() {
-	__release(_type,_unVal);
+	releaseRef();
 }
 
 rabbit::ObjectPtr& rabbit::ObjectPtr::operator=(const rabbit::ObjectPtr& _obj) {
-	rabbit::ObjectType tOldType;
-	rabbit::ObjectValue unOldVal;
-	tOldType=_type;
-	unOldVal=_unVal;
-	_unVal = _obj._unVal;
-	_type = _obj._type;
-	__addRef(_type,_unVal);
-	__release(tOldType,unOldVal);
+	rabbit::ObjectPtr tmp{_obj};
+	swap(tmp);
 	return *this;
 }
 
 rabbit::ObjectPtr& rabbit::ObjectPtr::operator=(const rabbit::Object& _obj) {
-	rabbit::ObjectType tOldType;
-	rabbit::ObjectValue unOldVal;
-	tOldType=_type;
-	unOldVal=_unVal;
-	_unVal = _obj._unVal;
-	_type = _obj._type;
-	__addRef(_type,_unVal);
-	__release(tOldType,unOldVal);
+	rabbit::ObjectPtr tmp{_obj};
+	swap(tmp);
 	return *this;
 }
 
 void rabbit::ObjectPtr::Null() {
-	rabbit::ObjectType tOldType = _type;
-	rabbit::ObjectValue unOldVal = _unVal;
-	_type = rabbit::OT_NULL;
-	_unVal.raw = 0;
-	__release(tOldType ,unOldVal);
+	releaseRef();
 }
-
 
 
 uint64_t rabbit::translateIndex(const rabbit::ObjectPtr &idx) {

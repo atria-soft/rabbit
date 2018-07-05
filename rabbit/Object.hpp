@@ -223,19 +223,11 @@ namespace rabbit {
 			}
 			rabbit::Object getRealObject() const;
 			rabbit::UserPointer getUserDataValue() const;
+			
+			void addRef();
+			void releaseRef();
+			void swap(rabbit::Object& _obj);
 	};
-	
-	#define ISREFCOUNTED(t) (t&SQOBJECT_REF_COUNTED)
-	
-	#define __addRef(type,unval) if(ISREFCOUNTED(type)) \
-		{ \
-			unval.pRefCounted->refCountIncrement(); \
-		}
-	
-	#define __release(type,unval) if(ISREFCOUNTED(type) && (unval.pRefCounted->refCountDecrement()==0))  \
-		{   \
-			unval.pRefCounted->release();   \
-		}
 	
 	inline void _Swap(rabbit::Object &a,rabbit::Object &b)
 	{
