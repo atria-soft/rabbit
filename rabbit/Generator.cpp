@@ -107,8 +107,7 @@ rabbit::Generator::Generator(rabbit::SharedState *ss,rabbit::Closure *closure) {
 }
 
 rabbit::Generator *rabbit::Generator::create(rabbit::SharedState *ss,rabbit::Closure *closure) {
-	rabbit::Generator *nc=(rabbit::Generator*)SQ_MALLOC(sizeof(rabbit::Generator));
-	new ((char*)nc) rabbit::Generator(ss,closure);
+	rabbit::Generator *nc = ETK_NEW(rabbit::Generator, ss, closure);
 	return nc;
 }
 

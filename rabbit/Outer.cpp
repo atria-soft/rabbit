@@ -16,8 +16,7 @@ rabbit::Outer::Outer(rabbit::SharedState *ss, rabbit::ObjectPtr *outer){
 }
 
 rabbit::Outer* rabbit::Outer::create(rabbit::SharedState *ss, rabbit::ObjectPtr *outer) {
-	rabbit::Outer *nc  = (rabbit::Outer*)SQ_MALLOC(sizeof(rabbit::Outer));
-	new ((char*)nc) rabbit::Outer(ss, outer);
+	rabbit::Outer *nc = ETK_NEW(rabbit::Outer, ss, outer);
 	return nc;
 }
 
@@ -26,6 +25,5 @@ rabbit::Outer::~Outer() {
 }
 
 void rabbit::Outer::release() {
-	this->~Outer();
-	sq_vm_free(this,sizeof(rabbit::Outer));
+	ETK_FREE(rabbit::Outer, this);
 }

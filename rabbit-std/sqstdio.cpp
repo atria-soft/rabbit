@@ -147,13 +147,12 @@ static int64_t _file_constructor(rabbit::VirtualMachine* v)
 		return rabbit::sq_throwerror(v,"wrong parameter");
 	}
 
-	f = new (rabbit::sq_malloc(sizeof(rabbit::std::File)))rabbit::std::File(newf,owns);
-	if(SQ_FAILED(rabbit::sq_setinstanceup(v,1,f))) {
-		f->~File();
-		rabbit::sq_free(f,sizeof(rabbit::std::File));
+	f = ETK_NEW(rabbit::std::File, newf, owns);
+	if(SQ_FAILED(rabbit::sq_setinstanceup(v, 1, f))) {
+		ETK_DELETE(rabbit::std::File, f);
 		return rabbit::sq_throwerror(v, "cannot create blob with negative size");
 	}
-	rabbit::sq_setreleasehook(v,1,_file_releasehook);
+	rabbit::sq_setreleasehook(v, 1, _file_releasehook);
 	return 0;
 }
 

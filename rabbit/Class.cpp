@@ -50,8 +50,7 @@ rabbit::Class::~Class() {
 }
 
 rabbit::Class* rabbit::Class::create(rabbit::SharedState *ss, Class *base) {
-	rabbit::Class *newclass = (Class *)SQ_MALLOC(sizeof(Class));
-	new ((char*)newclass) Class(ss, base);
+	rabbit::Class *newclass = ETK_NEW(Class, ss, base);
 	return newclass;
 }
 

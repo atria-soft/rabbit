@@ -28,7 +28,7 @@ rabbit::String *rabbit::String::create(rabbit::SharedState *ss,const char *s,int
 
 void rabbit::String::release()
 {
-	REMOVE_STRING(_sharedstate,this);
+	REMOVE_STRING(_sharedstate, this);
 }
 
 int64_t rabbit::String::next(const rabbit::ObjectPtr &refpos, rabbit::ObjectPtr &outkey, rabbit::ObjectPtr &outval)

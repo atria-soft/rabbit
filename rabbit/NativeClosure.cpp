@@ -42,6 +42,5 @@ rabbit::NativeClosure::~NativeClosure() {
 void rabbit::NativeClosure::release(){
 	int64_t size = _CALC_NATVIVECLOSURE_SIZE(_noutervalues);
 	_DESTRUCT_VECTOR(ObjectPtr,_noutervalues,_outervalues);
-	this->~NativeClosure();
-	sq_free(this,size);
+	ETK_FREE(NativeClosure, this);
 }

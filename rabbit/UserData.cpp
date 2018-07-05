@@ -17,8 +17,7 @@ rabbit::UserData::~UserData() {
 }
 
 rabbit::UserData* rabbit::UserData::create(rabbit::SharedState *ss, int64_t size) {
-	UserData* ud = (UserData*)SQ_MALLOC(sq_aligning(sizeof(UserData))+size);
-	new ((char*)ud) UserData(ss);
+	UserData* ud = ETK_NEW(UserData, ss);
 	ud->m_size = size;
 	ud->m_typetag = 0;
 	return ud;
@@ -28,9 +27,7 @@ void rabbit::UserData::release() {
 	if (m_hook) {
 		m_hook((rabbit::UserPointer)sq_aligning(this + 1),m_size);
 	}
-	int64_t tsize = m_size;
-	this->~UserData();
-	SQ_FREE(this, sq_aligning(sizeof(UserData)) + tsize);
+	ETK_FREE(UserData, this);
 }
 
 const int64_t& rabbit::UserData::getsize() const {

@@ -138,10 +138,9 @@ static int64_t _blob_constructor(rabbit::VirtualMachine* v)
 	if(size < 0) return rabbit::sq_throwerror(v, "cannot create blob with negative size");
 	//rabbit::std::Blob *b = new rabbit::std::Blob(size);
 
-	rabbit::std::Blob *b = new (rabbit::sq_malloc(sizeof(rabbit::std::Blob)))rabbit::std::Blob(size);
+	rabbit::std::Blob *b = ETK_NEW(rabbit::std::Blob, size);
 	if(SQ_FAILED(rabbit::sq_setinstanceup(v,1,b))) {
-		b->~Blob();
-		rabbit::sq_free(b,sizeof(rabbit::std::Blob));
+		ETK_FREE(rabbit::std::Blob, b);
 		return rabbit::sq_throwerror(v, "cannot create blob");
 	}
 	rabbit::sq_setreleasehook(v,1,_blob_releasehook);
@@ -156,11 +155,10 @@ static int64_t _blob__cloned(rabbit::VirtualMachine* v)
 			return SQ_ERROR;
 	}
 	//rabbit::std::Blob *thisone = new rabbit::std::Blob(other->Len());
-	rabbit::std::Blob *thisone = new (rabbit::sq_malloc(sizeof(rabbit::std::Blob)))rabbit::std::Blob(other->Len());
+	rabbit::std::Blob *thisone = ETK_NEW(rabbit::std::Blob, other->Len());
 	memcpy(thisone->getBuf(),other->getBuf(),thisone->Len());
 	if(SQ_FAILED(rabbit::sq_setinstanceup(v,1,thisone))) {
-		thisone->~Blob();
-		rabbit::sq_free(thisone,sizeof(rabbit::std::Blob));
+		ETK_FREE(rabbit::std::Blob, thisone);
 		return rabbit::sq_throwerror(v, "cannot clone blob");
 	}
 	rabbit::sq_setreleasehook(v,1,_blob_releasehook);

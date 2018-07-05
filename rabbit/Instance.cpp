@@ -32,7 +32,7 @@ rabbit::Instance::Instance(rabbit::SharedState *ss, rabbit::Class *c, int64_t me
 	_class = c;
 	uint64_t nvalues = _class->_defaultvalues.size();
 	for(uint64_t n = 0; n < nvalues; n++) {
-		new ((char*)&_values[n]) rabbit::ObjectPtr(_class->_defaultvalues[n].val);
+		&_values[n] = ETK_NEW(rabbit::ObjectPtr, _class->_defaultvalues[n].val);
 	}
 	init(ss);
 }
@@ -42,7 +42,7 @@ rabbit::Instance::Instance(rabbit::SharedState *ss, rabbit::Instance *i, int64_t
 	_class = i->_class;
 	uint64_t nvalues = _class->_defaultvalues.size();
 	for(uint64_t n = 0; n < nvalues; n++) {
-		new ((char*)&_values[n]) rabbit::ObjectPtr(i->_values[n]);
+		&_values[n] = ETK_NEW(rabbit::ObjectPtr, i->_values[n]);
 	}
 	init(ss);
 }
@@ -80,8 +80,7 @@ bool rabbit::Instance::instanceOf(rabbit::Class *trg) {
 
 rabbit::Instance* rabbit::Instance::create(rabbit::SharedState *ss,rabbit::Class *theclass) {
 	int64_t size = calcinstancesize(theclass);
-	Instance *newinst = (Instance *)SQ_MALLOC(size);
-	new ((char*)newinst) Instance(ss, theclass,size);
+	Instance *newinst = ETK_NEW(Instance, ss, theclass,size);
 	if(theclass->_udsize) {
 		newinst->_userpointer = ((unsigned char *)newinst) + (size - theclass->_udsize);
 	}
@@ -90,8 +89,7 @@ rabbit::Instance* rabbit::Instance::create(rabbit::SharedState *ss,rabbit::Class
 
 rabbit::Instance* rabbit::Instance::clone(rabbit::SharedState *ss) {
 	int64_t size = calcinstancesize(_class);
-	Instance *newinst = (Instance *)SQ_MALLOC(size);
-	new ((char*)newinst) Instance(ss, this,size);
+	Instance *newinst = ETK_NEW(Instance, ss, this, size);
 	if(_class->_udsize) {
 		newinst->_userpointer = ((unsigned char *)newinst) + (size - _class->_udsize);
 	}
@@ -130,7 +128,6 @@ void rabbit::Instance::release() {
 		return;
 	}
 	int64_t size = _memsize;
-	this->~Instance();
-	SQ_FREE(this, size);
+	ETK_FREE(Instance, this);
 }
 

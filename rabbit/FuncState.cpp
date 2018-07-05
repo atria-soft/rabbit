@@ -658,10 +658,8 @@ rabbit::FunctionProto* rabbit::FuncState::buildProto() {
 	return f;
 }
 
-rabbit::FuncState *rabbit::FuncState::pushChildState(rabbit::SharedState *ss)
-{
-	FuncState *child = (rabbit::FuncState *)sq_malloc(sizeof(rabbit::FuncState));
-	new ((char*)child) FuncState(ss,this,_errfunc,_errtarget);
+rabbit::FuncState *rabbit::FuncState::pushChildState(rabbit::SharedState *ss) {
+	FuncState *child = ETK_NEW(rabbit::FuncState, ss, this, _errfunc, _errtarget);
 	_childstates.pushBack(child);
 	return child;
 }

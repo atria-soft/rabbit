@@ -172,8 +172,7 @@ void rabbit::Closure::release(){
 	_DESTRUCT_VECTOR(ObjectPtr,f->_noutervalues,_outervalues);
 	_DESTRUCT_VECTOR(ObjectPtr,f->_ndefaultparams,_defaultparams);
 	__Objrelease(_function);
-	this->~Closure();
-	sq_vm_free(this,size);
+	ETK_FREE(Closure, this);
 }
 
 void rabbit::Closure::setRoot(rabbit::WeakRef *r) {

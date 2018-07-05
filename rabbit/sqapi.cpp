@@ -61,16 +61,13 @@ rabbit::VirtualMachine* rabbit::sq_open(int64_t initialstacksize)
 {
 	rabbit::SharedState *ss = ETK_NEW(rabbit::SharedState);
 	ss->init();
-	
-	char* allocatedData = (char*)SQ_MALLOC(sizeof(rabbit::VirtualMachine));
-	rabbit::VirtualMachine *v = new (allocatedData) rabbit::VirtualMachine(ss);
+	rabbit::VirtualMachine *v = ETK_NEW(rabbit::VirtualMachine, ss);
 	ss->_root_vm = v;
 	
 	if(v->init(NULL, initialstacksize)) {
 		return v;
 	} else {
-		v->~VirtualMachine();
-		SQ_FREE(allocatedData,sizeof(rabbit::VirtualMachine));
+		ETK_FREE(rabbit::VirtualMachine, v);
 		return NULL;
 	}
 	return v;
@@ -80,17 +77,14 @@ rabbit::VirtualMachine* rabbit::sq_newthread(rabbit::VirtualMachine* friendvm, i
 {
 	rabbit::SharedState *ss;
 	ss=_get_shared_state(friendvm);
-	
-	char* allocatedData = (char*)SQ_MALLOC(sizeof(rabbit::VirtualMachine));
-	rabbit::VirtualMachine *v = new (allocatedData) rabbit::VirtualMachine(ss);
+	rabbit::VirtualMachine *v = ETK_NEW(rabbit::VirtualMachine, ss);
 	ss->_root_vm = v;
 	
 	if(v->init(friendvm, initialstacksize)) {
 		friendvm->push(v);
 		return v;
 	} else {
-		v->~VirtualMachine();
-		SQ_FREE(allocatedData,sizeof(rabbit::VirtualMachine));
+		ETK_FREE(rabbit::VirtualMachine, v);
 		return NULL;
 	}
 }
@@ -258,17 +252,17 @@ void rabbit::sq_pushstring(rabbit::VirtualMachine* v,const char *s,int64_t len)
 	else v->pushNull();
 }
 
-void rabbit::sq_pushinteger(rabbit::VirtualMachine* v,int64_t n)
+void rabbit::sq_pushinteger(rabbit::VirtualMachine* v, int64_t n)
 {
 	v->push(n);
 }
 
-void rabbit::sq_pushbool(rabbit::VirtualMachine* v,rabbit::Bool b)
+void rabbit::sq_pushbool(rabbit::VirtualMachine* v, rabbit::Bool b)
 {
 	v->push(b?true:false);
 }
 
-void rabbit::sq_pushfloat(rabbit::VirtualMachine* v,float_t n)
+void rabbit::sq_pushfloat(rabbit::VirtualMachine* v, float_t n)
 {
 	v->push(n);
 }

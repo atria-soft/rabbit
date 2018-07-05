@@ -46,8 +46,7 @@ rabbit::String *rabbit::StringTable::add(const char *news,int64_t len)
 			return s; //found
 	}
 
-	rabbit::String *t = (rabbit::String *)SQ_MALLOC(sq_rsl(len)+sizeof(rabbit::String));
-	new ((char*)t) rabbit::String;
+	rabbit::String *t = ETK_NEW(rabbit::String);
 	t->_sharedstate = _sharedstate;
 	memcpy(t->_val,news,sq_rsl(len));
 	t->_val[len] = '\0';
@@ -92,9 +91,7 @@ void rabbit::StringTable::remove(rabbit::String *bs)
 			else
 				_strings[h] = s->_next;
 			_slotused--;
-			int64_t slen = s->_len;
-			s->~String();
-			SQ_FREE(s,sizeof(rabbit::String) + sq_rsl(slen));
+			ETK_FREE(String, s);
 			return;
 		}
 		prev = s;
