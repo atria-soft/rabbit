@@ -225,7 +225,7 @@ bool rabbit::VirtualMachine::NEG_OP(rabbit::ObjectPtr &trg,const rabbit::ObjectP
 					if(callMetaMethod(closure, MT_UNM, 1, temp_reg) == false) {
 						return false;
 					}
-					_Swap(trg,temp_reg);
+					trg.swap(temp_reg);
 					return true;
 				}
 			}
@@ -868,17 +868,21 @@ exception_restore:
 						SQ_THROW();
 					}
 					STK(arg3) = o;
-					_Swap(TARGET,temp_reg);//TARGET = temp_reg;
+					TARGET.swap(temp_reg);
 				}
 				continue;
 			case _OP_GETK:
-				if (!get(STK(arg2), ci->_literals[arg1], temp_reg, 0,arg2)) { SQ_THROW();}
-				_Swap(TARGET,temp_reg);//TARGET = temp_reg;
+				if (!get(STK(arg2), ci->_literals[arg1], temp_reg, 0,arg2)) {
+					SQ_THROW();
+				}
+				TARGET.swap(temp_reg);
 				continue;
 			case _OP_MOVE: TARGET = STK(arg1); continue;
 			case _OP_NEWSLOT:
 				_GUARD(newSlot(STK(arg1), STK(arg2), STK(arg3),false));
-				if(arg0 != 0xFF) TARGET = STK(arg3);
+				if(arg0 != 0xFF) {
+					TARGET = STK(arg3);
+				}
 				continue;
 			case _OP_DELETE: _GUARD(deleteSlot(STK(arg1), STK(arg2), TARGET)); continue;
 			case _OP_SET:
@@ -887,7 +891,7 @@ exception_restore:
 				continue;
 			case _OP_GET:
 				if (!get(STK(arg1), STK(arg2), temp_reg, 0,arg1)) { SQ_THROW(); }
-				_Swap(TARGET,temp_reg);//TARGET = temp_reg;
+				TARGET.swap(temp_reg);
 				continue;
 			case _OP_EQ:{
 				bool res;
@@ -912,7 +916,7 @@ exception_restore:
 				if(Return(arg0, arg1, temp_reg)){
 					assert(traps==0);
 					//outres = temp_reg;
-					_Swap(outres,temp_reg);
+					outres.swap(temp_reg);
 					return true;
 				}
 				continue;
@@ -1053,7 +1057,9 @@ exception_restore:
 					if(sarg1 != MAX_FUNC_STACKSIZE) temp_reg = STK(arg1);
 					_GUARD(ci->_generator->yield(this,arg2));
 					traps -= ci->_etraps;
-					if(sarg1 != MAX_FUNC_STACKSIZE) _Swap(STK(arg1),temp_reg);//STK(arg1) = temp_reg;
+					if(sarg1 != MAX_FUNC_STACKSIZE) {
+						STK(arg1).swap(temp_reg);
+					}
 				}
 				else { raise_error("trying to yield a '%s',only genenerator can be yielded", getTypeName(ci->_generator)); SQ_THROW();}
 				if(Return(arg0, arg1, temp_reg)){

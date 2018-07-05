@@ -14,11 +14,11 @@
 #include <rabbit/Object.hpp>
 
 namespace rabbit {
-	#define RABBIT_OBJ_REF_TYPE_DECLARE(type,_class,sym) \
+	#define RABBIT_OBJ_REF_TYPE_DECLARE(type,_class) \
 		ObjectPtr(_class * x); \
 		ObjectPtr& operator=(_class *x);
 	
-	#define RABBIT_SCALAR_TYPE_DECLARE(type,_class,sym) \
+	#define RABBIT_SCALAR_TYPE_DECLARE(type,_class) \
 		ObjectPtr(_class x); \
 		ObjectPtr& operator=(_class x);
 	
@@ -28,23 +28,23 @@ namespace rabbit {
 			ObjectPtr(const ObjectPtr& _obj);
 			ObjectPtr(const Object& _obj);
 			
-			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_TABLE, rabbit::Table, pTable)
-			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_CLASS, rabbit::Class, pClass)
-			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_INSTANCE, rabbit::Instance, pInstance)
-			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_ARRAY, rabbit::Array, pArray)
-			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_CLOSURE, rabbit::Closure, pClosure)
-			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_NATIVECLOSURE, rabbit::NativeClosure, pNativeClosure)
-			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_OUTER, rabbit::Outer, pOuter)
-			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_GENERATOR, rabbit::Generator, pGenerator)
-			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_STRING, rabbit::String, pString)
-			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_USERDATA, UserData, pUserData)
-			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_WEAKREF, WeakRef, pWeakRef)
-			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_THREAD, VirtualMachine, pThread)
-			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_FUNCPROTO, rabbit::FunctionProto, pFunctionProto)
+			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_TABLE, rabbit::Table)
+			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_CLASS, rabbit::Class)
+			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_INSTANCE, rabbit::Instance)
+			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_ARRAY, rabbit::Array)
+			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_CLOSURE, rabbit::Closure)
+			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_NATIVECLOSURE, rabbit::NativeClosure)
+			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_OUTER, rabbit::Outer)
+			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_GENERATOR, rabbit::Generator)
+			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_STRING, rabbit::String)
+			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_USERDATA, UserData)
+			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_WEAKREF, WeakRef)
+			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_THREAD, VirtualMachine)
+			RABBIT_OBJ_REF_TYPE_DECLARE(rabbit::OT_FUNCPROTO, rabbit::FunctionProto)
 			
-			RABBIT_SCALAR_TYPE_DECLARE(rabbit::OT_INTEGER, int64_t, nInteger)
-			RABBIT_SCALAR_TYPE_DECLARE(rabbit::OT_FLOAT, float_t, fFloat)
-			RABBIT_SCALAR_TYPE_DECLARE(rabbit::OT_USERPOINTER, UserPointer, pUserPointer)
+			RABBIT_SCALAR_TYPE_DECLARE(rabbit::OT_INTEGER, int64_t)
+			RABBIT_SCALAR_TYPE_DECLARE(rabbit::OT_FLOAT, float_t)
+			RABBIT_SCALAR_TYPE_DECLARE(rabbit::OT_USERPOINTER, UserPointer)
 			
 			ObjectPtr(bool _value);
 			ObjectPtr& operator=(bool _value);
