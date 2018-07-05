@@ -758,7 +758,7 @@ static bool _hsort_sift_down(rabbit::VirtualMachine* v,rabbit::Array *arr, int64
 				return false; // We'd be swapping ourselve. The compare function is incorrect
 			}
 
-			_Swap((*arr)[root], (*arr)[maxChild]);
+			(*arr)[root].swap((*arr)[maxChild]);
 			root = maxChild;
 		}
 		else {
@@ -779,7 +779,7 @@ static bool _hsort(rabbit::VirtualMachine* v,rabbit::ObjectPtr &arr, int64_t SQ_
 
 	for (i = array_size-1; i >= 1; i--)
 	{
-		_Swap((*a)[0],(*a)[i]);
+		(*a)[0].swap((*a)[i]);
 		if(!_hsort_sift_down(v,a, 0, i-1,func)) return false;
 	}
 	return true;

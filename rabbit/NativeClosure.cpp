@@ -17,8 +17,7 @@ rabbit::NativeClosure::NativeClosure(rabbit::SharedState *ss,SQFUNCTION func) {
 
 rabbit::NativeClosure* rabbit::NativeClosure::create(rabbit::SharedState *ss,SQFUNCTION func,int64_t nouters) {
 	int64_t size = _CALC_NATVIVECLOSURE_SIZE(nouters);
-	rabbit::NativeClosure *nc=(rabbit::NativeClosure*)SQ_MALLOC(size);
-	new ((char*)nc) rabbit::NativeClosure(ss,func);
+	rabbit::NativeClosure *nc = ETK_NEW(rabbit::NativeClosure, ss, func);
 	nc->_outervalues = (rabbit::ObjectPtr *)(nc + 1);
 	nc->_noutervalues = nouters;
 	_CONSTRUCT_VECTOR(rabbit::ObjectPtr,nc->_noutervalues,nc->_outervalues);

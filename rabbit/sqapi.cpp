@@ -9,6 +9,7 @@
 #include <rabbit/VirtualMachine.hpp>
 
 
+#include <etk/Allocator.hpp>
 #include <rabbit/Array.hpp>
 
 
@@ -58,8 +59,7 @@ namespace rabbit {
 }
 rabbit::VirtualMachine* rabbit::sq_open(int64_t initialstacksize)
 {
-	rabbit::SharedState *ss;
-	sq_new(ss, rabbit::SharedState);
+	rabbit::SharedState *ss = ETK_NEW(rabbit::SharedState);
 	ss->init();
 	
 	char* allocatedData = (char*)SQ_MALLOC(sizeof(rabbit::VirtualMachine));
@@ -140,7 +140,7 @@ void rabbit::sq_close(rabbit::VirtualMachine* v)
 {
 	rabbit::SharedState *ss = _get_shared_state(v);
 	ss->_root_vm.toVirtualMachine()->finalize();
-	sq_delete(ss, SharedState);
+	ETK_DELETE(SharedState, ss);
 }
 
 int64_t rabbit::sq_getversion()

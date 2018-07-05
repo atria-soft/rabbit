@@ -8,6 +8,7 @@
 #pragma once
 
 #include <etk/types.hpp>
+#include <etk/Allocator.hpp>
 #include <ctype.h>
 #ifdef SQUSEDOUBLE
 typedef double float_t;

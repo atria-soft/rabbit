@@ -123,6 +123,6 @@ void rabbit::Generator::kill() {
 }
 
 void rabbit::Generator::release() {
-	sq_delete(this,Generator);
+	ETK_DELETE(Generator, this);
 }
 

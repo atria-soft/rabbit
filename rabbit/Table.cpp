@@ -293,5 +293,5 @@ int64_t rabbit::Table::countUsed() const {
 }
 
 void rabbit::Table::release() {
-	sq_delete(this, Table);
+	ETK_DELETE(Table, this);
 }

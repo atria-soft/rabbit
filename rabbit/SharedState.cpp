@@ -6,6 +6,9 @@
  * @license MPL-2 (see license file)
  */
 #include <rabbit/SharedState.hpp>
+
+#include <etk/Allocator.hpp>
+
 #include <rabbit/Table.hpp>
 #include <rabbit/String.hpp>
 #include <rabbit/StringTable.hpp>
@@ -97,11 +100,10 @@ void rabbit::SharedState::init()
 {
 	_scratchpad=NULL;
 	_scratchpadsize=0;
-	_stringtable = (rabbit::StringTable*)SQ_MALLOC(sizeof(rabbit::StringTable));
-	new ((char*)_stringtable) rabbit::StringTable(this);
-	sq_new(_metamethods,etk::Vector<rabbit::ObjectPtr>);
-	sq_new(_systemstrings,etk::Vector<rabbit::ObjectPtr>);
-	sq_new(_types,etk::Vector<rabbit::ObjectPtr>);
+	_stringtable = ETK_NEW(rabbit::StringTable, this);
+	_metamethods = ETK_NEW(etk::Vector<rabbit::ObjectPtr>);
+	_systemstrings = ETK_NEW(etk::Vector<rabbit::ObjectPtr>);
+	_types = ETK_NEW(etk::Vector<rabbit::ObjectPtr>);
 	_metamethodsmap = rabbit::Table::create(this,rabbit::MT_LAST-1);
 	//adding type strings to avoid memory trashing
 	//types names
@@ -185,12 +187,13 @@ rabbit::SharedState::~SharedState()
 	_instance_default_delegate.Null();
 	_weakref_default_delegate.Null();
 	_refs_table.finalize();
-	using tmpType = etk::Vector<rabbit::ObjectPtr>;
-	sq_delete(_types, tmpType);
-	sq_delete(_systemstrings, tmpType);
-	sq_delete(_metamethods, tmpType);
-	sq_delete(_stringtable, StringTable);
-	if(_scratchpad)SQ_FREE(_scratchpad,_scratchpadsize);
+	ETK_DELETE(etk::Vector<rabbit::ObjectPtr>, _types);
+	ETK_DELETE(etk::Vector<rabbit::ObjectPtr>, _systemstrings);
+	ETK_DELETE(etk::Vector<rabbit::ObjectPtr>, _metamethods);
+	ETK_DELETE(rabbit::StringTable, _stringtable);
+	if(_scratchpad) {
+		SQ_FREE(_scratchpad,_scratchpadsize);
+	}
 }
 
 

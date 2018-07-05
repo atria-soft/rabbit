@@ -30,8 +30,7 @@ rabbit::Array::~Array() {
 // TODO : remove this ETK_ALLOC can do it natively ...
 rabbit::Array* rabbit::Array::create(rabbit::SharedState* _ss,
                      int64_t _ninitialsize) {
-	Array *newarray=(Array*)SQ_MALLOC(sizeof(Array));
-	new ((char*)newarray) Array(_ss, _ninitialsize);
+	Array *newarray = ETK_NEW(Array, _ss, _ninitialsize);
 	return newarray;
 }
 void rabbit::Array::finalize() {
@@ -126,7 +125,7 @@ bool rabbit::Array::remove(int64_t _idx) {
 	return true;
 }
 void rabbit::Array::release() {
-	sq_delete(this, Array);
+	ETK_DELETE(Array, this);
 }
 rabbit::ObjectPtr& rabbit::Array::operator[] (const size_t _pos) {
 	return m_data[_pos];

@@ -668,7 +668,7 @@ rabbit::FuncState *rabbit::FuncState::pushChildState(rabbit::SharedState *ss)
 
 void rabbit::FuncState::popChildState() {
 	FuncState *child = _childstates.back();
-	sq_delete(child, FuncState);
+	ETK_DELETE(FuncState, child);
 	_childstates.popBack();
 }
 

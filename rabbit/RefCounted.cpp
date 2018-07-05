@@ -7,6 +7,9 @@
  */
 
 #include <rabbit/RefCounted.hpp>
+
+#include <etk/Allocator.hpp>
+
 #include <rabbit/WeakRef.hpp>
 #include <rabbit/rabbit.hpp>
 #include <rabbit/squtils.hpp>
@@ -14,7 +17,7 @@
 
 rabbit::WeakRef * rabbit::RefCounted::getWeakRef(rabbit::ObjectType type) {
 	if(!_weakref) {
-		sq_new(_weakref, WeakRef);
+		_weakref = ETK_NEW(WeakRef);
 		_weakref->_obj._unVal.raw = 0; //clean the whole union
 		_weakref->_obj._type = type;
 		_weakref->_obj._unVal.pRefCounted = this;

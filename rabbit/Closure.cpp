@@ -156,8 +156,7 @@ rabbit::Closure::Closure(rabbit::SharedState *ss,rabbit::FunctionProto *func){
 }
 rabbit::Closure *rabbit::Closure::create(rabbit::SharedState *ss,rabbit::FunctionProto *func,rabbit::WeakRef *root){
 	int64_t size = _CALC_CLOSURE_SIZE(func);
-	rabbit::Closure *nc=(rabbit::Closure*)SQ_MALLOC(size);
-	new ((char*)nc) rabbit::Closure(ss,func);
+	rabbit::Closure *nc = ETK_NEW(rabbit::Closure, ss, func);
 	nc->_outervalues = (rabbit::ObjectPtr *)(nc + 1);
 	nc->_defaultparams = &nc->_outervalues[func->_noutervalues];
 	nc->_root = root;

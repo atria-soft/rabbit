@@ -87,7 +87,7 @@ void rabbit::Class::release() {
 	if (_hook) {
 		_hook(_typetag,0);
 	}
-	sq_delete(this, Class);
+	ETK_DELETE(Class, this);
 }
 
 bool rabbit::Class::newSlot(rabbit::SharedState *ss,const rabbit::ObjectPtr &key,const rabbit::ObjectPtr &val,bool bstatic) {

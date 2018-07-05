@@ -15,5 +15,5 @@ void rabbit::WeakRef::release() {
 	if(_obj.isRefCounted() == true) {
 		_obj._unVal.pRefCounted->_weakref = null;
 	}
-	sq_delete(this, WeakRef);
+	ETK_DELETE(WeakRef, this);
 }

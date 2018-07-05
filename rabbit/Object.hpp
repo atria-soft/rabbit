@@ -12,7 +12,6 @@
 #include <rabbit/ObjectValue.hpp>
 
 namespace rabbit {
-
 	class Object {
 		public:
 			rabbit::ObjectType _type;
@@ -228,14 +227,4 @@ namespace rabbit {
 			void releaseRef();
 			void swap(rabbit::Object& _obj);
 	};
-	
-	inline void _Swap(rabbit::Object &a,rabbit::Object &b)
-	{
-		rabbit::ObjectType tOldType = a._type;
-		rabbit::ObjectValue unOldVal = a._unVal;
-		a._type = b._type;
-		a._unVal = b._unVal;
-		b._type = tOldType;
-		b._unVal = unOldVal;
-	}
 }

@@ -28,7 +28,6 @@ namespace rabbit {
 			rabbit::NativeClosure *clone();
 			~NativeClosure();
 			void release();
-		
 			int64_t _nparamscheck;
 			etk::Vector<int64_t> _typecheck;
 			rabbit::ObjectPtr *_outervalues;
