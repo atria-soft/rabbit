@@ -56,7 +56,7 @@ namespace rabbit {
 		return sq_throwerror(v, _get_shared_state(v)->getScratchPad(-1));
 	}
 }
-rabbit::VirtualMachine* rabbit::sq_open(int64_t initialstacksize)
+rabbit::VirtualMachine* rabbit::sq_open()
 {
 	rabbit::SharedState *ss;
 	sq_new(ss, rabbit::SharedState);
@@ -66,7 +66,7 @@ rabbit::VirtualMachine* rabbit::sq_open(int64_t initialstacksize)
 	rabbit::VirtualMachine *v = new (allocatedData) rabbit::VirtualMachine(ss);
 	ss->_root_vm = v;
 	
-	if(v->init(NULL, initialstacksize)) {
+	if(v->init(NULL)) {
 		return v;
 	} else {
 		v->~VirtualMachine();
@@ -76,7 +76,7 @@ rabbit::VirtualMachine* rabbit::sq_open(int64_t initialstacksize)
 	return v;
 }
 
-rabbit::VirtualMachine* rabbit::sq_newthread(rabbit::VirtualMachine* friendvm, int64_t initialstacksize)
+rabbit::VirtualMachine* rabbit::sq_newthread(rabbit::VirtualMachine* friendvm)
 {
 	rabbit::SharedState *ss;
 	ss=_get_shared_state(friendvm);
@@ -85,7 +85,7 @@ rabbit::VirtualMachine* rabbit::sq_newthread(rabbit::VirtualMachine* friendvm, i
 	rabbit::VirtualMachine *v = new (allocatedData) rabbit::VirtualMachine(ss);
 	ss->_root_vm = v;
 	
-	if(v->init(friendvm, initialstacksize)) {
+	if(v->init(friendvm)) {
 		friendvm->push(v);
 		return v;
 	} else {
@@ -151,15 +151,11 @@ int64_t rabbit::sq_getversion()
 rabbit::Result rabbit::sq_compile(rabbit::VirtualMachine* v,SQLEXREADFUNC read,rabbit::UserPointer p,const char *sourcename,rabbit::Bool raiseerror)
 {
 	rabbit::ObjectPtr o;
-#ifndef NO_COMPILER
 	if(compile(v, read, p, sourcename, o, raiseerror?true:false, _get_shared_state(v)->_debuginfo)) {
 		v->push(rabbit::Closure::create(_get_shared_state(v), o.toFunctionProto(), v->_roottable.toTable()->getWeakRef(rabbit::OT_TABLE)));
 		return SQ_OK;
 	}
 	return SQ_ERROR;
-#else
-	return sq_throwerror(v,"this is a no compiler build");
-#endif
 }
 
 void rabbit::sq_enabledebuginfo(rabbit::VirtualMachine* v, rabbit::Bool enable)

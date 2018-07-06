@@ -257,7 +257,7 @@ int main(int argc, char* argv[])
 	_CrtsetAllocHook(MemAllocHook);
 #endif
 
-	v=rabbit::sq_open(1024);
+	v=rabbit::sq_open();
 	sq_setprintfunc(v,printfunc,errorfunc);
 
 	sq_pushroottable(v);

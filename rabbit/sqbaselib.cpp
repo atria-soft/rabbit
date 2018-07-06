@@ -238,9 +238,8 @@ static int64_t base_compilestring(rabbit::VirtualMachine* v)
 static int64_t base_newthread(rabbit::VirtualMachine* v)
 {
 	rabbit::ObjectPtr &func = stack_get(v,2);
-	int64_t stksize = (func.toClosure()->_function->_stacksize << 1) +2;
-	rabbit::VirtualMachine* newv = sq_newthread(v, (stksize < MIN_STACK_OVERHEAD + 2)? MIN_STACK_OVERHEAD + 2 : stksize);
-	sq_move(newv,v,-2);
+	rabbit::VirtualMachine* newv = sq_newthread(v);
+	sq_move(newv, v, -2);
 	return 1;
 }
 

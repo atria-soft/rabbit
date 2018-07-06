@@ -61,7 +61,7 @@ namespace rabbit {
 			};
 			VirtualMachine(rabbit::SharedState *ss);
 			~VirtualMachine();
-			bool init(VirtualMachine *friendvm, int64_t stacksize);
+			bool init(VirtualMachine *friendvm);
 			bool execute(rabbit::ObjectPtr &func, int64_t nargs, int64_t stackbase, rabbit::ObjectPtr &outres, rabbit::Bool raiseerror, ExecutionType et = ET_CALL);
 			//starts a native call return when the NATIVE closure returns
 			bool callNative(rabbit::NativeClosure *nclosure, int64_t nargs, int64_t newbase, rabbit::ObjectPtr &retval, int32_t target, bool &suspend,bool &tailcall);

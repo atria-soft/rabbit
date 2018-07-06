@@ -141,7 +141,8 @@ bool rabbit::VirtualMachine::ARITH_OP(uint64_t op,rabbit::ObjectPtr &trg,const r
 
 rabbit::VirtualMachine::VirtualMachine(rabbit::SharedState *ss)
 {
-	_sharedstate=ss;
+	_stack.resize(4096);
+	_sharedstate = ss;
 	_suspended = SQFalse;
 	_suspended_target = -1;
 	_suspended_root = SQFalse;
@@ -157,6 +158,27 @@ rabbit::VirtualMachine::VirtualMachine(rabbit::SharedState *ss)
 	_openouters = NULL;
 	ci = NULL;
 	_releasehook = NULL;
+}
+
+bool rabbit::VirtualMachine::init(rabbit::VirtualMachine *friendvm) {
+	_alloccallsstacksize = 4;
+	_callstackdata.resize(_alloccallsstacksize);
+	_callsstacksize = 0;
+	_callsstack = &_callstackdata[0];
+	_stackbase = 0;
+	_top = 0;
+	if(!friendvm) {
+		_roottable = rabbit::Table::create(_get_shared_state(this), 0);
+		sq_base_register(this);
+	}
+	else {
+		_roottable = friendvm->_roottable;
+		_errorhandler = friendvm->_errorhandler;
+		_debughook = friendvm->_debughook;
+		_debughook_native = friendvm->_debughook_native;
+		_debughook_closure = friendvm->_debughook_closure;
+	}
+	return true;
 }
 
 void rabbit::VirtualMachine::finalize()
@@ -185,12 +207,25 @@ bool rabbit::VirtualMachine::arithMetaMethod(int64_t op,const rabbit::ObjectPtr 
 {
 	rabbit::MetaMethod mm;
 	switch(op){
-		case '+': mm=MT_ADD; break;
-		case '-': mm=MT_SUB; break;
-		case '/': mm=MT_DIV; break;
-		case '*': mm=MT_MUL; break;
-		case '%': mm=MT_MODULO; break;
-		default: mm = MT_ADD; assert(0); break; //shutup compiler
+		case '+':
+			mm=MT_ADD;
+			break;
+		case '-':
+			mm=MT_SUB;
+			break;
+		case '/':
+			mm=MT_DIV;
+			break;
+		case '*':
+			mm=MT_MUL;
+			break;
+		case '%':
+			mm=MT_MODULO;
+			break;
+		default:
+			mm = MT_ADD;
+			assert(0);
+			break; //shutup compiler
 	}
 	if(    o1.isDelegable() == true
 	    && o1.toDelegable()->_delegate) {
@@ -379,31 +414,6 @@ bool rabbit::VirtualMachine::typeOf(const rabbit::ObjectPtr &obj1,rabbit::Object
 		}
 	}
 	dest = rabbit::String::create(_get_shared_state(this),getTypeName(obj1));
-	return true;
-}
-
-bool rabbit::VirtualMachine::init(rabbit::VirtualMachine *friendvm, int64_t stacksize)
-{
-	_stack.resize(stacksize);
-	_alloccallsstacksize = 4;
-	_callstackdata.resize(_alloccallsstacksize);
-	_callsstacksize = 0;
-	_callsstack = &_callstackdata[0];
-	_stackbase = 0;
-	_top = 0;
-	if(!friendvm) {
-		_roottable = rabbit::Table::create(_get_shared_state(this), 0);
-		sq_base_register(this);
-	}
-	else {
-		_roottable = friendvm->_roottable;
-		_errorhandler = friendvm->_errorhandler;
-		_debughook = friendvm->_debughook;
-		_debughook_native = friendvm->_debughook_native;
-		_debughook_closure = friendvm->_debughook_closure;
-	}
-
-
 	return true;
 }
 

@@ -43,8 +43,8 @@ typedef int64_t (*SQLEXREADFUNC)(rabbit::UserPointer);
 
 namespace rabbit {
 /*vm*/
-rabbit::VirtualMachine* sq_open(int64_t initialstacksize);
-rabbit::VirtualMachine* sq_newthread(rabbit::VirtualMachine* friendvm, int64_t initialstacksize);
+rabbit::VirtualMachine* sq_open();
+rabbit::VirtualMachine* sq_newthread(rabbit::VirtualMachine* friendvm);
 void sq_seterrorhandler(rabbit::VirtualMachine* v);
 void sq_close(rabbit::VirtualMachine* v);
 void sq_setforeignptr(rabbit::VirtualMachine* v,rabbit::UserPointer p);
