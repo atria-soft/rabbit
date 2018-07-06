@@ -198,10 +198,6 @@ uint64_t sq_getvmrefcount(rabbit::VirtualMachine* v, const rabbit::Object *po);
 int64_t sq_collectgarbage(rabbit::VirtualMachine* v);
 rabbit::Result sq_resurrectunreachable(rabbit::VirtualMachine* v);
 
-/*serialization*/
-rabbit::Result sq_writeclosure(rabbit::VirtualMachine* vm,SQWRITEFUNC writef,rabbit::UserPointer up);
-rabbit::Result sq_readclosure(rabbit::VirtualMachine* vm,SQREADFUNC readf,rabbit::UserPointer up);
-
 /*mem allocation*/
 void *sq_malloc(uint64_t size);
 void *sq_realloc(void* p,uint64_t oldsize,uint64_t newsize);

@@ -33,8 +33,6 @@ namespace rabbit {
 			Closure *clone();
 			~Closure();
 		
-			bool save(rabbit::VirtualMachine *v,rabbit::UserPointer up,SQWRITEFUNC write);
-			static bool load(rabbit::VirtualMachine *v,rabbit::UserPointer up,SQREADFUNC read,rabbit::ObjectPtr &ret);
 			rabbit::WeakRef *_env;
 			rabbit::WeakRef *_root;
 			rabbit::Class *_base;
@@ -42,12 +40,6 @@ namespace rabbit {
 			rabbit::ObjectPtr *_outervalues;
 			rabbit::ObjectPtr *_defaultparams;
 	};
-	bool SafeWrite(rabbit::VirtualMachine* v,SQWRITEFUNC write,rabbit::UserPointer up,rabbit::UserPointer dest,int64_t size);
-	bool SafeRead(rabbit::VirtualMachine* v,SQWRITEFUNC read,rabbit::UserPointer up,rabbit::UserPointer dest,int64_t size);
-	bool WriteTag(rabbit::VirtualMachine* v,SQWRITEFUNC write,rabbit::UserPointer up,uint32_t tag);
-	bool CheckTag(rabbit::VirtualMachine* v,SQWRITEFUNC read,rabbit::UserPointer up,uint32_t tag);
-	bool WriteObject(rabbit::VirtualMachine* v,rabbit::UserPointer up,SQWRITEFUNC write,rabbit::ObjectPtr &o);
-	bool ReadObject(rabbit::VirtualMachine* v,rabbit::UserPointer up,SQREADFUNC read,rabbit::ObjectPtr &o);
 
 }
 #define _CHECK_IO(exp)  { if(!exp)return false; }

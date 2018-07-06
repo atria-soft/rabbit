@@ -37,8 +37,6 @@ namespace rabbit {
 		
 			const char* getLocal(rabbit::VirtualMachine *v,uint64_t stackbase,uint64_t nseq,uint64_t nop);
 			int64_t getLine(rabbit::Instruction *curr);
-			bool save(rabbit::VirtualMachine *v,rabbit::UserPointer up,SQWRITEFUNC write);
-			static bool load(rabbit::VirtualMachine *v,rabbit::UserPointer up,SQREADFUNC read,rabbit::ObjectPtr &ret);
 			rabbit::ObjectPtr _sourcename;
 			rabbit::ObjectPtr _name;
 			int64_t _stacksize;

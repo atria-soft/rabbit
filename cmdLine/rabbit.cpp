@@ -72,9 +72,6 @@ void PrintUsage()
 {
 	fprintf(stderr,"usage: sq <options> <scriptpath [args]>.\n"
 		"Available options are:\n"
-		"   -c			  compiles the file to bytecode(default output 'out.karrot')\n"
-		"   -o			  specifies output file for the -c option\n"
-		"   -c			  compiles only\n"
 		"   -d			  generates debug infos\n"
 		"   -v			  displays version infos\n"
 		"   -h			  prints help\n");
@@ -87,8 +84,6 @@ void PrintUsage()
 int getargs(rabbit::VirtualMachine* v,int argc, char* argv[],int64_t *retval)
 {
 	int i;
-	int compiles_only = 0;
-	char * output = NULL;
 	*retval = 0;
 	if(argc>1)
 	{
@@ -104,14 +99,6 @@ int getargs(rabbit::VirtualMachine* v,int argc, char* argv[],int64_t *retval)
 				case 'd':
 					sq_enabledebuginfo(v,1);
 					break;
-				case 'c':
-					compiles_only = 1;
-					break;
-				case 'o':
-					if(arg < argc) {
-						arg++;
-						output = argv[arg];
-					}
 					break;
 				case 'v':
 					PrintVersionInfos();
@@ -140,49 +127,28 @@ int getargs(rabbit::VirtualMachine* v,int argc, char* argv[],int64_t *retval)
 
 			arg++;
 
-			//sq_pushstring(v,"ARGS",-1);
-			//sq_newarray(v,0);
-
-			//sq_createslot(v,-3);
-			//sq_pop(v,1);
-			if(compiles_only) {
-				if(SQ_SUCCEEDED(rabbit::std::loadfile(v,filename,SQTrue))){
-					const char *outfile = "out.karrot";
-					if(output) {
-						outfile = output;
-					}
-					if(SQ_SUCCEEDED(rabbit::std::writeclosuretofile(v,outfile)))
-						return _DONE;
+			if(SQ_SUCCEEDED(rabbit::std::loadfile(v,filename,SQTrue))) {
+				int callargs = 1;
+				sq_pushroottable(v);
+				for(i=arg;i<argc;i++)
+				{
+					const char *a;
+					a=argv[i];
+					sq_pushstring(v,a,-1);
+					callargs++;
 				}
-			}
-			else {
-				//if(SQ_SUCCEEDED(rabbit::std::dofile(v,filename,SQFalse,SQTrue))) {
-					//return _DONE;
-				//}
-				if(SQ_SUCCEEDED(rabbit::std::loadfile(v,filename,SQTrue))) {
-					int callargs = 1;
-					sq_pushroottable(v);
-					for(i=arg;i<argc;i++)
-					{
-						const char *a;
-						a=argv[i];
-						sq_pushstring(v,a,-1);
-						callargs++;
-						//sq_arrayappend(v,-2);
+				if(SQ_SUCCEEDED(sq_call(v,callargs,SQTrue,SQTrue))) {
+					rabbit::ObjectType type = sq_gettype(v,-1);
+					if(type == rabbit::OT_INTEGER) {
+						*retval = type;
+						sq_getinteger(v,-1,retval);
 					}
-					if(SQ_SUCCEEDED(sq_call(v,callargs,SQTrue,SQTrue))) {
-						rabbit::ObjectType type = sq_gettype(v,-1);
-						if(type == rabbit::OT_INTEGER) {
-							*retval = type;
-							sq_getinteger(v,-1,retval);
-						}
-						return _DONE;
-					}
-					else{
-						return _ERROR;
-					}
-
+					return _DONE;
 				}
+				else{
+					return _ERROR;
+				}
+
 			}
 			//if this point is reached an error occurred
 			{

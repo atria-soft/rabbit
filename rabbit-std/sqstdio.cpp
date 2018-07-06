@@ -317,41 +317,38 @@ rabbit::Result rabbit::std::loadfile(rabbit::VirtualMachine* v,const char *filen
 			//probably an empty file
 			us = 0;
 		}
-		if(us == SQ_BYTECODE_STREAM_TAG) { //BYTECODE
-			rabbit::std::fseek(file,0,SQ_SEEK_SET);
-			if(SQ_SUCCEEDED(sq_readclosure(v,file_read,file))) {
-				rabbit::std::fclose(file);
-				return SQ_OK;
-			}
+		switch (us) {
+			//gotta swap the next 2 lines on BIG endian machines
+			case 0xFFFE:
+				func = _io_file_lexfeed_UCS2_BE;
+				break; //UTF-16 little endian;
+			case 0xFEFF:
+				func = _io_file_lexfeed_UCS2_LE;
+				break; //UTF-16 big endian;
+			case 0xBBEF:
+				if(rabbit::std::fread(&uc,1,sizeof(uc),file) == 0) {
+					rabbit::std::fclose(file);
+					return sq_throwerror(v,"io error");
+				}
+				if(uc != 0xBF) {
+					rabbit::std::fclose(file);
+					return sq_throwerror(v,"Unrecognized encoding");
+				}
+				func = _io_file_lexfeed_PLAIN;
+				break;
+				//UTF-8 ;
+			default:
+				rabbit::std::fseek(file,0,SQ_SEEK_SET);
+				break;
+				// ascii
 		}
-		else { //SCRIPT
-
-			switch(us)
-			{
-				//gotta swap the next 2 lines on BIG endian machines
-				case 0xFFFE: func = _io_file_lexfeed_UCS2_BE; break;//UTF-16 little endian;
-				case 0xFEFF: func = _io_file_lexfeed_UCS2_LE; break;//UTF-16 big endian;
-				case 0xBBEF:
-					if(rabbit::std::fread(&uc,1,sizeof(uc),file) == 0) {
-						rabbit::std::fclose(file);
-						return sq_throwerror(v,"io error");
-					}
-					if(uc != 0xBF) {
-						rabbit::std::fclose(file);
-						return sq_throwerror(v,"Unrecognized encoding");
-					}
-					func = _io_file_lexfeed_PLAIN;
-					break;//UTF-8 ;
-				default: rabbit::std::fseek(file,0,SQ_SEEK_SET); break; // ascii
-			}
-			IOBuffer buffer;
-			buffer.ptr = 0;
-			buffer.size = 0;
-			buffer.file = file;
-			if(SQ_SUCCEEDED(sq_compile(v,func,&buffer,filename,printerror))){
-				rabbit::std::fclose(file);
-				return SQ_OK;
-			}
+		IOBuffer buffer;
+		buffer.ptr = 0;
+		buffer.size = 0;
+		buffer.file = file;
+		if(SQ_SUCCEEDED(sq_compile(v,func,&buffer,filename,printerror))){
+			rabbit::std::fclose(file);
+			return SQ_OK;
 		}
 		rabbit::std::fclose(file);
 		return SQ_ERROR;
@@ -376,18 +373,6 @@ rabbit::Result rabbit::std::dofile(rabbit::VirtualMachine* v,const char *filenam
 	return SQ_ERROR;
 }
 
-rabbit::Result rabbit::std::writeclosuretofile(rabbit::VirtualMachine* v,const char *filename)
-{
-	SQFILE file = rabbit::std::fopen(filename,"wb+");
-	if(!file) return sq_throwerror(v,"cannot open the file");
-	if(SQ_SUCCEEDED(sq_writeclosure(v,file_write,file))) {
-		rabbit::std::fclose(file);
-		return SQ_OK;
-	}
-	rabbit::std::fclose(file);
-	return SQ_ERROR; //forward the error
-}
-
 int64_t _g_io_loadfile(rabbit::VirtualMachine* v)
 {
 	const char *filename;
@@ -397,15 +382,6 @@ int64_t _g_io_loadfile(rabbit::VirtualMachine* v)
 		sq_getbool(v,3,&printerror);
 	}
 	if(SQ_SUCCEEDED(rabbit::std::loadfile(v,filename,printerror)))
-		return 1;
-	return SQ_ERROR; //propagates the error
-}
-
-int64_t _g_io_writeclosuretofile(rabbit::VirtualMachine* v)
-{
-	const char *filename;
-	sq_getstring(v,2,&filename);
-	if(SQ_SUCCEEDED(rabbit::std::writeclosuretofile(v,filename)))
 		return 1;
 	return SQ_ERROR; //propagates the error
 }
@@ -428,7 +404,6 @@ int64_t _g_io_dofile(rabbit::VirtualMachine* v)
 static const rabbit::RegFunction iolib_funcs[]={
 	_DECL_GLOBALIO_FUNC(loadfile,-2,".sb"),
 	_DECL_GLOBALIO_FUNC(dofile,-2,".sb"),
-	_DECL_GLOBALIO_FUNC(writeclosuretofile,3,".sc"),
 	{NULL,(SQFUNCTION)0,0,NULL}
 };
 

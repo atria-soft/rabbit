@@ -44,7 +44,6 @@ rabbit::Result getfile(rabbit::VirtualMachine* v, int64_t idx, SQFILE *file);
 //compiler helpers
 rabbit::Result loadfile(rabbit::VirtualMachine* v,const char *filename,rabbit::Bool printerror);
 rabbit::Result dofile(rabbit::VirtualMachine* v,const char *filename,rabbit::Bool retval,rabbit::Bool printerror);
-rabbit::Result writeclosuretofile(rabbit::VirtualMachine* v,const char *filename);
 
 rabbit::Result register_iolib(rabbit::VirtualMachine* v);
 

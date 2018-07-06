@@ -1350,35 +1350,6 @@ void rabbit::sq_setcompilererrorhandler(rabbit::VirtualMachine* v,SQCOMPILERERRO
 	_get_shared_state(v)->_compilererrorhandler = f;
 }
 
-rabbit::Result rabbit::sq_writeclosure(rabbit::VirtualMachine* v,SQWRITEFUNC w,rabbit::UserPointer up)
-{
-	rabbit::ObjectPtr *o = NULL;
-	_GETSAFE_OBJ(v, -1, rabbit::OT_CLOSURE,o);
-	unsigned short tag = SQ_BYTECODE_STREAM_TAG;
-	if(o->toClosure()->_function->_noutervalues)
-		return sq_throwerror(v,"a closure with free variables bound cannot be serialized");
-	if(w(up,&tag,2) != 2)
-		return sq_throwerror(v,"io error");
-	if(!o->toClosure()->save(v,up,w))
-		return SQ_ERROR;
-	return SQ_OK;
-}
-
-rabbit::Result rabbit::sq_readclosure(rabbit::VirtualMachine* v,SQREADFUNC r,rabbit::UserPointer up)
-{
-	rabbit::ObjectPtr closure;
-
-	unsigned short tag;
-	if(r(up,&tag,2) != 2)
-		return sq_throwerror(v,"io error");
-	if(tag != SQ_BYTECODE_STREAM_TAG)
-		return sq_throwerror(v,"invalid stream");
-	if(!rabbit::Closure::load(v,up,r,closure))
-		return SQ_ERROR;
-	v->push(closure);
-	return SQ_OK;
-}
-
 char * rabbit::sq_getscratchpad(rabbit::VirtualMachine* v,int64_t minsize)
 {
 	return _get_shared_state(v)->getScratchPad(minsize);
